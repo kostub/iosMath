@@ -1,0 +1,409 @@
+//
+//  MTMathListBuilderTest.m
+//  iosMath
+//
+//  Created by Kostub Deshmukh on 8/28/13.
+//  Copyright (C) 2013 MathChat
+//   
+//  This software may be modified and distributed under the terms of the
+//  MIT license. See the LICENSE file for details.
+//
+
+#import "MTMathListBuilderTest.h"
+#import "MTMathListBuilder.h"
+
+@implementation MTMathListBuilderTest
+
+- (void) checkAtomTypes:(MTMathList*) list types:(NSArray*) types desc:(NSString*) desc
+{
+    XCTAssertEqual(list.atoms.count, types.count, @"%@", desc);
+    for (int i = 0; i < list.atoms.count; i++) {
+        MTMathAtom *atom = list.atoms[i];
+        XCTAssertNotNil(atom, @"%@", desc);
+        XCTAssertEqualObjects(@(atom.type), types[i], @"%@", desc);
+    }
+}
+
+- (void)setUp
+{
+    [super setUp];
+    
+    // Set-up code here.
+}
+
+- (void)tearDown
+{
+    // Tear-down code here.
+    
+    [super tearDown];
+}
+
+static NSArray* getTestData() {
+    return @[
+             @[ @"x", @[ @(kMTMathAtomVariable) ] , @"x"],
+             @[ @"1", @[ @(kMTMathAtomNumber) ] , @"1"],
+             @[ @"*", @[ @(kMTMathAtomBinaryOperator) ] ,@"*"],
+             @[ @"+", @[ @(kMTMathAtomBinaryOperator) ], @"+"],
+             @[ @".", @[ @(kMTMathAtomNumber) ], @"." ],
+             @[ @"(", @[ @(kMTMathAtomOpen) ], @"(" ],
+             @[ @")", @[ @(kMTMathAtomClose) ], @")" ],
+             @[ @",", @[ @(kMTMathAtomPunctuation)], @"," ],
+             @[ @"!", @[ @(kMTMathAtomOrdinary)], @"!" ],
+             @[ @"=", @[ @(kMTMathAtomRelation)], @"=" ],
+             @[ @"x+2", @[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) ], @"x+2"],
+             // spaces are ignored
+             @[ @"(2.3 * 8)", @[ @(kMTMathAtomOpen), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) , @(kMTMathAtomClose) ], @"(2.3*8)"],
+             // braces are just for grouping
+             @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)], @"53+4"],
+             // extra braces are ok
+             @[ @"{{3", @[@(kMTMathAtomNumber)], @"3"],
+             // commands
+             @[ @"\\pi+\\theta\\geq 3",@[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber)], @"\\pi +\\theta \\geq 3"],
+             ];
+}
+
+
+- (void) testBuilder
+{
+    NSArray* data = getTestData();
+    for (NSArray* testCase in data) {
+        NSString* str = testCase[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+        NSArray* atomTypes = testCase[1];
+        [self checkAtomTypes:list types:atomTypes desc:desc];
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, testCase[2], @"%@", desc);
+    }
+}
+
+static NSArray* getTestDataSuperScript() {
+    return @[
+             @[ @"x^2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}"],
+             @[ @"x^23", @[ @(kMTMathAtomVariable), @(kMTMathAtomNumber) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}3"],
+             @[ @"x^{23}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x^{23}"],
+             @[ @"x^2^3", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x^{23}" ],
+             @[ @"x^{2^3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x^{2^{3}}"],
+             @[ @"x^{^2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x^{^{2}*}"],
+             @[ @"^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"^{2}"],
+             @[ @"x^^2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}"],
+             ];
+}
+
+- (void) testSuperScript
+{
+    NSArray* data = getTestDataSuperScript();
+    for (NSArray* testCase in data) {
+        NSString* str = testCase[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+        NSArray* atomTypes = testCase[1];
+        [self checkAtomTypes:list types:atomTypes desc:desc];
+        
+        // get the first atom
+        MTMathAtom* first = list.atoms[0];
+        // check it's superscript
+        XCTAssertNotNil(first.superScript, @"%@", desc);
+        MTMathList* superlist = first.superScript;
+        [self checkAtomTypes:superlist types:testCase[2] desc:desc];
+        
+        if (testCase.count == 5) {
+            // one more level
+            MTMathAtom* superFirst = superlist.atoms[0];
+            MTMathList* supersuperList = superFirst.superScript;
+            [self checkAtomTypes:supersuperList types:testCase[3] desc:desc];
+        }
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, [testCase lastObject], @"%@", desc);
+    }
+}
+
+static NSArray* getTestDataSubScript() {
+    return @[
+             @[ @"x_2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}" ],
+             @[ @"x_23", @[ @(kMTMathAtomVariable), @(kMTMathAtomNumber) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}3"],
+             @[ @"x_{23}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x_{23}"],
+             @[ @"x_2_3", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x_{23}" ],
+             @[ @"x_{2_3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x_{2_{3}}"],
+             @[ @"x_{_2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x_{_{2}*}"],
+             @[ @"_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"_{2}" ],
+             @[ @"x__2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}"],
+             ];
+}
+
+- (void) testSubScript
+{
+    NSArray* data = getTestDataSubScript();
+    for (NSArray* testCase in data) {
+        NSString* str = testCase[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+        NSArray* atomTypes = testCase[1];
+        [self checkAtomTypes:list types:atomTypes desc:desc];
+        
+        // get the first atom
+        MTMathAtom* first = list.atoms[0];
+        // check it's superscript
+        XCTAssertNotNil(first.subScript, @"%@", desc);
+        MTMathList* sublist = first.subScript;
+        [self checkAtomTypes:sublist types:testCase[2] desc:desc];
+        
+        if (testCase.count == 5) {
+            // one more level
+            MTMathAtom* subFirst = sublist.atoms[0];
+            MTMathList* subsubList = subFirst.subScript;
+            [self checkAtomTypes:subsubList types:testCase[3] desc:desc];
+        }
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, [testCase lastObject], @"%@", desc);
+    }
+}
+
+static NSArray* getTestDataSuperSubScript() {
+    return @[
+             @[ @"x_2^*", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @[ @(kMTMathAtomBinaryOperator) ], @"x^{*}_{2}" ],
+             @[ @"x^*_2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @[ @(kMTMathAtomBinaryOperator) ], @"x^{*}_{2}" ],
+             @[ @"x_^*", @[ @(kMTMathAtomVariable) ],  @[ ], @[ @(kMTMathAtomBinaryOperator) ], @"x^{*}_{}" ],
+             @[ @"x^_2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber)], @[ ], @"x^{}_{2}"],
+             @[ @"x_{2^*}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber)], @[ ], @"x_{2^{*}}"],
+             @[ @"x^{*_2}", @[ @(kMTMathAtomVariable) ], @[ ], @[ @(kMTMathAtomBinaryOperator),], @"x^{*_{2}}"],
+             @[ @"_2^*", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @[ @(kMTMathAtomBinaryOperator) ], @"^{*}_{2}"],
+             ];
+}
+
+- (void) testSuperSubScript
+{
+    NSArray* data = getTestDataSuperSubScript();
+    for (NSArray* testCase in data) {
+        NSString* str = testCase[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+        NSArray* atomTypes = testCase[1];
+        [self checkAtomTypes:list types:atomTypes desc:desc];
+        
+        // get the first atom
+        MTMathAtom* first = list.atoms[0];
+
+        NSArray* subscript = testCase[2];
+        if (subscript.count > 0) {
+            XCTAssertNotNil(first.subScript, @"%@", desc);
+            MTMathList* sublist = first.subScript;
+            [self checkAtomTypes:sublist types:subscript desc:desc];
+        }
+        NSArray* superscript = testCase[3];
+        if (superscript.count > 0) {
+            XCTAssertNotNil(first.superScript, @"%@", desc);
+            MTMathList* sublist = first.superScript;
+            [self checkAtomTypes:sublist types:superscript desc:desc];
+        }
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, [testCase lastObject], @"%@", desc);
+    }
+}
+
+- (void) testSymbols
+{
+    NSString *str = @"5\\times3^{2\\div2}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @3, @"%@", desc);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"5", @"%@", desc);
+    atom = list.atoms[1];
+    XCTAssertEqual(atom.type, kMTMathAtomBinaryOperator, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"\u00D7", @"%@", desc);
+    atom = list.atoms[2];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"3", @"%@", desc);
+    
+    // super script
+    MTMathList* superList = atom.superScript;
+    XCTAssertNotNil(superList, @"%@", desc);
+    XCTAssertEqualObjects(@(superList.atoms.count), @3, @"%@", desc);
+    atom = superList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+    atom = superList.atoms[1];
+    XCTAssertEqual(atom.type, kMTMathAtomBinaryOperator, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"\u00F7", @"%@", desc);
+    atom = superList.atoms[2];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+}
+
+- (void) testFrac
+{
+    NSString *str = @"\\frac1c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
+    XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    
+    MTMathList *subList = frac.numerator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"1", @"%@", desc);
+    
+    atom = list.atoms[0];
+    subList = frac.denominator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"c", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{1}{c}", @"%@", desc);
+}
+
+- (void) testFracInFrac
+{
+    NSString *str = @"\\frac1\\frac23";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
+    XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    
+    MTMathList *subList = frac.numerator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"1", @"%@", desc);
+    
+    subList = frac.denominator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    frac = subList.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
+    XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    
+    
+    subList = frac.numerator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+    
+    subList = frac.denominator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"3", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{1}{\\frac{2}{3}}", @"%@", desc);
+}
+
+- (void) testSqrt
+{
+    NSString *str = @"\\sqrt2";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTRadical* rad = list.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
+    XCTAssertEqualObjects(rad.nucleus, @"", @"%@", desc);
+
+    MTMathList *subList = rad.radicand;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sqrt{2}", @"%@", desc);
+}
+
+- (void) testSqrtInSqrt
+{
+    NSString *str = @"\\sqrt\\sqrt2";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTRadical* rad = list.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
+    XCTAssertEqualObjects(rad.nucleus, @"", @"%@", desc);
+
+    MTMathList *subList = rad.radicand;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    rad = subList.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
+    XCTAssertEqualObjects(rad.nucleus, @"", @"%@", desc);
+
+
+    subList = rad.radicand;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom* atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sqrt{\\sqrt{2}}", @"%@", desc);
+}
+
+- (void) testRad
+{
+    NSString *str = @"\\sqrt[3]2";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTRadical* rad = list.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical);
+    XCTAssertEqualObjects(rad.nucleus, @"");
+
+    MTMathList *subList = rad.radicand;
+    XCTAssertNotNil(subList);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber);
+    XCTAssertEqualObjects(atom.nucleus, @"2");
+
+    subList = rad.degree;
+    XCTAssertNotNil(subList);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber);
+    XCTAssertEqualObjects(atom.nucleus, @"3");
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sqrt[3]{2}");
+}
+
+@end
