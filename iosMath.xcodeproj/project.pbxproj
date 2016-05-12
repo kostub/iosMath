@@ -31,7 +31,6 @@
 		49965F2017CBBA2700A555C5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0117CBBA2700A555C5 /* Foundation.framework */; };
 		49A27B0918EBF5B30030B7EF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49A27B0718EBF5B30030B7EF /* InfoPlist.strings */; };
 		49A27B0F18EBF5F10030B7EF /* latinmodern-math.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49A27B0E18EBF5F10030B7EF /* latinmodern-math.otf */; };
-		49AA6E65190DB6EF0000C00C /* MathFontBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 49A27B0118EBF5B30030B7EF /* MathFontBundle.bundle */; };
 		49B83EF317CE74620014B739 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
 		49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF917CF2AE90014B739 /* AppDelegate.m */; };
 		49B83F0217CF2AE90014B739 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EFC17CF2AE90014B739 /* main.m */; };
@@ -39,7 +38,6 @@
 		49B83F0417CF2AE90014B739 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFE17CF2AE90014B739 /* Default.png */; };
 		49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFF17CF2AE90014B739 /* Default@2x.png */; };
 		49B83F0817CF2B420014B739 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83F0717CF2B420014B739 /* ViewController.m */; };
-		49B83F0E17CF30740014B739 /* latinmodern-math.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49B83F0D17CF30740014B739 /* latinmodern-math.otf */; };
 		49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DA6BC619A062A30086B19F /* MTUnicode.m */; };
 		66B91F54A155071228C33E27 /* libPods-iosMathExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B7305B3D5272E07D296E1146 /* libPods-iosMathExample.a */; };
 		A4AF82224BB9060CC51567E8 /* libPods-iosMathTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */; };
@@ -120,7 +118,6 @@
 		49B83F0717CF2B420014B739 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = example/ViewController.m; sourceTree = "<group>"; };
 		49B83F0917CF2EC30014B739 /* iosMath-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iosMath-Info.plist"; sourceTree = "<group>"; };
 		49B83F0B17CF2F080014B739 /* iosMath-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "iosMath-Prefix.pch"; sourceTree = "<group>"; };
-		49B83F0D17CF30740014B739 /* latinmodern-math.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "latinmodern-math.otf"; path = "Resources/latinmodern-math.otf"; sourceTree = "<group>"; };
 		49DA6BC319A05F850086B19F /* MTUnicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTUnicode.h; path = ../../../iosMath/iosMath/lib/MTUnicode.h; sourceTree = "<group>"; };
 		49DA6BC619A062A30086B19F /* MTUnicode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTUnicode.m; path = ../../../iosMath/iosMath/lib/MTUnicode.m; sourceTree = "<group>"; };
 		847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -345,7 +342,6 @@
 		49B83F0C17CF30550014B739 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				49B83F0D17CF30740014B739 /* latinmodern-math.otf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -491,12 +487,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				49AA6E65190DB6EF0000C00C /* MathFontBundle.bundle in Resources */,
 				49965F0A17CBBA2700A555C5 /* InfoPlist.strings in Resources */,
 				49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */,
 				49B83F0417CF2AE90014B739 /* Default.png in Resources */,
 				49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */,
-				49B83F0E17CF30740014B739 /* latinmodern-math.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

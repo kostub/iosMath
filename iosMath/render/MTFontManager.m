@@ -28,7 +28,7 @@
     if (self) {
         NSLog(@"Loading font latinmodern math");
         // Uses bundle for class so that this can be access by the unit tests.
-        NSBundle *bundle = [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"MathFontBundle" withExtension:@"bundle"]];
+        NSBundle *bundle = [NSBundle bundleForClass:[self class]];
         NSString* fontPath = [bundle pathForResource:@"latinmodern-math" ofType:@"otf"];
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename([fontPath UTF8String]);
         _defaultLabelFont = CGFontCreateWithDataProvider(fontDataProvider);
