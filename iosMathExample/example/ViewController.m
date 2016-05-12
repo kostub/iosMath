@@ -44,7 +44,7 @@
 
     // Demo formulae
     // Quadratic formula
-    MTMathUILabel* demoLabel1 = [self createMathLabel:@"x = \\frac{-b + \\sqrt{b^2-4ac}}{2a}" withHeight:60];
+    MTMathUILabel* demoLabel1 = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" withHeight:60];
     [self addLabelAsSubview:demoLabel1 to:contentView];
     // This is first label so set the height from the top
     NSDictionary *views = NSDictionaryOfVariableBindings(demoLabel1);
@@ -58,7 +58,19 @@
     [self addLabelAsSubview:demoLabel2 to:contentView];
     [self setVerticalGap:10 between:demoLabel1 and:demoLabel2];
 
-    MTMathUILabel* lastDemoLabel = demoLabel2;
+    MTMathUILabel* demoLabel3 = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
+                                 \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
+                                           withHeight:40];
+    [self addLabelAsSubview:demoLabel3 to:contentView];
+    [self setVerticalGap:10 between:demoLabel2 and:demoLabel3];
+
+    MTMathUILabel* demoLabel4 = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
+                                 = 1+\\frac{e^{-2\\pi}} {1 \\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
+                                           withHeight:80];
+    [self addLabelAsSubview:demoLabel4 to:contentView];
+    [self setVerticalGap:10 between:demoLabel3 and:demoLabel4];
+
+    MTMathUILabel* lastDemoLabel = demoLabel4;
 
     // Test different aspects
     MTMathUILabel* label1 = [self createMathLabel:@"3+2-5 = 0" withHeight:40];

@@ -170,7 +170,10 @@ static void initializeGlobalsIfNeeded() {
             atom = [MTMathAtom atomWithType:kMTMathAtomPunctuation value:chStr];
         } else if ([kRelations containsObject:chStr]) {
             atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:chStr];
-        } else if (ch == '+' || ch == '-' || ch == '*') {
+        } else if (ch == '-') {
+            // Use the math minus sign
+            atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2212"];
+        } else if (ch == '+' || ch == '*') {
             atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:chStr];
         } else if (ch == '.' || (ch >= '0' && ch <= '9')) {
             atom = [MTMathAtom atomWithType:kMTMathAtomNumber value:chStr];
@@ -275,7 +278,7 @@ static void initializeGlobalsIfNeeded() {
                       @"beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B2"],
                       @"gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B3"],
                       @"delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B4"],
-                      @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B5"],
+                      @"varepsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B5"],
                       @"zeta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B6"],
                       @"eta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B7"],
                       @"theta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B8"],
@@ -288,37 +291,30 @@ static void initializeGlobalsIfNeeded() {
                       @"omicron" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BF"],
                       @"pi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C0"],
                       @"rho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
-                      @"sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C2"],
-                      @"tau" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C3"],
-                      @"upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C4"],
-                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C5"],
-                      @"chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C6"],
-                      @"psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C7"],
-                      @"omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C8"],
+                      @"varsigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
+                      @"sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C3"],
+                      @"tau" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C4"],
+                      @"upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C5"],
+                      @"varphi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C6"],
+                      @"chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C7"],
+                      @"psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C8"],
+                      @"omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C9"],
+                      @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D1"],
+                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D5"],
+                      @"varpi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D6"],
+                      @"varrho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F1"],
+                      @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F5"],
                       
                       // Capital greek characters
-                      @"Alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0391"],
-                      @"Beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0392"],
                       @"Gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0393"],
                       @"Delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0394"],
-                      @"Epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0395"],
-                      @"Zeta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0396"],
-                      @"Eta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0397"],
                       @"Theta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0398"],
-                      @"Iota" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0399"],
-                      @"Kappa" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039A"],
                       @"Lambda" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039B"],
-                      @"Mu" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039C"],
-                      @"Nu" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039D"],
                       @"Xi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039E"],
-                      @"Omicron" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039F"],
                       @"Pi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A0"],
-                      @"Rho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A1"],
                       @"Sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A3"],
-                      @"Tau" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A4"],
                       @"Upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A5"],
                       @"Phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A6"],
-                      @"Chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A7"],
                       @"Psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A8"],
                       @"Omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A9"],
                       
@@ -327,9 +323,13 @@ static void initializeGlobalsIfNeeded() {
                       @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
                       @"ne"  : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolNotEqual],
                       @"neq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolNotEqual],
+
                       // operators
                       @"times" : [MTMathAtomFactory times],
                       @"div"   : [MTMathAtomFactory divide],
+                      @"pm"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"],
+                      @"mp"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2213"],                      
+
                       // No limit operators
                       @"log" : [MTMathAtomFactory operatorWithName:@"log"],
                       @"lg" : [MTMathAtomFactory operatorWithName:@"lg"],
@@ -347,6 +347,7 @@ static void initializeGlobalsIfNeeded() {
                       @"coth" : [MTMathAtomFactory operatorWithName:@"coth"],
                       @"sec" : [MTMathAtomFactory operatorWithName:@"sec"],
                       @"csc" : [MTMathAtomFactory operatorWithName:@"csc"],
+
                       // Latex command characters
                       @"{" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"{"],
                       @"}" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"}"],

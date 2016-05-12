@@ -99,6 +99,23 @@ UTF32Char getItalicized(unichar ch) {
     } else if (ch >= kMTUnicodeCapitalGreekStart && ch <= kMTUnicodeCapitalGreekEnd) {
         // Capital Greek characters
         unicode = kMTUnicodeGreekMathCapitalItalicStart + (ch - kMTUnicodeCapitalGreekStart);
+    }
+    // Exceptions to the above greek letter rules
+    else if (ch == 0x03D1) {
+        // \vartheta
+        unicode = 0x1D717;
+    } else if (ch == 0x03D5) {
+        // \phi
+        unicode = 0x1D719;
+    } else if (ch == 0x03D6) {
+        // \varpi
+        unicode = 0x1D71B;
+    } else if (ch == 0x03F1) {
+        // \varrho
+        unicode = 0x1D71A;
+    } else if (ch == 0x03F5) {
+        // \epsilon
+        unicode = 0x1D716;
     } else {
         @throw [NSException exceptionWithName:@"IllegalCharacter"
                                        reason:[NSString stringWithFormat:@"Unknown character %d used as variable.", ch]
