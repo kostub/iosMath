@@ -416,7 +416,6 @@
 				49965F1717CBBA2700A555C5 /* Sources */,
 				49965F1817CBBA2700A555C5 /* Frameworks */,
 				49965F1917CBBA2700A555C5 /* Resources */,
-				49965F1A17CBBA2700A555C5 /* ShellScript */,
 				89BE4A420E67730DC572540C /* 📦 Embed Pods Frameworks */,
 				C6253ABF539A9D25D25B1108 /* 📦 Copy Pods Resources */,
 			);
@@ -537,19 +536,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		49965F1A17CBBA2700A555C5 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
 		};
 		89BE4A420E67730DC572540C /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -820,11 +806,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BB4250423755E0D3CD2BA614 /* Pods-iosMathTests.debug.xcconfig */;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
-					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
-					"$(inherited)",
-				);
 				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -835,11 +816,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
-					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
-					"$(inherited)",
-				);
 				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
