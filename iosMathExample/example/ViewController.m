@@ -34,7 +34,7 @@
     UIScrollView* scrollView = [[UIScrollView alloc] initWithFrame:frame];
     self.view = scrollView;
 
-    UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 990)];
+    UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 1080)];
     [scrollView addSubview:view];
     [scrollView setContentSize:view.frame.size];
     
@@ -113,6 +113,10 @@
     label.backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
     label.mathList = [MTMathList new];
     label.mathList = [MTMathListBuilder buildFromString:@"\\sqrt[x+\\frac{3}{4}]{\\frac{2}{4}+1}"];
+    [self.view addSubview:label];
+
+    label = [[MTMathUILabel alloc] initWithFrame:CGRectMake(10, 1000, 400, 60)];
+    label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b + \\sqrt{b^2-4ac}}{2a}"];
     [self.view addSubview:label];
 }
 
