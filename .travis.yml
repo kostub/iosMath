@@ -1,4 +1,6 @@
 language: objective-c
+before_install:
+- gem install cocoapods # Since Travis is not always on latest version
 xcode_workspace: iosMath.xcworkspace # path to your xcodeproj folder
 xcode_scheme: iosMath
 xcode_sdk: iphonesimulator
