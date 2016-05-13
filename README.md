@@ -75,6 +75,18 @@ label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b + \\sqrt{b^2
 Adding `MTMathUILabel` as a sub-view of your `UIView` as will render the
 quadratic formula example shown above.
 
+### Included Features
+This is a list of formula types that the library currently supports:
+
+* Simple algebraic equations
+* Fractions and continued fractions
+* Exponents and subscripts
+* Trigonometric formulae
+* Square roots and n-th roots
+* Greek alphabet
+* Geometry symbols (e.g. angle, congruence etc.)
+* Ratios, proportions, percents
+
 ### Example
 
 There is a sample app included in this project that shows how to use the
@@ -129,6 +141,20 @@ label.paddingTop = 10;
 If the LaTeX text given to `[MTMathListBuilder buildFromString]` is
 invalid or if it contains commands that aren't currently supported, it
 will return `nil`.
+
+## Future Enhancements
+
+Note this is not a complete implementation of LaTeX math mode. There are
+some important pieces that are missing and will be included in future
+updates. This includes:
+
+* Support for big operators (e.g. integral, product, sum)
+* Support for big delimiters (bigl, bigr etc.)
+* Limits
+* Many symbols are not yet included (e.g. arrows)
+* Math spacing
+* Aligning equations
+* Matrices
 
 ## License
 
