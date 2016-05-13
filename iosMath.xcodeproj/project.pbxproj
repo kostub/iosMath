@@ -47,16 +47,6 @@
 		D94FE3591B90DE91002D11E2 /* MTMathListBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EED0417DAEDB500939107 /* MTMathListBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		493202AE1B4D2A7C00712B40 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 49965EF417CBBA2700A555C5 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 49A27B0018EBF5B30030B7EF;
-			remoteInfo = MathFontBundle;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		4987307317D546800041B02B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -376,7 +366,6 @@
 				D94FE3521B90DD1F002D11E2 /* Headers */,
 				4987307217D546800041B02B /* Frameworks */,
 				4987307317D546800041B02B /* CopyFiles */,
-				D94FE35A1B90E141002D11E2 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -401,7 +390,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				493202AF1B4D2A7C00712B40 /* PBXTargetDependency */,
 			);
 			name = iosMathExample;
 			productName = iosMath;
@@ -453,12 +441,6 @@
 			attributes = {
 				LastTestingUpgradeCheck = 0630;
 				LastUpgradeCheck = 0720;
-				ORGANIZATIONNAME = MathChat;
-				TargetAttributes = {
-					49965EFB17CBBA2700A555C5 = {
-						DevelopmentTeam = ME5266U533;
-					};
-				};
 			};
 			buildConfigurationList = 49965EF717CBBA2700A555C5 /* Build configuration list for PBXProject "iosMath" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -587,19 +569,6 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D94FE35A1B90E141002D11E2 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/build_multiplatform.sh\"";
-		};
 		E29EDA86FBD87D988339E97B /* 📦 Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -661,14 +630,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		493202AF1B4D2A7C00712B40 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 49A27B0018EBF5B30030B7EF /* MathFontBundle */;
-			targetProxy = 493202AE1B4D2A7C00712B40 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		49965F0817CBBA2700A555C5 /* InfoPlist.strings */ = {
