@@ -86,6 +86,7 @@ This is a list of formula types that the library currently supports:
 * Greek alphabet
 * Geometry symbols (e.g. angle, congruence etc.)
 * Ratios, proportions, percents
+* Most commonly used math symbols
 
 ### Example
 
@@ -101,7 +102,7 @@ __iosMathExample__ app.
 ##### Math mode
 
 You can change the mode of the `MTMathUILabel` between Display Mode
-(equivalent to `$$` or `\[` in LaTeX') and Text Mode (equivalent to `$`
+(equivalent to `$$` or `\[` in LaTeX) and Text Mode (equivalent to `$`
 or `\(` in LaTeX). The default style is Display. To switch to Text
 simply:
 
@@ -151,7 +152,7 @@ updates. This includes:
 * Support for big operators (e.g. integral, product, sum)
 * Support for big delimiters (bigl, bigr etc.)
 * Limits
-* Many symbols are not yet included (e.g. arrows)
+* Some symbols are not yet included (e.g. arrows)
 * Math spacing
 * Aligning equations
 * Matrices
