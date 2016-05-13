@@ -1,4 +1,10 @@
 # iosMath
+
+[![Build Status](http://img.shields.io/travis/kostub/iosMath.svg?style=flat)](https://travis-ci.org/kostub/iosMath)
+[![Version](https://img.shields.io/cocoapods/v/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
+[![License](https://img.shields.io/cocoapods/l/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
+[![Platform](https://img.shields.io/cocoapods/p/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
+
 `iosMath` is a library for displaying beautifully rendered math equations
 in iOS applications. It typesets formulae written using the LaTeX in a
 `UILabel` equivalent class. It uses the same typesetting rules as LaTeX
@@ -10,7 +16,8 @@ applications without having to use a `UIWebView` and Javascript. More
 importantly, it is significantly faster than using a `UIWebView`.
 
 ## Examples
-Here are some formulae that you could render with this library:
+Here are screenshots of some formulae that you could render with this
+library:
 
 ![Quadratic Formula](img/quadratic.png)
 
