@@ -76,7 +76,7 @@ an `MTMathUILabel` as follows:
 #import "MTMathListBuilder.h"
 
 MTMathULabel* Iabel = [[MTMathUILabel alloc] init];
-label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b + \\sqrt{b^2-4ac}}{2a}"];
+label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"];
 
 ```
 Adding `MTMathUILabel` as a sub-view of your `UIView` as will render the

@@ -68,7 +68,7 @@
     [self setVerticalGap:10 between:demoLabel2 and:demoLabel3];
 
     MTMathUILabel* demoLabel4 = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
-                                 = 1+\\frac{e^{-2\\pi}} {1 \\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
+                                 = 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
     demoLabel4.fontSize = 15;
     [self addLabelAsSubview:demoLabel4 to:contentView];
