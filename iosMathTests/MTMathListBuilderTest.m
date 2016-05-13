@@ -48,7 +48,7 @@ static NSArray* getTestData() {
              @[ @"(", @[ @(kMTMathAtomOpen) ], @"(" ],
              @[ @")", @[ @(kMTMathAtomClose) ], @")" ],
              @[ @",", @[ @(kMTMathAtomPunctuation)], @"," ],
-             @[ @"!", @[ @(kMTMathAtomOrdinary)], @"!" ],
+             @[ @"!", @[ @(kMTMathAtomClose)], @"!" ],
              @[ @"=", @[ @(kMTMathAtomRelation)], @"=" ],
              @[ @"x+2", @[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) ], @"x+2"],
              // spaces are ignored

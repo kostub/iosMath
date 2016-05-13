@@ -30,7 +30,7 @@
     XCTAssertEqualObjects(@(finalized.atoms.count), @10, @"Num atoms");
     MTMathAtom* atom = finalized.atoms[0];
     XCTAssertEqual(atom.type, kMTMathAtomUnaryOperator, @"Atom 0");
-    XCTAssertEqualObjects(atom.nucleus, @"-", @"Atom 0 value");
+    XCTAssertEqualObjects(atom.nucleus, @"−", @"Atom 0 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 1)), @"Range");
     atom = finalized.atoms[1];
     XCTAssertEqual(atom.type, kMTMathAtomNumber, @"Atom 1");
@@ -65,7 +65,7 @@
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 2)), @"Range");
     atom = subScr.atoms[1];
     XCTAssertEqual(atom.type, kMTMathAtomUnaryOperator, @"Sub Atom 1");
-    XCTAssertEqualObjects(atom.nucleus, @"-", @"Sub Atom 1 value");
+    XCTAssertEqualObjects(atom.nucleus, @"−", @"Sub Atom 1 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(2, 1)), @"Range");
     
     atom = finalized.atoms[3];
@@ -78,7 +78,7 @@
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(5, 1)), @"Range");
     atom = finalized.atoms[5];
     XCTAssertEqual(atom.type, kMTMathAtomUnaryOperator, @"Atom 5");
-    XCTAssertEqualObjects(atom.nucleus, @"-", @"Atom 5 value");
+    XCTAssertEqualObjects(atom.nucleus, @"−", @"Atom 5 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(6, 1)), @"Range");
     atom = finalized.atoms[6];
     XCTAssertEqual(atom.type, kMTMathAtomNumber, @"Atom 6");
@@ -103,7 +103,7 @@
     XCTAssertEqualObjects(@(numer.atoms.count), @2, @"Numer script");
     atom = numer.atoms[0];
     XCTAssertEqual(atom.type, kMTMathAtomUnaryOperator, @"Numer Atom 0");
-    XCTAssertEqualObjects(atom.nucleus, @"-", @"Numer Atom 0 value");
+    XCTAssertEqualObjects(atom.nucleus, @"−", @"Numer Atom 0 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 1)), @"Range");
     atom = numer.atoms[1];
     XCTAssertEqual(atom.type, kMTMathAtomNumber, @"Numer Atom 1");
@@ -118,7 +118,6 @@
     XCTAssertEqual(atom.type, kMTMathAtomNumber, @"Denom Atom 0");
     XCTAssertEqualObjects(atom.nucleus, @"15.2", @"Denom Atom 0 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 4)), @"Range");
-    
     
 }
 
