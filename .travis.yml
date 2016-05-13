@@ -1,3 +1,4 @@
 language: objective-c
-xcode_project: iosMath.xcodeproj # path to your xcodeproj folder
+xcode_workspace: iosMath.xcworkspace # path to your xcodeproj folder
 xcode_scheme: iosMath
+xcode_sdk: iphonesimulator

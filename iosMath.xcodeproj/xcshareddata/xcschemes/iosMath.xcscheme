@@ -28,6 +28,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "7D06BFEA4390EE2A25BDC8C681A9C2F9"
+               BuildableName = "libPods-iosMathExample.a"
+               BlueprintName = "Pods-iosMathExample"
+               ReferencedContainer = "container:Pods/Pods.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "4E99318C32F34A1618680BCC88F9EE41"
                BuildableName = "libPods-iosMathTests.a"
                BlueprintName = "Pods-iosMathTests"
@@ -94,6 +108,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "4987307417D546800041B02B"
+            BuildableName = "libIosMath.a"
+            BlueprintName = "IosMath"
+            ReferencedContainer = "container:iosMath.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
