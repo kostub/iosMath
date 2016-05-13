@@ -132,6 +132,6 @@ will return `nil`.
 
 ## License
 
-iosMath is available under the MIT license. See the [LICENSE](./LICENCE)
+iosMath is available under the MIT license. See the [LICENSE](./LICENSE)
 file for more info.
 
