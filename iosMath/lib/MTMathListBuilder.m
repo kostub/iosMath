@@ -18,7 +18,7 @@ NSString *const MTParseError = @"ParseError";
 
 static void initializeGlobalsIfNeeded() {
     if (!kRelations) {
-        kRelations = [NSSet setWithObjects:@"=", @">", @"<", @":", nil];  // colon is here because tex does that
+        kRelations = [NSSet setWithObjects:@"=", @">", @"<", nil];  // colon is here because tex does that
     }
 }
 @implementation MTMathListBuilder {
@@ -164,12 +164,15 @@ static void initializeGlobalsIfNeeded() {
             continue;
         } else if (ch == '(' || ch == '[') {
             atom = [MTMathAtom atomWithType:kMTMathAtomOpen value:chStr];
-        } else if (ch == ')' || ch == ']') {
+        } else if (ch == ')' || ch == ']' || ch == '!' || ch == '?') {
             atom = [MTMathAtom atomWithType:kMTMathAtomClose value:chStr];
         } else if (ch == ',' || ch == ';') {
             atom = [MTMathAtom atomWithType:kMTMathAtomPunctuation value:chStr];
         } else if ([kRelations containsObject:chStr]) {
             atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:chStr];
+        } else if (ch == ':') {
+            // Math colon is ratio. Regular colon is \colon
+            atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2236"];
         } else if (ch == '-') {
             // Use the math minus sign
             atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2212"];
@@ -179,9 +182,9 @@ static void initializeGlobalsIfNeeded() {
             atom = [MTMathAtom atomWithType:kMTMathAtomNumber value:chStr];
         } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
             atom = [MTMathAtom atomWithType:kMTMathAtomVariable value:chStr];
-        } else if (ch == '!' || ch == '"' || ch == '/' || ch == '?' || ch == '@' || ch == '`' || ch == '|') {
+        } else if (ch == '"' || ch == '/' || ch == '@' || ch == '`' || ch == '|') {
             // just an ordinary character. The following are allowed ordinary chars
-            // ! ? | / ` @ "
+            // | / ` @ "
             atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
         } else {
             NSAssert(false, @"Unknown ascii character %@. Should have been accounted for.", @(ch));
@@ -226,6 +229,13 @@ static void initializeGlobalsIfNeeded() {
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
+    NSDictionary* aliases = [MTMathListBuilder aliases];
+    // First check if this is an alias
+    NSString* canonicalCommand = aliases[command];
+    if (canonicalCommand) {
+        // Switch to the canonical command
+        command = canonicalCommand;
+    }
     NSDictionary* commands = [MTMathListBuilder supportedCommands];
     MTMathAtom* atom = commands[command];
     if (atom) {
@@ -268,11 +278,6 @@ static void initializeGlobalsIfNeeded() {
         commands = @{
                       @"square" : [MTMathAtomFactory placeholder],
                       
-                      // Other symbols
-                      @"infty" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u221E"],
-                      @"angle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2220"],
-                      @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
-                      
                       // Greek characters
                       @"alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B1"],
                       @"beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B2"],
@@ -299,12 +304,15 @@ static void initializeGlobalsIfNeeded() {
                       @"chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C7"],
                       @"psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C8"],
                       @"omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C9"],
-                      @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D1"],
-                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D5"],
-                      @"varpi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D6"],
-                      @"varrho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F1"],
-                      @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F5"],
-                      
+                      // We mark the following greek chars as ordinary so that we don't try
+                      // to automatically italicize them as we do with variables.
+                      // These characters fall outside the rules of italicization that we have defined.
+                      @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\U0001D716"],
+                      @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D717"],
+                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D719"],
+                      @"varrho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\U0001D71A"],
+                      @"varpi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71B"],
+
                       // Capital greek characters
                       @"Gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0393"],
                       @"Delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0394"],
@@ -321,14 +329,42 @@ static void initializeGlobalsIfNeeded() {
                       // Relations
                       @"leq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolLessEqual],
                       @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
-                      @"ne"  : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolNotEqual],
                       @"neq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolNotEqual],
+                      @"in" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2208"],
+                      @"notin" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2209"],
+                      @"ni" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u220B"],
+                      @"propto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u221D"],
+                      @"mid" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2223"],
+                      @"parallel" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2225"],
+                      @"sim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u223C"],
+                      @"simeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2243"],
+                      @"cong" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2245"],
+                      @"approx" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2248"],
+                      @"gg" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226A"],
+                      @"ll" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226B"],
+                      @"subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2282"],
+                      @"supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2283"],
+                      @"subseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2286"],
+                      @"supseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2287"],
+                      @"perp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27C2"],
 
                       // operators
                       @"times" : [MTMathAtomFactory times],
                       @"div"   : [MTMathAtomFactory divide],
                       @"pm"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"],
-                      @"mp"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2213"],                      
+                      @"mp"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2213"],
+                      @"ast"   : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2217"],
+                      @"circ"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2218"],
+                      @"bullet" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2219"],
+                      @"wedge" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2227"],
+                      @"vee" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2228"],
+                      @"cap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2229"],
+                      @"cup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u222A"],
+                      @"sqcap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2293"],
+                      @"sqcup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2294"],
+                      @"star"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C6"],
+                      @"cdot"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C5"],
+                      @"setminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u29F5"],
 
                       // No limit operators
                       @"log" : [MTMathAtomFactory operatorWithName:@"log"],
@@ -357,10 +393,57 @@ static void initializeGlobalsIfNeeded() {
                       @"%" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"%"],
                       @"_" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"_"],
                       @"backslash" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\\"],
+
+                      // Punctuation
+                      // Note: \colon is different from : which is a relation
+                      @"colon" : [MTMathAtom atomWithType:kMTMathAtomPunctuation value:@":"],
+
+                      // Other symbols
+                      @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
+                      @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
+                      @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
+                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
+                      @"hbar" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u210F"],
+                      @"Im" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2111"],
+                      @"ell" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2113"],
+                      @"wp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2118"],
+                      @"Re" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u211C"],
+                      @"aleph" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2135"],
+                      @"forall" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2200"],
+                      @"exists" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2203"],
+                      @"emptyset" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2205"],
+                      @"nabla" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2207"],
+                      @"infty" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u221E"],
+                      @"angle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2220"],
+                      @"top" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22A4"],
+                      @"bot" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22A5"],
+                      @"vdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EE"],
+                      @"cdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EF"],
+                      @"ddots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22F1"],
+                      @"triangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B3"],
+                      @"imath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A4"],
+                      @"jmath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A5"],
+                      @"partial" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D715"],
                       };
         
     }
     return commands;
+}
+
++ (NSDictionary*) aliases
+{
+    static NSDictionary* aliases = nil;
+    if (!aliases) {
+        aliases = @{
+                     @"lnot" : @"neg",
+                     @"land" : @"wedge",
+                     @"lor" : @"vee",
+                     @"ne" : @"neq",
+                     @"le" : @"leq",
+                     @"ge" : @"geq",
+                     };
+    }
+    return aliases;
 }
 
 + (NSDictionary*) textToCommands
