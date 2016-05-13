@@ -6,13 +6,20 @@ and so the equations are rendered exactly as LaTeX would render them.
 
 It is similar to [MathJax](https://www.mathjax.org) or
 [KaTeX](https://github.com/Khan/KaTeX) for the web but for native iOS
-applications without having to use a `UIWebView` and Javascript and
-significantly faster than using it.
+applications without having to use a `UIWebView` and Javascript. More
+importantly, it is significantly faster than using a `UIWebView`.
 
 ## Examples
 Here are some formulae that you could render with this library:
 
 ![Quadratic Formula](img/quadratic.png)
+
+![Square Formula](img/square.png)
+
+![Cos Sum](img/trig.png)
+
+![Ramanujan Identity](img/ramanujan.png)
+
  
 ## Requirements
 `iosMath` works on iOS 6+ and requires ARC to build. It depends on
@@ -117,7 +124,14 @@ label.paddingRight = 20;
 label.paddingTop = 10;
 ```
 
+##### Error handling
+
+If the LaTeX text given to `[MTMathListBuilder buildFromString]` is
+invalid or if it contains commands that aren't currently supported, it
+will return `nil`.
+
 ## License
 
-iosMath is available under the MIT license. See the LICENSE file for more info.
+iosMath is available under the MIT license. See the [LICENSE](./LICENCE)
+file for more info.
 
