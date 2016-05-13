@@ -135,7 +135,7 @@
     [self setVerticalGap:10 between:label9 and:label10];
 
     // Square root inside square roots and with fractions
-    MTMathUILabel* label11 = [self createMathLabel:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt5^x}}+\\sqrt{3x}+x^{\\sqrt2}" withHeight:60];
+    MTMathUILabel* label11 = [self createMathLabel:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt5^x}}+\\sqrt{3x}+x^{\\sqrt2}" withHeight:90];
     [self addLabelAsSubview:label11 to:contentView];
     [self setVerticalGap:10 between:label10 and:label11];
 
