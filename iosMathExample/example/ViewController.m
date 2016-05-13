@@ -46,6 +46,7 @@
     // Quadratic formula
     MTMathUILabel* demoLabel1 = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" withHeight:60];
     [self addLabelAsSubview:demoLabel1 to:contentView];
+    demoLabel1.fontSize = 15;
     // This is first label so set the height from the top
     NSDictionary *views = NSDictionaryOfVariableBindings(demoLabel1);
     [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(30)-[demoLabel1]"
@@ -56,17 +57,20 @@
 
     MTMathUILabel* demoLabel2 = [self createMathLabel:@"(a_1+a_2)^2=a_1^2+2a_1a_2+a_2^2" withHeight:40];
     [self addLabelAsSubview:demoLabel2 to:contentView];
+    demoLabel2.fontSize = 15;
     [self setVerticalGap:10 between:demoLabel1 and:demoLabel2];
 
     MTMathUILabel* demoLabel3 = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
                                  \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
                                            withHeight:40];
+    demoLabel3.fontSize = 15;
     [self addLabelAsSubview:demoLabel3 to:contentView];
     [self setVerticalGap:10 between:demoLabel2 and:demoLabel3];
 
     MTMathUILabel* demoLabel4 = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
                                  = 1+\\frac{e^{-2\\pi}} {1 \\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
+    demoLabel4.fontSize = 15;
     [self addLabelAsSubview:demoLabel4 to:contentView];
     [self setVerticalGap:10 between:demoLabel3 and:demoLabel4];
 
