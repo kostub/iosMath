@@ -325,7 +325,45 @@ static void initializeGlobalsIfNeeded() {
                       @"Phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A6"],
                       @"Psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A8"],
                       @"Omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A9"],
-                      
+
+                      // Open
+                      @"lceil" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u2308"],
+                      @"lfloor" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u230A"],
+                      @"langle" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27E8"],
+                      @"lgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EE"],
+
+                      // Close
+                      @"rceil" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u2309"],
+                      @"rfloor" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u230B"],
+                      @"rangle" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27E9"],
+                      @"rgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EF"],
+
+                      // Arrows
+                      @"leftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2190"],
+                      @"uparrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2191"],
+                      @"rightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2192"],
+                      @"downarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2193"],
+                      @"leftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2194"],
+                      @"updownarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2195"],
+                      @"nwarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2196"],
+                      @"nearrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2197"],
+                      @"searrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2198"],
+                      @"swarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2199"],
+                      @"mapsto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A6"],
+                      @"Leftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D0"],
+                      @"Uparrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D1"],
+                      @"Rightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D2"],
+                      @"Downarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D3"],
+                      @"Leftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D4"],
+                      @"Updownarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D5"],
+                      @"longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F5"],
+                      @"longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F6"],
+                      @"longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F7"],
+                      @"Longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F8"],
+                      @"Longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F9"],
+                      @"Longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FA"],
+
+
                       // Relations
                       @"leq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolLessEqual],
                       @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
@@ -340,19 +378,32 @@ static void initializeGlobalsIfNeeded() {
                       @"simeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2243"],
                       @"cong" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2245"],
                       @"approx" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2248"],
+                      @"asymp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224D"],
+                      @"doteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2250"],
+                      @"equiv" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2261"],
                       @"gg" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226A"],
                       @"ll" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226B"],
+                      @"prec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227A"],
+                      @"succ" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227B"],
                       @"subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2282"],
                       @"supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2283"],
                       @"subseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2286"],
                       @"supseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2287"],
+                      @"sqsubset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u228F"],
+                      @"sqsupset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2290"],
+                      @"sqsubseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2291"],
+                      @"sqsupseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2292"],
+                      @"models" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A7"],
                       @"perp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27C2"],
 
                       // operators
                       @"times" : [MTMathAtomFactory times],
                       @"div"   : [MTMathAtomFactory divide],
                       @"pm"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"],
+                      @"dagger" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2020"],
+                      @"ddagger" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2021"],
                       @"mp"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2213"],
+                      @"setminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2216"],
                       @"ast"   : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2217"],
                       @"circ"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2218"],
                       @"bullet" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2219"],
@@ -360,11 +411,18 @@ static void initializeGlobalsIfNeeded() {
                       @"vee" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2228"],
                       @"cap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2229"],
                       @"cup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u222A"],
+                      @"wr" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2240"],
+                      @"uplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u228E"],
                       @"sqcap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2293"],
                       @"sqcup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2294"],
+                      @"oplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2295"],
+                      @"ominus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2296"],
+                      @"otimes" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2297"],
+                      @"oslash" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2298"],
+                      @"odot" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2299"],
                       @"star"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C6"],
                       @"cdot"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C5"],
-                      @"setminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u29F5"],
+                      @"amalg" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2A3F"],
 
                       // No limit operators
                       @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
@@ -402,6 +460,22 @@ static void initializeGlobalsIfNeeded() {
                       @"Pr" : [MTMathAtomFactory operatorWithName:@"Pr" limits:YES],
                       @"gcd" : [MTMathAtomFactory operatorWithName:@"gcd" limits:YES],
 
+                      // Large operators
+                      @"prod" : [MTMathAtomFactory operatorWithName:@"\u220F" limits:YES],
+                      @"coprod" : [MTMathAtomFactory operatorWithName:@"\u2210" limits:YES],
+                      @"sum" : [MTMathAtomFactory operatorWithName:@"\u2211" limits:YES],
+                      @"int" : [MTMathAtomFactory operatorWithName:@"\u222B" limits:NO],
+                      @"oint" : [MTMathAtomFactory operatorWithName:@"\u222E" limits:NO],
+                      @"bigwedge" : [MTMathAtomFactory operatorWithName:@"\u22C0" limits:YES],
+                      @"bigvee" : [MTMathAtomFactory operatorWithName:@"\u22C1" limits:YES],
+                      @"bigcap" : [MTMathAtomFactory operatorWithName:@"\u22C2" limits:YES],
+                      @"bigcup" : [MTMathAtomFactory operatorWithName:@"\u22C3" limits:YES],
+                      @"bigodot" : [MTMathAtomFactory operatorWithName:@"\u2A00" limits:YES],
+                      @"bigoplus" : [MTMathAtomFactory operatorWithName:@"\u2A01" limits:YES],
+                      @"bigotimes" : [MTMathAtomFactory operatorWithName:@"\u2A02" limits:YES],
+                      @"biguplus" : [MTMathAtomFactory operatorWithName:@"\u2A04" limits:YES],
+                      @"bigsqcup" : [MTMathAtomFactory operatorWithName:@"\u2A06" limits:YES],
+
                       // Latex command characters
                       @"{" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"{"],
                       @"}" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"}"],
@@ -415,10 +489,13 @@ static void initializeGlobalsIfNeeded() {
                       // Punctuation
                       // Note: \colon is different from : which is a relation
                       @"colon" : [MTMathAtom atomWithType:kMTMathAtomPunctuation value:@":"],
+                      @"cdotp" : [MTMathAtom atomWithType:kMTMathAtomPunctuation value:@"\u00B7"],
 
                       // Other symbols
                       @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
                       @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
+                      @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
+                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
                       @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
                       @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
                       @"hbar" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u210F"],
@@ -459,6 +536,11 @@ static void initializeGlobalsIfNeeded() {
                      @"ne" : @"neq",
                      @"le" : @"leq",
                      @"ge" : @"geq",
+                     @"lbrace" : @"{",
+                     @"rbrace" : @"}",
+                     @"Vert" : @"|",
+                     @"gets" : @"leftarrow",
+                     @"to" : @"rightarrow",
                      };
     }
     return aliases;
