@@ -39,7 +39,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:scrollView];
-    [self setHeight:1080 forView:contentView];
+    [self setHeight:1280 forView:contentView];
 
 
     // Demo formulae
@@ -148,6 +148,16 @@
     MTMathUILabel* label13 = [self createMathLabel:@"\\sqrt[x+\\frac{3}{4}]{\\frac{2}{4}+1}" withHeight:60];
     [self addLabelAsSubview:label13 to:contentView];
     [self setVerticalGap:10 between:label12 and:label13];
+
+    // Non-symbol operators with no limits
+    MTMathUILabel* label14 = [self createMathLabel:@"\\sin^2(\\theta)=\\log_3^2(\\pi)" withHeight:60];
+    [self addLabelAsSubview:label14 to:contentView];
+    [self setVerticalGap:10 between:label13 and:label14];
+
+    // Non-symbol operators with limits
+    MTMathUILabel* label15 = [self createMathLabel:@"\\lim_{x\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
+    [self addLabelAsSubview:label15 to:contentView];
+    [self setVerticalGap:10 between:label14 and:label15];
 }
 
 - (void)viewDidLoad

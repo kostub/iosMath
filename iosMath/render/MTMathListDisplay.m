@@ -654,7 +654,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (void)setPosition:(CGPoint)position
 {
-    self.position = position;
+    super.position = position;
     [self updateLowerLimitPosition];
     [self updateUpperLimitPosition];
     [self updateNucleusPosition];
@@ -1379,6 +1379,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         }
         opsDisplay.position = _currentPosition;
         opsDisplay.range = op.indexRange;
+        _currentPosition.x += opsDisplay.width;
         return opsDisplay;
     } else {
         _currentPosition.x += display.width;
