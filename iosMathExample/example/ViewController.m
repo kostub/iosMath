@@ -39,7 +39,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:scrollView];
-    [self setHeight:1280 forView:contentView];
+    [self setHeight:1480 forView:contentView];
 
 
     // Demo formulae
@@ -155,9 +155,31 @@
     [self setVerticalGap:10 between:label13 and:label14];
 
     // Non-symbol operators with limits
-    MTMathUILabel* label15 = [self createMathLabel:@"\\lim_{x\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
+    MTMathUILabel* label15 = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
     [self addLabelAsSubview:label15 to:contentView];
     [self setVerticalGap:10 between:label14 and:label15];
+
+    // Symbol operators with limits
+    MTMathUILabel* label16 = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
+    [self addLabelAsSubview:label16 to:contentView];
+    [self setVerticalGap:10 between:label15 and:label16];
+
+    // Symbol operators with limits text style
+    MTMathUILabel* label17 = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
+    label17.labelMode = kMTMathUILabelModeText;
+    [self addLabelAsSubview:label17 to:contentView];
+    [self setVerticalGap:10 between:label16 and:label17];
+
+    // Non-symbol operators with limits text style
+    MTMathUILabel* label18 = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
+    label18.labelMode = kMTMathUILabelModeText;
+    [self addLabelAsSubview:label18 to:contentView];
+    [self setVerticalGap:10 between:label17 and:label18];
+
+    // Symbol operators with no limits
+    MTMathUILabel* label19 = [self createMathLabel:@"\\int_{0}^{\\infty}e^x dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
+    [self addLabelAsSubview:label19 to:contentView];
+    [self setVerticalGap:10 between:label18 and:label19];
 }
 
 - (void)viewDidLoad

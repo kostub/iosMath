@@ -207,7 +207,7 @@ static void initializeGlobalsIfNeeded() {
 
 - (NSString*) readCommand
 {
-    // a command is a string of all lowercase characters.
+    // a command is a string of all upper and lower case characters.
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
@@ -216,7 +216,7 @@ static void initializeGlobalsIfNeeded() {
             // These are single char commands.
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
             break;
-        } else if (ch >= 'a' && ch <= 'z') {
+        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
         } else {
             // we went too far

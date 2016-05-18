@@ -1358,7 +1358,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         _currentPosition.x += display.width;
         return display;
     }
-    if (op.limits) {
+    if (op.limits && _style == kMTLineStyleDisplay) {
         // make limits
         MTMathListDisplay *superScript = nil, *subScript = nil;
         if (op.superScript) {
