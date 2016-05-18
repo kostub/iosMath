@@ -56,6 +56,13 @@
 @property (nonatomic, readonly) CGFloat radicalKernAfterDegree;                        // -10 mu in Tex
 @property (nonatomic, readonly) CGFloat radicalDegreeBottomRaisePercent;               // 60% in Tex
 
+#pragma mark Limits
+@property (nonatomic, readonly) CGFloat upperLimitBaselineRiseMin;                     // \xi_11 in TeX
+@property (nonatomic, readonly) CGFloat upperLimitGapMin;                              // \xi_9 in TeX
+@property (nonatomic, readonly) CGFloat lowerLimitGapMin;                              // \xi_10 in TeX
+@property (nonatomic, readonly) CGFloat lowerLimitBaselineDropMin;                     // \xi_12 in TeX
+@property (nonatomic, readonly) CGFloat limitExtraAscenderDescender;                   // \xi_13 in TeX, not present in OpenType so we always set it to 0.
+
 #pragma mark Constants
 
 @property (nonatomic, readonly) CGFloat axisHeight;                                    // \sigma_22 in TeX

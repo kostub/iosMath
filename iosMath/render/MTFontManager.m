@@ -47,6 +47,12 @@
     return font;
 }
 
+-(NSString*) getGlyphName:(CGGlyph) glyph
+{
+    NSString* name = CFBridgingRelease(CGFontCopyGlyphNameForGlyph(_defaultLabelFont, glyph));
+    return name;
+}
+
 - (void) dealloc
 {
     CGFontRelease(_defaultLabelFont);

@@ -43,7 +43,11 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 
 + (MTMathAtom *)closeParens;
 
-+ (MTMathAtom *) operatorWithName:(NSString*) name;
+/** Deprecated. Use (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
+ instead. This sets the limits to false. */
++ (MTMathAtom *) operatorWithName:(NSString*) name __deprecated;
+
++ (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits;
 
 + (MTRadical*) placeholderRadical;
 

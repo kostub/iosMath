@@ -84,6 +84,13 @@ typedef enum  {
 
 @end
 
+@interface MTLargeOpLimitsDisplay : MTDisplay
+
+@property (nonatomic, readonly) MTMathListDisplay* upperLimit;
+@property (nonatomic, readonly) MTMathListDisplay* lowerLimit;
+
+@end
+
 typedef enum  {
     kMTLineStyleDisplay,
     kMTLineStyleText,

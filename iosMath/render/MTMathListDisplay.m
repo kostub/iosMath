@@ -13,6 +13,7 @@
 
 #import "MTMathListDisplay.h"
 #import "MTFontMetrics.h"
+#import "MTFontManager.h"
 #import "MTUnicode.h"
 
 #pragma mark Inter Element Spacing
@@ -540,12 +541,171 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 @end
 
+#pragma mark - MTLargeOpGlyphDisplay
+
+
+// Rendering of an MTLargeOpGlyph as an MTDisplay
+@interface MTLargeOpGlyphDisplay : MTDisplay
+
+// Shift the glyph down by the given amount.
+@property (nonatomic) CGFloat shiftDown;
+
+@end
+
+
+@implementation MTLargeOpGlyphDisplay {
+    CGGlyph _glyph;
+    CTFontRef _font;
+}
+
+- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(CTFontRef) font
+{
+    self = [super init];
+    if (self) {
+        _font = CFRetain(font);
+        _glyph = glyph;
+
+        self.position = position;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    CGContextSaveGState(context);
+
+    // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
+    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextSetTextPosition(context, 0, 0);
+
+    // Draw the glyph.
+    CGPoint glyphPosition = CGPointMake(0, -self.shiftDown);
+    CTFontDrawGlyphs(_font, &_glyph, &glyphPosition, 1, context);
+
+    CGContextRestoreGState(context);
+}
+
+- (void)dealloc
+{
+    CFRelease(_font);
+}
+
+@end
+
+@implementation MTLargeOpLimitsDisplay {
+    CGFloat _limitShift;
+    CGFloat _upperLimitGap;
+    CGFloat _lowerLimitGap;
+    CGFloat _extraPadding;
+
+    MTDisplay *_nucleus;
+}
+
+- (instancetype) initWithNucleus:(MTDisplay*) nucleus upperLimit:(MTMathListDisplay*) upperLimit lowerLimit:(MTMathListDisplay*) lowerLimit limitShift:(CGFloat) limitShift extraPadding:(CGFloat) extraPadding
+{
+    self = [super init];
+    if (self) {
+        _upperLimit = upperLimit;
+        _lowerLimit = lowerLimit;
+        _nucleus = nucleus;
+
+        CGFloat maxWidth = MAX(nucleus.width, upperLimit.width);
+        maxWidth = MAX(maxWidth, lowerLimit.width);
+
+        _limitShift = limitShift;
+        _upperLimitGap = 0;
+        _lowerLimitGap = 0;
+        _extraPadding = extraPadding;  // corresponds to \xi_13 in TeX
+        self.width = maxWidth;
+    }
+    return self;
+}
+
+- (CGFloat)ascent
+{
+    if (self.upperLimit) {
+        return _nucleus.ascent + _extraPadding + self.upperLimit.ascent + _upperLimitGap + self.upperLimit.descent;
+    } else {
+        return _nucleus.ascent;
+    }
+}
+
+- (CGFloat)descent
+{
+    if (self.lowerLimit) {
+        return _nucleus.descent + _extraPadding + _lowerLimitGap + self.lowerLimit.descent + self.lowerLimit.ascent;
+    } else {
+        return _nucleus.descent;
+    }
+}
+
+- (void)setLowerLimitGap:(CGFloat)lowerLimitGap
+{
+    _lowerLimitGap = lowerLimitGap;
+    [self updateLowerLimitPosition];
+}
+
+- (void) setUpperLimitGap:(CGFloat)upperLimitGap
+{
+    _upperLimitGap = upperLimitGap;
+    [self updateUpperLimitPosition];
+}
+
+- (void)setPosition:(CGPoint)position
+{
+    self.position = position;
+    [self updateLowerLimitPosition];
+    [self updateUpperLimitPosition];
+    [self updateNucleusPosition];
+}
+
+- (void) updateLowerLimitPosition
+{
+    if (self.lowerLimit) {
+        // The position of the lower limit includes the position of the MTLargeOpLimitsDisplay
+        // This is to make the positioning of the radical consistent with fractions and radicals
+        // Move the starting point to below the nucleus leaving a gap of _lowerLimitGap and subtract
+        // the ascent to to get the baseline. Also center and shift it to the left by _limitShift.
+        self.lowerLimit.position = CGPointMake(self.position.x - _limitShift + (self.width - _lowerLimit.width)/2,
+                                               self.position.y - _nucleus.descent - _lowerLimitGap - self.lowerLimit.ascent);
+    }
+}
+
+- (void) updateUpperLimitPosition
+{
+    if (self.upperLimit) {
+        // The position of the upper limit includes the position of the MTLargeOpLimitsDisplay
+        // This is to make the positioning of the radical consistent with fractions and radicals
+        // Move the starting point to above the nucleus leaving a gap of _upperLimitGap and add
+        // the descent to to get the baseline. Also center and shift it to the right by _limitShift.
+        self.upperLimit.position = CGPointMake(self.position.x + _limitShift + (self.width - self.upperLimit.width)/2,
+                                               self.position.y + _nucleus.ascent + _upperLimitGap + self.upperLimit.descent);
+    }
+}
+
+- (void) updateNucleusPosition
+{
+    // Center the nucleus
+    _nucleus.position = CGPointMake(self.position.x + (self.width - _nucleus.width)/2, self.position.y);
+}
+
+- (void)draw:(CGContextRef)context
+{
+    // Draw the elements.
+    [self.upperLimit draw:context];
+    [self.lowerLimit draw:context];
+    [_nucleus draw:context];
+}
+
+@end
+
 #pragma mark - MTTypesetter
 
 @implementation MTTypesetter {
     CTFontRef _font;
     MTFontMetrics* _fontMetrics;
-    NSMutableArray* _displayAtoms;
+    NSMutableArray<MTDisplay *>* _displayAtoms;
     CGPoint _currentPosition;
     NSMutableAttributedString* _currentLine;
     NSMutableArray* _currentAtoms;   // List of atoms that make the line
@@ -721,7 +881,21 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 break;
             }
                 
-                
+            case kMTMathAtomLargeOperator: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                if (prevNode) {
+                    CGFloat interElementSpace = [self getInterElementSpace:prevNode.type right:atom.type];
+                    _currentPosition.x += interElementSpace;
+                }
+                MTLargeOperator* op = (MTLargeOperator*) atom;
+                MTDisplay* display = [self makeLargeOp:op];
+                [_displayAtoms addObject:display];
+                break;
+            }
+
             default:
                 // the rendering for all the rest is pretty similar
                 // All we need is render the character and set the interelement space.
@@ -1111,6 +1285,106 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     *glyphDescent = descent;
     *glyphWidth = width;
     return glyphs[4];
+}
+
+#pragma Large Operators
+
+- (CGGlyph) findGlyphForCharacter:(unichar) ch
+{
+    // Get the glyph fromt the font
+    CGGlyph glyph[1];
+    unichar chars[] = { ch };
+    bool found = CTFontGetGlyphsForCharacters(_styleFont, chars, glyph, 1);
+    if (!found) {
+        // the font did not contain a glyph for our character, so we just return 0 (notdef)
+        return 0;
+    }
+    return glyph[0];
+}
+
+- (CGGlyph) findLargerGlyph:(CGGlyph) glyph
+{
+    NSString* name = [MTFontManager.fontManager getGlyphName:glyph];
+    // TODO: This is specific to the LMM font, and may not work with others.
+    NSString* nextName = [NSString stringWithFormat:@"%@.v1", name];
+    CGGlyph larger = CTFontGetGlyphWithName(_styleFont, (__bridge CFStringRef) nextName);
+    if (larger == 0) {
+        // i.e. .notdef (notdef is always 0 in opentype fonts)
+        // If there is no larger glyph return the same one
+        return glyph;
+    }
+    return larger;
+}
+
+- (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
+{
+    CGFloat delta = 0;
+    if (op.nucleus.length == 1) {
+        unichar ch = [op.nucleus characterAtIndex:0];
+        CGGlyph glyph = [self findGlyphForCharacter:ch];
+        if (_style == kMTLineStyleDisplay && glyph != 0) {
+            // Enlarge the character in display style.
+            glyph = [self findLargerGlyph:glyph];
+        }
+        // TODO: This should be the italic correction of the character.
+        delta = 0;
+        // TODO: Remove italic correction from the width of the glyph if
+        // there is a subscript and limits is not set.
+        // vertically center
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
+        CGFloat ascent, descent, width;
+        getBboxDetails(bbox, &ascent, &descent, &width);
+        CGFloat shiftDown = 0.5*(ascent - descent) - _fontMetrics.axisHeight;
+        MTLargeOpGlyphDisplay* glyphDisplay = [[MTLargeOpGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
+        glyphDisplay.ascent = ascent;
+        glyphDisplay.descent = descent;
+        glyphDisplay.width = width;
+        glyphDisplay.shiftDown = shiftDown;
+        return [self addLimitsToDisplay:glyphDisplay forOperator:op delta:delta];
+    } else {
+        // Create a regular node
+        NSMutableAttributedString* line = [[NSMutableAttributedString alloc] initWithString:op.nucleus];
+        // add the font
+        [line addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont) range:NSMakeRange(0, line.length)];
+        MTCTLineDisplay* displayAtom = [[MTCTLineDisplay alloc] initWithString:line position:_currentPosition range:op.indexRange font:_styleFont atoms:@[ op ]];
+        return [self addLimitsToDisplay:displayAtom forOperator:op delta:0];
+    }
+}
+
+- (MTDisplay*) addLimitsToDisplay:(MTDisplay*) display forOperator:(MTLargeOperator*) op delta:(CGFloat)delta
+{
+    // If there is no subscript or superscript, just return the current display
+    if (!op.subScript && !op.superScript) {
+        _currentPosition.x += display.width;
+        return display;
+    }
+    if (op.limits) {
+        // make limits
+        MTMathListDisplay *superScript = nil, *subScript = nil;
+        if (op.superScript) {
+            superScript = [MTTypesetter createLineForMathList:op.superScript font:_font style:self.scriptStyle cramped:self.superScriptCramped];
+        }
+        if (op.subScript) {
+            subScript = [MTTypesetter createLineForMathList:op.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
+        }
+        NSAssert(superScript || subScript, @"Atleast one of superscript or subscript should have been present.");
+        MTLargeOpLimitsDisplay* opsDisplay = [[MTLargeOpLimitsDisplay alloc] initWithNucleus:display upperLimit:superScript lowerLimit:subScript limitShift:delta/2 extraPadding:0];
+        if (superScript) {
+            CGFloat upperLimitGap = MAX(_fontMetrics.upperLimitGapMin, _fontMetrics.upperLimitBaselineRiseMin - superScript.descent);
+            opsDisplay.upperLimitGap = upperLimitGap;
+        }
+        if (subScript) {
+            CGFloat lowerLimitGap = MAX(_fontMetrics.lowerLimitGapMin, _fontMetrics.lowerLimitBaselineDropMin - subScript.ascent);
+            opsDisplay.lowerLimitGap = lowerLimitGap;
+        }
+        opsDisplay.position = _currentPosition;
+        opsDisplay.range = op.indexRange;
+        return opsDisplay;
+    } else {
+        _currentPosition.x += display.width;
+        [self makeScripts:op display:display index:op.indexRange.location];
+        return display;
+    }
 }
 
 @end

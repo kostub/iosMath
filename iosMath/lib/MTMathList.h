@@ -75,6 +75,22 @@ typedef enum
 
 @end
 
+/** A `MTMathAtom` of type `kMTMathAtomLargeOperator`. */
+@interface MTLargeOperator : MTMathAtom
+
+/** Designated initializer. Initialize a large operator with the given
+ value and setting for limits.
+ */
+- (instancetype) initWithValue:(NSString*) value limits:(BOOL) limits;
+
+/** Indicates whether the limits (if present) should be displayed
+ above and below the operator in display mode.  If limits is false
+ then the limits (if present) and displayed like a regular subscript/superscript.
+ */
+@property (nonatomic, readonly) BOOL limits;
+
+@end
+
 // A representation of a list of math objects. This list can be constructed directly or built with
 // the help of the MTMathListBuilder. It is not required that the mathematics represented make sense
 // (i.e. this can represent something like "x 2 = +". This list can be used for display using MTLine
