@@ -174,6 +174,34 @@
     return 0.6;
 }
 
+#pragma mark - Limits
+
+- (CGFloat)upperLimitGapMin
+{
+    return [self fontUnitsToPt:200];
+}
+
+- (CGFloat)upperLimitBaselineRiseMin
+{
+    return [self fontUnitsToPt:111];
+}
+
+- (CGFloat)lowerLimitGapMin
+{
+    return [self fontUnitsToPt:167];
+}
+
+- (CGFloat)lowerLimitBaselineDropMin
+{
+    return [self fontUnitsToPt:600];
+}
+
+- (CGFloat)limitExtraAscenderDescender
+{
+    // not present in OpenType fonts.
+    return [self fontUnitsToPt:0];
+}
+
 #pragma mark - Constants
 
 -(CGFloat)axisHeight
