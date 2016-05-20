@@ -291,4 +291,17 @@ static NSString* const kVariants = @"variants";
     return glyph;
 }
 
+#pragma mark - Italic Correction
+
+static NSString* const kItalic = @"italic";
+
+- (CGFloat)getItalicCorrection:(CGGlyph)glyph
+{
+    NSDictionary* italics = (NSDictionary*) [_mathTable objectForKey:kItalic];
+    NSString* glyphName = [self.font getGlyphName:glyph];
+    NSNumber* val = (NSNumber*) [italics objectForKey:glyphName];
+    // if val is nil, this returns 0.
+    return [self fontUnitsToPt:[val intValue]];
+}
+
 @end

@@ -838,7 +838,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
-                    [self makeScripts:atom display:displayRad index:rad.indexRange.location];
+                    [self makeScripts:atom display:displayRad index:rad.indexRange.location delta:0];
                 }
                 // change type to ordinary
                 //atom.type = kMTMathAtomOrdinary;
@@ -858,7 +858,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 MTFractionDisplay* displayFrac = [self addFractionWithNumerator:frac.numerator denominator:frac.denominator range:frac.indexRange];
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
-                    [self makeScripts:atom display:displayFrac index:frac.indexRange.location];
+                    [self makeScripts:atom display:displayFrac index:frac.indexRange.location delta:0];
                 }
                 break;
             }
@@ -922,7 +922,17 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                     // stash the existing line
                     // We don't check _currentLine.length here since we want to allow empty lines with super/sub scripts.
                     MTCTLineDisplay* line = [self addDisplayLine];
-                    [self makeScripts:atom display:line index:NSMaxRange(atom.indexRange) - 1];
+                    CGFloat delta = 0;
+                    if (atom.nucleus.length > 0) {
+                        // Use the italic correction of the last character.
+                        CGGlyph glyph = [self findGlyphForCharacterAtIndex:atom.nucleus.length - 1 inString:atom.nucleus];
+                        delta = [_styleFont.mathTable getItalicCorrection:glyph];
+                    }
+                    if (delta > 0 && !atom.subScript) {
+                        // Add a kern of delta
+                        _currentPosition.x += delta;
+                    }
+                    [self makeScripts:atom display:line index:NSMaxRange(atom.indexRange) - 1 delta:delta];
                 }
                 break;
         }
@@ -1032,7 +1042,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 // make scripts for the last atom
 // index is the index of the element which is getting the sub/super scripts.
-- (void) makeScripts:(MTMathAtom*) atom display:(MTDisplay*) display index:(NSUInteger) index
+- (void) makeScripts:(MTMathAtom*) atom display:(MTDisplay*) display index:(NSUInteger) index delta:(CGFloat) delta
 {
     assert(atom.subScript || atom.superScript);
     
@@ -1097,7 +1107,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
             subscriptShiftDown -= superscriptBottomDelta;
         }
     }
-    CGFloat delta = 0;  // TODO: get this delta from the italic correction above and shift superscript position by that
+    // The delta is the italic correction above that shift superscript position
     superScript.position = CGPointMake(_currentPosition.x + delta, _currentPosition.y + superScriptShiftUp);
     [_displayAtoms addObject:superScript];
     subscript.position = CGPointMake(_currentPosition.x, _currentPosition.y - subscriptShiftDown);
@@ -1271,12 +1281,17 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 #pragma Large Operators
 
-- (CGGlyph) findGlyphForCharacter:(unichar) ch
+- (CGGlyph) findGlyphForCharacterAtIndex:(NSUInteger) index inString:(NSString*) str
 {
+    // Get the character at index taking into account UTF-32 characters
+    NSRange range = [str rangeOfComposedCharacterSequenceAtIndex:index];
+    unichar chars[range.length];
+    [str getCharacters:chars range:range];
+
     // Get the glyph fromt the font
-    CGGlyph glyph[1];
-    unichar chars[] = { ch };
-    bool found = CTFontGetGlyphsForCharacters(_styleFont.ctFont, chars, glyph, 1);
+    CGGlyph glyph[range.length];
+    bool found = CTFontGetGlyphsForCharacters(_styleFont.ctFont, chars, glyph, range
+                                              .length);
     if (!found) {
         // the font did not contain a glyph for our character, so we just return 0 (notdef)
         return 0;
@@ -1286,18 +1301,17 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
 {
+    bool limits = (op.limits && _style == kMTLineStyleDisplay);
     CGFloat delta = 0;
     if (op.nucleus.length == 1) {
-        unichar ch = [op.nucleus characterAtIndex:0];
-        CGGlyph glyph = [self findGlyphForCharacter:ch];
+        CGGlyph glyph = [self findGlyphForCharacterAtIndex:0 inString:op.nucleus];
         if (_style == kMTLineStyleDisplay && glyph != 0) {
             // Enlarge the character in display style.
             glyph = [_styleFont.mathTable getLargerGlyph:glyph];
         }
-        // TODO: This should be the italic correction of the character.
-        delta = 0;
-        // TODO: Remove italic correction from the width of the glyph if
-        // there is a subscript and limits is not set.
+        // This is be the italic correction of the character.
+        delta = [_styleFont.mathTable getItalicCorrection:glyph];
+
         // vertically center
         CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
         CGFloat ascent, descent, width;
@@ -1307,6 +1321,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         glyphDisplay.ascent = ascent;
         glyphDisplay.descent = descent;
         glyphDisplay.width = width;
+        if (op.subScript && !limits) {
+            // Remove italic correction from the width of the glyph if
+            // there is a subscript and limits is not set.
+            glyphDisplay.width -= delta;
+        }
         glyphDisplay.shiftDown = shiftDown;
         return [self addLimitsToDisplay:glyphDisplay forOperator:op delta:delta];
     } else {
@@ -1351,7 +1370,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         return opsDisplay;
     } else {
         _currentPosition.x += display.width;
-        [self makeScripts:op display:display index:op.indexRange.location];
+        [self makeScripts:op display:display index:op.indexRange.location delta:delta];
         return display;
     }
 }

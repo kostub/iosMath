@@ -93,4 +93,10 @@
  */
 - (CGGlyph) getLargerGlyph:(CGGlyph) glyph;
 
+#pragma mark Italic Correction
+
+/** Returns the italic correction for the given glyph if any. If there
+ isn't any this returns 0. */
+- (CGFloat) getItalicCorrection:(CGGlyph) glyph;
+
 @end

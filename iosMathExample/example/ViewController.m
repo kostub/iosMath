@@ -39,7 +39,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:scrollView];
-    [self setHeight:1480 forView:contentView];
+    [self setHeight:1680 forView:contentView];
 
 
     // Demo formulae
@@ -180,6 +180,16 @@
     MTMathUILabel* label19 = [self createMathLabel:@"\\int_{0}^{\\infty}e^x dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
     [self addLabelAsSubview:label19 to:contentView];
     [self setVerticalGap:10 between:label18 and:label19];
+
+    // Test italic correction for large ops
+    MTMathUILabel* label20 = [self createMathLabel:@"\\int\\int\\int^{\\infty}\\int_0\\int^{\\infty}_0\\int" withHeight:60];
+    [self addLabelAsSubview:label20 to:contentView];
+    [self setVerticalGap:10 between:label19 and:label20];
+
+    // Test italic correction for superscript/subscript
+    MTMathUILabel* label21 = [self createMathLabel:@"U_3^2UY_3^2U_3Y^2f_1f^2ff" withHeight:60];
+    [self addLabelAsSubview:label21 to:contentView];
+    [self setVerticalGap:10 between:label20 and:label21];
 }
 
 - (void)viewDidLoad
