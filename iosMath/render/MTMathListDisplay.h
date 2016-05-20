@@ -13,6 +13,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
 
+#import "MTFont.h"
 #import "MTMathList.h"
 
 @interface MTDisplay : NSObject
@@ -100,6 +101,6 @@ typedef enum  {
 
 @interface MTTypesetter : NSObject
 
-+ (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(CTFontRef) font style:(MTLineStyle) style;
++ (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(MTFont*) font style:(MTLineStyle) style;
 
 @end

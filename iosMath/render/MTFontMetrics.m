@@ -16,13 +16,13 @@
     CGFloat _fontSize;
 }
 
-- (id)initWithFont:(CTFontRef)font
+- (id)initWithFont:(MTFont*)font
 {
     self = [super init];
     if (self) {
         // do domething with font
-        _unitsPerEm = CTFontGetUnitsPerEm(font);
-        _fontSize = CTFontGetSize(font);
+        _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
+        _fontSize = font.fontSize;
     }
     return self;
 }

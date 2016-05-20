@@ -204,7 +204,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 @implementation MTCTLineDisplay
 
 
-- (id)initWithString:(NSAttributedString*) attrString position:(CGPoint)position range:(NSRange) range font:(CTFontRef) font atoms:(NSArray*) atoms
+- (id)initWithString:(NSAttributedString*) attrString position:(CGPoint)position range:(NSRange) range font:(MTFont*) font atoms:(NSArray*) atoms
 {
     self = [super init];
     if (self) {
@@ -237,7 +237,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     _line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)(_attributedString));
 }
 
-- (void) computeDimensions:(CTFontRef) font
+- (void) computeDimensions:(MTFont*) font
 {
     NSArray* runs = (__bridge NSArray *)(CTLineGetGlyphRuns(_line));
     for (id obj in runs) {
@@ -245,7 +245,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         CFIndex numGlyphs = CTRunGetGlyphCount(run);
         CGGlyph glyphs[numGlyphs];
         CTRunGetGlyphs(run, CFRangeMake(0, numGlyphs), glyphs);
-        CGRect bounds = CTFontGetBoundingRectsForGlyphs(font, kCTFontHorizontalOrientation, glyphs, NULL, numGlyphs);
+        CGRect bounds = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontHorizontalOrientation, glyphs, NULL, numGlyphs);
         CGFloat ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
         // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
         CGFloat descent = MAX(0, 0 - CGRectGetMinY(bounds));
@@ -444,17 +444,17 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 @implementation MTRadicalDisplay {
     CGGlyph _glyph;
-    CTFontRef _font;
+    MTFont* _font;
     CGFloat _glyphWidth;
     CGFloat _radicalShift;
 }
 
-- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(CGGlyph) glyph glyphWidth:(CGFloat) glyphWidth position:(CGPoint) position range:(NSRange) range font:(CTFontRef) font
+- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(CGGlyph) glyph glyphWidth:(CGFloat) glyphWidth position:(CGPoint) position range:(NSRange) range font:(MTFont*) font
 {
     self = [super init];
     if (self) {
         _radicand = radicand;
-        _font = CFRetain(font);
+        _font = font;
         _glyph = glyph;
         _glyphWidth = glyphWidth;
         _radicalShift = 0;
@@ -515,7 +515,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
     // Draw the glyph.
     CGPoint glyphPosition = CGPointMake(0, _shiftUp);
-    CTFontDrawGlyphs(_font, &_glyph, &glyphPosition, 1, context);
+    CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
 
     // Draw the VBOX
     // for the kern of, we don't need to draw anything.
@@ -534,11 +534,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     CGContextRestoreGState(context);
 }
 
-- (void)dealloc
-{
-    CFRelease(_font);
-}
-
 @end
 
 #pragma mark - MTLargeOpGlyphDisplay
@@ -555,14 +550,14 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 @implementation MTLargeOpGlyphDisplay {
     CGGlyph _glyph;
-    CTFontRef _font;
+    MTFont* _font;
 }
 
-- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(CTFontRef) font
+- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font
 {
     self = [super init];
     if (self) {
-        _font = CFRetain(font);
+        _font = font;
         _glyph = glyph;
 
         self.position = position;
@@ -581,14 +576,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
     // Draw the glyph.
     CGPoint glyphPosition = CGPointMake(0, -self.shiftDown);
-    CTFontDrawGlyphs(_font, &_glyph, &glyphPosition, 1, context);
+    CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
 
     CGContextRestoreGState(context);
-}
-
-- (void)dealloc
-{
-    CFRelease(_font);
 }
 
 @end
@@ -703,7 +693,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 #pragma mark - MTTypesetter
 
 @implementation MTTypesetter {
-    CTFontRef _font;
+    MTFont* _font;
     MTFontMetrics* _fontMetrics;
     NSMutableArray<MTDisplay *>* _displayAtoms;
     CGPoint _currentPosition;
@@ -711,11 +701,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     NSMutableArray* _currentAtoms;   // List of atoms that make the line
     NSRange _currentLineIndexRange;
     MTLineStyle _style;
-    CTFontRef _styleFont;
+    MTFont* _styleFont;
     BOOL _cramped;
 }
 
-+ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(CTFontRef)font style:(MTLineStyle)style
++ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font style:(MTLineStyle)style
 {
     MTMathList* finalizedList = mathList.finalized;
     // default is not cramped
@@ -723,7 +713,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 }
 
 // Internal
-+ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(CTFontRef)font style:(MTLineStyle)style cramped:(BOOL) cramped
++ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font style:(MTLineStyle)style cramped:(BOOL) cramped
 {
     NSParameterAssert(font);
     NSArray* preprocessedAtoms = [self preprocessMathList:mathList];
@@ -739,11 +729,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     return [UIColor blueColor];
 }
 
-- (id)initWithFont:(CTFontRef) font style:(MTLineStyle) style cramped:(BOOL) cramped
+- (instancetype)initWithFont:(MTFont*) font style:(MTLineStyle) style cramped:(BOOL) cramped
 {
     self = [super init];
     if (self) {
-        _font = CFRetain(font);
+        _font = font;
         _displayAtoms = [NSMutableArray array];
         _currentPosition = CGPointZero;
         _style = style;
@@ -751,17 +741,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         _currentLine = [NSMutableAttributedString new];
         _currentAtoms = [NSMutableArray array];
 
-        _styleFont = CTFontCreateCopyWithAttributes(_font, [[self class] getStyleSize:_style font:_font], nil, nil);
+        _styleFont = [_font copyFontWithSize:[[self class] getStyleSize:_style font:_font]];
         _fontMetrics = [[MTFontMetrics alloc] initWithFont:_styleFont];
         _currentLineIndexRange = NSMakeRange(NSNotFound, NSNotFound);
     }
     return self;
-}
-
-- (void)dealloc
-{
-    CFRelease(_font);
-    CFRelease(_styleFont);
 }
 
 + (NSArray*) preprocessMathList:(MTMathList*) ml
@@ -803,10 +787,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 }
 
 // returns the size of the font in this style
-+ (CGFloat) getStyleSize:(MTLineStyle) style font:(CTFontRef) font
++ (CGFloat) getStyleSize:(MTLineStyle) style font:(MTFont*) font
 {
     MTFontMetrics *fontMetrics = [[MTFontMetrics alloc] initWithFont:font];
-    CGFloat original = CTFontGetSize(font);
+    CGFloat original = font.fontSize;
     switch (style) {
         case kMTLineStyleDisplay:
         case kMTLineStyleText:
@@ -955,7 +939,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 - (MTCTLineDisplay*) addDisplayLine
 {
     // add the font
-    [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont) range:NSMakeRange(0, _currentLine.length)];
+    [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, _currentLine.length)];
     /*NSAssert(_currentLineIndexRange.length == numCodePoints(_currentLine.string),
              @"The length of the current line: %@ does not match the length of the range (%d, %d)",
              _currentLine, _currentLineIndexRange.location, _currentLineIndexRange.length);*/
@@ -1061,9 +1045,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     if (![display isKindOfClass:[MTCTLineDisplay class]]) {
         // get the font in script style
         CGFloat scriptFontSize = [[self class] getStyleSize:self.scriptStyle font:_font];
-        CTFontRef scriptFont = CTFontCreateCopyWithAttributes(_font, scriptFontSize, nil, nil);
+        MTFont* scriptFont = [_font copyFontWithSize:scriptFontSize];
         MTFontMetrics *scriptFontMetrics = [[MTFontMetrics alloc] initWithFont:scriptFont];
-        CFRelease(scriptFont);
         
         // if it is not a simple line then
         superScriptShiftUp = display.ascent - scriptFontMetrics.superscriptBaselineDropMax;
@@ -1258,16 +1241,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 - (CGGlyph) findGlyph:(NSString*) name withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
     CGGlyph glyphs[5];
-    glyphs[0] = CTFontGetGlyphWithName(_styleFont, (__bridge CFStringRef) name);
+    glyphs[0] = [_styleFont getGlyphWithName:name];
     // TODO: load these from some font table. Right now they are hardcoded for the LMM font.
     for (int i = 1; i <= 4; i++) {
         NSString* nextName = [NSString stringWithFormat:@"%@.v%d", name, i];
         // TODO: check for .notdef
-        glyphs[i] = CTFontGetGlyphWithName(_styleFont, (__bridge CFStringRef) nextName);
+        glyphs[i] = [_styleFont getGlyphWithName:nextName];
     }
     CGRect bboxes[5];
     // Get the bounds for these glyphs
-    CTFontGetBoundingRectsForGlyphs(_styleFont, kCTFontHorizontalOrientation, glyphs, bboxes, 5);
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, 5);
     CGFloat ascent, descent, width;
     for (int i = 0; i < 5; i++) {
         CGRect bounds = bboxes[i];
@@ -1294,7 +1277,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     // Get the glyph fromt the font
     CGGlyph glyph[1];
     unichar chars[] = { ch };
-    bool found = CTFontGetGlyphsForCharacters(_styleFont, chars, glyph, 1);
+    bool found = CTFontGetGlyphsForCharacters(_styleFont.ctFont, chars, glyph, 1);
     if (!found) {
         // the font did not contain a glyph for our character, so we just return 0 (notdef)
         return 0;
@@ -1304,10 +1287,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (CGGlyph) findLargerGlyph:(CGGlyph) glyph
 {
-    NSString* name = [MTFontManager.fontManager getGlyphName:glyph];
+    NSString* name = [_styleFont getGlyphName:glyph];
     // TODO: This is specific to the LMM font, and may not work with others.
     NSString* nextName = [NSString stringWithFormat:@"%@.v1", name];
-    CGGlyph larger = CTFontGetGlyphWithName(_styleFont, (__bridge CFStringRef) nextName);
+    CGGlyph larger = [_styleFont getGlyphWithName:nextName];
     if (larger == 0) {
         // i.e. .notdef (notdef is always 0 in opentype fonts)
         // If there is no larger glyph return the same one
@@ -1331,7 +1314,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         // TODO: Remove italic correction from the width of the glyph if
         // there is a subscript and limits is not set.
         // vertically center
-        CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
         CGFloat ascent, descent, width;
         getBboxDetails(bbox, &ascent, &descent, &width);
         CGFloat shiftDown = 0.5*(ascent - descent) - _fontMetrics.axisHeight;
@@ -1345,7 +1328,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         // Create a regular node
         NSMutableAttributedString* line = [[NSMutableAttributedString alloc] initWithString:op.nucleus];
         // add the font
-        [line addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont) range:NSMakeRange(0, line.length)];
+        [line addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, line.length)];
         MTCTLineDisplay* displayAtom = [[MTCTLineDisplay alloc] initWithString:line position:_currentPosition range:op.indexRange font:_styleFont atoms:@[ op ]];
         return [self addLimitsToDisplay:displayAtom forOperator:op delta:0];
     }

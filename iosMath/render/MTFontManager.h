@@ -9,20 +9,14 @@
 //  MIT license. See the LICENSE file for details.
 //  
 
-#import <Foundation/Foundation.h>
-#import <CoreText/CoreText.h>
+@import Foundation;
+
+#import "MTFont.h"
 
 @interface MTFontManager : NSObject
 
-+ (id) fontManager;
++ (instancetype) fontManager;
 
-// The caller is responsible for releasing this font.
-- (CTFontRef) createCTFontFromDefaultFont:(CGFloat) size;
-
-/** Returns the name of the given glyph or null if the glyph
- is not associated with the font. */
-- (NSString*) getGlyphName:(CGGlyph) glyph;
-
-@property (nonatomic, readonly) CGFontRef defaultLabelFont;
+- (MTFont*) defaultFont;
 
 @end

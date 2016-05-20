@@ -11,12 +11,12 @@
 @interface MTFont ()
 
 @property (nonatomic) CGFontRef defaultCGFont;
-@property (nonatomic) CTFontRef font;
+@property (nonatomic) CTFontRef ctFont;
 @property (nonatomic) NSDictionary* mathTable;
 
 @end
 
-const int kDefaultFontSize = 30;
+const int kDefaultFontSize = 20;
 
 @implementation MTFont
 
@@ -37,7 +37,7 @@ const int kDefaultFontSize = 30;
         CFRelease(fontDataProvider);
         NSLog(@"Num glyphs: %zd", CGFontGetNumberOfGlyphs(self.defaultCGFont));
 
-        self.font = CTFontCreateWithGraphicsFont(self.defaultCGFont, kDefaultFontSize, nil, nil);
+        self.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, kDefaultFontSize, nil, nil);
 
         NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist"];
         NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
@@ -53,7 +53,7 @@ const int kDefaultFontSize = 30;
     // Retain the font as we are adding another reference to it.
     CGFontRetain(copyFont.defaultCGFont);
     copyFont.mathTable = self.mathTable;
-    copyFont.font = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
+    copyFont.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
     return copyFont;
 }
 
@@ -63,10 +63,20 @@ const int kDefaultFontSize = 30;
     return name;
 }
 
+- (CGGlyph)getGlyphWithName:(NSString *)glyphName
+{
+    return CGFontGetGlyphWithGlyphName(self.defaultCGFont, (__bridge CFStringRef) glyphName);
+}
+
+- (CGFloat)fontSize
+{
+    return CTFontGetSize(self.ctFont);
+}
+
 - (void)dealloc
 {
     CGFontRelease(self.defaultCGFont);
-    CFRelease(self.font);
+    CFRelease(self.ctFont);
 }
 
 @end

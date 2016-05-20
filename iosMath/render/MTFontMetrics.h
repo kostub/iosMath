@@ -9,13 +9,15 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreText/CoreText.h>
+@import Foundation;
+@import CoreText;
+
+#import "MTFont.h"
 
 // Reference for math metrics: http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
 @interface MTFontMetrics : NSObject
 
-- (id) initWithFont:(CTFontRef) font;
+- (id) initWithFont:(MTFont*) font;
 
 // MU unit in points
 @property (nonatomic, readonly) CGFloat muUnit;
