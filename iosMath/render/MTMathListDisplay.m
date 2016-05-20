@@ -15,6 +15,7 @@
 #import "MTFontMathTable.h"
 #import "MTFontManager.h"
 #import "MTUnicode.h"
+#import "MTFont+Internal.h"
 
 #pragma mark Inter Element Spacing
 
@@ -1237,7 +1238,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (CGGlyph) findGlyph:(NSString*) name withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
-    CFArrayRef variants = [_styleFont copyVerticalVariantsForGlyphWithName:name];
+    CFArrayRef variants = [_styleFont.mathTable copyVerticalVariantsForGlyphWithName:name];
     CFIndex numVariants = CFArrayGetCount(variants);
     CGGlyph glyphs[numVariants];
     for (CFIndex i = 0; i < numVariants; i++) {
@@ -1291,7 +1292,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         CGGlyph glyph = [self findGlyphForCharacter:ch];
         if (_style == kMTLineStyleDisplay && glyph != 0) {
             // Enlarge the character in display style.
-            glyph = [_styleFont getLargerGlyph:glyph];
+            glyph = [_styleFont.mathTable getLargerGlyph:glyph];
         }
         // TODO: This should be the italic correction of the character.
         delta = 0;

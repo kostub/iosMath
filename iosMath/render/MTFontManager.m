@@ -10,6 +10,7 @@
 //
 
 #import "MTFontManager.h"
+#import "MTFont+Internal.h"
 
 @implementation MTFontManager {
     MTFont* _defaultFont;

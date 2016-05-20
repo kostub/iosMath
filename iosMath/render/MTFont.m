@@ -81,48 +81,4 @@ const int kDefaultFontSize = 20;
     CGFontRelease(self.defaultCGFont);
     CFRelease(self.ctFont);
 }
-
-#pragma mark - Variants
-
-static NSString* const kVariants = @"variants";
-
-- (CFArrayRef) copyVerticalVariantsForGlyphWithName:(NSString*) glyphName
-{
-    NSParameterAssert(glyphName);
-    NSDictionary* variants = (NSDictionary*) [_rawMathTable objectForKey:kVariants];
-    CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
-    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
-    if (!variantGlyphs) {
-        // There are no extra variants, so just add the current glyph to it.
-        CGGlyph glyph = [self getGlyphWithName:glyphName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)glyph);
-        return glyphArray;
-    }
-    for (NSString* glyphVariantName in variantGlyphs) {
-        CGGlyph variantGlyph = [self getGlyphWithName:glyphVariantName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)variantGlyph);
-    }
-    return glyphArray;
-}
-
-- (CGGlyph) getLargerGlyph:(CGGlyph) glyph
-{
-    NSDictionary* variants = (NSDictionary*) [_rawMathTable objectForKey:kVariants];
-    NSString* glyphName = [self getGlyphName:glyph];
-    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
-    if (!variantGlyphs) {
-        // There are no extra variants, so just returnt the current glyph.
-        return glyph;
-    }
-    // Find the first variant with a different name.
-    for (NSString* glyphVariantName in variantGlyphs) {
-        if (![glyphVariantName isEqualToString:glyphName]) {
-            CGGlyph variantGlyph = [self getGlyphWithName:glyphVariantName];
-            return variantGlyph;
-        }
-    }
-    // We did not find any variants of this glyph so return it.
-    return glyph;
-}
-
 @end

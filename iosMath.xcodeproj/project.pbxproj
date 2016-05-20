@@ -39,9 +39,10 @@
 		49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFF17CF2AE90014B739 /* Default@2x.png */; };
 		49B83F0817CF2B420014B739 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83F0717CF2B420014B739 /* ViewController.m */; };
 		49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DA6BC619A062A30086B19F /* MTUnicode.m */; };
-		49DEC8061CED71C3000053CD /* MTFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8041CED71C3000053CD /* MTFont.h */; };
+		49DEC8061CED71C3000053CD /* MTFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8041CED71C3000053CD /* MTFont.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		49DEC8071CED71C3000053CD /* MTFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DEC8051CED71C3000053CD /* MTFont.m */; };
 		49DEC80A1CEEFABC000053CD /* latinmodern-math.plist in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8091CEEFABC000053CD /* latinmodern-math.plist */; };
+		49DEC80D1CEF1028000053CD /* MTFont+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC80B1CEF1028000053CD /* MTFont+Internal.h */; };
 		66B91F54A155071228C33E27 /* libPods-iosMathExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B7305B3D5272E07D296E1146 /* libPods-iosMathExample.a */; };
 		A4AF82224BB9060CC51567E8 /* libPods-iosMathTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */; };
 		D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF417DAED9000939107 /* MTMathUILabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -113,6 +114,7 @@
 		49DEC8041CED71C3000053CD /* MTFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFont.h; sourceTree = "<group>"; };
 		49DEC8051CED71C3000053CD /* MTFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFont.m; sourceTree = "<group>"; };
 		49DEC8091CEEFABC000053CD /* latinmodern-math.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = "latinmodern-math.plist"; sourceTree = "<group>"; };
+		49DEC80B1CEF1028000053CD /* MTFont+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MTFont+Internal.h"; sourceTree = "<group>"; };
 		847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.release.xcconfig"; sourceTree = "<group>"; };
 		B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.release.xcconfig"; sourceTree = "<group>"; };
@@ -343,6 +345,7 @@
 				492EECFA17DAED9000939107 /* MTFontManager.m */,
 				492EECF717DAED9000939107 /* MTFontMathTable.h */,
 				492EECF817DAED9000939107 /* MTFontMathTable.m */,
+				49DEC80B1CEF1028000053CD /* MTFont+Internal.h */,
 			);
 			name = fonts;
 			sourceTree = "<group>";
@@ -370,6 +373,7 @@
 				D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */,
 				D94FE3551B90DE5B002D11E2 /* MTMathList.h in Headers */,
 				49DEC8061CED71C3000053CD /* MTFont.h in Headers */,
+				49DEC80D1CEF1028000053CD /* MTFont+Internal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

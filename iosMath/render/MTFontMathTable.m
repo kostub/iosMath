@@ -11,19 +11,28 @@
 
 #import "MTFontMathTable.h"
 #import "MTFont.h"
+#import "MTFont+Internal.h"
+
+@interface MTFontMathTable ()
+
+// The font for this math table.
+@property (nonatomic, readonly, weak) MTFont* font;
+
+@end
 
 @implementation MTFontMathTable {
     NSUInteger _unitsPerEm;
     CGFloat _fontSize;
-    NSDictionary* _mathTable;
+    NSDictionary* _Nonnull _mathTable;
 }
 
-- (instancetype)initWithFont:(MTFont*)font mathTable:(NSDictionary*) mathTable
+- (instancetype)initWithFont:(nonnull MTFont*) font mathTable:(nonnull NSDictionary*) mathTable
 {
     self = [super init];
     if (self) {
         NSParameterAssert(font);
         NSParameterAssert(font.ctFont);
+        _font = font;
         // do domething with font
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
@@ -236,6 +245,50 @@ static NSString* const kConstants = @"constants";
 - (CGFloat)scriptScriptScaleDown
 {
     return [self percentFromTable:@"ScriptScriptPercentScaleDown"];
+}
+
+
+#pragma mark - Variants
+
+static NSString* const kVariants = @"variants";
+
+- (CFArrayRef) copyVerticalVariantsForGlyphWithName:(NSString*) glyphName
+{
+    NSParameterAssert(glyphName);
+    NSDictionary* variants = (NSDictionary*) [_mathTable objectForKey:kVariants];
+    CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
+    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
+    if (!variantGlyphs) {
+        // There are no extra variants, so just add the current glyph to it.
+        CGGlyph glyph = [self.font getGlyphWithName:glyphName];
+        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)glyph);
+        return glyphArray;
+    }
+    for (NSString* glyphVariantName in variantGlyphs) {
+        CGGlyph variantGlyph = [self.font getGlyphWithName:glyphVariantName];
+        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)variantGlyph);
+    }
+    return glyphArray;
+}
+
+- (CGGlyph) getLargerGlyph:(CGGlyph) glyph
+{
+    NSDictionary* variants = (NSDictionary*) [_mathTable objectForKey:kVariants];
+    NSString* glyphName = [self.font getGlyphName:glyph];
+    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
+    if (!variantGlyphs) {
+        // There are no extra variants, so just returnt the current glyph.
+        return glyph;
+    }
+    // Find the first variant with a different name.
+    for (NSString* glyphVariantName in variantGlyphs) {
+        if (![glyphVariantName isEqualToString:glyphName]) {
+            CGGlyph variantGlyph = [self.font getGlyphWithName:glyphVariantName];
+            return variantGlyph;
+        }
+    }
+    // We did not find any variants of this glyph so return it.
+    return glyph;
 }
 
 @end
