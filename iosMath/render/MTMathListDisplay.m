@@ -12,7 +12,7 @@
 #import <CoreText/CoreText.h>
 
 #import "MTMathListDisplay.h"
-#import "MTFontMetrics.h"
+#import "MTFontMathTable.h"
 #import "MTFontManager.h"
 #import "MTUnicode.h"
 
@@ -465,7 +465,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     return self;
 }
 
-- (void) setDegree:(MTMathListDisplay *)degree fontMetrics:(MTFontMetrics*) fontMetrics
+- (void) setDegree:(MTMathListDisplay *)degree fontMetrics:(MTFontMathTable*) fontMetrics
 {
     // sets up the degree of the radical
     CGFloat kernBefore = fontMetrics.radicalKernBeforeDegree;
@@ -694,7 +694,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 @implementation MTTypesetter {
     MTFont* _font;
-    MTFontMetrics* _fontMetrics;
     NSMutableArray<MTDisplay *>* _displayAtoms;
     CGPoint _currentPosition;
     NSMutableAttributedString* _currentLine;
@@ -742,7 +741,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         _currentAtoms = [NSMutableArray array];
 
         _styleFont = [_font copyFontWithSize:[[self class] getStyleSize:_style font:_font]];
-        _fontMetrics = [[MTFontMetrics alloc] initWithFont:_styleFont];
         _currentLineIndexRange = NSMakeRange(NSNotFound, NSNotFound);
     }
     return self;
@@ -789,7 +787,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 // returns the size of the font in this style
 + (CGFloat) getStyleSize:(MTLineStyle) style font:(MTFont*) font
 {
-    MTFontMetrics *fontMetrics = [[MTFontMetrics alloc] initWithFont:font];
     CGFloat original = font.fontSize;
     switch (style) {
         case kMTLineStyleDisplay:
@@ -797,10 +794,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
             return original;
             
         case kMTLineStyleScript:
-            return original * fontMetrics.scriptScaleDown;
+            return original * font.mathTable.scriptScaleDown;
             
         case kMTLineStypleScriptScript:
-            return original * fontMetrics.scriptScriptScaleDown;
+            return original * font.mathTable.scriptScriptScaleDown;
     }
 }
 
@@ -832,8 +829,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 MTRadicalDisplay* displayRad = [self makeRadical:rad.radicand range:rad.indexRange];
                 if (rad.degree) {
                     // add the degree to the radical
-                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_font style:kMTLineStypleScriptScript];
-                    [displayRad setDegree:degree fontMetrics:_fontMetrics];
+                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_styleFont style:kMTLineStypleScriptScript];
+                    [displayRad setDegree:degree fontMetrics:_styleFont.mathTable];
                 }
                 [_displayAtoms addObject:displayRad];
                 _currentPosition.x += displayRad.width;
@@ -990,7 +987,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     int spaceMultipler = [self getSpacingInMu:spaceType];
     if (spaceMultipler > 0) {
         // 1 em = size of font in pt. space multipler is in multiples mu or 1/18 em
-        return spaceMultipler * _fontMetrics.muUnit;
+        return spaceMultipler * _styleFont.mathTable.muUnit;
     }
     return 0;
 }
@@ -1026,9 +1023,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 - (CGFloat) superScriptShiftUp
 {
     if (_cramped) {
-        return _fontMetrics.superscriptShiftUpCramped;
+        return _styleFont.mathTable.superscriptShiftUpCramped;
     } else {
-        return _fontMetrics.superscriptShiftUp;
+        return _styleFont.mathTable.superscriptShiftUp;
     }
 }
 
@@ -1046,7 +1043,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         // get the font in script style
         CGFloat scriptFontSize = [[self class] getStyleSize:self.scriptStyle font:_font];
         MTFont* scriptFont = [_font copyFontWithSize:scriptFontSize];
-        MTFontMetrics *scriptFontMetrics = [[MTFontMetrics alloc] initWithFont:scriptFont];
+        MTFontMathTable *scriptFontMetrics = scriptFont.mathTable;
         
         // if it is not a simple line then
         superScriptShiftUp = display.ascent - scriptFontMetrics.superscriptBaselineDropMax;
@@ -1059,13 +1056,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         subscript.type = kMTLinePositionSubscript;
         subscript.index = index;
         
-        subscriptShiftDown = fmax(subscriptShiftDown, _fontMetrics.subscriptShiftDown);
-        subscriptShiftDown = fmax(subscriptShiftDown, subscript.ascent - _fontMetrics.subscriptTopMax);
+        subscriptShiftDown = fmax(subscriptShiftDown, _styleFont.mathTable.subscriptShiftDown);
+        subscriptShiftDown = fmax(subscriptShiftDown, subscript.ascent - _styleFont.mathTable.subscriptTopMax);
         // add the subscript
         subscript.position = CGPointMake(_currentPosition.x, _currentPosition.y - subscriptShiftDown);
         [_displayAtoms addObject:subscript];
         // update the position
-        _currentPosition.x += subscript.width + _fontMetrics.spaceAfterScript;
+        _currentPosition.x += subscript.width + _styleFont.mathTable.spaceAfterScript;
         return;
     }
     
@@ -1073,26 +1070,26 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     superScript.type = kMTLinePositionSuperscript;
     superScript.index = index;
     superScriptShiftUp = fmax(superScriptShiftUp, self.superScriptShiftUp);
-    superScriptShiftUp = fmax(superScriptShiftUp, superScript.descent + _fontMetrics.superscriptBottomMin);
+    superScriptShiftUp = fmax(superScriptShiftUp, superScript.descent + _styleFont.mathTable.superscriptBottomMin);
     
     if (!atom.subScript) {
         superScript.position = CGPointMake(_currentPosition.x, _currentPosition.y + superScriptShiftUp);
         [_displayAtoms addObject:superScript];
         // update the position
-        _currentPosition.x += superScript.width + _fontMetrics.spaceAfterScript;
+        _currentPosition.x += superScript.width + _styleFont.mathTable.spaceAfterScript;
         return;
     }
     MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
     subscript.type = kMTLinePositionSubscript;
     subscript.index = index;
-    subscriptShiftDown = fmax(subscriptShiftDown, _fontMetrics.subscriptShiftDown);
+    subscriptShiftDown = fmax(subscriptShiftDown, _styleFont.mathTable.subscriptShiftDown);
     
     // joint positioning of subscript & superscript
     CGFloat subSuperScriptGap = (superScriptShiftUp - superScript.descent) + (subscriptShiftDown - subscript.ascent);
-    if (subSuperScriptGap < _fontMetrics.subSuperscriptGapMin) {
+    if (subSuperScriptGap < _styleFont.mathTable.subSuperscriptGapMin) {
         // Set the gap to atleast as much
-        subscriptShiftDown += _fontMetrics.subSuperscriptGapMin - subSuperScriptGap;
-        CGFloat superscriptBottomDelta = _fontMetrics.superscriptBottomMaxWithSubscript - (superScriptShiftUp - superScript.descent);
+        subscriptShiftDown += _styleFont.mathTable.subSuperscriptGapMin - subSuperScriptGap;
+        CGFloat superscriptBottomDelta = _styleFont.mathTable.superscriptBottomMaxWithSubscript - (superScriptShiftUp - superScript.descent);
         if (superscriptBottomDelta > 0) {
             // superscript is lower than the max allowed by the font with a subscript.
             superScriptShiftUp += superscriptBottomDelta;
@@ -1104,40 +1101,40 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     [_displayAtoms addObject:superScript];
     subscript.position = CGPointMake(_currentPosition.x, _currentPosition.y - subscriptShiftDown);
     [_displayAtoms addObject:subscript];
-    _currentPosition.x += MAX(superScript.width + delta, subscript.width) + _fontMetrics.spaceAfterScript;
+    _currentPosition.x += MAX(superScript.width + delta, subscript.width) + _styleFont.mathTable.spaceAfterScript;
 }
 
 #pragma mark Fractions
 
 - (CGFloat) numeratorShiftUp {
     if (_style == kMTLineStyleDisplay) {
-        return _fontMetrics.fractionNumeratorDisplayStyleShiftUp;
+        return _styleFont.mathTable.fractionNumeratorDisplayStyleShiftUp;
     } else {
-        return _fontMetrics.fractionNumeratorShiftUp;
+        return _styleFont.mathTable.fractionNumeratorShiftUp;
     }
 }
 
 - (CGFloat) numeratorGapMin {
     if (_style == kMTLineStyleDisplay) {
-        return _fontMetrics.fractionNumeratorDisplayStyleGapMin;
+        return _styleFont.mathTable.fractionNumeratorDisplayStyleGapMin;
     } else {
-        return _fontMetrics.fractionNumeratorGapMin;
+        return _styleFont.mathTable.fractionNumeratorGapMin;
     }
 }
 
 - (CGFloat) denominatorShiftDown {
     if (_style == kMTLineStyleDisplay) {
-        return _fontMetrics.fractionDenominatorDisplayStyleShiftDown;
+        return _styleFont.mathTable.fractionDenominatorDisplayStyleShiftDown;
     } else {
-        return _fontMetrics.fractionDenominatorShiftDown;
+        return _styleFont.mathTable.fractionDenominatorShiftDown;
     }
 }
 
 - (CGFloat) denominatorGapMin {
     if (_style == kMTLineStyleDisplay) {
-        return _fontMetrics.fractionDenominatorDisplayStyleGapMin;
+        return _styleFont.mathTable.fractionDenominatorDisplayStyleGapMin;
     } else {
-        return _fontMetrics.fractionDenominatorGapMin;
+        return _styleFont.mathTable.fractionDenominatorGapMin;
     }
 }
 
@@ -1159,8 +1156,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     
     // determine the location of the numerator
     CGFloat numeratorShiftUp = self.numeratorShiftUp;
-    CGFloat barLocation = _fontMetrics.axisHeight;
-    CGFloat barThickness = _fontMetrics.fractionRuleThickness;
+    CGFloat barLocation = _styleFont.mathTable.axisHeight;
+    CGFloat barThickness = _styleFont.mathTable.fractionRuleThickness;
     // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
     CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
     // The distance should at least be displayGap
@@ -1198,9 +1195,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 - (CGFloat) radicalVerticalGap
 {
     if (_style == kMTLineStyleDisplay) {
-        return _fontMetrics.radicalDisplayStyleVerticalGap;
+        return _styleFont.mathTable.radicalDisplayStyleVerticalGap;
     } else {
-        return _fontMetrics.radicalVerticalGap;
+        return _styleFont.mathTable.radicalVerticalGap;
     }
 }
 
@@ -1208,7 +1205,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 {
     MTMathListDisplay* innerDisplay = [MTTypesetter createLineForMathList:radicand font:_font style:_style cramped:YES];
         CGFloat clearance = self.radicalVerticalGap;
-    CGFloat radicalRuleThickness = _fontMetrics.radicalRuleThickness;
+    CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     CGGlyph glyph = [self findGlyph:@"radical" withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
@@ -1229,8 +1226,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     CGFloat shiftUp = radicalAscent - glyphAscent;  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
 
     MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyph glyphWidth:glyphWidth position:_currentPosition range:range font:_styleFont];
-    radical.ascent = radicalAscent + _fontMetrics.radicalExtraAscender;
-    radical.topKern = _fontMetrics.radicalExtraAscender;
+    radical.ascent = radicalAscent + _styleFont.mathTable.radicalExtraAscender;
+    radical.topKern = _styleFont.mathTable.radicalExtraAscender;
     radical.shiftUp = shiftUp;
     radical.lineThickness = radicalRuleThickness;
     radical.descent = glyphAscent + glyphDescent - radicalAscent;
@@ -1317,7 +1314,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
         CGFloat ascent, descent, width;
         getBboxDetails(bbox, &ascent, &descent, &width);
-        CGFloat shiftDown = 0.5*(ascent - descent) - _fontMetrics.axisHeight;
+        CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
         MTLargeOpGlyphDisplay* glyphDisplay = [[MTLargeOpGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
         glyphDisplay.ascent = ascent;
         glyphDisplay.descent = descent;
@@ -1353,11 +1350,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         NSAssert(superScript || subScript, @"Atleast one of superscript or subscript should have been present.");
         MTLargeOpLimitsDisplay* opsDisplay = [[MTLargeOpLimitsDisplay alloc] initWithNucleus:display upperLimit:superScript lowerLimit:subScript limitShift:delta/2 extraPadding:0];
         if (superScript) {
-            CGFloat upperLimitGap = MAX(_fontMetrics.upperLimitGapMin, _fontMetrics.upperLimitBaselineRiseMin - superScript.descent);
+            CGFloat upperLimitGap = MAX(_styleFont.mathTable.upperLimitGapMin, _styleFont.mathTable.upperLimitBaselineRiseMin - superScript.descent);
             opsDisplay.upperLimitGap = upperLimitGap;
         }
         if (subScript) {
-            CGFloat lowerLimitGap = MAX(_fontMetrics.lowerLimitGapMin, _fontMetrics.lowerLimitBaselineDropMin - subScript.ascent);
+            CGFloat lowerLimitGap = MAX(_styleFont.mathTable.lowerLimitGapMin, _styleFont.mathTable.lowerLimitBaselineDropMin - subScript.ascent);
             opsDisplay.lowerLimitGap = lowerLimitGap;
         }
         opsDisplay.position = _currentPosition;

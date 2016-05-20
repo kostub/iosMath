@@ -12,14 +12,25 @@
 @import Foundation;
 @import CoreText;
 
-#import "MTFont.h"
+@class MTFont;
 
-// Reference for math metrics: http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
-@interface MTFontMetrics : NSObject
+/** This class represents the Math table of an open type font.
+ 
+ The math table is documented here: https://www.microsoft.com/typography/otspec/math.htm
+ 
+ How the constants in this class affect the display is documented here:
+ http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
 
-- (id) initWithFont:(MTFont*) font;
+ @note We don't parse the math table from the open type font. Rather we parse it
+ in python and convert it to a .plist file which is easily consumed by this class.
+ This approach is preferable to spending an inordinate amount of time figuring out
+ how to parse the returned NSData object using the open type rules.
+ */
+@interface MTFontMathTable : NSObject
 
-// MU unit in points
+- (instancetype) initWithFont:(MTFont*) font mathTable:(NSDictionary*) mathTable;
+
+/** MU unit in points */
 @property (nonatomic, readonly) CGFloat muUnit;
 
 // Math Font Metrics from the opentype specification

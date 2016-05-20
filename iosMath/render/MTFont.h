@@ -10,6 +10,8 @@
 @import CoreGraphics;
 @import Foundation;
 
+#import "MTFontMathTable.h"
+
 /** MTFont wraps the inconvenient distinction between CTFont and CGFont as well
  as the data loaded from the math table.
  */
@@ -33,7 +35,8 @@
 
 /** Access to the raw CTFontRef if needed. */
 @property (nonatomic, readonly) CTFontRef ctFont;
-/** Access to the raw math table if needed. */
-@property (nonatomic, readonly) NSDictionary* mathTable;
+
+/** The font math table. */
+@property (nonatomic, readonly) MTFontMathTable* mathTable;
 
 @end

@@ -12,7 +12,8 @@
 
 @property (nonatomic) CGFontRef defaultCGFont;
 @property (nonatomic) CTFontRef ctFont;
-@property (nonatomic) NSDictionary* mathTable;
+@property (nonatomic) MTFontMathTable* mathTable;
+@property (nonatomic) NSDictionary* rawMathTable;
 
 @end
 
@@ -41,7 +42,8 @@ const int kDefaultFontSize = 20;
 
         NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist"];
         NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
-        self.mathTable = dict;
+        self.rawMathTable = dict;
+        self.mathTable = [[MTFontMathTable alloc] initWithFont:self mathTable:_rawMathTable];
     }
     return self;
 }
@@ -52,8 +54,9 @@ const int kDefaultFontSize = 20;
     copyFont.defaultCGFont = self.defaultCGFont;
     // Retain the font as we are adding another reference to it.
     CGFontRetain(copyFont.defaultCGFont);
-    copyFont.mathTable = self.mathTable;
     copyFont.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
+    copyFont.rawMathTable = self.rawMathTable;
+    copyFont.mathTable = [[MTFontMathTable alloc] initWithFont:copyFont mathTable:copyFont.rawMathTable];
     return copyFont;
 }
 

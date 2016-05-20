@@ -9,20 +9,25 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import "MTFontMetrics.h"
+#import "MTFontMathTable.h"
+#import "MTFont.h"
 
-@implementation MTFontMetrics {
+@implementation MTFontMathTable {
     NSUInteger _unitsPerEm;
     CGFloat _fontSize;
+    NSDictionary* _mathTable;
 }
 
-- (id)initWithFont:(MTFont*)font
+- (instancetype)initWithFont:(MTFont*)font mathTable:(NSDictionary*) mathTable
 {
     self = [super init];
     if (self) {
+        NSParameterAssert(font);
+        NSParameterAssert(font.ctFont);
         // do domething with font
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
+        _mathTable = mathTable;
     }
     return self;
 }

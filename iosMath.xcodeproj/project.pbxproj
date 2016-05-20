@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
-		492EED0917DAEDD200939107 /* MTFontMetrics.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMetrics.m */; };
+		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
 		492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF617DAED9000939107 /* MTMathListDisplay.m */; };
 		492EED0B17DAEDD200939107 /* MTMathUILabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF517DAED9000939107 /* MTMathUILabel.m */; };
 		492EED0C17DAEDDD00939107 /* MTMathListBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFF17DAEDB500939107 /* MTMathListBuilder.m */; };
@@ -66,8 +66,8 @@
 		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
 		492EECF517DAED9000939107 /* MTMathUILabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathUILabel.m; sourceTree = "<group>"; };
 		492EECF617DAED9000939107 /* MTMathListDisplay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListDisplay.m; sourceTree = "<group>"; };
-		492EECF717DAED9000939107 /* MTFontMetrics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFontMetrics.h; sourceTree = "<group>"; };
-		492EECF817DAED9000939107 /* MTFontMetrics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontMetrics.m; sourceTree = "<group>"; };
+		492EECF717DAED9000939107 /* MTFontMathTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFontMathTable.h; sourceTree = "<group>"; };
+		492EECF817DAED9000939107 /* MTFontMathTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontMathTable.m; sourceTree = "<group>"; };
 		492EECF917DAED9000939107 /* MTFontManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFontManager.h; sourceTree = "<group>"; };
 		492EECFA17DAED9000939107 /* MTFontManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManager.m; sourceTree = "<group>"; };
 		492EECFF17DAEDB500939107 /* MTMathListBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilder.m; sourceTree = "<group>"; };
@@ -286,16 +286,11 @@
 		49965F3917CBD02000A555C5 /* render */ = {
 			isa = PBXGroup;
 			children = (
-				492EECF917DAED9000939107 /* MTFontManager.h */,
-				492EECFA17DAED9000939107 /* MTFontManager.m */,
-				492EECF717DAED9000939107 /* MTFontMetrics.h */,
-				492EECF817DAED9000939107 /* MTFontMetrics.m */,
+				49DEC8081CEEC865000053CD /* fonts */,
 				492EECF317DAED9000939107 /* MTMathListDisplay.h */,
 				492EECF617DAED9000939107 /* MTMathListDisplay.m */,
 				492EECF417DAED9000939107 /* MTMathUILabel.h */,
 				492EECF517DAED9000939107 /* MTMathUILabel.m */,
-				49DEC8041CED71C3000053CD /* MTFont.h */,
-				49DEC8051CED71C3000053CD /* MTFont.m */,
 			);
 			path = render;
 			sourceTree = "<group>";
@@ -334,6 +329,19 @@
 			children = (
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		49DEC8081CEEC865000053CD /* fonts */ = {
+			isa = PBXGroup;
+			children = (
+				49DEC8041CED71C3000053CD /* MTFont.h */,
+				49DEC8051CED71C3000053CD /* MTFont.m */,
+				492EECF917DAED9000939107 /* MTFontManager.h */,
+				492EECFA17DAED9000939107 /* MTFontManager.m */,
+				492EECF717DAED9000939107 /* MTFontMathTable.h */,
+				492EECF817DAED9000939107 /* MTFontMathTable.m */,
+			);
+			name = fonts;
 			sourceTree = "<group>";
 		};
 		673C67F49848EC78C5FD29E0 /* Pods */ = {
@@ -599,7 +607,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				492EED0817DAEDD200939107 /* MTFontManager.m in Sources */,
-				492EED0917DAEDD200939107 /* MTFontMetrics.m in Sources */,
+				492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */,
 				492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */,
 				492EED0B17DAEDD200939107 /* MTMathUILabel.m in Sources */,
 				492EED0C17DAEDDD00939107 /* MTMathListBuilder.m in Sources */,
