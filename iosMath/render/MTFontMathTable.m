@@ -42,186 +42,200 @@
     return _fontSize/18;
 }
 
-// TODO: These are hardcoded for LM Math. Read from the Math table in the font so that other fonts can be used.
+static NSString* const kConstants = @"constants";
+
+- (CGFloat) constantFromTable:(NSString*) constName
+{
+    NSDictionary* consts = (NSDictionary*) [_mathTable objectForKey:kConstants];
+    NSNumber* val = (NSNumber*)[consts objectForKey:constName];
+    return [self fontUnitsToPt:[val intValue]];
+}
+
+- (CGFloat) percentFromTable:(NSString*) percentName
+{
+    NSDictionary* consts = (NSDictionary*) [_mathTable objectForKey:kConstants];
+    NSNumber* val = (NSNumber*)[consts objectForKey:percentName];
+    return [val floatValue] / 100;
+}
 
 #pragma mark - Fractions
 - (CGFloat)fractionNumeratorDisplayStyleShiftUp
 {
-    return [self fontUnitsToPt:677];
+    return [self constantFromTable:@"FractionNumeratorDisplayStyleShiftUp"];
 }
 
 - (CGFloat)fractionNumeratorShiftUp
 {
-    return [self fontUnitsToPt:394];
+    return [self constantFromTable:@"FractionNumeratorShiftUp"];
 }
 
 - (CGFloat)fractionDenominatorDisplayStyleShiftDown
 {
-    return [self fontUnitsToPt:686];
+    return [self constantFromTable:@"FractionDenominatorDisplayStyleShiftDown"];
 }
 
 - (CGFloat)fractionDenominatorShiftDown
 {
-    return [self fontUnitsToPt:345];
+    return [self constantFromTable:@"FractionDenominatorShiftDown"];
 }
 
 - (CGFloat)fractionNumeratorDisplayStyleGapMin
 {
-    return [self fontUnitsToPt:120];
+    return [self constantFromTable:@"FractionNumDisplayStyleGapMin"];
 }
 
 - (CGFloat)fractionNumeratorGapMin
 {
-    return [self fontUnitsToPt:40];
+    return [self constantFromTable:@"FractionNumeratorGapMin"];
 }
 
 - (CGFloat)fractionDenominatorDisplayStyleGapMin
 {
-    return [self fontUnitsToPt:120];
+    return [self constantFromTable:@"FractionDenomDisplayStyleGapMin"];
 }
 
 - (CGFloat)fractionDenominatorGapMin
 {
-    return [self fontUnitsToPt:40];
+    return [self constantFromTable:@"FractionDenominatorGapMin"];
 }
 
 - (CGFloat)fractionRuleThickness
 {
-    return [self fontUnitsToPt:40];
+    return [self constantFromTable:@"FractionRuleThickness"];
 }
 
 #pragma mark - Sub/Superscripts
 
 - (CGFloat)superscriptShiftUp
 {
-    return [self fontUnitsToPt:363];
+    return [self constantFromTable:@"SuperscriptShiftUp"];
 }
 
 - (CGFloat)superscriptShiftUpCramped
 {
-    return [self fontUnitsToPt:289];
+    return [self constantFromTable:@"SuperscriptShiftUpCramped"];
 }
 
 - (CGFloat)subscriptShiftDown
 {
-    return [self fontUnitsToPt:247];
+    return [self constantFromTable:@"SubscriptShiftDown"];
 }
 
 - (CGFloat)superscriptBaselineDropMax
 {
-    return [self fontUnitsToPt:250];
+    return [self constantFromTable:@"SuperscriptBaselineDropMax"];
 }
 
 - (CGFloat)subscriptBaselineDropMin
 {
-    return [self fontUnitsToPt:200];
+    return [self constantFromTable:@"SubscriptBaselineDropMin"];
 }
 
 - (CGFloat)superscriptBottomMin
 {
-    return [self fontUnitsToPt:108];
+    return [self constantFromTable:@"SuperscriptBottomMin"];
 }
 
 - (CGFloat)subscriptTopMax
 {
-    return [self fontUnitsToPt:344];
+    return [self constantFromTable:@"SubscriptTopMax"];
 }
 
 - (CGFloat)subSuperscriptGapMin
 {
-    return [self fontUnitsToPt:160];
+    return [self constantFromTable:@"SubSuperscriptGapMin"];
 }
 
 - (CGFloat)superscriptBottomMaxWithSubscript
 {
-    return [self fontUnitsToPt:344];
+    return [self constantFromTable:@"SuperscriptBottomMaxWithSubscript"];
 }
 
 - (CGFloat) spaceAfterScript
 {
-    return [self fontUnitsToPt:56];
+    return [self constantFromTable:@"SpaceAfterScript"];
 }
 
 #pragma mark - Radicals
 
 - (CGFloat)radicalRuleThickness
 {
-    return [self fontUnitsToPt:40];
+    return [self constantFromTable:@"RadicalRuleThickness"];
 }
 
 - (CGFloat)radicalExtraAscender
 {
-    return [self fontUnitsToPt:40];
+    return [self constantFromTable:@"RadicalExtraAscender"];
 }
 
 - (CGFloat)radicalVerticalGap
 {
-    return [self fontUnitsToPt:50];
+    return [self constantFromTable:@"RadicalVerticalGap"];
 }
 
 - (CGFloat)radicalDisplayStyleVerticalGap
 {
-    return [self fontUnitsToPt:148];
+    return [self constantFromTable:@"RadicalDisplayStyleVerticalGap"];
 }
 
 - (CGFloat)radicalKernBeforeDegree
 {
-    return [self fontUnitsToPt:278];
+    return [self constantFromTable:@"RadicalKernBeforeDegree"];
 }
 
 - (CGFloat)radicalKernAfterDegree
 {
-    return [self fontUnitsToPt:-556];
+    return [self constantFromTable:@"RadicalKernAfterDegree"];
 }
 
 - (CGFloat)radicalDegreeBottomRaisePercent
 {
-    return 0.6;
+    return [self percentFromTable:@"RadicalDegreeBottomRaisePercent"];
 }
 
 #pragma mark - Limits
 
 - (CGFloat)upperLimitGapMin
 {
-    return [self fontUnitsToPt:200];
+    return [self constantFromTable:@"UpperLimitGapMin"];
 }
 
 - (CGFloat)upperLimitBaselineRiseMin
 {
-    return [self fontUnitsToPt:111];
+    return [self constantFromTable:@"UpperLimitBaselineRiseMin"];
 }
 
 - (CGFloat)lowerLimitGapMin
 {
-    return [self fontUnitsToPt:167];
+    return [self constantFromTable:@"LowerLimitGapMin"];
 }
 
 - (CGFloat)lowerLimitBaselineDropMin
 {
-    return [self fontUnitsToPt:600];
+    return [self constantFromTable:@"LowerLimitBaselineDropMin"];
 }
 
 - (CGFloat)limitExtraAscenderDescender
 {
     // not present in OpenType fonts.
-    return [self fontUnitsToPt:0];
+    return 0;
 }
 
 #pragma mark - Constants
 
 -(CGFloat)axisHeight
 {
-    return [self fontUnitsToPt:250];
+    return [self constantFromTable:@"AxisHeight"];
 }
 
 - (CGFloat)scriptScaleDown
 {
-    return 0.7;
+    return [self percentFromTable:@"ScriptPercentScaleDown"];
 }
 
 - (CGFloat)scriptScriptScaleDown
 {
-    return 0.5;
+    return [self percentFromTable:@"ScriptScriptPercentScaleDown"];
 }
 
 @end
