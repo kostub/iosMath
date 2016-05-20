@@ -30,6 +30,15 @@
 /** Returns a glyph associated with the given name. */
 - (CGGlyph) getGlyphWithName:(NSString*) glyphName;
 
+/** Returns a CFArray of all the vertical variants of the glyph if any.
+ This array needs to be released by the caller. */
+- (CFArrayRef) copyVerticalVariantsForGlyphWithName:(NSString*) glyphName;
+
+/** Returns a larger vertical variant of the given glyph if any.
+ If there is no larger version, this returns the current glyph.
+ */
+- (CGGlyph) getLargerGlyph:(CGGlyph) glyph;
+
 /** The size of this font in points. */
 @property (nonatomic, readonly) CGFloat fontSize;
 

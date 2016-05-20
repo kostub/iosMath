@@ -1237,19 +1237,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (CGGlyph) findGlyph:(NSString*) name withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
-    CGGlyph glyphs[5];
-    glyphs[0] = [_styleFont getGlyphWithName:name];
-    // TODO: load these from some font table. Right now they are hardcoded for the LMM font.
-    for (int i = 1; i <= 4; i++) {
-        NSString* nextName = [NSString stringWithFormat:@"%@.v%d", name, i];
-        // TODO: check for .notdef
-        glyphs[i] = [_styleFont getGlyphWithName:nextName];
+    CFArrayRef variants = [_styleFont copyVerticalVariantsForGlyphWithName:name];
+    CFIndex numVariants = CFArrayGetCount(variants);
+    CGGlyph glyphs[numVariants];
+    for (CFIndex i = 0; i < numVariants; i++) {
+        CGGlyph glyph = (CGGlyph)CFArrayGetValueAtIndex(variants, i);
+        glyphs[i] = glyph;
     }
-    CGRect bboxes[5];
+    CFRelease(variants);
+
+    CGRect bboxes[numVariants];
     // Get the bounds for these glyphs
-    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, 5);
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
     CGFloat ascent, descent, width;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         getBboxDetails(bounds, &ascent, &descent, &width);
 
@@ -1264,7 +1265,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     *glyphAscent = ascent;
     *glyphDescent = descent;
     *glyphWidth = width;
-    return glyphs[4];
+    return glyphs[numVariants - 1];
 }
 
 #pragma Large Operators
@@ -1282,20 +1283,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     return glyph[0];
 }
 
-- (CGGlyph) findLargerGlyph:(CGGlyph) glyph
-{
-    NSString* name = [_styleFont getGlyphName:glyph];
-    // TODO: This is specific to the LMM font, and may not work with others.
-    NSString* nextName = [NSString stringWithFormat:@"%@.v1", name];
-    CGGlyph larger = [_styleFont getGlyphWithName:nextName];
-    if (larger == 0) {
-        // i.e. .notdef (notdef is always 0 in opentype fonts)
-        // If there is no larger glyph return the same one
-        return glyph;
-    }
-    return larger;
-}
-
 - (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
 {
     CGFloat delta = 0;
@@ -1304,7 +1291,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         CGGlyph glyph = [self findGlyphForCharacter:ch];
         if (_style == kMTLineStyleDisplay && glyph != 0) {
             // Enlarge the character in display style.
-            glyph = [self findLargerGlyph:glyph];
+            glyph = [_styleFont getLargerGlyph:glyph];
         }
         // TODO: This should be the italic correction of the character.
         delta = 0;
