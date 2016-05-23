@@ -12,9 +12,15 @@
 #import "MTFontManager.h"
 #import "MTFont+Internal.h"
 
-@implementation MTFontManager {
-    MTFont* _defaultFont;
-}
+const int kDefaultFontSize = 20;
+
+@interface MTFontManager ()
+
+@property (nonatomic, nonnull) NSMutableDictionary<NSString*, MTFont*>* nameToFontMap;
+
+@end
+
+@implementation MTFontManager
 
 + (instancetype) fontManager
 {
@@ -25,12 +31,47 @@
     return manager;
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.nameToFontMap = [[NSMutableDictionary alloc] init];
+    }
+    return self;
+}
+
+- (MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
+{
+    MTFont* f = [self.nameToFontMap objectForKey:name];
+    if (!f) {
+        f = [[MTFont alloc] initFontWithName:name size:size];
+        [self.nameToFontMap setObject:f forKey:name];
+    }
+    if (f.fontSize == size) {
+        return f;
+    } else {
+        return [f copyFontWithSize:size];
+    }
+}
+
+- (MTFont *)latinModernFontWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"latinmodern-math" size:size];
+}
+
+- (MTFont *)xitsFontWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"xits-math" size:size];
+}
+
+- (MTFont *)termesFontWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"texgyretermes-math" size:size];
+}
+
 - (MTFont *)defaultFont
 {
-    if (!_defaultFont) {
-        _defaultFont = [[MTFont alloc] initFontWithName:@"latinmodern-math"];
-    }
-    return _defaultFont;
+    return [self latinModernFontWithSize:kDefaultFontSize];
 }
 
 @end

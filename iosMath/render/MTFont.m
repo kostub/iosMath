@@ -7,6 +7,7 @@
 //
 
 #import "MTFont.h"
+#import "MTFont+Internal.h"
 
 @interface MTFont ()
 
@@ -17,11 +18,9 @@
 
 @end
 
-const int kDefaultFontSize = 20;
-
 @implementation MTFont
 
-- (instancetype) initFontWithName:(NSString*) name
+- (instancetype)initFontWithName:(NSString *)name size:(CGFloat)size
 {
     self = [super init];
     if (self ) {
@@ -38,7 +37,7 @@ const int kDefaultFontSize = 20;
         CFRelease(fontDataProvider);
         NSLog(@"Num glyphs: %zd", CGFontGetNumberOfGlyphs(self.defaultCGFont));
 
-        self.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, kDefaultFontSize, nil, nil);
+        self.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
 
         NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist"];
         NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
