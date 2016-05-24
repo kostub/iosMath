@@ -83,7 +83,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
 + (MTMathAtom *)operatorWithName:(NSString *)name
 {
-    return [MTMathAtom atomWithType:kMTMathAtomLargeOperator value:name];
+    return [[MTLargeOperator alloc] initWithValue:name limits:NO];
+}
+
++ (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
+{
+    return [[MTLargeOperator alloc] initWithValue:name limits:limits];
 }
 
 @end

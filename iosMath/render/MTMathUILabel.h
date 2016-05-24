@@ -12,6 +12,7 @@
 #import <UIKit/UIKit.h>
 #import <CoreText/CoreText.h>
 
+#import "MTFont.h"
 #import "MTMathList.h"
 #import "MTMathListDisplay.h"
 
@@ -38,7 +39,7 @@ typedef enum {
 @property (nonatomic) MTMathList* mathList;
 // This should be a math font
 // TODO remove from header file
-@property (nonatomic) CTFontRef font;
+@property (nonatomic) MTFont* font;
 // Resizes the display using the new font size.
 @property (nonatomic) CGFloat fontSize;
 

@@ -13,4 +13,10 @@
 
 @interface ViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+
+- (IBAction)latinButtonPressed:(id)sender;
+- (IBAction)termesButtonPressed:(id)sender;
+- (IBAction)xitsButtonPressed:(id)sender;
+
 @end

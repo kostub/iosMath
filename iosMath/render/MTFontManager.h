@@ -9,16 +9,36 @@
 //  MIT license. See the LICENSE file for details.
 //  
 
-#import <Foundation/Foundation.h>
-#import <CoreText/CoreText.h>
+@import Foundation;
 
+#import "MTFont.h"
+
+/** A manager to load font files from disc and keep them
+ in memory. */
 @interface MTFontManager : NSObject
 
-+ (id) fontManager;
+/** Get the singleton instance of MTFontManager. */
++ (nonnull instancetype) fontManager;
 
-// The caller is responsible for releasing this font.
-- (CTFontRef) createCTFontFromDefaultFont:(CGFloat) size;
+/** Returns the default font, which is Latin Modern Math. */
+- (nonnull MTFont*) defaultFont;
 
-@property (nonatomic, readonly) CGFontRef defaultLabelFont;
+/** Load a font with the given name. For the font to load, there
+ must be a .otf file with the given name and a .plist file containing
+ the math table data. The math table can be extracted using math_table_to_plist
+ python script.
+ @param name The name of the font file.
+ @param size The size of the font to return.
+ */
+- (nonnull MTFont*) fontWithName:(nonnull NSString*) name size:(CGFloat) size;
+
+/** Helper function to return the Xits Math font. */
+- (nonnull MTFont*) xitsFontWithSize:(CGFloat) size;
+
+/** Helper function to return the Tex Gyre Termes Math font. */
+- (nonnull MTFont*) termesFontWithSize:(CGFloat) size;
+
+/** Helper function to return the Latin Modern Math font. */
+- (nonnull MTFont*) latinModernFontWithSize:(CGFloat) size;
 
 @end

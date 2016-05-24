@@ -9,15 +9,28 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreText/CoreText.h>
+@import Foundation;
+@import CoreText;
 
-// Reference for math metrics: http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
-@interface MTFontMetrics : NSObject
+@class MTFont;
 
-- (id) initWithFont:(CTFontRef) font;
+/** This class represents the Math table of an open type font.
+ 
+ The math table is documented here: https://www.microsoft.com/typography/otspec/math.htm
+ 
+ How the constants in this class affect the display is documented here:
+ http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
 
-// MU unit in points
+ @note We don't parse the math table from the open type font. Rather we parse it
+ in python and convert it to a .plist file which is easily consumed by this class.
+ This approach is preferable to spending an inordinate amount of time figuring out
+ how to parse the returned NSData object using the open type rules.
+ */
+@interface MTFontMathTable : NSObject
+
+- (instancetype) initWithFont:(MTFont*) font mathTable:(NSDictionary*) mathTable;
+
+/** MU unit in points */
 @property (nonatomic, readonly) CGFloat muUnit;
 
 // Math Font Metrics from the opentype specification
@@ -56,10 +69,34 @@
 @property (nonatomic, readonly) CGFloat radicalKernAfterDegree;                        // -10 mu in Tex
 @property (nonatomic, readonly) CGFloat radicalDegreeBottomRaisePercent;               // 60% in Tex
 
+#pragma mark Limits
+@property (nonatomic, readonly) CGFloat upperLimitBaselineRiseMin;                     // \xi_11 in TeX
+@property (nonatomic, readonly) CGFloat upperLimitGapMin;                              // \xi_9 in TeX
+@property (nonatomic, readonly) CGFloat lowerLimitGapMin;                              // \xi_10 in TeX
+@property (nonatomic, readonly) CGFloat lowerLimitBaselineDropMin;                     // \xi_12 in TeX
+@property (nonatomic, readonly) CGFloat limitExtraAscenderDescender;                   // \xi_13 in TeX, not present in OpenType so we always set it to 0.
+
 #pragma mark Constants
 
 @property (nonatomic, readonly) CGFloat axisHeight;                                    // \sigma_22 in TeX
 @property (nonatomic, readonly) CGFloat scriptScaleDown;
 @property (nonatomic, readonly) CGFloat scriptScriptScaleDown;
+
+#pragma mark Variants
+
+/** Returns a CFArray of all the vertical variants of the glyph if any.
+ This array needs to be released by the caller. */
+- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph;
+
+/** Returns a larger vertical variant of the given glyph if any.
+ If there is no larger version, this returns the current glyph.
+ */
+- (CGGlyph) getLargerGlyph:(CGGlyph) glyph;
+
+#pragma mark Italic Correction
+
+/** Returns the italic correction for the given glyph if any. If there
+ isn't any this returns 0. */
+- (CGFloat) getItalicCorrection:(CGGlyph) glyph;
 
 @end

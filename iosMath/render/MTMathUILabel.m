@@ -43,31 +43,25 @@
     _paddingTop = 0;
     _paddingBottom = 0;
     _labelMode = kMTMathUILabelModeDisplay;
-    CTFontRef font = [[MTFontManager fontManager] createCTFontFromDefaultFont:_fontSize];
+    MTFont* font = [MTFontManager fontManager].defaultFont;
     self.font = font;
-    CFRelease(font);
     _textAlignment = kMTTextAlignmentLeft;
     _displayList = nil;
     self.backgroundColor = [UIColor clearColor];
 }
 
-- (void)setFont:(CTFontRef)font
+- (void)setFont:(MTFont*)font
 {
     NSParameterAssert(font);
-    
-    if (_font) {
-        CFRelease(_font);
-    }
-    _font = CFRetain(font);
+    _font = font;
     [self setNeedsLayout];
 }
 
 - (void)setFontSize:(CGFloat)fontSize
 {
     _fontSize = fontSize;
-    CTFontRef font = [[MTFontManager fontManager] createCTFontFromDefaultFont:_fontSize];
+    MTFont* font = [_font copyFontWithSize:_fontSize];
     self.font = font;
-    CFRelease(font);
 }
 
 - (void) setMathList:(MTMathList *)mathList
@@ -86,13 +80,6 @@
 {
     _textAlignment = textAlignment;
     [self setNeedsLayout];
-}
-
-- (void)dealloc
-{
-    if (_font) {
-        CFRelease(_font);
-    }
 }
 
 - (MTLineStyle) currentStyle

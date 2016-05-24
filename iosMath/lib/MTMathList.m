@@ -76,6 +76,9 @@ static NSString* typeToText(MTMathAtomType type) {
         return [[[self class] alloc] initWithType:kMTMathAtomPlaceholder value:@"\u25A1"];
     } else if (type == kMTMathAtomRadical) {
         return [[MTRadical alloc] init];
+    } else if (type == kMTMathAtomLargeOperator) {
+        // Default setting of limits is true
+        return [[MTLargeOperator alloc] initWithValue:value limits:YES];
     }
     return [[[self class] alloc] initWithType:type value:value];
 }
@@ -88,6 +91,13 @@ static NSString* typeToText(MTMathAtomType type) {
         _nucleus = [value copy];
     }
     return self;
+}
+
+- (instancetype)init
+{
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathAtom init] cannot be called. Use [MTMathAtom initWithType:value:] instead."
+                                 userInfo:nil];
 }
 
 - (NSString *)stringValue
@@ -105,7 +115,7 @@ static NSString* typeToText(MTMathAtomType type) {
 // Note this is a deep copy.
 - (id)copyWithZone:(NSZone *)zone
 {
-    MTMathAtom* atom = [[[self class] allocWithZone:zone] init];
+    MTMathAtom* atom = [[[self class] allocWithZone:zone] initWithType:self.type value:self.nucleus];
     atom.type = self.type;
     atom.nucleus = self.nucleus;
     atom.subScript = [self.subScript copyWithZone:zone];
@@ -165,6 +175,16 @@ static NSString* typeToText(MTMathAtomType type) {
     return self;
 }
 
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomFraction) {
+        return [super initWithType:type value:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTFraction initWithType:value:] cannot be called. Use [MTFraction init] instead."
+                                 userInfo:nil];
+}
+
 - (NSString *)stringValue
 {
     NSMutableString* str = [NSMutableString stringWithFormat:@"\\frac{%@}{%@}", self.numerator.stringValue, self.denominator.stringValue];
@@ -198,6 +218,16 @@ static NSString* typeToText(MTMathAtomType type) {
     return self;
 }
 
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomRadical) {
+        return [super initWithType:type value:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTRadical initWithType:value:] cannot be called. Use [MTRadical init] instead."
+                                 userInfo:nil];
+}
+
 - (NSString *)stringValue
 {
     NSMutableString* str = [NSMutableString stringWithString:@"\\sqrt"];
@@ -221,6 +251,38 @@ static NSString* typeToText(MTMathAtomType type) {
     rad.radicand = [self.radicand copyWithZone:zone];
     rad.degree = [self.degree copyWithZone:zone];
     return rad;
+}
+
+@end
+
+#pragma mark - MTLargeOperator
+
+@implementation MTLargeOperator
+
+- (instancetype) initWithValue:(NSString*) value limits:(BOOL) limits
+{
+    self = [super initWithType:kMTMathAtomLargeOperator value:value];
+    if (self) {
+        _limits = limits;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomLargeOperator) {
+        return [super initWithType:type value:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTLargeOperator initWithType:value:] cannot be called. Use [MTLargeOperator initWithValue:limits:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTLargeOperator* op = [super copyWithZone:zone];
+    op->_limits = self.limits;
+    return op;
 }
 
 @end

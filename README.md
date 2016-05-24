@@ -19,14 +19,15 @@ importantly, it is significantly faster than using a `UIWebView`.
 Here are screenshots of some formulae that you could render with this
 library:
 
-![Quadratic Formula](img/quadratic.png)
+![Quadratic Formula](img/quadratic.png) 
 
-![Square Formula](img/square.png)
+![Gauss Integral](img/gaussintegral.png)
 
-![Cos Sum](img/trig.png)
+![AM-GM](img/amgm.png)
 
 ![Ramanujan Identity](img/ramanujan.png)
 
+The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
  
 ## Requirements
 `iosMath` works on iOS 6+ and requires ARC to build. It depends on
@@ -75,7 +76,7 @@ an `MTMathUILabel` as follows:
 #import "MTMathUILabel.h"
 #import "MTMathListBuilder.h"
 
-MTMathULabel* Iabel = [[MTMathUILabel alloc] init];
+MTMathULabel* label = [[MTMathUILabel alloc] init];
 label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"];
 
 ```
@@ -90,6 +91,8 @@ This is a list of formula types that the library currently supports:
 * Exponents and subscripts
 * Trigonometric formulae
 * Square roots and n-th roots
+* Calculus symbos - limits, derivatives, integrals
+* Big operators (e.g. product, sum)
 * Greek alphabet
 * Geometry symbols (e.g. angle, congruence etc.)
 * Ratios, proportions, percents
@@ -156,12 +159,13 @@ Note this is not a complete implementation of LaTeX math mode. There are
 some important pieces that are missing and will be included in future
 updates. This includes:
 
-* Support for big operators (e.g. integral, product, sum)
 * Support for big delimiters (bigl, bigr etc.)
-* Limits
-* Some symbols are not yet included (e.g. arrows)
+* Math accents
+* Over and under symbols
+* Skewed fractions
 * Math spacing
 * Aligning equations
+* Some symbols are not yet included
 * Matrices
 
 ## License
@@ -169,3 +173,12 @@ updates. This includes:
 iosMath is available under the MIT license. See the [LICENSE](./LICENSE)
 file for more info.
 
+### Fonts
+This distribution contains the following fonts. These fonts are
+licensed as follows:
+* Latin Modern Math]: 
+    [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
+* Tex Gyre Termes:
+    [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
+* [XITS Math](https://github.com/khaledhosny/xits-math):
+    [Open Font License](./fonts/OFL.txt)

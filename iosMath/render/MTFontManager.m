@@ -10,10 +10,19 @@
 //
 
 #import "MTFontManager.h"
+#import "MTFont+Internal.h"
+
+const int kDefaultFontSize = 20;
+
+@interface MTFontManager ()
+
+@property (nonatomic, nonnull) NSMutableDictionary<NSString*, MTFont*>* nameToFontMap;
+
+@end
 
 @implementation MTFontManager
 
-+ (id) fontManager
++ (instancetype) fontManager
 {
     static MTFontManager* manager = nil;
     if (manager == nil) {
@@ -22,34 +31,47 @@
     return manager;
 }
 
-- (id) init
+- (instancetype)init
 {
     self = [super init];
     if (self) {
-        NSLog(@"Loading font latinmodern math");
-        // Uses bundle for class so that this can be access by the unit tests.
-        NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-        NSString* fontPath = [bundle pathForResource:@"latinmodern-math" ofType:@"otf"];
-        CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename([fontPath UTF8String]);
-        _defaultLabelFont = CGFontCreateWithDataProvider(fontDataProvider);
-        CFRelease(fontDataProvider);
-        NSLog(@"Num glyphs: %zd", CGFontGetNumberOfGlyphs(_defaultLabelFont));
+        self.nameToFontMap = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
-- (CTFontRef)createCTFontFromDefaultFont:(CGFloat) size
+- (MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
-    // CTFontCreateWithName does not load the complete math font, it only has about half the glyphs of the full math font.
-    // In particular it does not have the math italic characters which breaks our variable rendering.
-    // So we first load a CGFont from the file and then convert it to a CTFont.
-    CTFontRef font = CTFontCreateWithGraphicsFont(_defaultLabelFont, size, nil, nil);
-    return font;
+    MTFont* f = [self.nameToFontMap objectForKey:name];
+    if (!f) {
+        f = [[MTFont alloc] initFontWithName:name size:size];
+        [self.nameToFontMap setObject:f forKey:name];
+    }
+    if (f.fontSize == size) {
+        return f;
+    } else {
+        return [f copyFontWithSize:size];
+    }
 }
 
-- (void) dealloc
+- (MTFont *)latinModernFontWithSize:(CGFloat)size
 {
-    CGFontRelease(_defaultLabelFont);
+    return [self fontWithName:@"latinmodern-math" size:size];
+}
+
+- (MTFont *)xitsFontWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"xits-math" size:size];
+}
+
+- (MTFont *)termesFontWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"texgyretermes-math" size:size];
+}
+
+- (MTFont *)defaultFont
+{
+    return [self latinModernFontWithSize:kDefaultFontSize];
 }
 
 @end
