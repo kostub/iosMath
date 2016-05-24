@@ -25,7 +25,9 @@ library:
 
 ![AM-GM](img/amgm.png)
 
-More [Examples](./EXAMPLES.md) can be found here.
+![Ramanujan Identity](img/ramanujan.png)
+
+The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
  
 ## Requirements
 `iosMath` works on iOS 6+ and requires ARC to build. It depends on
