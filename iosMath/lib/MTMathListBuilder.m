@@ -70,8 +70,8 @@ static void initializeGlobalsIfNeeded() {
     [self buildInternal:list oneCharOnly:false];
     if ([self hasCharacters] && !_error) {
         // something went wrong most likely braces mismatched
-        NSLog(@"Mismatched braces: %@", [NSString stringWithCharacters:_chars length:_length]);
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:nil];
+        NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces: %@", [NSString stringWithCharacters:_chars length:_length]];
+        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
     }
     if (_error) {
         return nil;
@@ -200,8 +200,8 @@ static void initializeGlobalsIfNeeded() {
     }
     if (stop > 0) {
         // we never found our stop character
-        NSLog(@"Expected character not found: %d", stop);
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorCharacterNotFound userInfo:nil];
+        NSString* errorMessage = [NSString stringWithFormat:@"Expected character not found: %d", stop];
+        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorCharacterNotFound userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
     }
 }
 
@@ -265,8 +265,8 @@ static void initializeGlobalsIfNeeded() {
         }
         return rad;
     } else {
-        NSLog(@"Invalid command %@", command);
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidCommand userInfo:nil];
+        NSString* errorMessage = [NSString stringWithFormat:@"Invalid command %@", command];
+        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidCommand userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
         return nil;
     }
 }
@@ -566,6 +566,19 @@ static void initializeGlobalsIfNeeded() {
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
     return builder.build;
+}
+
++ (MTMathList *)buildFromString:(NSString *)str error:(NSError *__autoreleasing *)error
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
+    MTMathList* output = [builder build];
+    if (builder.error) {
+        if (error) {
+            *error = builder.error;
+        }
+        return nil;
+    }
+    return output;
 }
 
 + (NSString *)mathListToString:(MTMathList *)ml

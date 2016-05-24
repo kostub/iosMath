@@ -20,6 +20,7 @@ FOUNDATION_EXPORT NSString *const MTParseError;
  */
 @interface MTMathListBuilder : NSObject
 
+/** Contains any error that occurred during parsing. */
 @property (nonatomic, readonly) NSError* error;
 
 - (id) initWithString:(NSString*) str;
@@ -30,8 +31,16 @@ FOUNDATION_EXPORT NSString *const MTParseError;
 /// List of commands that are supported.
 + (NSDictionary*) supportedCommands;
 
-/// Construct a math list from a given string.
+/** Construct a math list from a given string. If there is parse error, returns
+ nil. To retrieve the error use the function `[MTMathListBuilder buildFromString:error:]`.
+ */
 + (MTMathList*) buildFromString:(NSString*) str;
+
+/** Construct a math list from a given string. If there is an error while
+ constructing the string, this returns nil. The error is returned in the 
+ `error` parameter.
+ */
++ (MTMathList*) buildFromString:(NSString*) str error:(NSError**) error;
 
 /// This converts the MTMathList to LaTeX.
 + (NSString*) mathListToString:(MTMathList*) ml;

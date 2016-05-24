@@ -81,8 +81,15 @@ typedef enum {
 
 /** The latex string to be displayed. Setting this will remove any `mathList` that
  has been set. If latex has not been set, this will return the latex output for the
- `mathList` that is set. */
+ `mathList` that is set.
+ @see error */
 @property (nonatomic) NSString* latex;
+
+/** This contains any error that occurred when parsing the latex. */
+@property (nonatomic, readonly) NSError* error;
+
+/** If true, if there is an error it displays the error message inline. Default true. */
+@property (nonatomic) BOOL displayErrorInline;
 
 /** The MTFont to use for rendering. */
 @property (nonatomic) MTFont* font;

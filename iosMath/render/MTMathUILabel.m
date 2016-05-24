@@ -14,7 +14,10 @@
 #import "MTFontManager.h"
 #import "MTMathListBuilder.h"
 
-@implementation MTMathUILabel
+
+@implementation MTMathUILabel {
+    UILabel* _errorLabel;
+}
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -48,7 +51,12 @@
     self.font = font;
     _textAlignment = kMTTextAlignmentLeft;
     _displayList = nil;
+    _displayErrorInline = true;
     self.backgroundColor = [UIColor clearColor];
+    _errorLabel = [[UILabel alloc] init];
+    _errorLabel.hidden = YES;
+    _errorLabel.layer.geometryFlipped = YES;
+    [self addSubview:_errorLabel];
 }
 
 - (void)setFont:(MTFont*)font
@@ -68,6 +76,7 @@
 - (void) setMathList:(MTMathList *)mathList
 {
     _mathList = mathList;
+    _error = nil;
     _latex = [MTMathListBuilder mathListToString:mathList];
     [self setNeedsLayout];
 }
@@ -75,7 +84,18 @@
 - (void)setLatex:(NSString *)latex
 {
     _latex = latex;
-    _mathList = [MTMathListBuilder buildFromString:latex];
+    _error = nil;
+    NSError* error = nil;
+    _mathList = [MTMathListBuilder buildFromString:latex error:&error];
+    if (error) {
+        _mathList = nil;
+        _error = error;
+        NSLog(@"Error parsing latex: %@", error.localizedDescription);
+        _errorLabel.text = error.localizedDescription;
+        _errorLabel.frame = self.bounds;
+        _errorLabel.hidden = !self.displayErrorInline;
+        _errorLabel.textColor = [UIColor redColor];
+    }
     [self setNeedsLayout];
 }
 
@@ -106,7 +126,7 @@
 - (void)drawRect:(CGRect)rect
 {
     [super drawRect:rect];
-    
+
     if (!_mathList) {
         return;
     }
@@ -151,6 +171,7 @@
     } else {
         _displayList = nil;
     }
+    _errorLabel.frame = self.bounds;
     [self setNeedsDisplay];
 }
 

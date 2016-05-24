@@ -11,7 +11,6 @@
 
 #import "ViewController.h"
 #import "MTMathUILabel.h"
-#import "MTMathListBuilder.h"
 #import "MTFontManager.h"
 
 @interface ViewController ()
@@ -179,6 +178,9 @@
     // Test italic correction for superscript/subscript
     self.labels[21] = [self createMathLabel:@"U_3^2UY_3^2U_3Y^2f_1f^2ff" withHeight:60];
 
+    // Error
+    self.labels[22] = [self createMathLabel:@"\\notacommand" withHeight:30];
+
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }
@@ -201,7 +203,7 @@
 {
     MTMathUILabel* label = [[MTMathUILabel alloc] init];
     [self setHeight:height forView:label];
-    label.mathList = [MTMathListBuilder buildFromString:latex];
+    label.latex = latex;
     return label;
 }
 
