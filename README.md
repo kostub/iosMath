@@ -19,14 +19,13 @@ importantly, it is significantly faster than using a `UIWebView`.
 Here are screenshots of some formulae that you could render with this
 library:
 
-![Quadratic Formula](img/quadratic.png)
+![Quadratic Formula](img/quadratic.png) 
 
-![Square Formula](img/square.png)
+![Gauss Integral](img/gaussintegral.png)
 
-![Cos Sum](img/trig.png)
+![AM-GM](img/amgm.png)
 
-![Ramanujan Identity](img/ramanujan.png)
-
+More [Examples](./EXAMPLES.md) can be found here.
  
 ## Requirements
 `iosMath` works on iOS 6+ and requires ARC to build. It depends on

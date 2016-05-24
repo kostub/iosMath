@@ -541,6 +541,7 @@ static void initializeGlobalsIfNeeded() {
                      @"Vert" : @"|",
                      @"gets" : @"leftarrow",
                      @"to" : @"rightarrow",
+                     @"iff" : @"Longleftrightarrow",
                      };
     }
     return aliases;

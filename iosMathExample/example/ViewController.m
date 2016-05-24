@@ -42,7 +42,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:self.scrollView];
-    [self setHeight:1680 forView:contentView];
+    [self setHeight:2880 forView:contentView];
 
 
     // Demo formulae
@@ -69,12 +69,29 @@
                                  = 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
 
+    self.demoLabels[4] = [self createMathLabel:@"\\sigma = \\sqrt{\\frac{1}{N}\\sum_{i=1}^N (x_i - \\mu)^2}"
+                                    withHeight:60];
+
+    self.demoLabels[5] = [self createMathLabel:@"\\neg(P\\land Q) \\iff (\\neg P)\\lor(\\neg Q)" withHeight:40];
+
+    self.demoLabels[6] = [self createMathLabel:@"\\log_b(x) = \\frac{\\log_a(x)}{\\log_a(b)}" withHeight:40];
+
+    self.demoLabels[7] = [self createMathLabel:@"\\lim_{x\\to\\infty}(1 + \\frac{k}{x})^x = e^k" withHeight:40];
+
+    self.demoLabels[8] = [self createMathLabel:@"\\int_{-\\infty}^\\infty e^{-x^2} dx = \\sqrt{\\pi}" withHeight:40];
+
+    self.demoLabels[9] = [self createMathLabel:@"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i" withHeight:60];
+
+    self.demoLabels[10] = [self createMathLabel:@"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}dz" withHeight:40];
+
+    self.demoLabels[11] = [self createMathLabel:@"i\\hbar\\frac{\\partial}{\\partial t}\\Psi(x,t) = -\\frac{\\hbar}{2m}\\nabla^2\\Psi(x,t) + V(x)\\Psi(x,t)" withHeight:40];
+
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
         self.demoLabels[i].fontSize = 15;
         [self addLabelWithIndex:i inArray:self.demoLabels toView:contentView];
     }
 
-    MTMathUILabel* lastDemoLabel = self.demoLabels[3];
+    MTMathUILabel* lastDemoLabel = self.demoLabels[self.demoLabels.count - 1];
 
     // Test formulae
     self.labels[0] = [self createMathLabel:@"3+2-5 = 0" withHeight:40];
