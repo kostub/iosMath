@@ -74,10 +74,9 @@ an `MTMathUILabel` as follows:
 
 ```objective-c
 #import "MTMathUILabel.h"
-#import "MTMathListBuilder.h"
 
 MTMathULabel* label = [[MTMathUILabel alloc] init];
-label.mathList = [MTMathListBuilder buildFromString:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"];
+label.latex = @"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
 
 ```
 Adding `MTMathUILabel` as a sub-view of your `UIView` as will render the
@@ -134,6 +133,15 @@ The default font-size is 20pt. You can change it as follows:
 ```objective-c
 label.fontSize = 30;
 ```
+##### Font
+The default font is *Latin Modern Math*. This can be changed as:
+
+```objective-c
+label.font = [[MTFontManager fontManager] termesFontWithSize:20];
+```
+
+This project has 3 fonts bundled with it, but you can use any OTF math
+font.
 
 ##### Padding
 The `MTMathUILabel` has top, bottom, left and right padding for finer
@@ -149,9 +157,16 @@ label.paddingTop = 10;
 
 ##### Error handling
 
-If the LaTeX text given to `[MTMathListBuilder buildFromString]` is
-invalid or if it contains commands that aren't currently supported, it
-will return `nil`.
+If the LaTeX text given to `MTMathUILabel` is
+invalid or if it contains commands that aren't currently supported then
+an error message will be displayed instead of the label.
+
+This error can be programmatically retrieved as `label.error`. If you
+prefer not to display anything then set:
+
+```objective-c
+label.displayErrorInline = NO;
+```
 
 ## Future Enhancements
 
