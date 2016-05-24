@@ -104,10 +104,15 @@ typedef enum
 
 @end
 
-/// A representation of a list of math objects. This list can be constructed directly or built with
-/// the help of the MTMathListBuilder. It is not required that the mathematics represented make sense
-/// (i.e. this can represent something like "x 2 = +". This list can be used for display using MTLine
-/// or can be a list of tokens to be used by a parser after finalizedMathList is called.
+/** A representation of a list of math objects.
+
+    This list can be constructed directly or built with
+    the help of the MTMathListBuilder. It is not required that the mathematics represented make sense
+    (i.e. this cn represent something like "x 2 = +". This list can be used for display using MTLine
+    or can be a list of tokens to be used by a parser after finalizedMathList is called.
+ 
+    @note This class is for ADVANCED usage only.
+ */
 @interface MTMathList : NSObject<NSCopying>
 
 /// A list of MathAtoms
