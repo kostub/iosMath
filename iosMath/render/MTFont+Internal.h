@@ -11,6 +11,8 @@
 #import "MTFont.h"
 #import "MTFontMathTable.h"
 
+/** This category add functions to MTFont that are meant to be internal
+ to this library for rendering purposes. */
 @interface MTFont (Internal)
 
 /** Load the font with a given name. This is the designated initializer. */

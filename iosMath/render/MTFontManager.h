@@ -20,7 +20,7 @@
 /** Get the singleton instance of MTFontManager. */
 + (nonnull instancetype) fontManager;
 
-/** Returns the default font, which is Latin Modern Math. */
+/** Returns the default font, which is Latin Modern Math with 20pt */
 - (nonnull MTFont*) defaultFont;
 
 /** Load a font with the given name. For the font to load, there

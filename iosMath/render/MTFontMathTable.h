@@ -25,6 +25,8 @@
  in python and convert it to a .plist file which is easily consumed by this class.
  This approach is preferable to spending an inordinate amount of time figuring out
  how to parse the returned NSData object using the open type rules.
+ 
+ @remark This class is not meant to be used outside of this library.
  */
 @interface MTFontMathTable : NSObject
 

@@ -15,22 +15,25 @@
 
 FOUNDATION_EXPORT NSString *const MTParseError;
 
+/** `MTMathListBuilder` is a class for parsing LaTeX into an `MTMathList` that
+ can be rendered and processed mathematically.
+ */
 @interface MTMathListBuilder : NSObject
 
 @property (nonatomic, readonly) NSError* error;
 
 - (id) initWithString:(NSString*) str;
 
-// Builds a mathlist from the given string. Returns nil if there is an error.
+/// Builds a mathlist from the given string. Returns nil if there is an error.
 - (MTMathList*) build;
 
-// List of commands that are supported.
+/// List of commands that are supported.
 + (NSDictionary*) supportedCommands;
 
-// Construct a math list from a given string.
+/// Construct a math list from a given string.
 + (MTMathList*) buildFromString:(NSString*) str;
 
-// This reverses the process above
+/// This converts the MTMathList to LaTeX.
 + (NSString*) mathListToString:(MTMathList*) ml;
 
 enum MTParseErrors {

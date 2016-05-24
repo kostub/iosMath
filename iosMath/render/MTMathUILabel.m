@@ -12,6 +12,7 @@
 #import "MTMathUILabel.h"
 #import "MTMathListDisplay.h"
 #import "MTFontManager.h"
+#import "MTMathListBuilder.h"
 
 @implementation MTMathUILabel
 
@@ -67,6 +68,14 @@
 - (void) setMathList:(MTMathList *)mathList
 {
     _mathList = mathList;
+    _latex = [MTMathListBuilder mathListToString:mathList];
+    [self setNeedsLayout];
+}
+
+- (void)setLatex:(NSString *)latex
+{
+    _latex = latex;
+    _mathList = [MTMathListBuilder buildFromString:latex];
     [self setNeedsLayout];
 }
 

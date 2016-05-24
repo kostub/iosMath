@@ -16,44 +16,87 @@
 #import "MTMathList.h"
 #import "MTMathListDisplay.h"
 
-// The only significant difference between the two modes is how fractions are displayed.
+/**
+ @typedef MTMathUILabelMode
+ @brief Different display styles supported by the `MTMathUILabel`.
+ 
+ @note: The only significant difference between the two modes is how fractions
+ and limits on large operators are displayed.
+ */
 typedef enum {
-    kMTMathUILabelModeDisplay,          // equivalent to $$ in TeX
-    kMTMathUILabelModeText              // equivalent to $ in TeX
+    /// Display mode. Equivalent to $$ in TeX
+    kMTMathUILabelModeDisplay,
+    /// Text mode. Equivalent to $ in TeX.
+    kMTMathUILabelModeText
 } MTMathUILabelMode;
 
+/**
+ @typedef MTTextAlignment
+ @brief Horizontal text alignment for `MTMathUILabel`.
+ */
 typedef enum {
+    /// Align left.
     kMTTextAlignmentLeft,
+    /// Align center.
     kMTTextAlignmentCenter,
+    /// Align right.
     kMTTextAlignmentRight,
 } MTTextAlignment;
 
-
+/** The main view for rendering math.
+ 
+ `MTMathLabel` accepts either a string in LaTeX or an `MTMathList` to display. Use 
+ `MTMathList` directly only if you are building it programmatically (e.g. using an
+ editor), otherwise using LaTeX is the preferable method.
+ 
+ The math display is centered vertically in the label. The default horizontal alignment is
+ is left. This can be changed by setting `textAlignment`. The math is default displayed in
+ *Display* mode. This can be changed using `labelMode`.
+ 
+ When created it uses `[MTFontManager defaultFont]` as its font. This can be changed using
+ the `font` parameter.
+ */
 @interface MTMathUILabel : UIView
 
+/** Padding to add to the left of the label. It is prefered
+ to use Auto Layout instead of padding. */
 @property (nonatomic) CGFloat paddingLeft;
+/** Padding to add to the right of the label. It is prefered
+ to use Auto Layout instead of padding. */
 @property (nonatomic) CGFloat paddingRight;
+/** Padding to add to the top of the label. It is prefered
+ to use Auto Layout instead of padding. */
 @property (nonatomic) CGFloat paddingTop;
+/** Padding to add to the bottom of the label. It is prefered
+ to use Auto Layout instead of padding. */
 @property (nonatomic) CGFloat paddingBottom;
 
+/** The `MTMathList` to render. Setting this will remove any 
+ `latex` that has already been set. If `latex` has been set, this will
+ return the parsed `MTMathList` if the `latex` parses successfully. Use this
+ setting if the `MTMathList` has been programmatically constructed, otherwise it
+ is preferred to use `latex`.
+ */
 @property (nonatomic) MTMathList* mathList;
-// This should be a math font
-// TODO remove from header file
+
+/** The latex string to be displayed. Setting this will remove any `mathList` that
+ has been set. If latex has not been set, this will return the latex output for the
+ `mathList` that is set. */
+@property (nonatomic) NSString* latex;
+
+/** The MTFont to use for rendering. */
 @property (nonatomic) MTFont* font;
-// Resizes the display using the new font size.
+
+/** Convenience method to just set the size of the font without changing the fontface. */
 @property (nonatomic) CGFloat fontSize;
 
-// The default mode is Display
+/** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;
 
-// The default is align left.
+/** Horizontal alignment for the text. The default is align left. */
 @property (nonatomic) MTTextAlignment textAlignment;
 
+/** The internal display of the MTMathUILabel. This is for advanced use only. */
 @property (nonatomic, readonly) MTMathListDisplay* displayList;
-
-// UIView methods overriden
-- (CGSize)sizeThatFits:(CGSize)size;
-- (void)layoutSubviews;
-- (void)drawRect:(CGRect)rect;
 
 @end
