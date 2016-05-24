@@ -252,10 +252,10 @@ static NSString* const kConstants = @"constants";
 
 static NSString* const kVariants = @"variants";
 
-- (CFArrayRef) copyVerticalVariantsForGlyphWithName:(NSString*) glyphName
+- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph
 {
-    NSParameterAssert(glyphName);
     NSDictionary* variants = (NSDictionary*) [_mathTable objectForKey:kVariants];
+    NSString* glyphName = [self.font getGlyphName:glyph];
     CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
     NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
     if (!variantGlyphs) {
