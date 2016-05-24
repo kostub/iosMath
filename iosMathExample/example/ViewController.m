@@ -60,146 +60,124 @@
 
 
     self.demoLabels[1] = [self createMathLabel:@"(a_1+a_2)^2=a_1^2+2a_1a_2+a_2^2" withHeight:40];
-    [self addLabelAsSubview:self.demoLabels[1] to:contentView];
-    self.demoLabels[1].fontSize = 15;
-    [self setVerticalGap:10 between:self.demoLabels[0] and:self.demoLabels[1]];
 
     self.demoLabels[2] = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
                                  \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
                                            withHeight:40];
-    self.demoLabels[2].fontSize = 15;
-    [self addLabelAsSubview:self.demoLabels[2] to:contentView];
-    [self setVerticalGap:10 between:self.demoLabels[1] and:self.demoLabels[2]];
 
     self.demoLabels[3] = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
                                  = 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
-    self.demoLabels[3].fontSize = 15;
-    [self addLabelAsSubview:self.demoLabels[3] to:contentView];
-    [self setVerticalGap:10 between:self.demoLabels[2] and:self.demoLabels[3]];
+
+    for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
+        self.demoLabels[i].fontSize = 15;
+        [self addLabelWithIndex:i inArray:self.demoLabels toView:contentView];
+    }
 
     MTMathUILabel* lastDemoLabel = self.demoLabels[3];
 
-    // Test different aspects
-    MTMathUILabel* label1 = [self createMathLabel:@"3+2-5 = 0" withHeight:40];
-    label1.backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
-    [self addLabelAsSubview:label1 to:contentView];
-    [self setVerticalGap:30 between:lastDemoLabel and:label1];
+    // Test formulae
+    self.labels[0] = [self createMathLabel:@"3+2-5 = 0" withHeight:40];
+    self.labels[0].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    [self addLabelAsSubview:self.labels[0] to:contentView];
+    [self setVerticalGap:30 between:lastDemoLabel and:self.labels[0]];
 
     // Infix and prefix Operators
-    MTMathUILabel* label2 = [self createMathLabel:@"12+-3 > +14" withHeight:40];
-    label2.backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
-    label2.textAlignment = kMTTextAlignmentCenter;
-    [self addLabelAsSubview:label2 to:contentView];
-    [self setVerticalGap:10 between:label1 and:label2];
+    self.labels[1] = [self createMathLabel:@"12+-3 > +14" withHeight:40];
+    self.labels[1].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    self.labels[1].textAlignment = kMTTextAlignmentCenter;
+
+    // Punct, parens
+    self.labels[2] = [self createMathLabel:@"(-3-5=-8, -6-7=-13)" withHeight:40];
 
     // Latex commands
-    MTMathUILabel* label3 = [self createMathLabel:@"5\\times(-2 \\div 1) = -10" withHeight:40];
-    label3.backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
-    label3.textAlignment = kMTTextAlignmentRight;
-    label3.paddingRight = 20;
-    [self addLabelAsSubview:label3 to:contentView];
-    [self setVerticalGap:10 between:label2 and:label3];
+    self.labels[3] = [self createMathLabel:@"5\\times(-2 \\div 1) = -10" withHeight:40];
+    self.labels[3].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    self.labels[3].textAlignment = kMTTextAlignmentRight;
+    self.labels[3].paddingRight = 20;
 
-    MTMathUILabel* label4 = [self createMathLabel:@"-h - (5xy+2) = z" withHeight:40];
-    [self addLabelAsSubview:label4 to:contentView];
-    [self setVerticalGap:10 between:label3 and:label4];
+    self.labels[4] = [self createMathLabel:@"-h - (5xy+2) = z" withHeight:40];
 
     // Text mode fraction
-    MTMathUILabel* label5 = [self createMathLabel:@"\\frac12x + \\frac{3\\div4}2y = 25" withHeight:60];
-    label5.labelMode = kMTMathUILabelModeText;
-    [self addLabelAsSubview:label5 to:contentView];
-    [self setVerticalGap:10 between:label4 and:label5];
+    self.labels[5] = [self createMathLabel:@"\\frac12x + \\frac{3\\div4}2y = 25" withHeight:60];
+    self.labels[5].labelMode = kMTMathUILabelModeText;
+
 
     // Display mode fraction
-    MTMathUILabel* label6 = [self createMathLabel:@"\\frac{x+\\frac{12}{5}}{y}+\\frac1z = \\frac{xz+y+\\frac{12}{5}z}{yz}" withHeight:60];
-    label6.backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
-    label6.paddingLeft = 20;
-    [self addLabelAsSubview:label6 to:contentView];
-    [self setVerticalGap:10 between:label5 and:label6];
+    self.labels[6] = [self createMathLabel:@"\\frac{x+\\frac{12}{5}}{y}+\\frac1z = \\frac{xz+y+\\frac{12}{5}z}{yz}" withHeight:60];
+    self.labels[6].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    self.labels[6].paddingLeft = 20;
+
+    // fraction in fraction in text mode
+    self.labels[7] = [self createMathLabel:@"\\frac{x+\\frac{12}{5}}{y}+\\frac1z = \\frac{xz+y+\\frac{12}{5}z}{yz}" withHeight:60];
+    self.labels[7].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    self.labels[7].labelMode = kMTMathUILabelModeText;
 
     // Exponents and subscripts
     // Large font
-    MTMathUILabel* label8 = [self createMathLabel:@"\\frac{x^{2+3y}}{x^{2+4y}} = x^y \\times \\frac{z_1^{y+1}}{z_1^{y+1}}" withHeight:90];
-    label8.fontSize = 30;
-    label8.textAlignment = kMTTextAlignmentCenter;
-    [self addLabelAsSubview:label8 to:contentView];
-    [self setVerticalGap:10 between:label6 and:label8];
+    self.labels[8] = [self createMathLabel:@"\\frac{x^{2+3y}}{x^{2+4y}} = x^y \\times \\frac{z_1^{y+1}}{z_1^{y+1}}" withHeight:90];
+    self.labels[8].fontSize = 30;
+    self.labels[8].textAlignment = kMTTextAlignmentCenter;
 
     // Small font
-    MTMathUILabel* label9 = [self createMathLabel:@"\\frac{x^{2+3y}}{x^{2+4y}} = x^y \\times \\frac{z_1^{y+1}}{z_1^{y+1}}" withHeight:30];
-    label9.fontSize = 10;
-    label9.textAlignment = kMTTextAlignmentCenter;
-    [self addLabelAsSubview:label9 to:contentView];
-    [self setVerticalGap:10 between:label8 and:label9];
+    self.labels[9] = [self createMathLabel:@"\\frac{x^{2+3y}}{x^{2+4y}} = x^y \\times \\frac{z_1^{y+1}}{z_1^{y+1}}" withHeight:30];
+    self.labels[9].fontSize = 10;
+    self.labels[9].textAlignment = kMTTextAlignmentCenter;
 
     // Square root
-    MTMathUILabel* label10 = [self createMathLabel:@"5+\\sqrt{2}+3" withHeight:40];
-    [self addLabelAsSubview:label10 to:contentView];
-    [self setVerticalGap:10 between:label9 and:label10];
+    self.labels[10] = [self createMathLabel:@"5+\\sqrt{2}+3" withHeight:40];
 
     // Square root inside square roots and with fractions
-    MTMathUILabel* label11 = [self createMathLabel:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt5^x}}+\\sqrt{3x}+x^{\\sqrt2}" withHeight:90];
-    [self addLabelAsSubview:label11 to:contentView];
-    [self setVerticalGap:10 between:label10 and:label11];
+    self.labels[11] = [self createMathLabel:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt5^x}}+\\sqrt{3x}+x^{\\sqrt2}" withHeight:90];
 
     // General root
-    MTMathUILabel* label12 = [self createMathLabel:@"\\sqrt[3]{24} + 3\\sqrt{2}24" withHeight:40];
-    [self addLabelAsSubview:label12 to:contentView];
-    [self setVerticalGap:10 between:label11 and:label12];
+    self.labels[12] = [self createMathLabel:@"\\sqrt[3]{24} + 3\\sqrt{2}24" withHeight:40];
 
     // Fractions and formulae in root
-    MTMathUILabel* label13 = [self createMathLabel:@"\\sqrt[x+\\frac{3}{4}]{\\frac{2}{4}+1}" withHeight:60];
-    [self addLabelAsSubview:label13 to:contentView];
-    [self setVerticalGap:10 between:label12 and:label13];
+    self.labels[13] = [self createMathLabel:@"\\sqrt[x+\\frac{3}{4}]{\\frac{2}{4}+1}" withHeight:60];
 
     // Non-symbol operators with no limits
-    MTMathUILabel* label14 = [self createMathLabel:@"\\sin^2(\\theta)=\\log_3^2(\\pi)" withHeight:60];
-    [self addLabelAsSubview:label14 to:contentView];
-    [self setVerticalGap:10 between:label13 and:label14];
+    self.labels[14] = [self createMathLabel:@"\\sin^2(\\theta)=\\log_3^2(\\pi)" withHeight:60];
 
     // Non-symbol operators with limits
-    MTMathUILabel* label15 = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
-    [self addLabelAsSubview:label15 to:contentView];
-    [self setVerticalGap:10 between:label14 and:label15];
+    self.labels[15] = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
 
     // Symbol operators with limits
-    MTMathUILabel* label16 = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
-    [self addLabelAsSubview:label16 to:contentView];
-    [self setVerticalGap:10 between:label15 and:label16];
+    self.labels[16] = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
 
     // Symbol operators with limits text style
-    MTMathUILabel* label17 = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
-    label17.labelMode = kMTMathUILabelModeText;
-    [self addLabelAsSubview:label17 to:contentView];
-    [self setVerticalGap:10 between:label16 and:label17];
+    self.labels[17] = [self createMathLabel:@"\\sum_{n=1}^{\\infty}\\frac{1+n}{1-n}=\\bigcup_{A\\in\\Im}C\\cup B" withHeight:60];
+    self.labels[17].labelMode = kMTMathUILabelModeText;
 
     // Non-symbol operators with limits text style
-    MTMathUILabel* label18 = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
-    label18.labelMode = kMTMathUILabelModeText;
-    [self addLabelAsSubview:label18 to:contentView];
-    [self setVerticalGap:10 between:label17 and:label18];
+    self.labels[18] = [self createMathLabel:@"\\lim_{x\\to\\infty}\\frac{e^2}{1-x}=\\limsup_{\\sigma}5" withHeight:60];
+    self.labels[18].labelMode = kMTMathUILabelModeText;
 
     // Symbol operators with no limits
-    MTMathUILabel* label19 = [self createMathLabel:@"\\int_{0}^{\\infty}e^x dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
-    [self addLabelAsSubview:label19 to:contentView];
-    [self setVerticalGap:10 between:label18 and:label19];
+    self.labels[19] = [self createMathLabel:@"\\int_{0}^{\\infty}e^x dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
 
     // Test italic correction for large ops
-    MTMathUILabel* label20 = [self createMathLabel:@"\\int\\int\\int^{\\infty}\\int_0\\int^{\\infty}_0\\int" withHeight:60];
-    [self addLabelAsSubview:label20 to:contentView];
-    [self setVerticalGap:10 between:label19 and:label20];
+    self.labels[20] = [self createMathLabel:@"\\int\\int\\int^{\\infty}\\int_0\\int^{\\infty}_0\\int" withHeight:60];
 
     // Test italic correction for superscript/subscript
-    MTMathUILabel* label21 = [self createMathLabel:@"U_3^2UY_3^2U_3Y^2f_1f^2ff" withHeight:60];
-    [self addLabelAsSubview:label21 to:contentView];
-    [self setVerticalGap:10 between:label20 and:label21];
+    self.labels[21] = [self createMathLabel:@"U_3^2UY_3^2U_3Y^2f_1f^2ff" withHeight:60];
+
+    for (NSUInteger i = 1; i < self.labels.count; i++) {
+        [self addLabelWithIndex:i inArray:self.labels toView:contentView];
+    }
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void) addLabelWithIndex:(NSUInteger) idx inArray:(NSArray<MTMathUILabel*>*) array toView:(UIView*) contentView
+{
+    NSAssert(idx > 0, @"Index should be greater than 0. For the first label add manually.");
+    [self addLabelAsSubview:array[idx] to:contentView];
+    [self setVerticalGap:10 between:array[idx - 1] and:array[idx]];
 }
 
 -(MTMathUILabel*) createMathLabel:(NSString*) latex withHeight:(CGFloat) height
@@ -275,6 +253,9 @@
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
     }
+    for (MTMathUILabel* label in self.labels) {
+        label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
+    }
 }
 
 - (IBAction)termesButtonPressed:(id)sender
@@ -282,11 +263,17 @@
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
     }
+    for (MTMathUILabel* label in self.labels) {
+        label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
+    }
 }
 
 - (IBAction)xitsButtonPressed:(id)sender
 {
     for (MTMathUILabel* label in self.demoLabels) {
+        label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
+    }
+    for (MTMathUILabel* label in self.labels) {
         label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
     }
 }
