@@ -1,5 +1,5 @@
 //
-//  MTFontMetrics.m
+//  MTFontMathTable.m
 //  iosMath
 //
 //  Created by Kostub Deshmukh on 8/28/13.
