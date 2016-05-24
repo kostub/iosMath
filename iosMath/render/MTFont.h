@@ -10,8 +10,6 @@
 @import CoreGraphics;
 @import Foundation;
 
-#import "MTFontMathTable.h"
-
 /** MTFont wraps the inconvenient distinction between CTFont and CGFont as well
  as the data loaded from the math table.
  */
