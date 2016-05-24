@@ -12,8 +12,12 @@
 #import "ViewController.h"
 #import "MTMathUILabel.h"
 #import "MTMathListBuilder.h"
+#import "MTFontManager.h"
 
 @interface ViewController ()
+
+@property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* demoLabels;
+@property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* labels;
 
 @end
 
@@ -23,58 +27,58 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        // Custom initialization
+        self.demoLabels = [[NSMutableArray alloc] init];
+        self.labels = [[NSMutableArray alloc] init];
     }
     return self;
 }
 
-- (void)loadView
+- (void)viewDidLoad
 {
-    CGRect frame = [UIApplication sharedApplication].keyWindow.bounds;
-    UIScrollView* scrollView = [[UIScrollView alloc] initWithFrame:frame];
-    self.view = scrollView;
+    [super viewDidLoad];
 
     UIView* contentView = [[UIView alloc] init];
-    [self addFullSizeView:contentView to:scrollView];
+    [self addFullSizeView:contentView to:self.scrollView];
     // set the size of the content view
     // Disable horizontal scrolling.
-    [self setEqualWidths:contentView andView:scrollView];
+    [self setEqualWidths:contentView andView:self.scrollView];
     [self setHeight:1680 forView:contentView];
 
 
     // Demo formulae
     // Quadratic formula
-    MTMathUILabel* demoLabel1 = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" withHeight:60];
-    [self addLabelAsSubview:demoLabel1 to:contentView];
-    demoLabel1.fontSize = 15;
+    self.demoLabels[0] = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" withHeight:60];
+    [self addLabelAsSubview:self.demoLabels[0] to:contentView];
+    self.demoLabels[0].fontSize = 15;
     // This is first label so set the height from the top
-    NSDictionary *views = NSDictionaryOfVariableBindings(demoLabel1);
-    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(30)-[demoLabel1]"
+    UIView* view = self.demoLabels[0];
+    NSDictionary *views = NSDictionaryOfVariableBindings(view);
+    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(30)-[view]"
                                                                                     options:0
                                                                                     metrics:nil
                                                                                       views:views]];
 
 
-    MTMathUILabel* demoLabel2 = [self createMathLabel:@"(a_1+a_2)^2=a_1^2+2a_1a_2+a_2^2" withHeight:40];
-    [self addLabelAsSubview:demoLabel2 to:contentView];
-    demoLabel2.fontSize = 15;
-    [self setVerticalGap:10 between:demoLabel1 and:demoLabel2];
+    self.demoLabels[1] = [self createMathLabel:@"(a_1+a_2)^2=a_1^2+2a_1a_2+a_2^2" withHeight:40];
+    [self addLabelAsSubview:self.demoLabels[1] to:contentView];
+    self.demoLabels[1].fontSize = 15;
+    [self setVerticalGap:10 between:self.demoLabels[0] and:self.demoLabels[1]];
 
-    MTMathUILabel* demoLabel3 = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
+    self.demoLabels[2] = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
                                  \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
                                            withHeight:40];
-    demoLabel3.fontSize = 15;
-    [self addLabelAsSubview:demoLabel3 to:contentView];
-    [self setVerticalGap:10 between:demoLabel2 and:demoLabel3];
+    self.demoLabels[2].fontSize = 15;
+    [self addLabelAsSubview:self.demoLabels[2] to:contentView];
+    [self setVerticalGap:10 between:self.demoLabels[1] and:self.demoLabels[2]];
 
-    MTMathUILabel* demoLabel4 = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
+    self.demoLabels[3] = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
                                  = 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
-    demoLabel4.fontSize = 15;
-    [self addLabelAsSubview:demoLabel4 to:contentView];
-    [self setVerticalGap:10 between:demoLabel3 and:demoLabel4];
+    self.demoLabels[3].fontSize = 15;
+    [self addLabelAsSubview:self.demoLabels[3] to:contentView];
+    [self setVerticalGap:10 between:self.demoLabels[2] and:self.demoLabels[3]];
 
-    MTMathUILabel* lastDemoLabel = demoLabel4;
+    MTMathUILabel* lastDemoLabel = self.demoLabels[3];
 
     // Test different aspects
     MTMathUILabel* label1 = [self createMathLabel:@"3+2-5 = 0" withHeight:40];
@@ -192,12 +196,6 @@
     [self setVerticalGap:10 between:label20 and:label21];
 }
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view.
-}
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -212,6 +210,7 @@
     return label;
 }
 
+#pragma mark Constraints
 - (void)addFullSizeView:(UIView *)view to:(UIView*) parent
 {
     view.translatesAutoresizingMaskIntoConstraints = NO;
@@ -269,4 +268,27 @@
                                                                  multiplier:1 constant:gap];
     constraint.active = YES;
 }
+
+#pragma mark Buttons
+- (IBAction)latinButtonPressed:(id)sender
+{
+    for (MTMathUILabel* label in self.demoLabels) {
+        label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
+    }
+}
+
+- (IBAction)termesButtonPressed:(id)sender
+{
+    for (MTMathUILabel* label in self.demoLabels) {
+        label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
+    }
+}
+
+- (IBAction)xitsButtonPressed:(id)sender
+{
+    for (MTMathUILabel* label in self.demoLabels) {
+        label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
+    }
+}
+
 @end
