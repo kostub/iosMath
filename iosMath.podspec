@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "iosMath"
-  s.version      = "0.7.1"
+  s.version      = "0.7.2"
   s.summary      = "Math equation rendering for iOS."
   s.description  = <<-DESC
 iosMath is a library for typesetting math formulas in iOS using
