@@ -31,8 +31,7 @@
         // So we first load a CGFont from the file and then convert it to a CTFont.
 
         NSLog(@"Loading font %@", name);
-        // Uses bundle for class so that this can be access by the unit tests.
-        NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+        NSBundle* bundle = [MTFont fontBundle];
         NSString* fontPath = [bundle pathForResource:name ofType:@"otf"];
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename([fontPath UTF8String]);
         self.defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
@@ -47,6 +46,12 @@
         self.mathTable = [[MTFontMathTable alloc] initWithFont:self mathTable:_rawMathTable];
     }
     return self;
+}
+
++ (NSBundle*) fontBundle
+{
+    // Uses bundle for class so that this can be access by the unit tests.
+    return [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"iosMathFonts" withExtension:@"bundle"]];
 }
 
 - (MTFont *)copyFontWithSize:(CGFloat)size
