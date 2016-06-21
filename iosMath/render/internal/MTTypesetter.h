@@ -14,6 +14,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(unsigned int, MTLineStyle)  {
+    kMTLineStyleDisplay,
+    kMTLineStyleText,
+    kMTLineStyleScript,
+    kMTLineStypleScriptScript
+};
+
 /// This class does all the LaTeX typesetting logic.
 /// For ADVANCED use only.
 @interface MTTypesetter : NSObject

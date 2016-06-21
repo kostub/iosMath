@@ -29,13 +29,18 @@ NS_ASSUME_NONNULL_BEGIN
 /// For debugging. Shows the object in quick look in Xcode.
 - (id) debugQuickLookObject;
 
-@property (nonatomic, readonly) CGFloat ascent;  // height
-@property (nonatomic, readonly) CGFloat descent; // depth
+/// The distance from the axis to the top of the display
+@property (nonatomic, readonly) CGFloat ascent;
+/// The distance from the axis to the bottom of the display
+@property (nonatomic, readonly) CGFloat descent;
+/// The width of the display
 @property (nonatomic, readonly) CGFloat width;
+/// Position of the display with respect to the parent view or display.
 @property (nonatomic) CGPoint position;
 /// The range of characters supported by this item
 @property (nonatomic, readonly) NSRange range;
-@property (nonatomic) BOOL hasScript;
+/// Whether the display has a subscript/superscript following it.
+@property (nonatomic, readonly) BOOL hasScript;
 
 @end
 
@@ -59,6 +64,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// It can render itself using the draw method.
 @interface MTMathListDisplay : MTDisplay
 
+/**
+ @typedef MTLinePosition
+ @brief The type of position for a line, i.e. subscript/superscript or regular.
+ */
 typedef NS_ENUM(unsigned int, MTLinePosition)  {
     /// Regular
     kMTLinePositionRegular,
@@ -70,6 +79,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 /// Where the line is positioned
 @property (nonatomic, readonly) MTLinePosition type;
+/// An array of MTDisplays which are positioned relative to the position of the
+/// the current display.
 @property (nonatomic, readonly) NSArray<MTDisplay*>* subDisplays;
 /// If a subscript or superscript this denotes the location in the parent MTList. For a
 /// regular list this is NSNotFound
@@ -82,7 +93,13 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 - (instancetype)init NS_UNAVAILABLE;
 
+/** A display representing the numerator of the fraction. It's position is relative 
+ to the parent and is not treated as a sub-display.
+ */
 @property (nonatomic, readonly) MTMathListDisplay* numerator;
+/** A display representing the denominator of the fraction. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
 @property (nonatomic, readonly) MTMathListDisplay* denominator;
 
 @end
@@ -92,7 +109,13 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 - (instancetype)init NS_UNAVAILABLE;
 
+/** A display representing the radicand of the radical. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
 @property (nonatomic, readonly) MTMathListDisplay* radicand;
+/** A display representing the degree of the radical. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* degree;
 
 @end
@@ -102,16 +125,16 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 - (instancetype)init NS_UNAVAILABLE;
 
+/** A display representing the upper limit of the large operator. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* upperLimit;
+/** A display representing the lower limit of the large operator. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* lowerLimit;
 
 @end
 
-typedef NS_ENUM(unsigned int, MTLineStyle)  {
-    kMTLineStyleDisplay,
-    kMTLineStyleText,
-    kMTLineStyleScript,
-    kMTLineStypleScriptScript
-};
 
 NS_ASSUME_NONNULL_END
