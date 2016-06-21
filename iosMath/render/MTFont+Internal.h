@@ -16,19 +16,19 @@
 @interface MTFont (Internal)
 
 /** Load the font with a given name. This is the designated initializer. */
-- (instancetype) initFontWithName:(NSString*) name size:(CGFloat) size;
+- (nonnull instancetype) initFontWithName:(nonnull NSString*) name size:(CGFloat) size;
 
 /** Access to the raw CTFontRef if needed. */
-@property (nonatomic, readonly) CTFontRef ctFont;
+@property (nonatomic, readonly, nonnull) CTFontRef ctFont;
 
 /** The font math table. */
-@property (nonatomic, readonly) MTFontMathTable* mathTable;
+@property (nonatomic, readonly, nonnull) MTFontMathTable* mathTable;
 
 /** Returns the name of the given glyph or null if the glyph
  is not associated with the font. */
-- (NSString*) getGlyphName:(CGGlyph) glyph;
+- (nullable NSString*) getGlyphName:(CGGlyph) glyph;
 
 /** Returns a glyph associated with the given name. */
-- (CGGlyph) getGlyphWithName:(NSString*) glyphName;
+- (CGGlyph) getGlyphWithName:(nonnull NSString*) glyphName;
 
 @end

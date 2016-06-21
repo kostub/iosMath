@@ -8,7 +8,7 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 /** 
  * An index that points to a particular character in the MTMathList. The index is a LinkedList that represents
@@ -50,10 +50,10 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 /// The index of the associated atom.
 @property (nonatomic, readonly) NSUInteger atomIndex;
 @property (nonatomic, readonly) MTMathListSubIndexType subIndexType;
-@property (nonatomic, readonly) MTMathListIndex* subIndex;
+@property (nonatomic, readonly, nullable) MTMathListIndex* subIndex;
 
-- (MTMathListIndex*) previous;
-- (MTMathListIndex*) next;
+- (nullable MTMathListIndex*) previous;
+- (nonnull MTMathListIndex*) next;
 
 /** 
  * Returns true if this index represents the beginning of a line. Note there may be multiple lines in a MTMathList,
@@ -69,38 +69,41 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 - (BOOL) hasSubIndexOfType:(MTMathListSubIndexType) subIndexType;
 
 /** Creates a new index by attaching this index at the end of the current one. */
-- (MTMathListIndex*) levelUpWithSubIndex:(MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
+- (nonnull MTMathListIndex*) levelUpWithSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
 /** Creates a new index by removing the last index item. If this is the last one, then returns nil. */
-- (MTMathListIndex*) levelDown;
+- (nullable MTMathListIndex*) levelDown;
 
-- (BOOL)isEqual:(id)object;
+- (nonnull instancetype)init NS_UNAVAILABLE;
+- (BOOL)isEqual:(nullable id)object;
 - (NSUInteger)hash;
-- (NSString *)description;
+- (nonnull NSString *)description;
 
-+ (id) level0Index:(NSUInteger) index;
-+ (instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
++ (nonnull instancetype) level0Index:(NSUInteger) index;
++ (nonnull instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
 
 
 @end
 
 @interface  MTMathListRange : NSObject
 
-/// Creates a valid range.
-+ (MTMathListRange*) makeRange:(MTMathListIndex*) start length:(NSUInteger) length;
-/// Creates a range at level 0 from the give range.
-+ (MTMathListRange *)makeRangeForRange:(NSRange)range;
-/// Makes a range of length 1
-+ (MTMathListRange*) makeRange:(MTMathListIndex*) start;
-/// Makes a range of length 1 at the level 0 index start
-+ (MTMathListRange*) makeRangeForIndex:(NSUInteger) start;
+- (nonnull instancetype)init NS_UNAVAILABLE;
 
-@property (nonatomic, readonly) MTMathListIndex* start;
+/// Creates a valid range.
++ (nonnull MTMathListRange*) makeRange:(nonnull MTMathListIndex*) start length:(NSUInteger) length;
+/// Creates a range at level 0 from the give range.
++ (nonnull MTMathListRange *)makeRangeForRange:(NSRange)range;
+/// Makes a range of length 1
++ (nonnull MTMathListRange*) makeRange:(nonnull MTMathListIndex*) start;
+/// Makes a range of length 1 at the level 0 index start
++ (nonnull MTMathListRange*) makeRangeForIndex:(NSUInteger) start;
+
+@property (nonatomic, readonly, nonnull) MTMathListIndex* start;
 @property (nonatomic, readonly) NSUInteger length;
 
-- (MTMathListRange*) subIndexRange;
+- (nullable MTMathListRange*) subIndexRange;
 /// Appends the current range to range and returns the resulting range. Any elements between the two are included in the range.
-- (MTMathListRange*) unionRange:(MTMathListRange*) range;
+- (nullable MTMathListRange*) unionRange:(nonnull MTMathListRange*) range;
 /// Unions all ranges in the given array of ranges
-+ (MTMathListRange*) unionRanges:(NSArray*) ranges;
++ (nullable MTMathListRange*) unionRanges:(nonnull NSArray<MTMathListRange*>*) ranges;
 
 @end

@@ -16,7 +16,7 @@
 
 @property (nonatomic, readwrite) NSUInteger atomIndex;
 @property (nonatomic, readwrite) MTMathListSubIndexType subIndexType;
-@property (nonatomic, readwrite) MTMathListIndex* subIndex;
+@property (nonatomic, readwrite, nullable) MTMathListIndex* subIndex;
 
 @end
 
@@ -173,6 +173,12 @@
     hash = hash * prime + self.subIndex.hash;
     return hash;
 }
+
+@end
+
+@interface MTMathListRange ()
+
+- (instancetype)initWithStart:(MTMathListIndex*) start length:(NSUInteger) length NS_DESIGNATED_INITIALIZER;
 
 @end
 

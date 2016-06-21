@@ -9,11 +9,11 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 #import "MTMathList.h"
 
-FOUNDATION_EXPORT NSString *const MTParseError;
+FOUNDATION_EXPORT NSString *const _Nonnull MTParseError;
 
 /** `MTMathListBuilder` is a class for parsing LaTeX into an `MTMathList` that
  can be rendered and processed mathematically.
@@ -21,32 +21,32 @@ FOUNDATION_EXPORT NSString *const MTParseError;
 @interface MTMathListBuilder : NSObject
 
 /** Contains any error that occurred during parsing. */
-@property (nonatomic, readonly) NSError* error;
+@property (nonatomic, readonly, nullable) NSError* error;
 
-- (instancetype) initWithString:(NSString*) str NS_DESIGNATED_INITIALIZER;
-- (instancetype) init NS_UNAVAILABLE;
+- (nonnull instancetype) initWithString:(nonnull NSString*) str NS_DESIGNATED_INITIALIZER;
+- (nonnull instancetype) init NS_UNAVAILABLE;
 
 /// Builds a mathlist from the given string. Returns nil if there is an error.
-- (MTMathList*) build;
+- (nullable MTMathList*) build;
 
 /// List of commands that are supported.
-+ (NSDictionary*) supportedCommands;
++ (nonnull NSDictionary<NSString*, MTMathAtom*>*) supportedCommands;
 
 /** Construct a math list from a given string. If there is parse error, returns
  nil. To retrieve the error use the function `[MTMathListBuilder buildFromString:error:]`.
  */
-+ (MTMathList*) buildFromString:(NSString*) str;
++ (nullable MTMathList*) buildFromString:(nonnull NSString*) str;
 
 /** Construct a math list from a given string. If there is an error while
- constructing the string, this returns nil. The error is returned in the 
+ constructing the string, this returns nil. The error is returned in the
  `error` parameter.
  */
-+ (MTMathList*) buildFromString:(NSString*) str error:(NSError**) error;
++ (nullable MTMathList*) buildFromString:(nonnull NSString*) str error:( NSError* _Nullable * _Nullable) error;
 
 /// This converts the MTMathList to LaTeX.
-+ (NSString*) mathListToString:(MTMathList*) ml;
++ (nonnull NSString*) mathListToString:(nonnull MTMathList*) ml;
 
-enum MTParseErrors {
+typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMismatchBraces = 1,
     MTParseErrorInvalidCommand,
     MTParseErrorCharacterNotFound,

@@ -9,12 +9,14 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
-#import <UIKit/UIKit.h>
+@import Foundation;
+@import QuartzCore;
+@import UIKit;
 
 #import "MTFont.h"
 #import "MTMathList.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 /// The base class for rendering a math equation.
 @interface MTDisplay : NSObject
@@ -47,7 +49,7 @@
 @property (nonatomic) NSAttributedString* attributedString;
 
 /// An array of MTMathAtoms that this CTLine displays. Used for indexing back into the MTMathList
-@property (nonatomic, readonly) NSArray* atoms;
+@property (nonatomic, readonly) NSArray<MTMathAtom*>* atoms;
 
 @end
 
@@ -66,7 +68,7 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 /// Where the line is positioned
 @property (nonatomic, readonly) MTLinePosition type;
-@property (nonatomic, readonly) NSArray* subDisplays;
+@property (nonatomic, readonly) NSArray<MTDisplay*>* subDisplays;
 /// If a subscript or superscript this denotes the location in the parent MTList. For a
 /// regular list this is NSNotFound
 @property (nonatomic, readonly) NSUInteger index;
@@ -85,15 +87,15 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 @interface MTRadicalDisplay : MTDisplay
 
 @property (nonatomic, readonly) MTMathListDisplay* radicand;
-@property (nonatomic, readonly) MTMathListDisplay* degree;
+@property (nonatomic, readonly, nullable) MTMathListDisplay* degree;
 
 @end
 
 /// Rendering a large operator with limits as an MTDisplay
 @interface MTLargeOpLimitsDisplay : MTDisplay
 
-@property (nonatomic, readonly) MTMathListDisplay* upperLimit;
-@property (nonatomic, readonly) MTMathListDisplay* lowerLimit;
+@property (nonatomic, readonly, nullable) MTMathListDisplay* upperLimit;
+@property (nonatomic, readonly, nullable) MTMathListDisplay* lowerLimit;
 
 @end
 
@@ -112,3 +114,5 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
 + (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(MTFont*) font style:(MTLineStyle) style;
 
 @end
+
+NS_ASSUME_NONNULL_END

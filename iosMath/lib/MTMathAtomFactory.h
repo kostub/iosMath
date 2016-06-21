@@ -13,6 +13,8 @@
 
 #import "MTMathList.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
@@ -52,3 +54,5 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (MTRadical*) placeholderRadical;
 
 @end
+
+NS_ASSUME_NONNULL_END

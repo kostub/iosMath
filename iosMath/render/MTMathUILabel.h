@@ -9,8 +9,8 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <UIKit/UIKit.h>
-#import <CoreText/CoreText.h>
+@import UIKit;
+@import CoreText;
 
 #import "MTFont.h"
 #import "MTMathList.h"
@@ -77,22 +77,22 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  setting if the `MTMathList` has been programmatically constructed, otherwise it
  is preferred to use `latex`.
  */
-@property (nonatomic) MTMathList* mathList;
+@property (nonatomic, nullable) MTMathList* mathList;
 
 /** The latex string to be displayed. Setting this will remove any `mathList` that
  has been set. If latex has not been set, this will return the latex output for the
  `mathList` that is set.
  @see error */
-@property (nonatomic) NSString* latex;
+@property (nonatomic, nullable) NSString* latex;
 
 /** This contains any error that occurred when parsing the latex. */
-@property (nonatomic, readonly) NSError* error;
+@property (nonatomic, readonly, nullable) NSError* error;
 
 /** If true, if there is an error it displays the error message inline. Default true. */
 @property (nonatomic) BOOL displayErrorInline;
 
 /** The MTFont to use for rendering. */
-@property (nonatomic) MTFont* font;
+@property (nonatomic, nonnull) MTFont* font;
 
 /** Convenience method to just set the size of the font without changing the fontface. */
 @property (nonatomic) CGFloat fontSize;
@@ -104,6 +104,6 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
 @property (nonatomic) MTTextAlignment textAlignment;
 
 /** The internal display of the MTMathUILabel. This is for advanced use only. */
-@property (nonatomic, readonly) MTMathListDisplay* displayList;
+@property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
 
 @end

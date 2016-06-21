@@ -108,15 +108,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4987307417D546800041B02B"
-            BuildableName = "libIosMath.a"
-            BlueprintName = "IosMath"
+            BlueprintIdentifier = "49965EFB17CBBA2700A555C5"
+            BuildableName = "iosMathExample.app"
+            BlueprintName = "iosMathExample"
             ReferencedContainer = "container:iosMath.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

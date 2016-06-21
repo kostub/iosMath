@@ -11,6 +11,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class MTMathList;
 
 @interface MTMathAtom : NSObject<NSCopying>
@@ -45,18 +47,20 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     kMTMathAtomPlaceholder,
 };
 
+- (instancetype)init NS_UNAVAILABLE;
+
 + (instancetype) atomWithType: (MTMathAtomType) type value:(NSString*) value;
 
 @property (nonatomic, readonly) NSString *stringValue;
 
 @property (nonatomic) MTMathAtomType type;
 @property (nonatomic, copy) NSString* nucleus;
-@property (nonatomic) MTMathList* superScript;
-@property (nonatomic) MTMathList* subScript;
+@property (nonatomic, nullable) MTMathList* superScript;
+@property (nonatomic, nullable) MTMathList* subScript;
 
 /// If this atom was formed by fusion of multiple atoms, then this stores the list of atoms that were fused to create this one.
 /// This is used in the finalizing and preprocessing steps.
-@property (nonatomic, readonly) NSArray* fusedAtoms;
+@property (nonatomic, readonly, nullable) NSArray<MTMathAtom*>* fusedAtoms;
 
 /// The index range in the MTMathList this MTMathAtom tracks. This is used by the finalizing and preprocessing steps
 /// which fuse MTMathAtoms to track the position of the current MTMathAtom in the original list.
@@ -66,11 +70,13 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 - (void) fuse:(MTMathAtom*) atom;
 
 /// Makes a deep copy of the atom
-- (id)copyWithZone:(NSZone *)zone;
+- (id)copyWithZone:(nullable NSZone *)zone;
 
 @end
 
 @interface MTFraction : MTMathAtom
+
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic) MTMathList* numerator;
 @property (nonatomic) MTMathList* denominator;
@@ -79,12 +85,14 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @interface MTRadical : MTMathAtom
 
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
 /// Denotes the term under the square root sign
-@property (nonatomic) MTMathList* radicand;
+@property (nonatomic, nullable) MTMathList* radicand;
 
 /// Denotes the degree of the radical, i.e. the value to the top left of the radical sign
 /// This can be null if there is no degree.
-@property (nonatomic) MTMathList* degree;
+@property (nonatomic, nullable) MTMathList* degree;
 
 @end
 
@@ -118,6 +126,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 /// A list of MathAtoms
 @property (nonatomic, readonly) NSArray* atoms;
 
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
 - (void) addAtom:(MTMathAtom*) atom;
 
 - (void) insertAtom:(MTMathAtom *)atom atIndex:(NSUInteger) index;
@@ -136,6 +146,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 - (MTMathList*) finalized;
 
 /// Makes a deep copy of the list
-- (id)copyWithZone:(NSZone *)zone;
+- (id)copyWithZone:(nullable NSZone *)zone;
 
 @end
+
+NS_ASSUME_NONNULL_END

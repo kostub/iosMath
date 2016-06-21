@@ -61,6 +61,8 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @property (nonatomic) NSRange indexRange;
 
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value NS_DESIGNATED_INITIALIZER;
+
 @end
 
 @implementation MTMathAtom {
@@ -178,7 +180,7 @@ static NSString* typeToText(MTMathAtomType type) {
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
 {
     if (type == kMTMathAtomFraction) {
-        return [super initWithType:type value:value];
+        return [self init];
     }
     @throw [NSException exceptionWithName:@"InvalidMethod"
                                    reason:@"[MTFraction initWithType:value:] cannot be called. Use [MTFraction init] instead."
@@ -221,7 +223,7 @@ static NSString* typeToText(MTMathAtomType type) {
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
 {
     if (type == kMTMathAtomRadical) {
-        return [super initWithType:type value:value];
+        return [self init];
     }
     @throw [NSException exceptionWithName:@"InvalidMethod"
                                    reason:@"[MTRadical initWithType:value:] cannot be called. Use [MTRadical init] instead."

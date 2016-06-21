@@ -18,7 +18,7 @@
 @interface MTFont : NSObject
 
 /** Returns a copy of this font but with a different size. */
-- (MTFont*) copyFontWithSize:(CGFloat) size;
+- (nonnull MTFont*) copyFontWithSize:(CGFloat) size;
 
 /** The size of this font in points. */
 @property (nonatomic, readonly) CGFloat fontSize;
