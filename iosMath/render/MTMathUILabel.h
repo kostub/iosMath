@@ -23,25 +23,25 @@
  @note: The only significant difference between the two modes is how fractions
  and limits on large operators are displayed.
  */
-typedef enum {
+typedef NS_ENUM(unsigned int, MTMathUILabelMode) {
     /// Display mode. Equivalent to $$ in TeX
     kMTMathUILabelModeDisplay,
     /// Text mode. Equivalent to $ in TeX.
     kMTMathUILabelModeText
-} MTMathUILabelMode;
+};
 
 /**
  @typedef MTTextAlignment
  @brief Horizontal text alignment for `MTMathUILabel`.
  */
-typedef enum {
+typedef NS_ENUM(unsigned int, MTTextAlignment) {
     /// Align left.
     kMTTextAlignmentLeft,
     /// Align center.
     kMTTextAlignmentCenter,
     /// Align right.
     kMTTextAlignmentRight,
-} MTTextAlignment;
+};
 
 /** The main view for rendering math.
  

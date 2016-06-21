@@ -42,10 +42,10 @@ const int kDefaultFontSize = 20;
 
 - (MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
-    MTFont* f = [self.nameToFontMap objectForKey:name];
+    MTFont* f = self.nameToFontMap[name];
     if (!f) {
         f = [[MTFont alloc] initFontWithName:name size:size];
-        [self.nameToFontMap setObject:f forKey:name];
+        self.nameToFontMap[name] = f;
     }
     if (f.fontSize == size) {
         return f;

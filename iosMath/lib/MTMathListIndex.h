@@ -27,7 +27,7 @@
  */
 @interface MTMathListIndex : NSObject
 
-typedef enum {
+typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
     /// The index denotes the whole atom, subIndex is nil.
     kMTSubIndexTypeNone  = 0,
     /// The position in the subindex is an index into the nucleus
@@ -44,7 +44,7 @@ typedef enum {
     kMTSubIndexTypeRadicand,
     /// The subindex indexes into the degree (only valid for radicals)
     kMTSubIndexTypeDegree
-} MTMathListSubIndexType;
+};
 
 
 /// The index of the associated atom.
@@ -78,7 +78,7 @@ typedef enum {
 - (NSString *)description;
 
 + (id) level0Index:(NSUInteger) index;
-+ (id) indexAtLocation:(NSUInteger) location withSubIndex:(MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
++ (instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
 
 
 @end

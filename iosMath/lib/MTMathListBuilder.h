@@ -23,7 +23,8 @@ FOUNDATION_EXPORT NSString *const MTParseError;
 /** Contains any error that occurred during parsing. */
 @property (nonatomic, readonly) NSError* error;
 
-- (id) initWithString:(NSString*) str;
+- (instancetype) initWithString:(NSString*) str NS_DESIGNATED_INITIALIZER;
+- (instancetype) init NS_UNAVAILABLE;
 
 /// Builds a mathlist from the given string. Returns nil if there is an error.
 - (MTMathList*) build;

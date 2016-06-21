@@ -29,7 +29,7 @@
     return mlIndex;
 }
 
-+ (id)indexAtLocation:(NSUInteger)location withSubIndex:(MTMathListIndex *)subIndex type:(MTMathListSubIndexType)type
++ (instancetype)indexAtLocation:(NSUInteger)location withSubIndex:(MTMathListIndex *)subIndex type:(MTMathListSubIndexType)type
 {
     MTMathListIndex* index = [self level0Index:location];
     index.subIndexType = type;
@@ -178,7 +178,7 @@
 
 @implementation MTMathListRange
 
-- (id)initWithStart:(MTMathListIndex*) start length:(NSUInteger) length
+- (instancetype)initWithStart:(MTMathListIndex*) start length:(NSUInteger) length
 {
     self = [super init];
     if (self) {

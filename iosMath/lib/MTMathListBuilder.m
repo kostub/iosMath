@@ -27,7 +27,7 @@ static void initializeGlobalsIfNeeded() {
     NSUInteger _length;
 }
 
-- (id)initWithString:(NSString *)str
+- (instancetype)initWithString:(NSString *)str
 {
     self = [super init];
     if (self) {
@@ -555,7 +555,7 @@ static void initializeGlobalsIfNeeded() {
         NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:commands.count];
         for (NSString* command in commands) {
             MTMathAtom* atom = commands[command];
-            [mutableDict setObject:command forKey:atom.nucleus];
+            mutableDict[atom.nucleus] = command;
         }
         textToCommands = [mutableDict copy];
     }

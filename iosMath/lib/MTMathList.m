@@ -271,7 +271,7 @@ static NSString* typeToText(MTMathAtomType type) {
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
 {
     if (type == kMTMathAtomLargeOperator) {
-        return [super initWithType:type value:value];
+        return [self initWithValue:value limits:false];
     }
     @throw [NSException exceptionWithName:@"InvalidMethod"
                                    reason:@"[MTLargeOperator initWithType:value:] cannot be called. Use [MTLargeOperator initWithValue:limits:] instead."
@@ -293,7 +293,7 @@ static NSString* typeToText(MTMathAtomType type) {
     NSMutableArray* _atoms;
 }
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self) {

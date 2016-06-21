@@ -55,14 +55,14 @@
 /// It can render itself using the draw method.
 @interface MTMathListDisplay : MTDisplay
 
-typedef enum  {
+typedef NS_ENUM(unsigned int, MTLinePosition)  {
     /// Regular
     kMTLinePositionRegular,
     /// Positioned at a subscript
     kMTLinePositionSubscript,
     /// Positioned at a superscript
     kMTLinePositionSuperscript
-} MTLinePosition;
+};
 
 /// Where the line is positioned
 @property (nonatomic, readonly) MTLinePosition type;
@@ -97,12 +97,12 @@ typedef enum  {
 
 @end
 
-typedef enum  {
+typedef NS_ENUM(unsigned int, MTLineStyle)  {
     kMTLineStyleDisplay,
     kMTLineStyleText,
     kMTLineStyleScript,
     kMTLineStypleScriptScript
-} MTLineStyle;
+};
 
 /// This class does all the LaTeX typesetting logic.
 /// For ADVANCED use only.

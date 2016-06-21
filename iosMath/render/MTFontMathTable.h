@@ -30,7 +30,8 @@
  */
 @interface MTFontMathTable : NSObject
 
-- (instancetype) initWithFont:(MTFont*) font mathTable:(NSDictionary*) mathTable;
+- (instancetype) initWithFont:(MTFont*) font mathTable:(NSDictionary*) mathTable NS_DESIGNATED_INITIALIZER;
+- (instancetype) init NS_UNAVAILABLE;
 
 /** MU unit in points */
 @property (nonatomic, readonly) CGFloat muUnit;
@@ -88,7 +89,7 @@
 
 /** Returns a CFArray of all the vertical variants of the glyph if any.
  This array needs to be released by the caller. */
-- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph;
+- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph CF_RETURNS_RETAINED;
 
 /** Returns a larger vertical variant of the given glyph if any.
  If there is no larger version, this returns the current glyph.

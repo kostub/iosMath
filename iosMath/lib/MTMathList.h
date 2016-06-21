@@ -15,7 +15,7 @@
 
 @interface MTMathAtom : NSObject<NSCopying>
 
-typedef enum
+typedef NS_ENUM(NSUInteger, MTMathAtomType)
 {
     /// A number or text in ordinary format - Ord in TeX
     kMTMathAtomOrdinary = 0,
@@ -35,19 +35,19 @@ typedef enum
     kMTMathAtomOpen,
     /// Close brackets - Close in TeX
     kMTMathAtomClose,
-    /// An inner fraction e.g 1/2 - Inner in TeX
+    /// An fraction e.g 1/2 - generalized fraction noad in TeX
     kMTMathAtomFraction,
     /// A radical operator e.g. sqrt(2)
     kMTMathAtomRadical,
     /// Punctuation such as , - Punct in TeX
     kMTMathAtomPunctuation,
-    // A placeholder square for future input. Does not exist in TeX
+    /// A placeholder square for future input. Does not exist in TeX
     kMTMathAtomPlaceholder,
-} MTMathAtomType;
+};
 
 + (instancetype) atomWithType: (MTMathAtomType) type value:(NSString*) value;
 
-- (NSString*) stringValue;
+@property (nonatomic, readonly) NSString *stringValue;
 
 @property (nonatomic) MTMathAtomType type;
 @property (nonatomic, copy) NSString* nucleus;
@@ -94,7 +94,7 @@ typedef enum
 /** Designated initializer. Initialize a large operator with the given
  value and setting for limits.
  */
-- (instancetype) initWithValue:(NSString*) value limits:(BOOL) limits;
+- (instancetype) initWithValue:(NSString*) value limits:(BOOL) limits NS_DESIGNATED_INITIALIZER;
 
 /** Indicates whether the limits (if present) should be displayed
  above and below the operator in display mode.  If limits is false
@@ -128,7 +128,7 @@ typedef enum
 - (void) removeAtomsInRange:(NSRange) range;
 
 /// converts the MTMathList to a string form. Note: This is not the LaTeX form.
-- (NSString*) stringValue;
+@property (nonatomic, readonly) NSString *stringValue;
 
 /// Create a new math list as a final expression and update atoms
 /// by combining like atoms that occur together and converting unary operators to binary operators.

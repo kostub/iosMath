@@ -55,16 +55,16 @@ static NSString* const kConstants = @"constants";
 
 - (CGFloat) constantFromTable:(NSString*) constName
 {
-    NSDictionary* consts = (NSDictionary*) [_mathTable objectForKey:kConstants];
-    NSNumber* val = (NSNumber*)[consts objectForKey:constName];
-    return [self fontUnitsToPt:[val intValue]];
+    NSDictionary* consts = (NSDictionary*) _mathTable[kConstants];
+    NSNumber* val = (NSNumber*)consts[constName];
+    return [self fontUnitsToPt:val.intValue];
 }
 
 - (CGFloat) percentFromTable:(NSString*) percentName
 {
-    NSDictionary* consts = (NSDictionary*) [_mathTable objectForKey:kConstants];
-    NSNumber* val = (NSNumber*)[consts objectForKey:percentName];
-    return [val floatValue] / 100;
+    NSDictionary* consts = (NSDictionary*) _mathTable[kConstants];
+    NSNumber* val = (NSNumber*)consts[percentName];
+    return val.floatValue / 100;
 }
 
 #pragma mark - Fractions
@@ -254,10 +254,10 @@ static NSString* const kVariants = @"variants";
 
 - (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) [_mathTable objectForKey:kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
     NSString* glyphName = [self.font getGlyphName:glyph];
     CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
-    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
+    NSArray* variantGlyphs = (NSArray*) variants[glyphName];
     if (!variantGlyphs) {
         // There are no extra variants, so just add the current glyph to it.
         CGGlyph glyph = [self.font getGlyphWithName:glyphName];
@@ -273,9 +273,9 @@ static NSString* const kVariants = @"variants";
 
 - (CGGlyph) getLargerGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) [_mathTable objectForKey:kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
     NSString* glyphName = [self.font getGlyphName:glyph];
-    NSArray* variantGlyphs = (NSArray*) [variants objectForKey:glyphName];
+    NSArray* variantGlyphs = (NSArray*) variants[glyphName];
     if (!variantGlyphs) {
         // There are no extra variants, so just returnt the current glyph.
         return glyph;
@@ -297,11 +297,11 @@ static NSString* const kItalic = @"italic";
 
 - (CGFloat)getItalicCorrection:(CGGlyph)glyph
 {
-    NSDictionary* italics = (NSDictionary*) [_mathTable objectForKey:kItalic];
+    NSDictionary* italics = (NSDictionary*) _mathTable[kItalic];
     NSString* glyphName = [self.font getGlyphName:glyph];
-    NSNumber* val = (NSNumber*) [italics objectForKey:glyphName];
+    NSNumber* val = (NSNumber*) italics[glyphName];
     // if val is nil, this returns 0.
-    return [self fontUnitsToPt:[val intValue]];
+    return [self fontUnitsToPt:val.intValue];
 }
 
 @end

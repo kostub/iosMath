@@ -19,14 +19,14 @@
 
 #pragma mark Inter Element Spacing
 
-typedef enum {
+typedef NS_ENUM(int, MTInterElementSpaceType) {
     kMTSpaceInvalid = -1,
     kMTSpaceNone = 0,
     kMTSpaceThin,
     kMTSpaceNSThin,    // Thin but not in script mode
     kMTSpaceNSMedium,
     kMTSpaceNSThick,
-} MTInterElementSpaceType;
+};
 
 
 NSArray* getInterElementSpaces() {
@@ -81,7 +81,7 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
         }
             
         default:
-            NSCAssert(false, @"Interelement space undefined for type %d", type);
+            NSCAssert(false, @"Interelement space undefined for type %lu", (unsigned long)type);
             return -1;
     }
 }
@@ -128,7 +128,7 @@ static BOOL isIos6Supported() {
     static BOOL supported = false;
     if (!initialized) {
         NSString *reqSysVer = @"6.0";
-        NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
+        NSString *currSysVer = [UIDevice currentDevice].systemVersion;
         if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) {
             supported = true;
         }
@@ -205,7 +205,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 @implementation MTCTLineDisplay
 
 
-- (id)initWithString:(NSAttributedString*) attrString position:(CGPoint)position range:(NSRange) range font:(MTFont*) font atoms:(NSArray*) atoms
+- (instancetype)initWithString:(NSAttributedString*) attrString position:(CGPoint)position range:(NSRange) range font:(MTFont*) font atoms:(NSArray*) atoms
 {
     self = [super init];
     if (self) {
@@ -288,7 +288,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 }
 
 
-- (id) initWithDisplays:(NSArray*) displays range:(NSRange) range
+- (instancetype) initWithDisplays:(NSArray*) displays range:(NSRange) range
 {
     self = [super init];
     if (self) {
@@ -361,7 +361,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 @implementation MTFractionDisplay 
 
-- (id)initWithNumerator:(MTMathListDisplay*) numerator denominator:(MTMathListDisplay*) denominator position:(CGPoint) position range:(NSRange) range
+- (instancetype)initWithNumerator:(MTMathListDisplay*) numerator denominator:(MTMathListDisplay*) denominator position:(CGPoint) position range:(NSRange) range
 {
     self = [super init];
     if (self) {
@@ -719,7 +719,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     NSArray* preprocessedAtoms = [self preprocessMathList:mathList];
     MTTypesetter *typesetter = [[MTTypesetter alloc] initWithFont:font style:style cramped:cramped];
     [typesetter createDisplayAtoms:preprocessedAtoms];
-    MTMathAtom* lastAtom = [mathList.atoms lastObject];
+    MTMathAtom* lastAtom = mathList.atoms.lastObject;
     MTMathListDisplay* line = [[MTMathListDisplay alloc] initWithDisplays:typesetter->_displayAtoms range:NSMakeRange(0, NSMaxRange(lastAtom.indexRange))];
     return line;
 }
@@ -899,7 +899,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 if (atom.type == kMTMathAtomPlaceholder) {
                     UIColor* color = [MTTypesetter placeholderColor];
                     current = [[NSAttributedString alloc] initWithString:atom.nucleus
-                                                              attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) [color CGColor] }];
+                                                              attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) color.CGColor }];
                 } else {
                     current = [[NSAttributedString alloc] initWithString:atom.nucleus];
                 }
@@ -990,10 +990,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 {
     NSUInteger leftIndex = getInterElementSpaceArrayIndexForType(left, true);
     NSUInteger rightIndex = getInterElementSpaceArrayIndexForType(right, false);
-    NSArray* spaceArray = [getInterElementSpaces() objectAtIndex:leftIndex];
-    NSNumber* spaceTypeObj = [spaceArray objectAtIndex:rightIndex];
-    MTInterElementSpaceType spaceType = [spaceTypeObj intValue];
-    NSAssert(spaceType != kMTSpaceInvalid, @"Invalid space between %d and %d", left, right);
+    NSArray* spaceArray = getInterElementSpaces()[leftIndex];
+    NSNumber* spaceTypeObj = spaceArray[rightIndex];
+    MTInterElementSpaceType spaceType = spaceTypeObj.intValue;
+    NSAssert(spaceType != kMTSpaceInvalid, @"Invalid space between %lu and %lu", (unsigned long)left, (unsigned long)right);
     
     int spaceMultipler = [self getSpacingInMu:spaceType];
     if (spaceMultipler > 0) {
