@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// A rendering of a single CTLine as an MTDisplay
 @interface MTCTLineDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /// The CTLine being displayed
 @property (nonatomic, readonly) CTLineRef line;
 /// The attributed string used to generate the CTLineRef. Note setting this does not reset the dimensions of
@@ -78,6 +80,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 /// Rendering of an MTFraction as an MTDisplay
 @interface MTFractionDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 @property (nonatomic, readonly) MTMathListDisplay* numerator;
 @property (nonatomic, readonly) MTMathListDisplay* denominator;
 
@@ -86,6 +90,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 /// Rendering of an MTRadical as an MTDisplay
 @interface MTRadicalDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 @property (nonatomic, readonly) MTMathListDisplay* radicand;
 @property (nonatomic, readonly, nullable) MTMathListDisplay* degree;
 
@@ -93,6 +99,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 /// Rendering a large operator with limits as an MTDisplay
 @interface MTLargeOpLimitsDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
 
 @property (nonatomic, readonly, nullable) MTMathListDisplay* upperLimit;
 @property (nonatomic, readonly, nullable) MTMathListDisplay* lowerLimit;
@@ -105,14 +113,5 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
     kMTLineStyleScript,
     kMTLineStypleScriptScript
 };
-
-/// This class does all the LaTeX typesetting logic.
-/// For ADVANCED use only.
-@interface MTTypesetter : NSObject
-
-/// Renders a MTMathList as a list of displays.
-+ (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(MTFont*) font style:(MTLineStyle) style;
-
-@end
 
 NS_ASSUME_NONNULL_END

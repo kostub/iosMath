@@ -14,7 +14,7 @@ beautifully rendered math equations in iOS applications.
   s.platform     = :ios, "6.0"
   s.source       = { :git => "https://github.com/kostub/iosMath.git", :tag => s.version.to_s }
   s.source_files = 'iosMath/**/*.{h,m}'
-  s.private_header_files = 'iosMath/render/*Internal.h', 'iosMath/render/MTFontMathTable.h'
+  s.private_header_files = 'iosMath/render/internal/*.h'
   s.resource_bundles = {
      'iosMathFonts' => [ 'fonts/*.otf', 'fonts/*.plist' ]
   }
