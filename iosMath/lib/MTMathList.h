@@ -15,8 +15,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class MTMathList;
 
-@interface MTMathAtom : NSObject<NSCopying>
-
+/**
+ @typedef MTMathAtomType
+ @brief The type of atom in a `MTMathList`.
+ 
+ The type of the atom determines how it is rendered, and spacing between the atoms.
+ */
 typedef NS_ENUM(NSUInteger, MTMathAtomType)
 {
     /// A number or text in ordinary format - Ord in TeX
@@ -45,18 +49,57 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     kMTMathAtomPunctuation,
     /// A placeholder square for future input. Does not exist in TeX
     kMTMathAtomPlaceholder,
+    /// An inner atom, i.e. an embedded math list - Inner in TeX
+    kMTMathAtomInner,
+    /// An underlined atom - Under in TeX
+    kMTMathAtomUnderline,
+    /// An overlined atom - Over in TeX
+    kMTMathAtomOverline,
+    /// An accented atom - Accent in TeX
+    kMTMathAtomAccent,
+    
+    // Atoms after this point do not support subscripts or superscripts
+    
+    /// A left atom - Left in TeX
+    kMTMathAtomLeft = 101,
+    /// A right atom - Right in TeX
+    kMTMathAtomRight,
 };
 
+/** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
+ or mathematical operator in a list. However certain atoms can represent more complex structures
+ such as fractions and radicals. Each atom has a type which determines how the atom is rendered and
+ a nucleus. The nucleus contains the character(s) that need to be rendered. However the nucleus may
+ be empty for certain types of atoms. An atom has an optional subscript or superscript which represents
+ the subscript or superscript that is to be rendered.
+ 
+ Certain types of atoms inherit from `MTMathAtom` and may have additional fields.
+ */
+@interface MTMathAtom : NSObject<NSCopying>
+
+/// Do not use init. Use `atomWithType:value:` to instantiate atoms.
 - (instancetype)init NS_UNAVAILABLE;
 
+/** Factory function to create an atom with a given type and value.
+ @param type The type of the atom to instantiate.
+ @param value The value of the atoms nucleus. The value is ignored for fractions and radicals.
+ */
 + (instancetype) atomWithType: (MTMathAtomType) type value:(NSString*) value;
 
+/** Returns a string representation of the MTMathAtom */
 @property (nonatomic, readonly) NSString *stringValue;
 
-@property (nonatomic) MTMathAtomType type;
-@property (nonatomic, copy) NSString* nucleus;
+/** The type of the atom. */
+@property (nonatomic, readonly) MTMathAtomType type;
+/** The nucleus of the atom. */
+@property (nonatomic, readonly, copy) NSString* nucleus;
+/** An optional superscript. */
 @property (nonatomic, nullable) MTMathList* superScript;
+/** An optional subscript. */
 @property (nonatomic, nullable) MTMathList* subScript;
+
+/** Returns true if this atom allows scripts (sub or super). */
+- (bool) scriptsAllowed;
 
 /// If this atom was formed by fusion of multiple atoms, then this stores the list of atoms that were fused to create this one.
 /// This is used in the finalizing and preprocessing steps.
@@ -74,17 +117,23 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
+/** An atom of type fraction. This atom has a numerator and denominator. */
 @interface MTFraction : MTMathAtom
 
+/// Creates an empty fraction
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
+/// Numerator of the fraction
 @property (nonatomic) MTMathList* numerator;
+/// Denominator of the fraction
 @property (nonatomic) MTMathList* denominator;
 
 @end
 
+/** An atom of type radical (square root). */
 @interface MTRadical : MTMathAtom
 
+/// Creates an empty radical
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /// Denotes the term under the square root sign
@@ -109,6 +158,17 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
  then the limits (if present) and displayed like a regular subscript/superscript.
  */
 @property (nonatomic, readonly) BOOL limits;
+
+@end
+
+/** An inner atom. This denotes an atom which contains a math list inside it. */
+@interface MTInner : MTMathAtom
+
+/// Creates an empty inner
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
+/// The inner math list
+@property (nonatomic, nullable) MTMathList* inner;
 
 @end
 

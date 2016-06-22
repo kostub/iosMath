@@ -201,17 +201,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     // that are not included in TeX and applies Rule 14 to merge ordinary characters.
     NSMutableArray* preprocessed = [NSMutableArray arrayWithCapacity:ml.atoms.count];
     MTMathAtom* prevNode = nil;
-    for (MTMathAtom *atom in ml.atoms) {
+    for (__strong MTMathAtom *atom in ml.atoms) {
         if (atom.type == kMTMathAtomVariable) {
             // This is not a TeX type node. TeX does this during parsing the input.
             // switch to using the italic math font
             // We convert it to ordinary
-            atom.nucleus = mathItalicize(atom.nucleus);
-            atom.type = kMTMathAtomOrdinary;
-        }
-        if (atom.type == kMTMathAtomNumber || atom.type == kMTMathAtomUnaryOperator) {
+            NSString* italics = mathItalicize(atom.nucleus);
+            atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:italics];
+        } else if (atom.type == kMTMathAtomNumber || atom.type == kMTMathAtomUnaryOperator) {
             // Neither of these are TeX nodes. TeX treats these as Ordinary. So will we.
-            atom.type = kMTMathAtomOrdinary;
+            atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:atom.nucleus];
         }
         
         if (atom.type == kMTMathAtomOrdinary) {

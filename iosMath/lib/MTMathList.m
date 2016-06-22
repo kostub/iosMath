@@ -52,6 +52,18 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Placeholder";
         case kMTMathAtomLargeOperator:
             return @"Large Operator";
+        case kMTMathAtomInner:
+            return @"Inner";
+        case kMTMathAtomUnderline:
+            return @"Underline";
+        case kMTMathAtomOverline:
+            return @"Overline";
+        case kMTMathAtomAccent:
+            return @"Accent";
+        case kMTMathAtomLeft:
+            return @"Left";
+        case kMTMathAtomRight:
+            return @"Right";
     }
 }
 
@@ -60,6 +72,8 @@ static NSString* typeToText(MTMathAtomType type) {
 @interface MTMathAtom ()
 
 @property (nonatomic) NSRange indexRange;
+@property (nonatomic, readwrite) MTMathAtomType type;
+@property (nonatomic, readwrite) NSString* nucleus;
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value NS_DESIGNATED_INITIALIZER;
 
@@ -81,6 +95,8 @@ static NSString* typeToText(MTMathAtomType type) {
     } else if (type == kMTMathAtomLargeOperator) {
         // Default setting of limits is true
         return [[MTLargeOperator alloc] initWithValue:value limits:YES];
+    } else if (type == kMTMathAtomInner) {
+        return [[MTInner alloc] init];
     }
     return [[[self class] alloc] initWithType:type value:value];
 }
@@ -124,6 +140,29 @@ static NSString* typeToText(MTMathAtomType type) {
     atom.superScript = [self.superScript copyWithZone:zone];
     atom.indexRange = self.indexRange;
     return atom;
+}
+
+- (bool)scriptsAllowed
+{
+    return (self.type < kMTMathAtomLeft);
+}
+
+- (void)setSubScript:(MTMathList *)subScript
+{
+    if (self.scriptsAllowed) {
+        _subScript = subScript;
+    } else {
+        @throw [[NSException alloc] initWithName:@"Error" reason:@"Subscripts not allowed for atom of this type." userInfo:nil];
+    }
+}
+
+- (void)setSuperScript:(MTMathList *)superScript
+{
+    if (self.scriptsAllowed) {
+        _superScript = superScript;
+    } else {
+        @throw [[NSException alloc] initWithName:@"Error" reason:@"Superscripts not allowed for atom of this type." userInfo:nil];
+    }
 }
 
 - (NSString *)description
@@ -285,6 +324,50 @@ static NSString* typeToText(MTMathAtomType type) {
     MTLargeOperator* op = [super copyWithZone:zone];
     op->_limits = self.limits;
     return op;
+}
+
+@end
+
+#pragma mark - MTInner
+
+@implementation MTInner
+
+- (instancetype)init
+{
+    // inner atoms have no nucleus
+    self = [super initWithType:kMTMathAtomInner value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomInner) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTInner initWithType:value:] cannot be called. Use [MTInner init] instead."
+                                 userInfo:nil];
+}
+
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithString:@"\\mathinner"];
+    [str appendFormat:@"{%@}", self.inner.stringValue];
+    
+    if (self.superScript) {
+        [str appendFormat:@"^{%@}", self.superScript.stringValue];
+    }
+    if (self.subScript) {
+        [str appendFormat:@"_{%@}", self.subScript.stringValue];
+    }
+    return str;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTInner* inner = [super copyWithZone:zone];
+    inner.inner = [self.inner copyWithZone:zone];
+    return inner;
 }
 
 @end
