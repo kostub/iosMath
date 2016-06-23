@@ -60,10 +60,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Overline";
         case kMTMathAtomAccent:
             return @"Accent";
-        case kMTMathAtomLeft:
-            return @"Left";
-        case kMTMathAtomRight:
-            return @"Right";
+        case kMTMathAtomBoundary:
+            return @"Boundary";
     }
 }
 
@@ -144,25 +142,27 @@ static NSString* typeToText(MTMathAtomType type) {
 
 - (bool)scriptsAllowed
 {
-    return (self.type < kMTMathAtomLeft);
+    return (self.type < kMTMathAtomBoundary);
 }
 
 - (void)setSubScript:(MTMathList *)subScript
 {
-    if (self.scriptsAllowed) {
-        _subScript = subScript;
-    } else {
-        @throw [[NSException alloc] initWithName:@"Error" reason:@"Subscripts not allowed for atom of this type." userInfo:nil];
+    if (subScript && !self.scriptsAllowed) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Subscripts not allowed for atom of type %@", typeToText(self.type)]
+                                        userInfo:nil];
     }
+    _subScript = subScript;
 }
 
 - (void)setSuperScript:(MTMathList *)superScript
 {
-    if (self.scriptsAllowed) {
-        _superScript = superScript;
-    } else {
-        @throw [[NSException alloc] initWithName:@"Error" reason:@"Superscripts not allowed for atom of this type." userInfo:nil];
+    if (superScript && !self.scriptsAllowed) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Superscripts not allowed for atom of type %@", typeToText(self.type)]
+                                        userInfo:nil];
     }
+    _superScript = superScript;
 }
 
 - (NSString *)description
@@ -349,10 +349,36 @@ static NSString* typeToText(MTMathAtomType type) {
                                  userInfo:nil];
 }
 
+- (void)setLeftBoundary:(MTMathAtom *)leftBoundary
+{
+    if (leftBoundary && leftBoundary.type != kMTMathAtomBoundary) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Left boundary must be of type kMTMathAtomBoundary"]
+                                        userInfo:nil];
+    }
+    _leftBoundary = leftBoundary;
+}
+
+- (void)setRightBoundary:(MTMathAtom *)rightBoundary
+{
+    if (rightBoundary && rightBoundary.type != kMTMathAtomBoundary) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Left boundary must be of type kMTMathAtomBoundary"]
+                                        userInfo:nil];
+    }
+    _rightBoundary = rightBoundary;
+}
+
 - (NSString *)stringValue
 {
-    NSMutableString* str = [NSMutableString stringWithString:@"\\mathinner"];
-    [str appendFormat:@"{%@}", self.inner.stringValue];
+    NSMutableString* str = [NSMutableString stringWithString:@"\\inner"];
+    if (self.leftBoundary) {
+        [str appendFormat:@"[%@]", self.leftBoundary.nucleus];
+    }
+    [str appendFormat:@"{%@}", self.innerList.stringValue];
+    if (self.rightBoundary) {
+        [str appendFormat:@"[%@]", self.rightBoundary.nucleus];
+    }
     
     if (self.superScript) {
         [str appendFormat:@"^{%@}", self.superScript.stringValue];
@@ -366,7 +392,9 @@ static NSString* typeToText(MTMathAtomType type) {
 - (id)copyWithZone:(NSZone *)zone
 {
     MTInner* inner = [super copyWithZone:zone];
-    inner.inner = [self.inner copyWithZone:zone];
+    inner.innerList = [self.innerList copyWithZone:zone];
+    inner.leftBoundary = [self.leftBoundary copyWithZone:zone];
+    inner.rightBoundary = [self.rightBoundary copyWithZone:zone];
     return inner;
 }
 
@@ -387,13 +415,29 @@ static NSString* typeToText(MTMathAtomType type) {
     return self;
 }
 
+- (bool) isAtomAllowed:(MTMathAtom*) atom
+{
+    return atom.type != kMTMathAtomBoundary;
+}
+
 - (void)addAtom:(MTMathAtom *)atom
 {
+    NSParameterAssert(atom);
+    if (![self isAtomAllowed:atom]) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Cannot add atom of type %@ in a mathlist", typeToText(atom.type)]
+                                        userInfo:nil];
+    }
     [_atoms addObject:atom];
 }
 
 - (void)insertAtom:(MTMathAtom *)atom atIndex:(NSUInteger) index
 {
+    if (![self isAtomAllowed:atom]) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:[NSString stringWithFormat:@"Cannot add atom of type %@ in a mathlist", typeToText(atom.type)]
+                                        userInfo:nil];
+    }
     [_atoms insertObject:atom atIndex:index];
 }
 
@@ -485,6 +529,13 @@ static NSString* typeToText(MTMathAtomType type) {
                 MTRadical* newRad = (MTRadical*) newNode;
                 newRad.radicand = rad.radicand.finalized;
                 newRad.degree = rad.degree.finalized;
+                break;
+            }
+                
+            case kMTMathAtomInner: {
+                MTInner *inner = (MTInner*) atom;
+                MTInner *newInner = (MTInner*) newNode;
+                newInner.innerList = inner.innerList.finalized;
                 break;
             }
                 

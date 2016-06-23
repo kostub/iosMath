@@ -9,8 +9,14 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import "MTMathListTest.h"
+@import XCTest;
+
 #import "MTMathListBuilder.h"
+#import "MTMathAtomFactory.h"
+
+@interface MTMathListTest : XCTestCase
+
+@end
 
 @implementation MTMathListTest
 
@@ -119,6 +125,323 @@
     XCTAssertEqualObjects(atom.nucleus, @"15.2", @"Denom Atom 0 value");
     XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 4)), @"Range");
     
+}
+
+- (void) testAdd
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    XCTAssertEqual(list.atoms.count, 0);
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    [list addAtom:atom];
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqual(list.atoms[0], atom);
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    [list addAtom:atom2];
+    XCTAssertEqual(list.atoms.count, 2);
+    XCTAssertEqual(list.atoms[0], atom);
+    XCTAssertEqual(list.atoms[1], atom2);
+}
+
+- (void) testAddErrors
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = nil;
+    XCTAssertThrows([list addAtom:atom]);
+    atom = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@""];
+    XCTAssertThrows([list addAtom:atom]);
+}
+
+- (void) testInsert
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    XCTAssertEqual(list.atoms.count, 0);
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    [list insertAtom:atom atIndex:0];
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqual(list.atoms[0], atom);
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    [list insertAtom:atom2 atIndex:0];
+    XCTAssertEqual(list.atoms.count, 2);
+    XCTAssertEqual(list.atoms[0], atom2);
+    XCTAssertEqual(list.atoms[1], atom);
+    MTMathAtom* atom3 = [MTMathAtomFactory placeholder];
+    [list insertAtom:atom3 atIndex:2];
+    XCTAssertEqual(list.atoms.count, 3);
+    XCTAssertEqual(list.atoms[0], atom2);
+    XCTAssertEqual(list.atoms[1], atom);
+    XCTAssertEqual(list.atoms[2], atom3);
+}
+
+- (void) testInsertErrors
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = nil;
+    XCTAssertThrows([list insertAtom:atom atIndex:0]);
+    atom = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@""];
+    XCTAssertThrows([list insertAtom:atom atIndex:0]);
+    atom = [MTMathAtomFactory placeholder];
+    XCTAssertThrows([list insertAtom:atom atIndex:1]);
+}
+
+- (void) testRemoveLast
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    [list addAtom:atom];
+    XCTAssertEqual(list.atoms.count, 1);
+    [list removeLastAtom];
+    XCTAssertEqual(list.atoms.count, 0);
+    // Removing from empty list.
+    [list removeLastAtom];
+    XCTAssertEqual(list.atoms.count, 0);
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    XCTAssertEqual(list.atoms.count, 2);
+    [list removeLastAtom];
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqual(list.atoms[0], atom);
+}
+
+- (void) testRemoveAtomAtIndex
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    XCTAssertEqual(list.atoms.count, 2);
+    [list removeAtomAtIndex:0];
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqual(list.atoms[0], atom2);
+    
+    // Index out of range
+    XCTAssertThrows([list removeAtomAtIndex:2]);
+}
+
+- (void) testRemoveAtomsInRange
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom3 = [MTMathAtomFactory placeholder];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    XCTAssertEqual(list.atoms.count, 3);
+    [list removeAtomsInRange:NSMakeRange(1, 2)];
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqual(list.atoms[0], atom);
+    
+    // Index out of range
+    XCTAssertThrows([list removeAtomsInRange:NSMakeRange(1, 3)]);
+}
+
+#define MTAssertEqual(test, expression1, expression2, ...) \
+_XCTPrimitiveAssertEqual(test, expression1, @#expression1, expression2, @#expression2, __VA_ARGS__)
+
+#define MTAssertNotEqual(test, expression1, expression2, ...) \
+_XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#expression2, __VA_ARGS__)
+
++ (void) checkAtomCopy:(MTMathAtom*) copy original:(MTMathAtom*) original forTest:(XCTestCase*) test
+{
+    MTAssertEqual(test, copy.type, original.type);
+    MTAssertEqual(test, copy.nucleus, original.nucleus);
+    // Deep copy
+    MTAssertNotEqual(test, copy, original);
+}
+
++ (void) checkListCopy:(MTMathList*) copy original:(MTMathList*) original forTest:(XCTestCase*) test
+{
+    MTAssertEqual(test, copy.atoms.count, original.atoms.count);
+    int i = 0;
+    for (MTMathAtom* copyAtom in copy.atoms) {
+        MTMathAtom* origAtom = original.atoms[i];
+        [self checkAtomCopy:copyAtom original:origAtom forTest:test];
+        i++;
+    }
+}
+
+- (void) testCopy
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [list copy];
+    [MTMathListTest checkListCopy:list2 original:list forTest:self];
+}
+
+@end
+
+@interface MTMathAtomTest : XCTestCase
+
+@end
+
+@implementation MTMathAtomTest
+
+- (void) testAtomInit
+{
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOpen value:@"("];
+    XCTAssertEqual(atom.nucleus, @"(");
+    XCTAssertEqual(atom.type, kMTMathAtomOpen);
+    
+    atom = [MTMathAtom atomWithType:kMTMathAtomRadical value:@"("];
+    XCTAssertEqual(atom.nucleus, @"");
+    XCTAssertEqual(atom.type, kMTMathAtomRadical);
+}
+
+- (void) testAtomScripts
+{
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOpen value:@"("];
+    XCTAssertTrue(atom.scriptsAllowed);
+    atom.subScript = [[MTMathList alloc] init];
+    XCTAssertNotNil(atom.subScript);
+    atom.superScript = [[MTMathList alloc] init];
+    XCTAssertNotNil(atom.superScript);
+    
+    atom = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    XCTAssertFalse(atom.scriptsAllowed);
+    // Can set to nil
+    atom.subScript = nil;
+    XCTAssertNil(atom.subScript);
+    atom.superScript = nil;
+    XCTAssertNil(atom.superScript);
+    // Can't set to value
+    MTMathList* list = [[MTMathList alloc] init];
+    XCTAssertThrows(atom.subScript = list);
+    XCTAssertThrows(atom.superScript = list);
+}
+
+- (void) testAtomCopy
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom1 = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom1];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    [list2 addAtom:atom3];
+    [list2 addAtom:atom2];
+    
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOpen value:@"("];
+    atom.subScript = list;
+    atom.superScript = list2;
+    MTMathAtom* copy = [atom copy];
+    
+    [MTMathListTest checkAtomCopy:copy original:atom forTest:self];
+    [MTMathListTest checkListCopy:copy.superScript original:atom.superScript forTest:self];
+    [MTMathListTest checkListCopy:copy.subScript original:atom.subScript forTest:self];
+}
+
+- (void) testCopyFraction
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    [list2 addAtom:atom3];
+    [list2 addAtom:atom2];
+    
+    MTFraction* frac = [[MTFraction alloc] init];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction);
+    frac.numerator = list;
+    frac.denominator = list2;
+    
+    MTFraction* copy = [frac copy];
+    [MTMathListTest checkAtomCopy:copy original:frac forTest:self];
+    [MTMathListTest checkListCopy:copy.numerator original:frac.numerator forTest:self];
+    [MTMathListTest checkListCopy:copy.denominator original:frac.denominator forTest:self];
+}
+
+- (void) testCopyRadical
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    [list2 addAtom:atom3];
+    [list2 addAtom:atom2];
+    
+    MTRadical* rad = [[MTRadical alloc] init];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical);
+    rad.radicand = list;
+    rad.degree = list2;
+    
+    MTRadical* copy = [rad copy];
+    [MTMathListTest checkAtomCopy:copy original:rad forTest:self];
+    [MTMathListTest checkListCopy:copy.radicand original:rad.radicand forTest:self];
+    [MTMathListTest checkListCopy:copy.degree original:rad.degree forTest:self];
+}
+
+- (void) testCopyLargeOperator
+{
+    MTLargeOperator* lg = [[MTLargeOperator alloc] initWithValue:@"lim" limits:true];
+    XCTAssertEqual(lg.type, kMTMathAtomLargeOperator);
+    XCTAssertTrue(lg.limits);
+    
+    MTLargeOperator* copy = [lg copy];
+    [MTMathListTest checkAtomCopy:copy original:lg forTest:self];
+    XCTAssertEqual(copy.limits, lg.limits);
+}
+- (void) testCopyInner
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTInner* inner = [[MTInner alloc] init];
+    inner.innerList = list;
+    inner.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    inner.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@")"];
+    XCTAssertEqual(inner.type, kMTMathAtomInner);
+    
+    MTInner* copy = [inner copy];
+    [MTMathListTest checkAtomCopy:copy original:inner forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:inner.innerList forTest:self];
+    [MTMathListTest checkAtomCopy:copy.leftBoundary original:inner.leftBoundary forTest:self];
+    [MTMathListTest checkAtomCopy:copy.rightBoundary original:inner.rightBoundary forTest:self];
+}
+
+- (void) testSetInnerBoundary
+{
+    MTInner* inner = [[MTInner alloc] init];
+    
+    // Can set non-nil
+    inner.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    inner.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@")"];
+    XCTAssertNotNil(inner.leftBoundary);
+    XCTAssertNotNil(inner.rightBoundary);
+    // Can set nil
+    inner.leftBoundary = nil;
+    inner.rightBoundary = nil;
+    XCTAssertNil(inner.leftBoundary);
+    XCTAssertNil(inner.rightBoundary);
+    // Can't set non boundary
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    XCTAssertThrows(inner.leftBoundary = atom);
+    XCTAssertThrows(inner.rightBoundary = atom);
 }
 
 @end

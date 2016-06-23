@@ -62,7 +62,8 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
             return 5;
         case kMTMathAtomPunctuation:
             return 6;
-        case kMTMathAtomFraction:
+        case kMTMathAtomFraction:  // Fraction and inner are treated the same.
+        case kMTMathAtomInner:
             return 7;
         case kMTMathAtomRadical: {
             if (row) {

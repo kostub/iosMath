@@ -105,7 +105,6 @@
 		49B83EEE17CE71AC0014B739 /* MTMathListBuilderTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListBuilderTest.h; sourceTree = "<group>"; };
 		49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilderTest.m; sourceTree = "<group>"; };
 		49B83EF217CE74620014B739 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		49B83EF417CF046A0014B739 /* MTMathListTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListTest.h; sourceTree = "<group>"; };
 		49B83EF517CF046A0014B739 /* MTMathListTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListTest.m; sourceTree = "<group>"; };
 		49B83EF817CF2AE90014B739 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = example/AppDelegate.h; sourceTree = "<group>"; };
 		49B83EF917CF2AE90014B739 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = example/AppDelegate.m; sourceTree = "<group>"; };
@@ -274,7 +273,6 @@
 				49965F2A17CBBA2700A555C5 /* iosMathTests.m */,
 				49B83EEE17CE71AC0014B739 /* MTMathListBuilderTest.h */,
 				49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */,
-				49B83EF417CF046A0014B739 /* MTMathListTest.h */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				49965F2417CBBA2700A555C5 /* Supporting Files */,
 			);

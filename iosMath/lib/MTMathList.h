@@ -60,10 +60,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     
     // Atoms after this point do not support subscripts or superscripts
     
-    /// A left atom - Left in TeX
-    kMTMathAtomLeft = 101,
-    /// A right atom - Right in TeX
-    kMTMathAtomRight,
+    /// A left atom - Left & Right in TeX. We don't need two since we track boundaries separately.
+    kMTMathAtomBoundary = 101,
 };
 
 /** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
@@ -161,14 +159,20 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
-/** An inner atom. This denotes an atom which contains a math list inside it. */
+/** An inner atom. This denotes an atom which contains a math list inside it. An inner atom
+ has optional boundaries. Note: Only one boundary may be present, it is not required to have
+ both. */
 @interface MTInner : MTMathAtom
 
 /// Creates an empty inner
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /// The inner math list
-@property (nonatomic, nullable) MTMathList* inner;
+@property (nonatomic, nullable) MTMathList* innerList;
+/// The left boundary atom. This must be a node of type kMTMathAtomBoundary
+@property (nonatomic, nullable) MTMathAtom* leftBoundary;
+/// The right boundary atom. This must be a node of type kMTMathAtomBoundary
+@property (nonatomic, nullable) MTMathAtom* rightBoundary;
 
 @end
 
@@ -186,15 +190,36 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 /// A list of MathAtoms
 @property (nonatomic, readonly) NSArray* atoms;
 
+/** Initializes an empty math list. */
 - (instancetype) init NS_DESIGNATED_INITIALIZER;
 
+/** Add an atom to the end of the list.
+ @param atom The atom to be inserted. This cannot be `nil` and cannot have the type `kMTMathAtomBoundary`.
+ @throws NSException if the atom is of type `kMTMathAtomBoundary`
+ @throws NSInvalidArgumentException if the atom is `nil` */
 - (void) addAtom:(MTMathAtom*) atom;
 
+/** Inserts an atom at the given index. If index is already occupied, the objects at index and beyond are 
+ shifted by adding 1 to their indices to make room.
+ 
+ @param atom The atom to be inserted. This cannot be `nil` and cannot have the type `kMTMathAtomBoundary`.
+ @param index The index where the atom is to be inserted. The index should be less than or equal to the
+ number of elements in the math list.
+ @throws NSException if the atom is of type kMTMathAtomBoundary
+ @throws NSInvalidArgumentException if the atom is nil
+ @throws NSRangeException if the index is greater than the number of atoms in the math list. */
 - (void) insertAtom:(MTMathAtom *)atom atIndex:(NSUInteger) index;
 
-/// deletes the last atom from the list
+/** Removes the last atom from the math list. If there are no atoms in the list this does nothing. */
 - (void) removeLastAtom;
+
+/** Removes the atom at the given index.
+ @param index The index at which to remove the atom. Must be less than the number of atoms
+ in the list.
+ */
 - (void) removeAtomAtIndex:(NSUInteger) index;
+
+/** Removes all the atoms within the given range. */
 - (void) removeAtomsInRange:(NSRange) range;
 
 /// converts the MTMathList to a string form. Note: This is not the LaTeX form.
