@@ -183,6 +183,31 @@
     XCTAssertThrows([list insertAtom:atom atIndex:1]);
 }
 
+- (void) testAppend
+{
+    MTMathList* list1 = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom3 = [MTMathAtomFactory placeholder];
+    [list1 addAtom:atom];
+    [list1 addAtom:atom2];
+    [list1 addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    MTMathAtom* atom5 = [MTMathAtomFactory times];
+    MTMathAtom* atom6 = [MTMathAtomFactory divide];
+    [list2 addAtom:atom5];
+    [list2 addAtom:atom6];
+    
+    XCTAssertEqual(list1.atoms.count, 3);
+    XCTAssertEqual(list2.atoms.count, 2);
+    
+    [list1 append:list2];
+    XCTAssertEqual(list1.atoms.count, 5);
+    XCTAssertEqual(list1.atoms[3], atom5);
+    XCTAssertEqual(list1.atoms[4], atom6);
+}
+
 - (void) testRemoveLast
 {
     MTMathList* list = [[MTMathList alloc] init];

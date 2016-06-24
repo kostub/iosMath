@@ -210,6 +210,11 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
  @throws NSRangeException if the index is greater than the number of atoms in the math list. */
 - (void) insertAtom:(MTMathAtom *)atom atIndex:(NSUInteger) index;
 
+/** Append the given list to the end of the current list.
+ @param list The list to append.
+ */
+- (void) append:(MTMathList*) list;
+
 /** Removes the last atom from the math list. If there are no atoms in the list this does nothing. */
 - (void) removeLastAtom;
 

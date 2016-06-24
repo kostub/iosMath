@@ -142,13 +142,20 @@ static void initializeGlobalsIfNeeded() {
             continue;
         } else if (ch == '{') {
             // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
-            [self buildInternal:list oneCharOnly:false];
+            MTMathList* sublist = [MTMathList new];
+            [self buildInternal:sublist oneCharOnly:false stopChar:'}'];
+            [list append:sublist];
             if (oneCharOnly) {
                 return;
             }
             continue;
         } else if (ch == '}') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
+            NSAssert(stop == 0, @"This should have been handled before");
+            // We encountered a closing brace when there is no stop set, that means there was no
+            // corresponding opening brace.
+            NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
+            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
             return;
         } else if (ch == '\\') {
             // \ means a command
@@ -199,9 +206,15 @@ static void initializeGlobalsIfNeeded() {
         }
     }
     if (stop > 0) {
-        // we never found our stop character
-        NSString* errorMessage = [NSString stringWithFormat:@"Expected character not found: %d", stop];
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorCharacterNotFound userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
+        if (stop == '}') {
+            // We did not find a corresponding closing brace.
+            NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
+            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
+        } else {
+            // we never found our stop character
+            NSString* errorMessage = [NSString stringWithFormat:@"Expected character not found: %d", stop];
+            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorCharacterNotFound userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
+        }
     }
 }
 

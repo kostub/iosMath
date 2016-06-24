@@ -441,6 +441,11 @@ static NSString* typeToText(MTMathAtomType type) {
     [_atoms insertObject:atom atIndex:index];
 }
 
+- (void)append:(MTMathList *)list
+{
+    [_atoms addObjectsFromArray:list.atoms];
+}
+
 - (void)removeLastAtom
 {
     if (_atoms.count > 0) {

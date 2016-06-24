@@ -9,8 +9,13 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import "MTMathListBuilderTest.h"
+@import XCTest;
+
 #import "MTMathListBuilder.h"
+
+@interface MTMathListBuilderTest : XCTestCase
+
+@end
 
 @implementation MTMathListBuilderTest
 
@@ -55,8 +60,6 @@ static NSArray* getTestData() {
              @[ @"(2.3 * 8)", @[ @(kMTMathAtomOpen), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) , @(kMTMathAtomClose) ], @"(2.3*8)"],
              // braces are just for grouping
              @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)], @"53+4"],
-             // extra braces are ok
-             @[ @"{{3", @[@(kMTMathAtomNumber)], @"3"],
              // commands
              @[ @"\\pi+\\theta\\geq 3",@[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber)], @"\\pi +\\theta \\geq 3"],
              // aliases
@@ -408,4 +411,31 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertEqualObjects(latex, @"\\sqrt[3]{2}");
 }
 
+static NSArray* getTestDataParseErrors() {
+    return @[
+              @[@"}a", @(MTParseErrorMismatchBraces)],
+              @[@"\\notacommand", @(MTParseErrorInvalidCommand)],
+              @[@"\\sqrt[5+3", @(MTParseErrorCharacterNotFound)],
+              @[@"{5+3", @(MTParseErrorMismatchBraces)],
+              @[@"5+3}", @(MTParseErrorMismatchBraces)],
+              @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],
+              ];
+};
+
+- (void) testErrors
+{
+        NSArray* data = getTestDataParseErrors();
+        for (NSArray* testCase in data) {
+            NSString* str = testCase[0];
+            NSError* error = nil;
+            MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+            NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+            XCTAssertNil(list, @"%@", desc);
+            XCTAssertNotNil(error, @"%@", desc);
+            XCTAssertEqual(error.domain, MTParseError, @"%@", desc);
+            NSNumber* num = testCase[1];
+            NSInteger code = [num integerValue];
+            XCTAssertEqual(error.code, code, @"%@", desc);
+        }
+}
 @end
