@@ -89,11 +89,13 @@ static NSArray* getTestDataSuperScript() {
              @[ @"x^2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}"],
              @[ @"x^23", @[ @(kMTMathAtomVariable), @(kMTMathAtomNumber) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}3"],
              @[ @"x^{23}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x^{23}"],
-             @[ @"x^2^3", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x^{23}" ],
+             @[ @"x^2^3", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}{}^{3}" ],
              @[ @"x^{2^3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x^{2^{3}}"],
-             @[ @"x^{^2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x^{^{2}*}"],
-             @[ @"^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"^{2}"],
-             @[ @"x^^2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x^{2}"],
+             @[ @"x^{^2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x^{{}^{2}*}"],
+             @[ @"^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
+             @[ @"{}^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
+             @[ @"x^^2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x^{}{}^{2}"],
+             @[ @"5{x}^2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x^{2}"],
              ];
 }
 
@@ -110,7 +112,10 @@ static NSArray* getTestDataSuperScript() {
         // get the first atom
         MTMathAtom* first = list.atoms[0];
         // check it's superscript
-        XCTAssertNotNil(first.superScript, @"%@", desc);
+        NSArray* types = testCase[2];
+        if (types.count > 0) {
+            XCTAssertNotNil(first.superScript, @"%@", desc);
+        }
         MTMathList* superlist = first.superScript;
         [self checkAtomTypes:superlist types:testCase[2] desc:desc];
         
@@ -132,11 +137,13 @@ static NSArray* getTestDataSubScript() {
              @[ @"x_2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}" ],
              @[ @"x_23", @[ @(kMTMathAtomVariable), @(kMTMathAtomNumber) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}3"],
              @[ @"x_{23}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x_{23}"],
-             @[ @"x_2_3", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber), @(kMTMathAtomNumber) ], @"x_{23}" ],
+             @[ @"x_2_3", @[ @(kMTMathAtomVariable) , @(kMTMathAtomOrdinary)],  @[ @(kMTMathAtomNumber) ], @"x_{2}{}_{3}" ],
              @[ @"x_{2_3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x_{2_{3}}"],
-             @[ @"x_{_2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x_{_{2}*}"],
-             @[ @"_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"_{2}" ],
-             @[ @"x__2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber) ], @"x_{2}"],
+             @[ @"x_{_2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x_{{}_{2}*}"],
+             @[ @"_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
+             @[ @"{}_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
+             @[ @"x__2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x_{}{}_{2}"],
+             @[ @"5{x}_2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x_{2}"],
              ];
 }
 
@@ -153,7 +160,10 @@ static NSArray* getTestDataSubScript() {
         // get the first atom
         MTMathAtom* first = list.atoms[0];
         // check it's superscript
-        XCTAssertNotNil(first.subScript, @"%@", desc);
+        NSArray* types = testCase[2];
+        if (types.count > 0) {
+            XCTAssertNotNil(first.subScript, @"%@", desc);
+        }
         MTMathList* sublist = first.subScript;
         [self checkAtomTypes:sublist types:testCase[2] desc:desc];
         
@@ -178,7 +188,7 @@ static NSArray* getTestDataSuperSubScript() {
              @[ @"x^_2", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber)], @[ ], @"x^{}_{2}"],
              @[ @"x_{2^*}", @[ @(kMTMathAtomVariable) ],  @[ @(kMTMathAtomNumber)], @[ ], @"x_{2^{*}}"],
              @[ @"x^{*_2}", @[ @(kMTMathAtomVariable) ], @[ ], @[ @(kMTMathAtomBinaryOperator),], @"x^{*_{2}}"],
-             @[ @"_2^*", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @[ @(kMTMathAtomBinaryOperator) ], @"^{*}_{2}"],
+             @[ @"_2^*", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @[ @(kMTMathAtomBinaryOperator) ], @"{}^{*}_{2}"],
              ];
 }
 
@@ -419,6 +429,17 @@ static NSArray* getTestDataParseErrors() {
               @[@"{5+3", @(MTParseErrorMismatchBraces)],
               @[@"5+3}", @(MTParseErrorMismatchBraces)],
               @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],
+              @[@"\\ + 3", @(MTParseErrorInvalidCommand)],
+              @[@"1+\\left", @(MTParseErrorMissingDelimiter)],
+              @[@"\\left(\\frac12\\right", @(MTParseErrorMissingDelimiter)],
+              @[@"\\left 5 + 3 \\right)", @(MTParseErrorInvalidDelimiter)],
+              @[@"\\left(\\frac12\\right + 3", @(MTParseErrorInvalidDelimiter)],
+              @[@"\\left\\lmoustache 5 + 3 \\right)", @(MTParseErrorInvalidDelimiter)],
+              @[@"\\left(\\frac12\\right\\rmoustache + 3", @(MTParseErrorInvalidDelimiter)],
+              @[@"5 + 3 \\right)", @(MTParseErrorMissingLeft)],
+              @[@"\\left(\\frac12", @(MTParseErrorMissingRight)],
+              @[@"\\left(5 + \\left| \\frac12 \\right)", @(MTParseErrorMissingRight)],
+              @[@"5+ \\left|\\frac12\\right| \\right)", @(MTParseErrorMissingLeft)],
               ];
 };
 

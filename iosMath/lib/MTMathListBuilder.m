@@ -25,6 +25,7 @@ static void initializeGlobalsIfNeeded() {
     unichar* _chars;
     int _currentChar;
     NSUInteger _length;
+    MTInner* _currentInnerAtom;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -66,12 +67,11 @@ static void initializeGlobalsIfNeeded() {
 
 - (MTMathList *)build
 {
-    MTMathList* list = [MTMathList new];
-    [self buildInternal:list oneCharOnly:false];
+    MTMathList* list = [self buildInternal:false];
     if ([self hasCharacters] && !_error) {
         // something went wrong most likely braces mismatched
         NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces: %@", [NSString stringWithCharacters:_chars length:_length]];
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
+        [self setError:MTParseErrorMismatchBraces message:errorMessage];
     }
     if (_error) {
         return nil;
@@ -79,16 +79,21 @@ static void initializeGlobalsIfNeeded() {
     return list;
 }
 
-- (void)buildInternal:(MTMathList*) list oneCharOnly:(BOOL) oneCharOnly
+- (MTMathList*) buildInternal:(BOOL) oneCharOnly
 {
-    [self buildInternal:list oneCharOnly:oneCharOnly stopChar:0];
+    return [self buildInternal:oneCharOnly stopChar:0];
 }
 
-- (void)buildInternal:(MTMathList*) list oneCharOnly:(BOOL) oneCharOnly stopChar:(unichar) stop
+- (MTMathList*)buildInternal:(BOOL) oneCharOnly stopChar:(unichar) stop
 {
+    MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
     MTMathAtom* prevAtom = nil;
     while([self hasCharacters]) {
+        if (_error) {
+            // If there is an error thus far then bail out.
+            return nil;
+        }
         MTMathAtom* atom = nil;
         unichar ch = [self getNextCharacter];
         NSString *chStr = [NSString stringWithCharacters:&ch length:1];
@@ -97,12 +102,12 @@ static void initializeGlobalsIfNeeded() {
                 // this is not the character we are looking for.
                 // They are meant for the caller to look at.
                 [self unlookCharacter];
-                return;
+                return list;
             }
         }
         // If there is a stop character, keep scanning till we find it
         if (stop > 0 && ch == stop) {
-            return;
+            return list;
         }
         
         if (ch < 0x21 || ch > 0x7E) {
@@ -111,42 +116,36 @@ static void initializeGlobalsIfNeeded() {
         } else if (ch == '^') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
             
-            if (!prevAtom) {
-                // add an empty node
+            if (!prevAtom || prevAtom.superScript || !prevAtom.scriptsAllowed) {
+                // If there is no previous atom, or if it already has a superscript
+                // or if scripts are not allowed for it, then add an empty node.
                 prevAtom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
                 [list addAtom:prevAtom];
             }
             // this is a superscript for the previous atom
-            if (!prevAtom.superScript) {
-                MTMathList* superScript = [MTMathList new];
-                prevAtom.superScript = superScript;
-            }
             // note: if the next char is the stopChar it will be consumed by the ^ and so it doesn't count as stop
-            [self buildInternal:prevAtom.superScript oneCharOnly:true];
+            prevAtom.superScript = [self buildInternal:true];
             continue;
         } else if (ch == '_') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
             
-            if (!prevAtom) {
-                // add an empty node
+            if (!prevAtom || prevAtom.subScript || !prevAtom.scriptsAllowed) {
+                // If there is no previous atom, or if it already has a subcript
+                // or if scripts are not allowed for it, then add an empty node.
                 prevAtom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
                 [list addAtom:prevAtom];
             }
             // this is a subscript for the previous atom
-            if (!prevAtom.subScript) {
-                MTMathList* subScript = [MTMathList new];
-                prevAtom.subScript = subScript;
-            }
             // note: if the next char is the stopChar it will be consumed by the _ and so it doesn't count as stop
-            [self buildInternal:prevAtom.subScript oneCharOnly:true];
+            prevAtom.subScript = [self buildInternal:true];
             continue;
         } else if (ch == '{') {
             // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
-            MTMathList* sublist = [MTMathList new];
-            [self buildInternal:sublist oneCharOnly:false stopChar:'}'];
+            MTMathList* sublist = [self buildInternal:false stopChar:'}'];
+            prevAtom = [sublist.atoms lastObject];
             [list append:sublist];
             if (oneCharOnly) {
-                return;
+                return list;
             }
             continue;
         } else if (ch == '}') {
@@ -155,16 +154,22 @@ static void initializeGlobalsIfNeeded() {
             // We encountered a closing brace when there is no stop set, that means there was no
             // corresponding opening brace.
             NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
-            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
-            return;
+            [self setError:MTParseErrorMismatchBraces message:errorMessage];
+            return nil;
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
+            MTMathList* done = [self stopCommand:command list:list];
+            if (done) {
+                return done;
+            } else if (_error) {
+                return nil;
+            }
             atom = [self atomForCommand:command];
             if (atom == nil) {
                 // this was an unknown command,
                 // we flag an error and return.
-                return;
+                return nil;
             }
         } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
             // These are latex control characters that have special meanings. We don't support them.
@@ -202,20 +207,20 @@ static void initializeGlobalsIfNeeded() {
         
         if (oneCharOnly) {
             // we consumed our onechar
-            return;
+            return list;
         }
     }
     if (stop > 0) {
         if (stop == '}') {
             // We did not find a corresponding closing brace.
-            NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
-            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorMismatchBraces userInfo:@{ NSLocalizedDescriptionKey: errorMessage} ];
+            [self setError:MTParseErrorMismatchBraces message:@"Missing closing brace"];
         } else {
             // we never found our stop character
             NSString* errorMessage = [NSString stringWithFormat:@"Expected character not found: %d", stop];
-            _error = [NSError errorWithDomain:MTParseError code:MTParseErrorCharacterNotFound userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
+            [self setError:MTParseErrorCharacterNotFound message:errorMessage];
         }
     }
+    return list;
 }
 
 - (NSString*) readCommand
@@ -240,6 +245,49 @@ static void initializeGlobalsIfNeeded() {
     return mutable;
 }
 
+- (NSString*) readDelimiter
+{
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        // Ignore spaces and nonascii.
+        if (ch < 0x21 || ch > 0x7E) {
+            // skip non ascii characters and spaces
+            continue;
+        } else if (ch == '\\') {
+            // \ means a command
+            NSString* command = [self readCommand];
+            if ([command isEqualToString:@"|"]) {
+                // | is a command and also a regular delimiter. We use the || command to
+                // distinguish between the 2 cases for the caller.
+                return @"||";
+            }
+            return command;
+        } else {
+            return [NSString stringWithCharacters:&ch length:1];
+        }
+    }
+    // We ran out of characters for delimiter
+    return nil;
+}
+
+- (NSString*) getDelimiterValue:(NSString*) delimiterType
+{
+    NSString* delim = [self readDelimiter];
+    if (!delim) {
+        NSString* errorMessage = [NSString stringWithFormat:@"Missing delimiter for \\%@", delimiterType];
+        [self setError:MTParseErrorMissingDelimiter message:errorMessage];
+        return nil;
+    }
+    NSDictionary<NSString*, NSString*>* delims = [MTMathListBuilder delimiters];
+    NSString* delimValue = delims[delim];
+    if (!delimValue) {
+        NSString* errorMessage = [NSString stringWithFormat:@"Invalid delimiter for \\%@: %@", delimiterType, delimValue];
+        [self setError:MTParseErrorInvalidDelimiter message:errorMessage];
+        return nil;
+    }
+    return delimValue;
+}
+
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
     NSDictionary* aliases = [MTMathListBuilder aliases];
@@ -257,30 +305,73 @@ static void initializeGlobalsIfNeeded() {
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];
-        frac.numerator = [MTMathList new];
-        frac.denominator = [MTMathList new];
-        [self buildInternal:frac.numerator oneCharOnly:true];
-        [self buildInternal:frac.denominator oneCharOnly:true];
+        frac.numerator = [self buildInternal:true];
+        frac.denominator = [self buildInternal:true];
         return frac;
     } else if ([command isEqualToString:@"sqrt"]) {
         // A sqrt command with one argument
         MTRadical* rad = [MTRadical new];
-        rad.radicand = [MTMathList new];
         unichar ch = [self getNextCharacter];
         if (ch == '[') {
             // special handling for sqrt[degree]{radicand}
-            rad.degree = [MTMathList new];
-            [self buildInternal:rad.degree oneCharOnly:false stopChar:']'];
-            [self buildInternal:rad.radicand oneCharOnly:true];
+            rad.degree = [self buildInternal:false stopChar:']'];
+            rad.radicand = [self buildInternal:true];
         } else {
             [self unlookCharacter];
-            [self buildInternal:rad.radicand oneCharOnly:true];
+            rad.radicand = [self buildInternal:true];
         }
         return rad;
+    } else if ([command isEqualToString:@"left"]) {
+        NSString* delim = [self getDelimiterValue:@"left"];
+        if (!delim) {
+            return nil;
+        }
+        // Save the current inner while a new one gets built.
+        MTInner* oldInner = _currentInnerAtom;
+        _currentInnerAtom = [MTInner new];
+        _currentInnerAtom.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        _currentInnerAtom.innerList = [self buildInternal:false];
+        if (!_currentInnerAtom.rightBoundary) {
+            // A right node would have set the right boundary so we must be missing the right node.
+            NSString* errorMessage = @"Missing \\right";
+            [self setError:MTParseErrorMissingRight message:errorMessage];
+            return nil;
+        }
+        // reinstate the old inner atom.
+        MTInner* newInner = _currentInnerAtom;
+        _currentInnerAtom = oldInner;
+        return newInner;
     } else {
-        NSString* errorMessage = [NSString stringWithFormat:@"Invalid command %@", command];
-        _error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidCommand userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
+        NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
+        [self setError:MTParseErrorInvalidCommand message:errorMessage];
         return nil;
+    }
+}
+
+- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list
+{
+    if ([command isEqualToString:@"right"]) {
+        NSString* delim = [self getDelimiterValue:@"right"];
+        if (!delim) {
+            return nil;
+        }
+        if (!_currentInnerAtom) {
+            NSString* errorMessage = @"Missing \\left";
+            [self setError:MTParseErrorMissingLeft message:errorMessage];
+            return nil;
+        }
+        _currentInnerAtom.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        // return the list read so far.
+        return list;
+    }
+    return nil;
+}
+
+- (void) setError:(MTParseErrors) code message:(NSString*) message
+{
+    // Only record the first error.
+    if (!_error) {
+        _error = [NSError errorWithDomain:MTParseError code:code userInfo:@{ NSLocalizedDescriptionKey : message }];
     }
 }
 
@@ -508,6 +599,7 @@ static void initializeGlobalsIfNeeded() {
                       @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
                       @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
                       @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
+                      @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
                       @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
                       @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
                       @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
@@ -558,6 +650,48 @@ static void initializeGlobalsIfNeeded() {
                      };
     }
     return aliases;
+}
+
++(NSDictionary<NSString*, NSString*> *) delimiters
+{
+    static NSDictionary* delims = nil;
+    if (!delims) {
+        delims = @{
+                   @"." : @"", // . means no delimiter
+                   @"(" : @"(",
+                   @")" : @")",
+                   @"[" : @"[",
+                   @"]" : @"]",
+                   @"<" : @"\u2329",
+                   @">" : @"\u232A",
+                   @"/" : @"/",
+                   @"\\" : @"\\",
+                   @"|" : @"|",
+                   @"lgroup" : @"\u27EE",
+                   @"rgroup" : @"\u27EF",
+                   @"||" : @"\u2016",
+                   @"Vert" : @"\u2016",
+                   @"vert" : @"|",
+                   @"uparrow" : @"\u2191",
+                   @"downarrow" : @"\u2193",
+                   @"updownarrow" : @"\u2195",
+                   @"Uparrow" : @"21D1",
+                   @"Downarrow" : @"21D3",
+                   @"Updownarrow" : @"21D5",
+                   @"backslash" : @"\\",
+                   @"rangle" : @"\u2329",
+                   @"langle" : @"\u232A",
+                   @"rbrace" : @"}",
+                   @"}" : @"}",
+                   @"{" : @"{",
+                   @"lbrace" : @"{",
+                   @"lceil" : @"\u2308",
+                   @"rceil" : @"\u2309",
+                   @"lfloor" : @"\u230A",
+                   @"rfloor" : @"\u230B",
+                   };
+    }
+    return delims;
 }
 
 + (NSDictionary*) textToCommands
@@ -612,6 +746,8 @@ static void initializeGlobalsIfNeeded() {
                 [str appendFormat:@"[%@]", [self mathListToString:rad.degree]];
             }
             [str appendFormat:@"{%@}", [self mathListToString:rad.radicand]];
+        } else if (atom.nucleus.length == 0) {
+            [str appendString:@"{}"];
         } else {
             [str appendString:atom.nucleus];
         }

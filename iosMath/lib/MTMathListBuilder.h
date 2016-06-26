@@ -50,6 +50,10 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMismatchBraces = 1,
     MTParseErrorInvalidCommand,
     MTParseErrorCharacterNotFound,
+    MTParseErrorMissingDelimiter,
+    MTParseErrorInvalidDelimiter,
+    MTParseErrorMissingRight,
+    MTParseErrorMissingLeft,
 };
 
 @end
