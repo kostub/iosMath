@@ -230,7 +230,7 @@ static void initializeGlobalsIfNeeded() {
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
         // Single char commands
-        if (mutable.length == 0 && (ch == '{' || ch == '}' || ch == '$' || ch == '&' || ch == '#' || ch == '%' || ch == '_')) {
+        if (mutable.length == 0 && (ch == '{' || ch == '}' || ch == '$' || ch == '&' || ch == '#' || ch == '%' || ch == '_' || ch == '|')) {
             // These are single char commands.
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
             break;
@@ -281,7 +281,7 @@ static void initializeGlobalsIfNeeded() {
     NSDictionary<NSString*, NSString*>* delims = [MTMathListBuilder delimiters];
     NSString* delimValue = delims[delim];
     if (!delimValue) {
-        NSString* errorMessage = [NSString stringWithFormat:@"Invalid delimiter for \\%@: %@", delimiterType, delimValue];
+        NSString* errorMessage = [NSString stringWithFormat:@"Invalid delimiter for \\%@: %@", delimiterType, delim];
         [self setError:MTParseErrorInvalidDelimiter message:errorMessage];
         return nil;
     }
@@ -709,6 +709,21 @@ static void initializeGlobalsIfNeeded() {
     return textToCommands;
 }
 
++ (NSDictionary*) delimToCommand
+{
+    static NSDictionary* delimToCommands = nil;
+    if (!delimToCommands) {
+        NSDictionary* delims = [self delimiters];
+        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
+        for (NSString* command in delims) {
+            NSString* delim = delims[command];
+            mutableDict[delim] = command;
+        }
+        delimToCommands = [mutableDict copy];
+    }
+    return delimToCommands;
+}
+
 + (MTMathList *)buildFromString:(NSString *)str
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
@@ -726,6 +741,22 @@ static void initializeGlobalsIfNeeded() {
         return nil;
     }
     return output;
+}
+
++ (NSString*) delimToString:(NSString*) delim
+{
+    NSString* command = self.delimToCommand[delim];
+    if (command) {
+        NSArray<NSString*>* singleChars = @[ @"(", @")", @"[", @"]", @"<", @">", @"|", @".", @"/"];
+        if ([singleChars containsObject:command]) {
+            return command;
+        } else if ([command isEqualToString:@"||"]) {
+            return @"\\|"; // special case for ||
+        } else {
+            return [NSString stringWithFormat:@"\\%@", command];
+        }
+    }
+    return @"";
 }
 
 + (NSString *)mathListToString:(MTMathList *)ml
@@ -746,8 +777,31 @@ static void initializeGlobalsIfNeeded() {
                 [str appendFormat:@"[%@]", [self mathListToString:rad.degree]];
             }
             [str appendFormat:@"{%@}", [self mathListToString:rad.radicand]];
+        } else if (atom.type == kMTMathAtomInner) {
+            MTInner* inner = (MTInner*) atom;
+            if (inner.leftBoundary || inner.rightBoundary) {
+                if (inner.leftBoundary) {
+                    [str appendFormat:@"\\left%@ ", [self delimToString:inner.leftBoundary.nucleus]];
+                } else {
+                    [str appendString:@"\\left. "];
+                }
+                [str appendString:[self mathListToString:inner.innerList]];
+                if (inner.rightBoundary) {
+                    [str appendFormat:@"\\right%@ ", [self delimToString:inner.rightBoundary.nucleus]];
+                } else {
+                    [str appendString:@"\\right. "];
+                }
+            } else {
+                [str appendFormat:@"{%@}", [self mathListToString:inner.innerList]];
+            }
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
+        } else if ([atom.nucleus isEqualToString:@"\u2236"]) {
+            // math colon
+            [str appendString:@":"];
+        } else if ([atom.nucleus isEqualToString:@"\u2212"]) {
+            // math minus
+            [str appendString:@"-"];
         } else {
             [str appendString:atom.nucleus];
         }

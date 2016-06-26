@@ -73,7 +73,9 @@ static NSArray* getTestData() {
     NSArray* data = getTestData();
     for (NSArray* testCase in data) {
         NSString* str = testCase[0];
-        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSError* error;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        XCTAssertNil(error);
         NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
         NSArray* atomTypes = testCase[1];
         [self checkAtomTypes:list types:atomTypes desc:desc];
@@ -104,7 +106,9 @@ static NSArray* getTestDataSuperScript() {
     NSArray* data = getTestDataSuperScript();
     for (NSArray* testCase in data) {
         NSString* str = testCase[0];
-        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSError* error;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        XCTAssertNil(error);
         NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
         NSArray* atomTypes = testCase[1];
         [self checkAtomTypes:list types:atomTypes desc:desc];
@@ -152,7 +156,10 @@ static NSArray* getTestDataSubScript() {
     NSArray* data = getTestDataSubScript();
     for (NSArray* testCase in data) {
         NSString* str = testCase[0];
-        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSError* error;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        XCTAssertNil(error);
+        
         NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
         NSArray* atomTypes = testCase[1];
         [self checkAtomTypes:list types:atomTypes desc:desc];
@@ -419,6 +426,63 @@ static NSArray* getTestDataSuperSubScript() {
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"\\sqrt[3]{2}");
+}
+
+static NSArray* getTestDataLeftRight() {
+    return @[
+             @[@"\\left( 2 \\right)", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber)], @"(", @")", @"\\left( 2\\right) "],
+             // spacing
+             @[@"\\left ( 2 \\right )", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber)], @"(", @")", @"\\left( 2\\right) "],
+             // commands
+             @[@"\\left\\{ 2 \\right\\}", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber)], @"{", @"}", @"\\left\\lbrace 2\\right\\rbrace "],
+             // complex commands
+             @[@"\\left\\langle x \\right\\rangle", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"\u232A", @"\u2329", @"\\left\\langle x\\right\\rangle "],
+             // bars
+             @[@"\\left| x \\right\\|", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"|", @"\u2016", @"\\left| x\\right\\| "],
+             // inner in between
+             @[@"5 + \\left( 2 \\right) - 2", @[ @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomInner), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) ], @2, @[ @(kMTMathAtomNumber)], @"(", @")", @"5+\\left( 2\\right) -2"],
+             // long inner
+              @[@"\\left( 2 + \\frac12\\right)", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomFraction)], @"(", @")", @"\\left( 2+\\frac{1}{2}\\right) "],
+             // nested
+             @[@"\\left[ 2 + \\left|\\frac{-x}{2}\\right| \\right]", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomInner)], @"[", @"]", @"\\left[ 2+\\left| \\frac{-x}{2}\\right| \\right] "],
+             ];
+}
+
+- (void) testLeftRight
+{
+    NSArray* data = getTestDataLeftRight();
+    for (NSArray* testCase in data) {
+        NSString* str = testCase[0];
+        
+        NSError* error;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        
+        XCTAssertNotNil(list, @"%@", str);
+        XCTAssertNil(error, @"%@", str);
+        
+        [self checkAtomTypes:list types:testCase[1] desc:[NSString stringWithFormat:@"%@ outer", str]];
+
+        NSNumber* innerLoc = testCase[2];
+        MTInner* inner = list.atoms[innerLoc.intValue];
+        XCTAssertEqual(inner.type, kMTMathAtomInner, @"%@", str);
+        XCTAssertEqualObjects(inner.nucleus, @"", @"%@", str);
+    
+        MTMathList* innerList = inner.innerList;
+        XCTAssertNotNil(innerList, @"%@", str);
+        [self checkAtomTypes:innerList types:testCase[3] desc:[NSString stringWithFormat:@"%@ inner", str]];
+        
+        XCTAssertNotNil(inner.leftBoundary, @"%@", str);
+        XCTAssertEqual(inner.leftBoundary.type, kMTMathAtomBoundary, @"%@", str);
+        XCTAssertEqualObjects(inner.leftBoundary.nucleus, testCase[4], @"%@", str);
+        
+        XCTAssertNotNil(inner.rightBoundary, @"%@", str);
+        XCTAssertEqual(inner.rightBoundary.type, kMTMathAtomBoundary, @"%@", str);
+        XCTAssertEqualObjects(inner.rightBoundary.nucleus, testCase[5], @"%@", str);
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, testCase[6], @"%@", str);
+    }
 }
 
 static NSArray* getTestDataParseErrors() {
