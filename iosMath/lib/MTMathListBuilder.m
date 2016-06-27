@@ -679,8 +679,8 @@ static void initializeGlobalsIfNeeded() {
                    @"Downarrow" : @"21D3",
                    @"Updownarrow" : @"21D5",
                    @"backslash" : @"\\",
-                   @"rangle" : @"\u2329",
-                   @"langle" : @"\u232A",
+                   @"rangle" : @"\u232A",
+                   @"langle" : @"\u2329",
                    @"rbrace" : @"}",
                    @"}" : @"}",
                    @"{" : @"{",
@@ -717,6 +717,19 @@ static void initializeGlobalsIfNeeded() {
         NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
         for (NSString* command in delims) {
             NSString* delim = delims[command];
+            NSString* existingCommand = mutableDict[delim];
+            if (existingCommand) {
+                if (command.length > existingCommand.length) {
+                    // Keep the shorter command
+                    continue;
+                } else if (command.length == existingCommand.length) {
+                    // If the length is the same, keep the alphabetically first
+                    if ([command compare:existingCommand] == NSOrderedDescending) {
+                        continue;
+                    }
+                }
+            }
+            // In other cases replace the command.
             mutableDict[delim] = command;
         }
         delimToCommands = [mutableDict copy];
