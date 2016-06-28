@@ -216,10 +216,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
             // switch to using the italic math font
             // We convert it to ordinary
             NSString* italics = mathItalicize(atom.nucleus);
-            atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:italics];
+            MTMathAtom* atomCopy = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:italics];
+            atomCopy.subScript = atom.subScript;
+            atomCopy.superScript = atom.superScript;
+            atom = atomCopy;
         } else if (atom.type == kMTMathAtomNumber || atom.type == kMTMathAtomUnaryOperator) {
             // Neither of these are TeX nodes. TeX treats these as Ordinary. So will we.
-            atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:atom.nucleus];
+            MTMathAtom* atomCopy = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:atom.nucleus];
+            atomCopy.subScript = atom.subScript;
+            atomCopy.superScript = atom.superScript;
+            atom = atomCopy;
         }
         
         if (atom.type == kMTMathAtomOrdinary) {

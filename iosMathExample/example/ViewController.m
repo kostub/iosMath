@@ -79,7 +79,7 @@
 
     self.demoLabels[8] = [self createMathLabel:@"\\int_{-\\infty}^\\infty e^{-x^2} dx = \\sqrt{\\pi}" withHeight:40];
 
-    self.demoLabels[9] = [self createMathLabel:@"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i" withHeight:60];
+    self.demoLabels[9] = [self createMathLabel:@"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i}" withHeight:60];
 
     self.demoLabels[10] = [self createMathLabel:@"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}dz" withHeight:40];
 
