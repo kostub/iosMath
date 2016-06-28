@@ -387,9 +387,9 @@ static BOOL isIos6Supported() {
 
 @end
 
-#pragma mark - MTLargeOpGlyphDisplay
+#pragma mark - MTLargeGlyphDisplay
 
-@implementation MTLargeOpGlyphDisplay {
+@implementation MTLargeGlyphDisplay {
     CGGlyph _glyph;
     MTFont* _font;
 }

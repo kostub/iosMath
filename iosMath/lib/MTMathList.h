@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger, MTMathAtomType)
 {
     /// A number or text in ordinary format - Ord in TeX
-    kMTMathAtomOrdinary = 0,
+    kMTMathAtomOrdinary = 1,
     /// A number - Does not exist in TeX
     kMTMathAtomNumber,
     /// A variable (i.e. text in italic format) - Does not exist in TeX

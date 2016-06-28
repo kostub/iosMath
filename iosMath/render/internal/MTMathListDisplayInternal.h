@@ -62,8 +62,8 @@
 
 @end
 
-// Rendering of an MTLargeOpGlyph as an MTDisplay
-@interface MTLargeOpGlyphDisplay : MTDisplay
+// Rendering of an large glyph as an MTDisplay
+@interface MTLargeGlyphDisplay : MTDisplay
 
 - (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
 
