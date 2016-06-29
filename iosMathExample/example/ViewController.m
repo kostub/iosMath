@@ -64,7 +64,7 @@
                                  \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
                                            withHeight:40];
 
-    self.demoLabels[3] = [self createMathLabel:@"\\frac{1}{(\\sqrt{\\phi \\sqrt{5}}-\\phi) e^{\\frac25 \\pi}} \
+    self.demoLabels[3] = [self createMathLabel:@"\\frac{1}{\\left(\\sqrt{\\phi \\sqrt{5}}-\\phi\\right) e^{\\frac25 \\pi}} \
                                  = 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }"
                                            withHeight:80];
 
@@ -75,7 +75,7 @@
 
     self.demoLabels[6] = [self createMathLabel:@"\\log_b(x) = \\frac{\\log_a(x)}{\\log_a(b)}" withHeight:40];
 
-    self.demoLabels[7] = [self createMathLabel:@"\\lim_{x\\to\\infty}(1 + \\frac{k}{x})^x = e^k" withHeight:40];
+    self.demoLabels[7] = [self createMathLabel:@"\\lim_{x\\to\\infty}\\left(1 + \\frac{k}{x}\\right)^x = e^k" withHeight:40];
 
     self.demoLabels[8] = [self createMathLabel:@"\\int_{-\\infty}^\\infty e^{-x^2} dx = \\sqrt{\\pi}" withHeight:40];
 
