@@ -326,11 +326,18 @@ static BOOL isIos6Supported() {
     // The layout is:
     // kernBefore, raise, degree, kernAfter, radical
     _degree = degree;
-    // Note: position of degree is relative to parent.
-    self.degree.position = CGPointMake(self.position.x + kernBefore, self.position.y + raise);
 
     // the radical is now shifted by kernBefore + degree.width + kernAfter
     _radicalShift = kernBefore + degree.width + kernAfter;
+    if (_radicalShift < 0) {
+        // we can't have the radical shift backwards, so instead we increase the kernBefore such
+        // that _radicalShift will be 0.
+        kernBefore -= _radicalShift;
+        _radicalShift = 0;
+    }
+    
+    // Note: position of degree is relative to parent.
+    self.degree.position = CGPointMake(self.position.x + kernBefore, self.position.y + raise);
     // Update the width by the _radicalShift
     self.width = _radicalShift + _glyphWidth + self.radicand.width;
     // update the position of the radicand

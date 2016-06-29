@@ -228,7 +228,7 @@
     MTMathList* mathList = [[MTMathList alloc] init];
     MTMathAtom* x = [MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"];
     MTMathList* subsc = [[MTMathList alloc] init];
-    [subsc addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"2"]];
+    [subsc addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"1"]];
     x.subScript = subsc;
     [mathList addAtom:x];
     
@@ -264,7 +264,7 @@
     XCTAssertTrue([sub1sub0 isKindOfClass:[MTCTLineDisplay class]]);
     MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub1sub0;
     XCTAssertEqual(line2.atoms.count, 1);
-    XCTAssertEqualObjects(line2.attributedString.string, @"2");
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
     XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
     XCTAssertFalse(line2.hasScript);
     
@@ -325,6 +325,7 @@
     XCTAssertTrue([sub2 isKindOfClass:[MTMathListDisplay class]]);
     MTMathListDisplay* display3 = (MTMathListDisplay*) sub2;
     XCTAssertEqual(display3.type, kMTLinePositionSubscript);
+    // Positioned differently when both subscript and superscript present.
     XCTAssertEqualsCGPoint(display3.position, CGPointMake(11.44, -5.278), 0.01);
     XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display3.hasScript);
@@ -343,6 +344,124 @@
     XCTAssertEqualWithAccuracy(display.ascent, 16.584, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 5.292, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 18.44, 0.01);
+}
+
+- (void)testRadical {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTRadical* rad = [[MTRadical alloc] init];
+    MTMathList* radicand = [[MTMathList alloc] init];
+    [radicand addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"1"]];
+    rad.radicand = radicand;
+    [mathList addAtom:rad];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTRadicalDisplay class]]);
+    MTRadicalDisplay* radical = (MTRadicalDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(radical.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(radical.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(radical.position, CGPointZero));
+    XCTAssertNotNil(radical.radicand);
+    XCTAssertNil(radical.degree);
+
+    MTMathListDisplay* display2 = radical.radicand;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(17.08, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subrad = display2.subDisplays[0];
+    XCTAssertTrue([subrad isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subrad;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 27.08, 0.01);
+}
+
+- (void)testRadicalWithDegree {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTRadical* rad = [[MTRadical alloc] init];
+    MTMathList* radicand = [[MTMathList alloc] init];
+    [radicand addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"1"]];
+    MTMathList* degree = [[MTMathList alloc] init];
+    [degree addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"3"]];
+    rad.radicand = radicand;
+    rad.degree = degree;
+    [mathList addAtom:rad];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTRadicalDisplay class]]);
+    MTRadicalDisplay* radical = (MTRadicalDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(radical.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(radical.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(radical.position, CGPointZero));
+    XCTAssertNotNil(radical.radicand);
+    XCTAssertNotNil(radical.degree);
+    
+    MTMathListDisplay* display2 = radical.radicand;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(17.08, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subrad = display2.subDisplays[0];
+    XCTAssertTrue([subrad isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subrad;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    MTMathListDisplay* display3 = radical.degree;
+    XCTAssertEqual(display3.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(6.12, 10.716), 0.01);
+    XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display3.hasScript);
+    XCTAssertEqual(display3.index, NSNotFound);
+    XCTAssertEqual(display3.subDisplays.count, 1);
+    
+    MTDisplay* subdeg = display3.subDisplays[0];
+    XCTAssertTrue([subdeg isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line3 = (MTCTLineDisplay*) subdeg;
+    XCTAssertEqual(line3.atoms.count, 1);
+    XCTAssertEqualObjects(line3.attributedString.string, @"3");
+    XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line3.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 27.08, 0.01);
 }
 
 @end

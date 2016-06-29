@@ -180,6 +180,9 @@
 
     // Error
     self.labels[22] = [self createMathLabel:@"\\notacommand" withHeight:30];
+    
+    self.labels[23] = [self createMathLabel:@"\\sqrt{1}" withHeight:20];
+    self.labels[24] = [self createMathLabel:@"\\sqrt[|]{1}" withHeight:20];
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
