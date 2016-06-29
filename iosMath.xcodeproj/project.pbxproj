@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
 		492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF617DAED9000939107 /* MTMathListDisplay.m */; };
@@ -16,7 +17,6 @@
 		492EED0E17DAEDDD00939107 /* MTMathList.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EED0317DAEDB500939107 /* MTMathList.m */; };
 		4987307617D546800041B02B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0117CBBA2700A555C5 /* Foundation.framework */; };
 		498730A417D547450041B02B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49965F2617CBBA2700A555C5 /* InfoPlist.strings */; };
-		498730A617D548190041B02B /* iosMathTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 49965F2A17CBBA2700A555C5 /* iosMathTests.m */; };
 		498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */; };
 		498730A817D548190041B02B /* MTMathListTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF517CF046A0014B739 /* MTMathListTest.m */; };
 		498730A917D548CA0041B02B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965EFF17CBBA2700A555C5 /* UIKit.framework */; };
@@ -72,6 +72,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
 		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
 		492EECF517DAED9000939107 /* MTMathUILabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathUILabel.m; sourceTree = "<group>"; };
@@ -96,8 +97,6 @@
 		49965F1C17CBBA2700A555C5 /* iosMathTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosMathTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		49965F2517CBBA2700A555C5 /* iosMathTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iosMathTests-Info.plist"; sourceTree = "<group>"; };
 		49965F2717CBBA2700A555C5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		49965F2917CBBA2700A555C5 /* iosMathTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iosMathTests.h; sourceTree = "<group>"; };
-		49965F2A17CBBA2700A555C5 /* iosMathTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iosMathTests.m; sourceTree = "<group>"; };
 		49A27B0118EBF5B30030B7EF /* MathFontBundle.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MathFontBundle.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A27B0218EBF5B30030B7EF /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		49A27B0618EBF5B30030B7EF /* MathFontBundle-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MathFontBundle-Info.plist"; sourceTree = "<group>"; };
@@ -268,10 +267,9 @@
 		49965F2317CBBA2700A555C5 /* iosMathTests */ = {
 			isa = PBXGroup;
 			children = (
-				49965F2917CBBA2700A555C5 /* iosMathTests.h */,
-				49965F2A17CBBA2700A555C5 /* iosMathTests.m */,
 				49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
+				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
 				49965F2417CBBA2700A555C5 /* Supporting Files */,
 			);
 			path = iosMathTests;
@@ -680,9 +678,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				498730A617D548190041B02B /* iosMathTests.m in Sources */,
 				498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
+				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

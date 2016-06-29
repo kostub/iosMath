@@ -88,9 +88,9 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 @property (nonatomic, readonly) NSString *stringValue;
 
 /** The type of the atom. */
-@property (nonatomic, readonly) MTMathAtomType type;
+@property (nonatomic) MTMathAtomType type;
 /** The nucleus of the atom. */
-@property (nonatomic, readonly, copy) NSString* nucleus;
+@property (nonatomic, copy) NSString* nucleus;
 /** An optional superscript. */
 @property (nonatomic, nullable) MTMathList* superScript;
 /** An optional subscript. */

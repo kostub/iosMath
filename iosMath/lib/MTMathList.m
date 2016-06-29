@@ -70,8 +70,6 @@ static NSString* typeToText(MTMathAtomType type) {
 @interface MTMathAtom ()
 
 @property (nonatomic) NSRange indexRange;
-@property (nonatomic, readwrite) MTMathAtomType type;
-@property (nonatomic, readwrite) NSString* nucleus;
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value NS_DESIGNATED_INITIALIZER;
 
