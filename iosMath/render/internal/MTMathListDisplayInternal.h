@@ -63,11 +63,9 @@
 @end
 
 // Rendering of an large glyph as an MTDisplay
-@interface MTLargeGlyphDisplay : MTDisplay
+@interface MTLargeGlyphDisplay()
 
 - (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
-
-- (instancetype)init NS_UNAVAILABLE;
 
 // Shift the glyph down by the given amount.
 @property (nonatomic) CGFloat shiftDown;

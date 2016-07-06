@@ -120,6 +120,13 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+/// Rendering a large glyph as a display
+@interface MTLargeGlyphDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+@end
+
 /// Rendering a large operator with limits as an MTDisplay
 @interface MTLargeOpLimitsDisplay : MTDisplay
 
