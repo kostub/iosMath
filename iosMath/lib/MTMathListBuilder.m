@@ -12,15 +12,8 @@
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
 
-
-static NSSet* kRelations = nil;
 NSString *const MTParseError = @"ParseError";
 
-static void initializeGlobalsIfNeeded() {
-    if (!kRelations) {
-        kRelations = [NSSet setWithObjects:@"=", @">", @"<", nil];  // colon is here because tex does that
-    }
-}
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
@@ -33,7 +26,6 @@ static void initializeGlobalsIfNeeded() {
     self = [super init];
     if (self) {
         _error = nil;
-        initializeGlobalsIfNeeded();
         _chars = malloc(sizeof(unichar)*str.length);
         _length = str.length;
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
@@ -110,10 +102,7 @@ static void initializeGlobalsIfNeeded() {
             return list;
         }
         
-        if (ch < 0x21 || ch > 0x7E) {
-            // skip non ascii characters and spaces
-            continue;
-        } else if (ch == '^') {
+        if (ch == '^') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
             
             if (!prevAtom || prevAtom.superScript || !prevAtom.scriptsAllowed) {
@@ -171,35 +160,12 @@ static void initializeGlobalsIfNeeded() {
                 // we flag an error and return.
                 return nil;
             }
-        } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
-            // These are latex control characters that have special meanings. We don't support them.
-            continue;
-        } else if (ch == '(' || ch == '[') {
-            atom = [MTMathAtom atomWithType:kMTMathAtomOpen value:chStr];
-        } else if (ch == ')' || ch == ']' || ch == '!' || ch == '?') {
-            atom = [MTMathAtom atomWithType:kMTMathAtomClose value:chStr];
-        } else if (ch == ',' || ch == ';') {
-            atom = [MTMathAtom atomWithType:kMTMathAtomPunctuation value:chStr];
-        } else if ([kRelations containsObject:chStr]) {
-            atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:chStr];
-        } else if (ch == ':') {
-            // Math colon is ratio. Regular colon is \colon
-            atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2236"];
-        } else if (ch == '-') {
-            // Use the math minus sign
-            atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2212"];
-        } else if (ch == '+' || ch == '*') {
-            atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:chStr];
-        } else if (ch == '.' || (ch >= '0' && ch <= '9')) {
-            atom = [MTMathAtom atomWithType:kMTMathAtomNumber value:chStr];
-        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-            atom = [MTMathAtom atomWithType:kMTMathAtomVariable value:chStr];
-        } else if (ch == '"' || ch == '/' || ch == '@' || ch == '`' || ch == '|') {
-            // just an ordinary character. The following are allowed ordinary chars
-            // | / ` @ "
-            atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
         } else {
-            NSAssert(false, @"Unknown ascii character %@. Should have been accounted for.", @(ch));
+            MTMathAtom* atom = [MTMathAtomFactory atomForCharacter:ch];
+            if (!atom) {
+                // Not a recognized character
+                continue;
+            }
         }
         NSAssert(atom, @"Atom shouldn't be nil");
         [list addAtom:atom];
@@ -297,11 +263,9 @@ static void initializeGlobalsIfNeeded() {
         // Switch to the canonical command
         command = canonicalCommand;
     }
-    NSDictionary* commands = [MTMathListBuilder supportedCommands];
-    MTMathAtom* atom = commands[command];
+    MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbol:command];
     if (atom) {
-        // Return a copy of the atom since atoms are mutable.
-        return [atom copy];
+        return atom;
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];
