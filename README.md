@@ -184,6 +184,16 @@ updates. This includes:
 * Some symbols are not yet included
 * Matrices
 
+## Related Projects
+
+For people looking for things beyond just rendering math, there are two
+related projects:
+
+* [MathEditor](https://github.com/kostub/MathEditor): A WYSIWYG editor
+  for math equations on iOS.
+* [MathSolver](https://github.com/kostub/MathSolver): A library for
+  solving math equations.
+
 ## License
 
 iosMath is available under the MIT license. See the [LICENSE](./LICENSE)
