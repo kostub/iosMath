@@ -92,6 +92,7 @@ This is a list of formula types that the library currently supports:
 * Square roots and n-th roots
 * Calculus symbos - limits, derivatives, integrals
 * Big operators (e.g. product, sum)
+* Big delimiters (using \\left and \\right)
 * Greek alphabet
 * Geometry symbols (e.g. angle, congruence etc.)
 * Ratios, proportions, percents

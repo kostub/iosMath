@@ -88,7 +88,6 @@ NSString *const MTParseError = @"ParseError";
         }
         MTMathAtom* atom = nil;
         unichar ch = [self getNextCharacter];
-        NSString *chStr = [NSString stringWithCharacters:&ch length:1];
         if (oneCharOnly) {
             if (ch == '^' || ch == '}' || ch == '_') {
                 // this is not the character we are looking for.
@@ -161,13 +160,13 @@ NSString *const MTParseError = @"ParseError";
                 return nil;
             }
         } else {
-            MTMathAtom* atom = [MTMathAtomFactory atomForCharacter:ch];
+            atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
                 // Not a recognized character
                 continue;
             }
         }
-        NSAssert(atom, @"Atom shouldn't be nil");
+        NSAssert(atom != nil, @"Atom shouldn't be nil");
         [list addAtom:atom];
         prevAtom = atom;
         
