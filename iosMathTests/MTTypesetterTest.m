@@ -808,11 +808,84 @@
     XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
     XCTAssertEqualsCGPoint(line2.position, CGPointMake(31.0933, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
-    XCTAssertFalse(line1.hasScript);
+    XCTAssertFalse(line2.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 29.356, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 22.006, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 42.533, 0.01);
+}
+
+- (void)testInner {
+    MTMathList* innerList = [[MTMathList alloc] init];
+    [innerList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    MTInner* inner = [[MTInner alloc] init];
+    inner.innerList = innerList;
+    inner.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    inner.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:inner];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* display2 = (MTMathListDisplay*) sub0;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 3);
+    
+    MTDisplay* subLeft = display2.subDisplays[0];
+    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
+    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 0)));
+    XCTAssertFalse(glyph.hasScript);
+    
+    MTDisplay* sub3 = display2.subDisplays[1];
+    XCTAssertTrue([sub3 isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* display3 = (MTMathListDisplay*) sub3;
+    XCTAssertEqual(display3.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(6.66, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display3.hasScript);
+    XCTAssertEqual(display3.index, NSNotFound);
+    XCTAssertEqual(display3.subDisplays.count, 1);
+    
+    MTDisplay* subsub3 = display3.subDisplays[0];
+    XCTAssertTrue([subsub3 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) subsub3;
+    XCTAssertEqual(line.atoms.count, 1);
+    // The x is italicized
+    XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+    XCTAssertFalse(line.hasScript);
+    
+    MTDisplay* subRight = display2.subDisplays[2];
+    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
+    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
+    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(18.1, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(0, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
+    XCTAssertFalse(glyph2.hasScript);
+    
+    // dimensions
+    XCTAssertEqual(display.ascent, display2.ascent);
+    XCTAssertEqual(display.descent, display2.descent);
+    XCTAssertEqual(display.width, display2.width);
+    
+    XCTAssertEqualWithAccuracy(display.ascent, 14.96, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.98, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 24.76, 0.01);
 }
 
 @end
