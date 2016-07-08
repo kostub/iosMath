@@ -43,7 +43,7 @@ x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
 
 ## Limit e^k
 ```LaTeX
-\lim_{x\to\infty}(1 + \frac{k}{x})^x = e^k
+\lim_{x\to\infty}\left(1 + \frac{k}{x}\right)^x = e^k
 ```
 
 ![Limit](img/limit.png)
@@ -61,6 +61,12 @@ x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
 ```
 
 ![AM-GM](img/amgm.png)
+
+## Cauchy-Schwarz inequality
+```LaTeX
+\left(\sum_{k=1}^n a_k b_k \right)^2 \le \left(\sum_{k=1}^n a_k^2\right)\left(\sum_{k=1}^n b_k^2\right)
+```
+![Cauchy Schwarz](img/cauchyschwarz.png)
 
 ## Cauchy integral formula
 ```LaTeX
