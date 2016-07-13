@@ -209,9 +209,7 @@ static NSString* typeToText(MTMathAtomType type) {
 
 - (instancetype)init
 {
-    // fractions have no nucleus
-    self = [super initWithType:kMTMathAtomFraction value:@""];
-    return self;
+    return [self initWithRule:true];
 }
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
@@ -224,9 +222,29 @@ static NSString* typeToText(MTMathAtomType type) {
                                  userInfo:nil];
 }
 
+- (instancetype)initWithRule:(BOOL)hasRule
+{
+    // fractions have no nucleus
+    self = [super initWithType:kMTMathAtomFraction value:@""];
+    if (self) {
+        _hasRule = hasRule;
+    }
+    return self;
+}
+
 - (NSString *)stringValue
 {
-    NSMutableString* str = [NSMutableString stringWithFormat:@"\\frac{%@}{%@}", self.numerator.stringValue, self.denominator.stringValue];
+    NSMutableString* str = [[NSMutableString alloc] init];
+    if (self.hasRule) {
+        [str appendString:@"\\atop"];
+    } else {
+        [str appendString:@"\\frac"];
+    }
+    if (self.leftDelimiter || self.rightDelimiter) {
+        [str appendFormat:@"[%@][%@]", self.leftDelimiter, self.rightDelimiter];
+    }
+    
+    [str appendFormat:@"{%@}{%@}", self.numerator.stringValue, self.denominator.stringValue];
     if (self.superScript) {
         [str appendFormat:@"^{%@}", self.superScript.stringValue];
     }

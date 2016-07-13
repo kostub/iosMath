@@ -118,13 +118,25 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 /** An atom of type fraction. This atom has a numerator and denominator. */
 @interface MTFraction : MTMathAtom
 
-/// Creates an empty fraction
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+/// Creates an empty fraction with a rule.
+- (instancetype)init;
+
+/// Creates an empty fraction with the given value of hasRule.
+- (instancetype)initWithRule:(BOOL) hasRule NS_DESIGNATED_INITIALIZER;
 
 /// Numerator of the fraction
 @property (nonatomic) MTMathList* numerator;
 /// Denominator of the fraction
 @property (nonatomic) MTMathList* denominator;
+
+/**If true, the fraction has a rule (i.e. a line) between the numerator and denominator.
+ The default value is true. */
+@property (nonatomic, readonly) BOOL hasRule;
+
+/** An optional delimiter for a fraction on the left. */
+@property (nonatomic, nullable) NSString* leftDelimiter;
+/** An optional delimiter for a fraction on the right. */
+@property (nonatomic, nullable) NSString* rightDelimiter;
 
 @end
 
