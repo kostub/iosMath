@@ -147,7 +147,7 @@ NSString *const MTParseError = @"ParseError";
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
-            MTMathList* done = [self stopCommand:command list:list];
+            MTMathList* done = [self stopCommand:command list:list stopChar:stop];
             if (done) {
                 return done;
             } else if (_error) {
@@ -311,7 +311,7 @@ NSString *const MTParseError = @"ParseError";
     }
 }
 
-- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list
+- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
 {
     if ([command isEqualToString:@"right"]) {
         NSString* delim = [self getDelimiterValue:@"right"];
@@ -326,6 +326,16 @@ NSString *const MTParseError = @"ParseError";
         _currentInnerAtom.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
         // return the list read so far.
         return list;
+    } else if ([command isEqualToString:@"over"]) {
+        MTFraction* frac = [[MTFraction alloc] init];
+        frac.numerator = list;
+        frac.denominator = [self buildInternal:NO stopChar:stopChar];
+        if (_error) {
+            return nil;
+        }
+        MTMathList* fracList = [MTMathList new];
+        [fracList addAtom:frac];
+        return fracList;
     }
     return nil;
 }
