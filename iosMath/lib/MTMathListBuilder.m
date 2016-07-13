@@ -336,6 +336,16 @@ NSString *const MTParseError = @"ParseError";
         MTMathList* fracList = [MTMathList new];
         [fracList addAtom:frac];
         return fracList;
+    } else if ([command isEqualToString:@"atop"]) {
+        MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
+        frac.numerator = list;
+        frac.denominator = [self buildInternal:NO stopChar:stopChar];
+        if (_error) {
+            return nil;
+        }
+        MTMathList* fracList = [MTMathList new];
+        [fracList addAtom:frac];
+        return fracList;
     }
     return nil;
 }
@@ -755,7 +765,11 @@ NSString *const MTParseError = @"ParseError";
             [str appendFormat:@"\\%@ ", command];
         } else if (atom.type == kMTMathAtomFraction) {
             MTFraction* frac = (MTFraction*) atom;
-            [str appendFormat:@"\\frac{%@}{%@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
+            if (frac.hasRule) {
+                [str appendFormat:@"\\frac{%@}{%@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
+            } else {
+                [str appendFormat:@"{%@ \\atop %@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
+            }
         } else if (atom.type == kMTMathAtomRadical) {
             [str appendString:@"\\sqrt"];
             MTRadical* rad = (MTRadical*) atom;

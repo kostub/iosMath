@@ -275,6 +275,7 @@ static NSArray* getTestDataSuperSubScript() {
     MTFraction* frac = list.atoms[0];
     XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
     XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertTrue(frac.hasRule);
     
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
@@ -307,6 +308,7 @@ static NSArray* getTestDataSuperSubScript() {
     MTFraction* frac = list.atoms[0];
     XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
     XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertTrue(frac.hasRule);
     
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
@@ -502,6 +504,7 @@ static NSArray* getTestDataLeftRight() {
     MTFraction* frac = list.atoms[0];
     XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
     XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertTrue(frac.hasRule);
     
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
@@ -537,6 +540,7 @@ static NSArray* getTestDataLeftRight() {
     MTFraction* frac = list.atoms[2];
     XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
     XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertTrue(frac.hasRule);
     
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
@@ -556,6 +560,75 @@ static NSArray* getTestDataLeftRight() {
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"5+\\frac{1}{c}+8", @"%@", desc);
+}
+
+- (void) testAtop
+{
+    NSString *str = @"1 \\atop c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
+    XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertFalse(frac.hasRule);
+    
+    MTMathList *subList = frac.numerator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"1", @"%@", desc);
+    
+    atom = list.atoms[0];
+    subList = frac.denominator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"c", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"{1 \\atop c}", @"%@", desc);
+}
+
+- (void) testAtopInParens
+{
+    NSString *str = @"5 + {1 \\atop c} + 8";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @5, @"%@", desc);
+    NSArray* types = @[@(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomFraction), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)];
+    [self checkAtomTypes:list types:types desc:desc];
+    
+    MTFraction* frac = list.atoms[2];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"%@", desc);
+    XCTAssertEqualObjects(frac.nucleus, @"", @"%@", desc);
+    XCTAssertFalse(frac.hasRule);
+    
+    MTMathList *subList = frac.numerator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"1", @"%@", desc);
+    
+    atom = list.atoms[0];
+    subList = frac.denominator;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"c", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"5+{1 \\atop c}+8", @"%@", desc);
 }
 
 static NSArray* getTestDataParseErrors() {
