@@ -113,6 +113,21 @@ static NSString* const kConstants = @"constants";
     return [self constantFromTable:@"FractionRuleThickness"];
 }
 
+- (CGFloat) delimitedSubFormulaMinHeight
+{
+    return [self constantFromTable:@"DelimitedSubFormulaMinHeight"];
+}
+
+- (CGFloat) skewedFractionHorizontalGap
+{
+    return [self constantFromTable:@"SkewedFractionHorizontalGap"];
+}
+
+- (CGFloat) skewedFractionVerticalGap
+{
+    return [self constantFromTable:@"SkewedFractionVerticalGap"];
+}
+
 #pragma mark - Sub/Superscripts
 
 - (CGFloat)superscriptShiftUp
@@ -247,6 +262,103 @@ static NSString* const kConstants = @"constants";
     return [self percentFromTable:@"ScriptScriptPercentScaleDown"];
 }
 
+- (CGFloat) mathLeading
+{
+    return [self constantFromTable:@"MathLeading"];
+}
+
+#pragma mark - Accents
+
+- (CGFloat) accentBaseHeight
+{
+    return [self constantFromTable:@"AccentBaseHeight"];
+}
+
+- (CGFloat) flattenedAccentBaseHeight
+{
+    return [self constantFromTable:@"FlattenedAccentBaseHeight"];
+}
+
+#pragma mark - Large Operators
+
+- (CGFloat) displayOperatorMinHeight
+{
+    return [self constantFromTable:@"DisplayOperatorMinHeight"];
+}
+
+#pragma mark - Over and Underbar
+
+- (CGFloat) overbarExtraAscender
+{
+    return [self constantFromTable:@"OverbarExtraAscender"];
+}
+
+- (CGFloat) overbarRuleThickness
+{
+    return [self constantFromTable:@"OverbarRuleThickness"];
+}
+
+- (CGFloat) overbarVerticalGap
+{
+    return [self constantFromTable:@"OverbarVerticalGap"];
+}
+
+- (CGFloat) underbarExtraDescender
+{
+    return [self constantFromTable:@"UnderbarExtraDescender"];
+}
+
+- (CGFloat) underbarRuleThickness
+{
+    return [self constantFromTable:@"UnderbarRuleThickness"];
+}
+
+- (CGFloat) underbarVerticalGap
+{
+    return [self constantFromTable:@"UnderbarVerticalGap"];
+}
+
+#pragma mark - Stacks
+
+-(CGFloat) stackBottomDisplayStyleShiftDown {
+    return [self constantFromTable:@"StackBottomDisplayStyleShiftDown"];
+}
+
+- (CGFloat) stackBottomShiftDown {
+    return [self constantFromTable:@"StackBottomShiftDown"];
+}
+            
+- (CGFloat) stackDisplayStyleGapMin {
+    return [self constantFromTable:@"StackDisplayStyleGapMin"];
+}
+            
+- (CGFloat) stackGapMin {
+    return [self constantFromTable:@"StackGapMin"];
+}
+
+- (CGFloat) stackTopDisplayStyleShiftUp {
+    return [self constantFromTable:@"StackTopDisplayStyleShiftUp"];
+}
+
+- (CGFloat) stackTopShiftUp {
+    return [self constantFromTable:@"StackTopShiftUp"];
+}
+
+- (CGFloat) stretchStackBottomShiftDown {
+    return [self constantFromTable:@"StretchStackBottomShiftDown"];
+}
+
+- (CGFloat) stretchStackGapAboveMin {
+    return [self constantFromTable:@"StretchStackGapAboveMin"];
+}
+
+- (CGFloat) stretchStackGapBelowMin {
+    return [self constantFromTable:@"StretchStackGapBelowMin"];
+}
+
+- (CGFloat) stretchStackTopShiftUp {
+    return [self constantFromTable:@"StretchStackTopShiftUp"];
+}
 
 #pragma mark - Variants
 
