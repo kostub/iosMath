@@ -313,6 +313,14 @@ NSString *const MTParseError = @"ParseError";
 
 - (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
 {
+    static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
+    if (!fractionCommands) {
+        fractionCommands = @{ @"over" : @[],
+                              @"atop" : @[],
+                              @"choose" : @[ @"(", @")"],
+                              @"brack" : @[ @"[", @"]"],
+                              @"brace" : @[ @"{", @"}"]};
+    }
     if ([command isEqualToString:@"right"]) {
         NSString* delim = [self getDelimiterValue:@"right"];
         if (!delim) {
@@ -326,18 +334,18 @@ NSString *const MTParseError = @"ParseError";
         _currentInnerAtom.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
         // return the list read so far.
         return list;
-    } else if ([command isEqualToString:@"over"]) {
-        MTFraction* frac = [[MTFraction alloc] init];
-        frac.numerator = list;
-        frac.denominator = [self buildInternal:NO stopChar:stopChar];
-        if (_error) {
-            return nil;
+    } else if ([fractionCommands objectForKey:command]) {
+        MTFraction* frac = nil;
+        if ([command isEqualToString:@"over"]) {
+            frac = [[MTFraction alloc] init];
+        } else {
+            frac = [[MTFraction alloc] initWithRule:NO];
         }
-        MTMathList* fracList = [MTMathList new];
-        [fracList addAtom:frac];
-        return fracList;
-    } else if ([command isEqualToString:@"atop"]) {
-        MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
+        NSArray* delims = [fractionCommands objectForKey:command];
+        if (delims.count == 2) {
+            frac.leftDelimiter = delims[0];
+            frac.rightDelimiter = delims[1];
+        }
         frac.numerator = list;
         frac.denominator = [self buildInternal:NO stopChar:stopChar];
         if (_error) {
@@ -768,7 +776,19 @@ NSString *const MTParseError = @"ParseError";
             if (frac.hasRule) {
                 [str appendFormat:@"\\frac{%@}{%@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
             } else {
-                [str appendFormat:@"{%@ \\atop %@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
+                NSString* command = nil;
+                if (!frac.leftDelimiter && !frac.rightDelimiter) {
+                    command = @"atop";
+                } else if ([frac.leftDelimiter isEqualToString:@"("] && [frac.rightDelimiter isEqualToString:@")"]) {
+                    command = @"choose";
+                } else if ([frac.leftDelimiter isEqualToString:@"{"] && [frac.rightDelimiter isEqualToString:@"}"]) {
+                    command = @"brace";
+                } else if ([frac.leftDelimiter isEqualToString:@"["] && [frac.rightDelimiter isEqualToString:@"]"]) {
+                    command = @"brack";
+                } else {
+                    command = [NSString stringWithFormat:@"atopwithdelims%@%@", frac.leftDelimiter, frac.rightDelimiter];
+                }
+                [str appendFormat:@"{%@ \\%@ %@}", [self mathListToString:frac.numerator], command, [self mathListToString:frac.denominator]];
             }
         } else if (atom.type == kMTMathAtomRadical) {
             [str appendString:@"\\sqrt"];
