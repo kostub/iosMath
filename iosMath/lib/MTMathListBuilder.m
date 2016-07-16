@@ -271,6 +271,14 @@ NSString *const MTParseError = @"ParseError";
         frac.numerator = [self buildInternal:true];
         frac.denominator = [self buildInternal:true];
         return frac;
+    } else if ([command isEqualToString:@"binom"]) {
+        // A binom command has 2 arguments
+        MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
+        frac.numerator = [self buildInternal:true];
+        frac.denominator = [self buildInternal:true];
+        frac.leftDelimiter = @"(";
+        frac.rightDelimiter = @")";
+        return frac;
     } else if ([command isEqualToString:@"sqrt"]) {
         // A sqrt command with one argument
         MTRadical* rad = [MTRadical new];
