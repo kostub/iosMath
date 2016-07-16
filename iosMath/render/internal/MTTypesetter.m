@@ -780,6 +780,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         [innerElements addObject:rightGlyph];
     }
     MTMathListDisplay* innerDisplay = [[MTMathListDisplay alloc] initWithDisplays:innerElements range:frac.indexRange];
+    innerDisplay.position = _currentPosition;
     return innerDisplay;
 }
 
