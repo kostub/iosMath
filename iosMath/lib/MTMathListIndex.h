@@ -27,6 +27,12 @@
  */
 @interface MTMathListIndex : NSObject
 
+/**
+ @typedef MTMathListSubIndexType
+ @brief The type of the subindex.
+ 
+ The type of the subindex denotes what branch the path to the atom that this index points to takes.
+ */
 typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
     /// The index denotes the whole atom, subIndex is nil.
     kMTSubIndexTypeNone  = 0,
@@ -49,10 +55,14 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 
 /// The index of the associated atom.
 @property (nonatomic, readonly) NSUInteger atomIndex;
+/// The type of subindex, e.g. superscript, numerator etc.
 @property (nonatomic, readonly) MTMathListSubIndexType subIndexType;
+/// The index into the sublist.
 @property (nonatomic, readonly, nullable) MTMathListIndex* subIndex;
 
+/// Returns the previous index if present. Returns `nil` if there is no previous index.
 - (nullable MTMathListIndex*) previous;
+/// Returns the next index.
 - (nonnull MTMathListIndex*) next;
 
 /** 
@@ -78,12 +88,23 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 - (NSUInteger)hash;
 - (nonnull NSString *)description;
 
+/** Factory function to create a `MTMathListIndex` with no subindexes.
+    @param index The index of the atom that the `MTMathListIndex` points at.
+ */
 + (nonnull instancetype) level0Index:(NSUInteger) index;
-+ (nonnull instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
 
+/** Factory function to create at `MTMathListIndex` with a given subIndex.
+    @param location The location at which the subIndex should is present.
+    @param subIndex The subIndex to be added. Can be nil.
+    @param type The type of the subIndex.
+ */
++ (nonnull instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
 
 @end
 
+/** A range of atoms in an `MTMathList`. This is similar to `NSRange` with a start and length, except that 
+    the starting location is defined by a `MTMathListIndex` rather than an ordinary integer.
+ */
 @interface  MTMathListRange : NSObject
 
 - (nonnull instancetype)init NS_UNAVAILABLE;
@@ -97,7 +118,9 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 /// Makes a range of length 1 at the level 0 index start
 + (nonnull MTMathListRange*) makeRangeForIndex:(NSUInteger) start;
 
+/// The starting location of the range. Cannot be `nil`.
 @property (nonatomic, readonly, nonnull) MTMathListIndex* start;
+/// The size of the range.
 @property (nonatomic, readonly) NSUInteger length;
 
 - (nullable MTMathListRange*) subIndexRange;

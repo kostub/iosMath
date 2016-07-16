@@ -23,6 +23,11 @@ FOUNDATION_EXPORT NSString *const _Nonnull MTParseError;
 /** Contains any error that occurred during parsing. */
 @property (nonatomic, readonly, nullable) NSError* error;
 
+/** Create a `MTMathListBuilder` for the given string. After instantiating the
+    `MTMathListBuilder, use `build` to build the mathlist. Create a new `MTMathListBuilder`
+    for each string that needs to be parsed. Do not reuse the object.
+    @param str The LaTeX string to be used to build the `MTMathList`
+ */
 - (nonnull instancetype) initWithString:(nonnull NSString*) str NS_DESIGNATED_INITIALIZER;
 - (nonnull instancetype) init NS_UNAVAILABLE;
 
@@ -46,13 +51,27 @@ FOUNDATION_EXPORT NSString *const _Nonnull MTParseError;
 /// This converts the MTMathList to LaTeX.
 + (nonnull NSString*) mathListToString:(nonnull MTMathList*) ml;
 
+/**
+ @typedef MTParseErrors
+ @brief The error encountered when parsing a LaTeX string.
+ 
+ The `code` in the `NSError` is one of the following indiciating why the LaTeX string
+ could not be parsed.
+ */
 typedef NS_ENUM(NSUInteger, MTParseErrors) {
+    /// The braces { } do not match.
     MTParseErrorMismatchBraces = 1,
+    /// A command in the string is not recognized.
     MTParseErrorInvalidCommand,
+    /// An expected character such as ] was not found.
     MTParseErrorCharacterNotFound,
+    /// The \left or \right command was not followed by a delimiter.
     MTParseErrorMissingDelimiter,
+    /// The delimiter following \left or \right was not a valid delimiter.
     MTParseErrorInvalidDelimiter,
+    /// There is no \right corresponding to the \left command.
     MTParseErrorMissingRight,
+    /// There is no \left corresponding to the \right command.
     MTParseErrorMissingLeft,
 };
 
