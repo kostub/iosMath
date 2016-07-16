@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.8.1 (2016-07-17)
+* Added support for binomials
+* New commands supported: \\over, \\atop, \\choose, \\brack, \\brace,
+  \\binom.
+
 ### v0.8.0 (2016-07-09)
 * Added support for \\left and \\right
 * New API for constructing `MTMathList`
