@@ -48,6 +48,13 @@ x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
 
 ![Limit](img/limit.png)
 
+## Stirling Numbers of the Second Kind
+```LaTeX
+{n \brace k} = \frac{1}{k!}\sum_{j=0}^k (-1)^{k-j}\binom{k}{j}(k-j)^n
+```
+
+![Stirling Numbers](img/stirling.png)
+
 ## Gaussian Integral
 ```LaTeX
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}

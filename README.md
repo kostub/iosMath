@@ -94,6 +94,7 @@ This is a list of formula types that the library currently supports:
 * Big operators (e.g. product, sum)
 * Big delimiters (using \\left and \\right)
 * Greek alphabet
+* Combinatorics (\\binom, \\choose etc.)
 * Geometry symbols (e.g. angle, congruence etc.)
 * Ratios, proportions, percents
 * Most commonly used math symbols
@@ -175,10 +176,9 @@ Note this is not a complete implementation of LaTeX math mode. There are
 some important pieces that are missing and will be included in future
 updates. This includes:
 
-* Support for big delimiters (bigl, bigr etc.)
+* Support for explicit big delimiters (bigl, bigr etc.)
 * Math accents
 * Over and under symbols
-* Skewed fractions
 * Math spacing
 * Aligning equations
 * Some symbols are not yet included
