@@ -259,6 +259,9 @@ static NSString* typeToText(MTMathAtomType type) {
     MTFraction* frac = [super copyWithZone:zone];
     frac.numerator = [self.numerator copyWithZone:zone];
     frac.denominator = [self.denominator copyWithZone:zone];
+    frac->_hasRule = self.hasRule;
+    frac.leftDelimiter = [self.leftDelimiter copyWithZone:zone];
+    frac.rightDelimiter = [self.rightDelimiter copyWithZone:zone];
     return frac;
 }
 
