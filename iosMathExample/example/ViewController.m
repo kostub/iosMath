@@ -185,6 +185,12 @@
     
     self.labels[23] = [self createMathLabel:@"\\sqrt{1}" withHeight:20];
     self.labels[24] = [self createMathLabel:@"\\sqrt[|]{1}" withHeight:20];
+    self.labels[25] = [self createMathLabel:@"{n \\choose k}" withHeight:60];
+    self.labels[26] = [self createMathLabel:@"{n \\choose k}" withHeight:30];
+    self.labels[26].labelMode = kMTMathUILabelModeText;
+    self.labels[27] = [self createMathLabel:@"\\left({n \\atop k}\\right)" withHeight:40];
+    self.labels[28] = [self createMathLabel:@"\\left({n \\atop k}\\right)" withHeight:30];
+    self.labels[28].labelMode = kMTMathUILabelModeText;
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];

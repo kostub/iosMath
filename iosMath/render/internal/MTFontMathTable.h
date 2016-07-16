@@ -46,7 +46,9 @@
 @property (nonatomic, readonly) CGFloat fractionNumeratorGapMin;                       // \xi_8 in TeX
 @property (nonatomic, readonly) CGFloat fractionDenominatorDisplayStyleGapMin;         // 3 * \xi_8 in TeX
 @property (nonatomic, readonly) CGFloat fractionDenominatorGapMin;                     // \xi_8 in TeX
-@property (nonatomic, readonly) CGFloat fractionRuleThickness;                         // \xi_8 in Tex
+@property (nonatomic, readonly) CGFloat fractionRuleThickness;                         // \xi_8 in TeX
+@property (nonatomic, readonly) CGFloat fractionDelimiterDisplayStyleSize;             // \sigma_20 in TeX
+@property (nonatomic, readonly) CGFloat fractionDelimiterSize;                         // \sigma_21 in TeX
 
 #pragma mark Stacks
 @property (nonatomic, readonly) CGFloat stackTopDisplayStyleShiftUp;                   // \sigma_8 in TeX

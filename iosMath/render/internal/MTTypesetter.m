@@ -328,10 +328,12 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 }
                 MTFraction* frac = (MTFraction*) atom;
                 [self addInterElementSpace:prevNode currentType:atom.type];
-                MTFractionDisplay* displayFrac = [self addFractionWithNumerator:frac.numerator denominator:frac.denominator range:frac.indexRange];
+                MTDisplay* display = [self makeFraction:frac];
+                [_displayAtoms addObject:display];
+                _currentPosition.x += display.width;
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
-                    [self makeScripts:atom display:displayFrac index:frac.indexRange.location delta:0];
+                    [self makeScripts:atom display:display index:frac.indexRange.location delta:0];
                 }
                 break;
             }
@@ -622,11 +624,19 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 #pragma mark Fractions
 
-- (CGFloat) numeratorShiftUp {
-    if (_style == kMTLineStyleDisplay) {
-        return _styleFont.mathTable.fractionNumeratorDisplayStyleShiftUp;
+- (CGFloat) numeratorShiftUp:(BOOL) hasRule {
+    if (hasRule) {
+        if (_style == kMTLineStyleDisplay) {
+            return _styleFont.mathTable.fractionNumeratorDisplayStyleShiftUp;
+        } else {
+            return _styleFont.mathTable.fractionNumeratorShiftUp;
+        }
     } else {
-        return _styleFont.mathTable.fractionNumeratorShiftUp;
+        if (_style == kMTLineStyleDisplay) {
+            return _styleFont.mathTable.stackTopDisplayStyleShiftUp;
+        } else {
+            return _styleFont.mathTable.stackTopShiftUp;
+        }
     }
 }
 
@@ -638,11 +648,19 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     }
 }
 
-- (CGFloat) denominatorShiftDown {
-    if (_style == kMTLineStyleDisplay) {
-        return _styleFont.mathTable.fractionDenominatorDisplayStyleShiftDown;
+- (CGFloat) denominatorShiftDown:(BOOL) hasRule {
+    if (hasRule) {
+        if (_style == kMTLineStyleDisplay) {
+            return _styleFont.mathTable.fractionDenominatorDisplayStyleShiftDown;
+        } else {
+            return _styleFont.mathTable.fractionDenominatorShiftDown;
+        }
     } else {
-        return _styleFont.mathTable.fractionDenominatorShiftDown;
+        if (_style == kMTLineStyleDisplay) {
+            return _styleFont.mathTable.stackBottomDisplayStyleShiftDown;
+        } else {
+            return _styleFont.mathTable.stackBottomShiftDown;
+        }
     }
 }
 
@@ -654,6 +672,22 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     }
 }
 
+- (CGFloat) stackGapMin {
+    if (_style == kMTLineStyleDisplay) {
+        return _styleFont.mathTable.stackDisplayStyleGapMin;
+    } else {
+        return _styleFont.mathTable.stackGapMin;
+    }
+}
+
+- (CGFloat) fractionDelimiterHeight {
+    if (_style == kMTLineStyleDisplay) {
+        return _styleFont.mathTable.fractionDelimiterDisplayStyleSize;
+    } else {
+        return _styleFont.mathTable.fractionDelimiterSize;
+    }
+}
+
 - (MTLineStyle) fractionStyle
 {
     if (_style == kMTLineStypleScriptScript) {
@@ -662,48 +696,91 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     return _style + 1;
 }
 
-// range is the range of the original mathlist represented by this fraction.
-- (MTFractionDisplay*) addFractionWithNumerator:(MTMathList*) numerator denominator:(MTMathList*) denominator range:(NSRange) range
+- (MTDisplay*) makeFraction:(MTFraction*) frac
 {
     // lay out the parts of the fraction
     MTLineStyle fractionStyle = self.fractionStyle;
-    MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:numerator font:_font style:fractionStyle cramped:false];
-    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:denominator font:_font style:fractionStyle cramped:true];
+    MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
+    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
     
     // determine the location of the numerator
-    CGFloat numeratorShiftUp = self.numeratorShiftUp;
+    CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
+    CGFloat denominatorShiftDown = [self denominatorShiftDown:frac.hasRule];
     CGFloat barLocation = _styleFont.mathTable.axisHeight;
-    CGFloat barThickness = _styleFont.mathTable.fractionRuleThickness;
-    // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
-    CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
-    // The distance should at least be displayGap
-    CGFloat minNumeratorGap = self.numeratorGapMin;
-    if (distanceFromNumeratorToBar < minNumeratorGap) {
-        // This makes the distance between the bottom of the numerator and the top edge of the fraction bar
-        // at least minNumeratorGap.
-        numeratorShiftUp += (minNumeratorGap - distanceFromNumeratorToBar);
+    CGFloat barThickness = (frac.hasRule) ? _styleFont.mathTable.fractionRuleThickness : 0;
+    
+    if (frac.hasRule) {
+        // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
+        CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
+        // The distance should at least be displayGap
+        CGFloat minNumeratorGap = self.numeratorGapMin;
+        if (distanceFromNumeratorToBar < minNumeratorGap) {
+            // This makes the distance between the bottom of the numerator and the top edge of the fraction bar
+            // at least minNumeratorGap.
+            numeratorShiftUp += (minNumeratorGap - distanceFromNumeratorToBar);
+        }
+        
+        // Do the same for the denominator
+        // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
+        CGFloat distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denominatorDisplay.ascent - denominatorShiftDown);
+        // The distance should at least be denominator gap
+        CGFloat minDenominatorGap = self.denominatorGapMin;
+        if (distanceFromDenominatorToBar < minDenominatorGap) {
+            // This makes the distance between the top of the denominator and the bottom of the fraction bar to be exactly
+            // minDenominatorGap
+            denominatorShiftDown += (minDenominatorGap - distanceFromDenominatorToBar);
+        }
+    } else {
+        // This is the distance between the numerator and the denominator
+        CGFloat clearance = (numeratorShiftUp - numeratorDisplay.descent) - (denominatorDisplay.ascent - denominatorShiftDown);
+        // This is the minimum clearance between the numerator and denominator.
+        CGFloat minGap = self.stackGapMin;
+        if (clearance < minGap) {
+            numeratorShiftUp += (minGap - clearance)/2;
+            denominatorShiftDown += (minGap - clearance)/2;
+        }
     }
     
-    // Do the same for the denominator
-    CGFloat denominatorShiftDown = self.denominatorShiftDown;
-    // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
-    CGFloat distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denominatorDisplay.ascent - denominatorShiftDown);
-    // The distance should at least be denominator gap
-    CGFloat minDenominatorGap = self.denominatorGapMin;
-    if (distanceFromDenominatorToBar < minDenominatorGap) {
-        // This makes the distance between the top of the denominator and the bottom of the fraction bar to be exactly
-        // minDenominatorGap
-        denominatorShiftDown += (minDenominatorGap - distanceFromDenominatorToBar);
-    }
+    MTFractionDisplay *display = [[MTFractionDisplay alloc] initWithNumerator:numeratorDisplay denominator:denominatorDisplay
+                                                                     position:_currentPosition range:frac.indexRange];
     
-    MTFractionDisplay *display = [[MTFractionDisplay alloc] initWithNumerator:numeratorDisplay denominator:denominatorDisplay position:_currentPosition range:range];
     display.numeratorUp = numeratorShiftUp;
     display.denominatorDown = denominatorShiftDown;
     display.lineThickness = barThickness;
     display.linePosition = barLocation;
-    [_displayAtoms addObject:display];
-    _currentPosition.x += display.width;
-    return display;
+    if (!frac.leftDelimiter && !frac.rightDelimiter) {
+        return display;
+    } else {
+        return [self addDelimitersToFractionDisplay:display forFraction:frac];
+    }
+}
+
+- (MTDisplay*) addDelimitersToFractionDisplay:(MTFractionDisplay*)display forFraction:(MTFraction*) frac
+{
+    NSAssert(frac.leftDelimiter || frac.rightDelimiter, @"Fraction should have a delimiters to call this function");
+    
+    NSMutableArray* innerElements = [[NSMutableArray alloc] init];
+    CGFloat glyphHeight = self.fractionDelimiterHeight;
+    CGPoint position = CGPointZero;
+    if (frac.leftDelimiter.length > 0) {
+        MTLargeGlyphDisplay* leftGlyph = [self findGlyphForBoundary:frac.leftDelimiter withHeight:glyphHeight];
+        leftGlyph.position = position;
+        position.x += leftGlyph.width;
+        [innerElements addObject:leftGlyph];
+    }
+    
+    display.position = position;
+    position.x += display.width;
+    [innerElements addObject:display];
+    
+    if (frac.rightDelimiter.length > 0) {
+        MTLargeGlyphDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
+        rightGlyph.position = position;
+        position.x += rightGlyph.width;
+        [innerElements addObject:rightGlyph];
+    }
+    MTMathListDisplay* innerDisplay = [[MTMathListDisplay alloc] initWithDisplays:innerElements range:frac.indexRange];
+    return innerDisplay;
 }
 
 #pragma mark - Radicals
@@ -923,7 +1000,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     NSMutableArray* innerElements = [[NSMutableArray alloc] init];
     CGPoint position = CGPointZero;
     if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
-        MTLargeGlyphDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary withHeight:glyphHeight];
+        MTLargeGlyphDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
@@ -934,7 +1011,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     [innerElements addObject:innerListDisplay];
     
     if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
-        MTLargeGlyphDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary withHeight:glyphHeight];
+        MTLargeGlyphDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
         [innerElements addObject:rightGlyph];
@@ -943,14 +1020,14 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     return innerDisplay;
 }
 
-- (MTLargeGlyphDisplay*) findGlyphForBoundary:(MTMathAtom*) boundaryAtom withHeight:(CGFloat) glyphHeight
+- (MTLargeGlyphDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
-    CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:boundaryAtom.nucleus];
+    CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:delimiter];
     CGGlyph glyph = [self findGlyph:leftGlyph withHeight:glyphHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     
     // Create a glyph display
-    MTLargeGlyphDisplay* glyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:boundaryAtom.indexRange font:_styleFont];
+    MTLargeGlyphDisplay* glyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:NSMakeRange(NSNotFound, 0) font:_styleFont];
     glyphDisplay.ascent = glyphAscent;
     glyphDisplay.descent = glyphDescent;
     glyphDisplay.width = glyphWidth;

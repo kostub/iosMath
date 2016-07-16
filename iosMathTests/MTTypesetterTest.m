@@ -466,7 +466,7 @@
 
 - (void)testFraction {
     MTMathList* mathList = [[MTMathList alloc] init];
-    MTFraction* frac = [[MTFraction alloc] init];
+    MTFraction* frac = [[MTFraction alloc] initWithRule:YES];
     MTMathList* num = [[MTMathList alloc] init];
     [num addAtom:[MTMathAtomFactory atomForCharacter:'1']];
     MTMathList* denom = [[MTMathList alloc] init];
@@ -531,6 +531,171 @@
     XCTAssertEqualWithAccuracy(display.ascent, 26.86, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 14.18, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
+}
+
+- (void)testAtop {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
+    MTMathList* num = [[MTMathList alloc] init];
+    [num addAtom:[MTMathAtomFactory atomForCharacter:'1']];
+    MTMathList* denom = [[MTMathList alloc] init];
+    [denom addAtom:[MTMathAtomFactory atomForCharacter:'3']];
+    frac.numerator = num;
+    frac.denominator = denom;
+    [mathList addAtom:frac];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTFractionDisplay class]]);
+    MTFractionDisplay* fraction = (MTFractionDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(fraction.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(fraction.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(fraction.position, CGPointZero));
+    XCTAssertNotNil(fraction.numerator);
+    XCTAssertNotNil(fraction.denominator);
+    
+    MTMathListDisplay* display2 = fraction.numerator;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(0, 13.54), 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subnum = display2.subDisplays[0];
+    XCTAssertTrue([subnum isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subnum;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    MTMathListDisplay* display3 = fraction.denominator;
+    XCTAssertEqual(display3.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(0, -13.72), 0.01);
+    XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display3.hasScript);
+    XCTAssertEqual(display3.index, NSNotFound);
+    XCTAssertEqual(display3.subDisplays.count, 1);
+    
+    MTDisplay* subdenom = display3.subDisplays[0];
+    XCTAssertTrue([subdenom isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line3 = (MTCTLineDisplay*) subdenom;
+    XCTAssertEqual(line3.atoms.count, 1);
+    XCTAssertEqualObjects(line3.attributedString.string, @"3");
+    XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line3.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 26.86, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 14.18, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
+}
+
+- (void)testBinomial {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
+    MTMathList* num = [[MTMathList alloc] init];
+    [num addAtom:[MTMathAtomFactory atomForCharacter:'1']];
+    MTMathList* denom = [[MTMathList alloc] init];
+    [denom addAtom:[MTMathAtomFactory atomForCharacter:'3']];
+    frac.numerator = num;
+    frac.denominator = denom;
+    frac.leftDelimiter = @"(";
+    frac.rightDelimiter = @")";
+    [mathList addAtom:frac];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* display0 = (MTMathListDisplay*) sub0;
+    XCTAssertNotNil(display0);
+    XCTAssertEqual(display0.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display0.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display0.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display0.hasScript);
+    XCTAssertEqual(display0.index, NSNotFound);
+    XCTAssertEqual(display0.subDisplays.count, 3);
+    
+    MTDisplay* subLeft = display0.subDisplays[0];
+    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
+    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
+    XCTAssertFalse(glyph.hasScript);
+    
+    MTDisplay* subFrac = display0.subDisplays[1];
+    XCTAssertTrue([subFrac isKindOfClass:[MTFractionDisplay class]]);
+    MTFractionDisplay* fraction = (MTFractionDisplay*) subFrac;
+    XCTAssertTrue(NSEqualRanges(fraction.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(fraction.hasScript);
+    XCTAssertEqualsCGPoint(fraction.position, CGPointMake(13.66, 0), 0.01);
+    XCTAssertNotNil(fraction.numerator);
+    XCTAssertNotNil(fraction.denominator);
+    
+    MTMathListDisplay* display2 = fraction.numerator;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(13.66, 13.54), 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subnum = display2.subDisplays[0];
+    XCTAssertTrue([subnum isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subnum;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    MTMathListDisplay* display3 = fraction.denominator;
+    XCTAssertEqual(display3.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(13.66, -13.72), 0.01);
+    XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display3.hasScript);
+    XCTAssertEqual(display3.index, NSNotFound);
+    XCTAssertEqual(display3.subDisplays.count, 1);
+    
+    MTDisplay* subdenom = display3.subDisplays[0];
+    XCTAssertTrue([subdenom isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line3 = (MTCTLineDisplay*) subdenom;
+    XCTAssertEqual(line3.atoms.count, 1);
+    XCTAssertEqualObjects(line3.attributedString.string, @"3");
+    XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line3.hasScript);
+    
+    MTDisplay* subRight = display0.subDisplays[2];
+    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
+    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
+    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(23.66, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
+    XCTAssertFalse(glyph2.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 28.92, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 18.94, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 33.88, 0.01);
 }
 
 - (void)testLargeOpNoLimitsText {
@@ -849,7 +1014,7 @@
     XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
     MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
-    XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 0)));
+    XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
     
     MTDisplay* sub3 = display2.subDisplays[1];
@@ -875,7 +1040,7 @@
     XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
     MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
     XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(18.1, 0), 0.01);
-    XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(0, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
+    XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
     
     // dimensions

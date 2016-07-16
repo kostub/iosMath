@@ -113,11 +113,6 @@ static NSString* const kConstants = @"constants";
     return [self constantFromTable:@"FractionRuleThickness"];
 }
 
-- (CGFloat) delimitedSubFormulaMinHeight
-{
-    return [self constantFromTable:@"DelimitedSubFormulaMinHeight"];
-}
-
 - (CGFloat) skewedFractionHorizontalGap
 {
     return [self constantFromTable:@"SkewedFractionHorizontalGap"];
@@ -126,6 +121,30 @@ static NSString* const kConstants = @"constants";
 - (CGFloat) skewedFractionVerticalGap
 {
     return [self constantFromTable:@"SkewedFractionVerticalGap"];
+}
+
+#pragma mark Non-standard
+
+// FractionDelimiterSize and FractionDelimiterDisplayStyleSize are not constants
+// specified in the OpenType Math specification. Rather these are proposed LuaTeX extensions
+// for the TeX parameters \sigma_20 (delim1) and \sigma_21 (delim2). Since these do not
+// exist in the fonts that we have, we use the same approach as LuaTeX and use the fontSize
+// to determine these values. The constants used are the same as LuaTeX and KaTeX and match the
+// metrics values of the original TeX fonts.
+// Note: An alternative approach is to use DelimitedSubFormulaMinHeight for \sigma21 and use a factor
+// of 2 to get \sigma 20 as proposed in Vieth paper.
+// The XeTeX implementation sets \sigma21 = fontSize and \sigma20 = DelimitedSubFormulaMinHeight which
+// will produce smaller delimiters.
+// Of all the approaches we've implemented LuaTeX's approach since it mimics LaTeX most accurately.
+- (CGFloat) fractionDelimiterSize
+{
+    return 1.01 * _fontSize;
+}
+
+- (CGFloat) fractionDelimiterDisplayStyleSize
+{
+    // Modified constant from 2.4 to 2.39, it matches KaTeX and looks better.
+    return 2.39 * _fontSize;
 }
 
 #pragma mark - Sub/Superscripts
@@ -265,6 +284,11 @@ static NSString* const kConstants = @"constants";
 - (CGFloat) mathLeading
 {
     return [self constantFromTable:@"MathLeading"];
+}
+
+- (CGFloat) delimitedSubFormulaMinHeight
+{
+    return [self constantFromTable:@"DelimitedSubFormulaMinHeight"];
 }
 
 #pragma mark - Accents
