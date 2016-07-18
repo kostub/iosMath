@@ -26,7 +26,7 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
 @interface MTTypesetter : NSObject
 
 /// Renders a MTMathList as a list of displays.
-+ (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(MTFont*) font style:(MTLineStyle) style;
++ (MTMathListDisplay*) createLineForMathList:(MTMathList*) mathList font:(MTFont*) font style:(MTLineStyle) style textColor:(UIColor*)textColor;
 
 @end
 

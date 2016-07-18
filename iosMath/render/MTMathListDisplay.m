@@ -424,6 +424,7 @@ static BOOL isIos6Supported() {
 
     // Draw the glyph.
     CGPoint glyphPosition = CGPointMake(0, -self.shiftDown);
+
     CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
 
     CGContextRestoreGState(context);
