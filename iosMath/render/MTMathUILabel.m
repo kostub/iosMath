@@ -57,6 +57,7 @@
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;
     [self addSubview:_errorLabel];
+    _textColor = [UIColor whiteColor];
 }
 
 - (void)setFont:(MTFont*)font
@@ -133,6 +134,9 @@
     
     // Drawing code
     CGContextRef context = UIGraphicsGetCurrentContext();
+    // Some of the lines in the text are created through a stroke (like the horizontal line in square root symbol), so we need to set the stroke color as the text color
+    CGContextSetStrokeColorWithColor(context, _textColor.CGColor);
+    CGContextSetFillColorWithColor(context, _textColor.CGColor);
     CGContextSaveGState(context);
     
     [_displayList draw:context];
@@ -143,7 +147,7 @@
 - (void) layoutSubviews
 {
     if (_mathList) {
-        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
+        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle textColor:_textColor];
         
         // Determine x position based on alignment
         CGFloat textX = 0;
@@ -179,7 +183,7 @@
 {
     MTMathListDisplay* displayList = nil;
     if (_mathList) {
-        displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
+        displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle textColor:_textColor];
     }
 
     size.width = displayList.width + _paddingLeft + _paddingRight;
