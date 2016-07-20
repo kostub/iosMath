@@ -634,6 +634,20 @@ static NSString* typeToText(MTMathAtomType type) {
                 break;
             }
                 
+            case kMTMathAtomUnderline: {
+                MTUnderLine* underline = (MTUnderLine*) atom;
+                MTUnderLine* newUnderline = (MTUnderLine*) newNode;
+                newUnderline.innerList = underline.innerList.finalized;
+                break;
+            }
+                
+            case kMTMathAtomOverline: {
+                MTOverLine* overLine = (MTOverLine*) atom;
+                MTOverLine* newOverline = (MTOverLine*) newNode;
+                newOverline.innerList = overLine.innerList.finalized;
+                break;
+            }
+                
             default:
                 break;
         }

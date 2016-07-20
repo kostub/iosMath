@@ -82,3 +82,14 @@
 @property (nonatomic) CGFloat lowerLimitGap;
 
 @end
+
+@interface MTLineDisplay ()
+
+- (instancetype)initWithInner:(MTMathListDisplay*) inner position:(CGPoint) position range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+// How much the line should be moved up.
+@property (nonatomic) CGFloat lineShiftUp;
+@property (nonatomic) CGFloat lineThickness;
+
+@end
+

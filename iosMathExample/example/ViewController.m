@@ -193,6 +193,9 @@
     self.labels[27] = [self createMathLabel:@"\\left({n \\atop k}\\right)" withHeight:40];
     self.labels[28] = [self createMathLabel:@"\\left({n \\atop k}\\right)" withHeight:30];
     self.labels[28].labelMode = kMTMathUILabelModeText;
+    self.labels[29] = [self createMathLabel:@"\\underline{xyz}+\\overline{abc}" withHeight:30];
+    self.labels[30] = [self createMathLabel:@"\\underline{\\frac12}+\\overline{\\frac34}" withHeight:50];
+    self.labels[31] = [self createMathLabel:@"\\underline{x^\\overline{y}_\\overline{z}+5}" withHeight:50];
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];

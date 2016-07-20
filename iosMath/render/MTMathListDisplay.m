@@ -537,3 +537,46 @@ static BOOL isIos6Supported() {
 }
 
 @end
+
+#pragma mark - MTLineDisplay
+
+@implementation MTLineDisplay
+
+- (instancetype)initWithInner:(MTMathListDisplay *)inner position:(CGPoint) position range:(NSRange)range
+{
+    self = [super init];
+    if (self) {
+        _inner = inner;
+        
+        self.position = position;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [self.inner draw:context];
+    
+    // draw the horizontal line
+    UIBezierPath* path = [UIBezierPath bezierPath];
+    CGPoint lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp);
+    CGPoint lineEnd = CGPointMake(lineStart.x + self.inner.width, lineStart.y);
+    [path moveToPoint:lineStart];
+    [path addLineToPoint:lineEnd];
+    path.lineWidth = self.lineThickness;
+    [path stroke];
+}
+
+- (void) setPosition:(CGPoint)position
+{
+    super.position = position;
+    [self updateInnerPosition];
+}
+
+- (void) updateInnerPosition
+{
+    self.inner.position = CGPointMake(self.position.x, self.position.y);
+}
+
+@end

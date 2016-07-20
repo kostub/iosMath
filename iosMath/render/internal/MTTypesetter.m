@@ -285,8 +285,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
                 
-            case kMTMathAtomUnderline:
-            case kMTMathAtomOverline:
             case kMTMathAtomAccent:
                 NSAssert(NO, @"These math atom types are not yet implemented.");
                 break;
@@ -366,6 +364,46 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
+                // add super scripts || subscripts
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+                
+            case kMTMathAtomUnderline: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Underline is considered as Ord in rule 16.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+                
+                MTUnderLine* under = (MTUnderLine*) atom;
+                MTDisplay* display = [self makeUnderline:under];
+                [_displayAtoms addObject:display];
+                _currentPosition.x += display.width;
+                // add super scripts || subscripts
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+                
+            case kMTMathAtomOverline: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Overline is considered as Ord in rule 16.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+                
+                MTOverLine* over = (MTOverLine*) atom;
+                MTDisplay* display = [self makeOverline:over];
+                [_displayAtoms addObject:display];
+                _currentPosition.x += display.width;
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
@@ -1036,6 +1074,33 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat shiftDown = 0.5*(glyphAscent - glyphDescent) - _styleFont.mathTable.axisHeight;
     glyphDisplay.shiftDown = shiftDown;
     return glyphDisplay;
+}
+
+#pragma mark - Underline/Overline
+
+- (MTDisplay*) makeUnderline:(MTUnderLine*) under
+{
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:under.innerList font:_font style:_style cramped:_cramped];
+    MTLineDisplay* underDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:under.indexRange];
+    // Move the line down by the vertical gap.
+    underDisplay.lineShiftUp = -(innerListDisplay.descent + _styleFont.mathTable.underbarVerticalGap);
+    underDisplay.lineThickness = _styleFont.mathTable.underbarRuleThickness;
+    underDisplay.ascent = innerListDisplay.ascent;
+    underDisplay.descent = innerListDisplay.descent + _styleFont.mathTable.underbarVerticalGap + _styleFont.mathTable.underbarRuleThickness + _styleFont.mathTable.underbarExtraDescender;
+    underDisplay.width = innerListDisplay.width;
+    return underDisplay;
+}
+
+- (MTDisplay*) makeOverline:(MTOverLine*) over
+{
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:over.innerList font:_font style:_style cramped:YES];
+    MTLineDisplay* overDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:over.indexRange];
+    overDisplay.lineShiftUp = innerListDisplay.ascent + _styleFont.mathTable.overbarVerticalGap;
+    overDisplay.lineThickness = _styleFont.mathTable.underbarRuleThickness;
+    overDisplay.ascent = innerListDisplay.ascent + _styleFont.mathTable.overbarVerticalGap + _styleFont.mathTable.overbarRuleThickness + _styleFont.mathTable.overbarExtraAscender;
+    overDisplay.descent = innerListDisplay.descent;
+    overDisplay.width = innerListDisplay.width;
+    return overDisplay;
 }
 
 @end
