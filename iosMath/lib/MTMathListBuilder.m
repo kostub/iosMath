@@ -312,6 +312,16 @@ NSString *const MTParseError = @"ParseError";
         MTInner* newInner = _currentInnerAtom;
         _currentInnerAtom = oldInner;
         return newInner;
+    } else if ([command isEqualToString:@"overline"]) {
+        // The overline command has 1 arguments
+        MTOverLine* over = [MTOverLine new];
+        over.innerList = [self buildInternal:true];
+        return over;
+    } else if ([command isEqualToString:@"underline"]) {
+        // The underline command has 1 arguments
+        MTUnderLine* under = [MTUnderLine new];
+        under.innerList = [self buildInternal:true];
+        return under;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
@@ -822,6 +832,14 @@ NSString *const MTParseError = @"ParseError";
             } else {
                 [str appendFormat:@"{%@}", [self mathListToString:inner.innerList]];
             }
+        } else if (atom.type == kMTMathAtomOverline) {
+            [str appendString:@"\\overline"];
+            MTOverLine* over = (MTOverLine*) atom;
+            [str appendFormat:@"{%@}", [self mathListToString:over.innerList]];
+        } else if (atom.type == kMTMathAtomUnderline) {
+            [str appendString:@"\\underline"];
+            MTUnderLine* under = (MTUnderLine*) atom;
+            [str appendFormat:@"{%@}", [self mathListToString:under.innerList]];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

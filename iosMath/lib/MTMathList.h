@@ -188,6 +188,28 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
+/** An atom with a line over the contained math list. */
+@interface MTOverLine : MTMathAtom
+
+/// Creates an empty over
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
+/// The inner math list
+@property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
+/** An atom with a line under the contained math list. */
+@interface MTUnderLine : MTMathAtom
+
+/// Creates an empty under
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
+/// The inner math list
+@property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
 /** A representation of a list of math objects.
 
     This list can be constructed directly or built with

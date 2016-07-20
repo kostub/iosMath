@@ -474,4 +474,42 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertThrows(inner.rightBoundary = atom);
 }
 
+- (void) testCopyOverline
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+
+    MTOverLine* over = [[MTOverLine alloc] init];
+    XCTAssertEqual(over.type, kMTMathAtomOverline);
+    over.innerList = list;
+    
+    MTOverLine* copy = [over copy];
+    [MTMathListTest checkAtomCopy:copy original:over forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:over.innerList forTest:self];
+}
+
+- (void) testCopyUnderline
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTUnderLine* under = [[MTUnderLine alloc] init];
+    XCTAssertEqual(under.type, kMTMathAtomUnderline);
+    under.innerList = list;
+    
+    MTOverLine* copy = [under copy];
+    [MTMathListTest checkAtomCopy:copy original:under forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:under.innerList forTest:self];
+}
+
 @end

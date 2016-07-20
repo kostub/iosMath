@@ -781,6 +781,54 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"{n \\choose k}", @"%@", desc);
 }
 
+- (void) testOverLine
+{
+    NSString *str = @"\\overline 2";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTOverLine* over = list.atoms[0];
+    XCTAssertEqual(over.type, kMTMathAtomOverline, @"%@", desc);
+    XCTAssertEqualObjects(over.nucleus, @"", @"%@", desc);
+    
+    MTMathList *subList = over.innerList;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\overline{2}", @"%@", desc);
+}
+
+- (void) testUnderline
+{
+    NSString *str = @"\\underline 2";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTUnderLine* under = list.atoms[0];
+    XCTAssertEqual(under.type, kMTMathAtomUnderline, @"%@", desc);
+    XCTAssertEqualObjects(under.nucleus, @"", @"%@", desc);
+    
+    MTMathList *subList = under.innerList;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomNumber, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"2", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\underline{2}", @"%@", desc);
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
