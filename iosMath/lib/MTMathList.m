@@ -490,6 +490,35 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @end
 
+#pragma mark - MTAccent
+
+@implementation MTAccent
+
+- (instancetype)initWithValue:(NSString *)value
+{
+    self = [super initWithType:kMTMathAtomAccent value:value];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomAccent) {
+        return [self initWithValue:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTAccent initWithType:value:] cannot be called. Use [MTAccent initWithValue:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTUnderLine* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    return op;
+}
+
+@end
+
 #pragma mark - MTMathList
 
 @implementation MTMathList {
@@ -645,6 +674,13 @@ static NSString* typeToText(MTMathAtomType type) {
                 MTOverLine* overLine = (MTOverLine*) atom;
                 MTOverLine* newOverline = (MTOverLine*) newNode;
                 newOverline.innerList = overLine.innerList.finalized;
+                break;
+            }
+                
+            case kMTMathAtomAccent: {
+                MTAccent* accent = (MTAccent*) atom;
+                MTAccent* newAccent = (MTAccent*) newNode;
+                newAccent.innerList = accent.innerList.finalized;
                 break;
             }
                 

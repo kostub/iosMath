@@ -210,11 +210,23 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
+/** An atom with an accent. */
+@interface MTAccent : MTMathAtom
+
+/** Creates a new `MTAccent` with the given value as the accent.
+ */
+- (instancetype)initWithValue:(NSString*) value NS_DESIGNATED_INITIALIZER;
+
+/// The mathlist under the accent.
+@property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
 /** A representation of a list of math objects.
 
     This list can be constructed directly or built with
     the help of the MTMathListBuilder. It is not required that the mathematics represented make sense
-    (i.e. this cn represent something like "x 2 = +". This list can be used for display using MTLine
+    (i.e. this can represent something like "x 2 = +". This list can be used for display using MTLine
     or can be a list of tokens to be used by a parser after finalizedMathList is called.
  
     @note This class is for ADVANCED usage only.

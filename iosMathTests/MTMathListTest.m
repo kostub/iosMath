@@ -512,4 +512,22 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkListCopy:copy.innerList original:under.innerList forTest:self];
 }
 
+- (void) testCopyAcccent
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTAccent* accent = [[MTAccent alloc] initWithValue:@"^"];
+    XCTAssertEqual(accent.type, kMTMathAtomAccent);
+    accent.innerList = list;
+    
+    MTOverLine* copy = [accent copy];
+    [MTMathListTest checkAtomCopy:copy original:accent forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:accent.innerList forTest:self];
+}
 @end
