@@ -253,6 +253,12 @@ NSString *const MTParseError = @"ParseError";
     return delimValue;
 }
 
+- (NSString*) accentForCommand:(NSString*) command
+{
+    NSDictionary<NSString*, NSString*> *accents = [MTMathListBuilder accents];
+    return accents[command];
+}
+
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
     NSDictionary* aliases = [MTMathListBuilder aliases];
@@ -265,6 +271,12 @@ NSString *const MTParseError = @"ParseError";
     MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbol:command];
     if (atom) {
         return atom;
+    }
+    NSString* accent = [self accentForCommand:command];
+    if (accent) {
+        MTAccent* accentAtom = [[MTAccent alloc] initWithValue:accent];
+        accentAtom.innerList = [self buildInternal:true];
+        return accentAtom;
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];
@@ -661,6 +673,28 @@ NSString *const MTParseError = @"ParseError";
     return aliases;
 }
 
++ (NSDictionary<NSString*, NSString*>*) accents
+{
+    static NSDictionary* accents = nil;
+    if (!accents) {
+        accents = @{
+                    @"grave" : @"\u0300",
+                    @"acute" : @"\u0301",
+                    @"hat" : @"\u0302",  // In our implementation hat and widehat behave the same.
+                    @"tilde" : @"\u0303", // In our implementation tilde and widetilde behave the same.
+                    @"bar" : @"\u0304",
+                    @"breve" : @"\u0306",
+                    @"dot" : @"\u0307",
+                    @"ddot" : @"\u0308",
+                    @"check" : @"\u030C",
+                    @"vec" : @"\u20D7",
+                    @"widehat" : @"\u0302",
+                    @"widetilde" : @"\u0303",
+                    };
+    }
+    return accents;
+}
+
 +(NSDictionary<NSString*, NSString*> *) delimiters
 {
     static NSDictionary* delims = nil;
@@ -744,6 +778,34 @@ NSString *const MTParseError = @"ParseError";
         delimToCommands = [mutableDict copy];
     }
     return delimToCommands;
+}
+
++ (NSDictionary*) accentToCommands
+{
+    static NSDictionary* accentToCommands = nil;
+    if (!accentToCommands) {
+        NSDictionary* accents = [self accents];
+        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:accents.count];
+        for (NSString* command in accents) {
+            NSString* acc = accents[command];
+            NSString* existingCommand = mutableDict[acc];
+            if (existingCommand) {
+                if (command.length > existingCommand.length) {
+                    // Keep the shorter command
+                    continue;
+                } else if (command.length == existingCommand.length) {
+                    // If the length is the same, keep the alphabetically first
+                    if ([command compare:existingCommand] == NSOrderedDescending) {
+                        continue;
+                    }
+                }
+            }
+            // In other cases replace the command.
+            mutableDict[acc] = command;
+        }
+        accentToCommands = [mutableDict copy];
+    }
+    return accentToCommands;
 }
 
 + (MTMathList *)buildFromString:(NSString *)str
@@ -840,6 +902,10 @@ NSString *const MTParseError = @"ParseError";
             [str appendString:@"\\underline"];
             MTUnderLine* under = (MTUnderLine*) atom;
             [str appendFormat:@"{%@}", [self mathListToString:under.innerList]];
+        } else if (atom.type == kMTMathAtomAccent) {
+            MTAccent* accent = (MTAccent*) atom;
+            NSDictionary* accentToCommands = [MTMathListBuilder accentToCommands];
+            [str appendFormat:@"\\%@{%@}", accentToCommands[accent.nucleus], [self mathListToString:accent.innerList]];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

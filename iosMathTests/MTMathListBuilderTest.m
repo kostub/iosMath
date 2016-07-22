@@ -829,6 +829,30 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\underline{2}", @"%@", desc);
 }
 
+- (void) testAccent
+{
+    NSString *str = @"\\bar x";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTAccent* accent = list.atoms[0];
+    XCTAssertEqual(accent.type, kMTMathAtomAccent, @"%@", desc);
+    XCTAssertEqualObjects(accent.nucleus, @"\u0304", @"%@", desc);
+    
+    MTMathList *subList = accent.innerList;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
+    MTMathAtom *atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"x", @"%@", desc);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\bar{x}", @"%@", desc);
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
