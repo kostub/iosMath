@@ -190,12 +190,17 @@ NSString *const MTParseError = @"ParseError";
 
 - (NSString*) readCommand
 {
+    static NSSet<NSNumber*>* singleCharCommands = nil;
+    if (!singleCharCommands) {
+        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!' ];
+        singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
+    }
     // a command is a string of all upper and lower case characters.
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
         // Single char commands
-        if (mutable.length == 0 && (ch == '{' || ch == '}' || ch == '$' || ch == '&' || ch == '#' || ch == '%' || ch == '_' || ch == '|')) {
+        if (mutable.length == 0 && [singleCharCommands containsObject:@(ch)]) {
             // These are single char commands.
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
             break;
@@ -609,6 +614,7 @@ NSString *const MTParseError = @"ParseError";
                       @"#" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"#"],
                       @"%" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"%"],
                       @"_" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"_"],
+                      @" " : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@" "],
                       @"backslash" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\\"],
 
                       // Punctuation
@@ -645,6 +651,14 @@ NSString *const MTParseError = @"ParseError";
                       @"imath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A4"],
                       @"jmath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A5"],
                       @"partial" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D715"],
+                      
+                      // Spacing
+                      @"," : [[MTMathSpace alloc] initWithSpace:3],
+                      @">" : [[MTMathSpace alloc] initWithSpace:4],
+                      @";" : [[MTMathSpace alloc] initWithSpace:5],
+                      @"!" : [[MTMathSpace alloc] initWithSpace:-3],
+                      @"quad" : [[MTMathSpace alloc] initWithSpace:18],  // quad = 1em = 18mu
+                      @"qquad" : [[MTMathSpace alloc] initWithSpace:36], // qquad = 2em
                       };
         
     }
@@ -808,6 +822,22 @@ NSString *const MTParseError = @"ParseError";
     return accentToCommands;
 }
 
++ (NSDictionary*) spaceToCommands
+{
+    static NSDictionary* spaceToCommands = nil;
+    if (!spaceToCommands) {
+        spaceToCommands = @{
+                            @3 : @",",
+                            @4 : @">",
+                            @5 : @";",
+                            @(-3) : @"!",
+                            @18 : @"quad",
+                            @36 : @"qquad",
+                    };
+    }
+    return spaceToCommands;
+}
+
 + (MTMathList *)buildFromString:(NSString *)str
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
@@ -848,10 +878,7 @@ NSString *const MTParseError = @"ParseError";
     NSDictionary* textToCommands = [self textToCommands];
     NSMutableString* str = [NSMutableString string];
     for (MTMathAtom* atom in ml.atoms) {
-        NSString* command = textToCommands[atom.nucleus];
-        if (command) {
-            [str appendFormat:@"\\%@ ", command];
-        } else if (atom.type == kMTMathAtomFraction) {
+        if (atom.type == kMTMathAtomFraction) {
             MTFraction* frac = (MTFraction*) atom;
             if (frac.hasRule) {
                 [str appendFormat:@"\\frac{%@}{%@}", [self mathListToString:frac.numerator], [self mathListToString:frac.denominator]];
@@ -906,6 +933,15 @@ NSString *const MTParseError = @"ParseError";
             MTAccent* accent = (MTAccent*) atom;
             NSDictionary* accentToCommands = [MTMathListBuilder accentToCommands];
             [str appendFormat:@"\\%@{%@}", accentToCommands[accent.nucleus], [self mathListToString:accent.innerList]];
+        } else if (atom.type == kMTMathAtomSpace) {
+            MTMathSpace* space = (MTMathSpace*) atom;
+            NSDictionary* spaceToCommands = [MTMathListBuilder spaceToCommands];
+            NSString* command = spaceToCommands[@(space.space)];
+            if (command) {
+                [str appendFormat:@"\\%@ ", command];
+            } else {
+                [str appendFormat:@"\\mkern%.1fmu", space.space];
+            }
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {
@@ -915,7 +951,12 @@ NSString *const MTParseError = @"ParseError";
             // math minus
             [str appendString:@"-"];
         } else {
-            [str appendString:atom.nucleus];
+            NSString* command = textToCommands[atom.nucleus];
+            if (command) {
+                [str appendFormat:@"\\%@ ", command];
+            } else {
+                [str appendString:atom.nucleus];
+            }
         }
         
         if (atom.superScript) {

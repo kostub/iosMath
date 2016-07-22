@@ -64,6 +64,10 @@ static NSArray* getTestData() {
              @[ @"\\pi+\\theta\\geq 3",@[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber)], @"\\pi +\\theta \\geq 3"],
              // aliases
              @[ @"\\pi\\ne 5 \\land 3", @[ @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)], @"\\pi \\neq 5\\wedge 3"],
+             // control space
+             @[ @"x \\ y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
+             // spacing
+             @[ @"x \\quad y \\; z \\! q", @[  @(kMTMathAtomVariable), @(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable)], @"x\\quad y\\; z\\! q"],
              ];
 }
 
@@ -853,6 +857,24 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\bar{x}", @"%@", desc);
 }
 
+- (void) testMathSpace
+{
+    NSString *str = @"\\!";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTMathSpace* space = list.atoms[0];
+    XCTAssertEqual(space.type, kMTMathAtomSpace, @"%@", desc);
+    XCTAssertEqualObjects(space.nucleus, @"", @"%@", desc);
+    XCTAssertEqual(space.space, -3);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\! ", @"%@", desc);
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -861,7 +883,6 @@ static NSArray* getTestDataParseErrors() {
               @[@"{5+3", @(MTParseErrorMismatchBraces)],
               @[@"5+3}", @(MTParseErrorMismatchBraces)],
               @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],
-              @[@"\\ + 3", @(MTParseErrorInvalidCommand)],
               @[@"1+\\left", @(MTParseErrorMissingDelimiter)],
               @[@"\\left(\\frac12\\right", @(MTParseErrorMissingDelimiter)],
               @[@"\\left 5 + 3 \\right)", @(MTParseErrorInvalidDelimiter)],
