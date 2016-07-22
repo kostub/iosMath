@@ -507,7 +507,7 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqual(under.type, kMTMathAtomUnderline);
     under.innerList = list;
     
-    MTOverLine* copy = [under copy];
+    MTUnderLine* copy = [under copy];
     [MTMathListTest checkAtomCopy:copy original:under forTest:self];
     [MTMathListTest checkListCopy:copy.innerList original:under.innerList forTest:self];
 }
@@ -526,8 +526,18 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqual(accent.type, kMTMathAtomAccent);
     accent.innerList = list;
     
-    MTOverLine* copy = [accent copy];
+    MTAccent* copy = [accent copy];
     [MTMathListTest checkAtomCopy:copy original:accent forTest:self];
     [MTMathListTest checkListCopy:copy.innerList original:accent.innerList forTest:self];
+}
+
+- (void) testCopySpace
+{
+    MTMathSpace* space = [[MTMathSpace alloc] initWithSpace:3];
+    XCTAssertEqual(space.type, kMTMathAtomSpace);
+    
+    MTMathSpace* copy = [space copy];
+    [MTMathListTest checkAtomCopy:copy original:space forTest:self];
+    XCTAssertEqual(space.space, copy.space);
 }
 @end

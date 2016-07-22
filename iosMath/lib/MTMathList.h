@@ -9,7 +9,8 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
+@import CoreGraphics;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -62,6 +63,13 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     
     /// A left atom - Left & Right in TeX. We don't need two since we track boundaries separately.
     kMTMathAtomBoundary = 101,
+    
+    // Atoms after this are non-math TeX nodes that are still useful in math mode. They do not have
+    // the usual structure.
+    
+    /// Spacing between math atoms. This denotes both glue and kern for TeX. We do not
+    /// distinguish between glue and kern.
+    kMTMathAtomSpace = 201,
 };
 
 /** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
@@ -219,6 +227,22 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 /// The mathlist under the accent.
 @property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
+/** An atom representing space.
+ @note None of the usual fields of the `MTMathAtom` apply even though this
+ class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
+ in the nucleus, subscript or superscript fields. */
+@interface MTMathSpace : MTMathAtom
+
+/** Creates a new `MTMathSpace` with the given spacing.
+ @param space The amount of space in mu units.
+ */
+- (instancetype) initWithSpace:(CGFloat) space NS_DESIGNATED_INITIALIZER;
+
+/** The amount of space represented by this object in mu units. */
+@property (nonatomic, readonly) CGFloat space;
 
 @end
 

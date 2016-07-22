@@ -62,6 +62,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Accent";
         case kMTMathAtomBoundary:
             return @"Boundary";
+        case kMTMathAtomSpace:
+            return @"Space";
     }
 }
 
@@ -104,6 +106,12 @@ static NSString* typeToText(MTMathAtomType type) {
             
         case kMTMathAtomUnderline:
             return [[MTUnderLine alloc] init];
+            
+        case kMTMathAtomAccent:
+            return [[MTAccent alloc] initWithValue:value];
+            
+        case kMTMathAtomSpace:
+            return [[MTMathSpace alloc] initWithSpace:0];
             
         default:
             return [[MTMathAtom alloc] initWithType:type value:value];
@@ -512,8 +520,40 @@ static NSString* typeToText(MTMathAtomType type) {
 
 - (id)copyWithZone:(NSZone *)zone
 {
-    MTUnderLine* op = [super copyWithZone:zone];
+    MTAccent* op = [super copyWithZone:zone];
     op.innerList = [self.innerList copyWithZone:zone];
+    return op;
+}
+
+@end
+
+#pragma mark - MTMathSpace
+
+@implementation MTMathSpace
+
+- (instancetype)initWithSpace:(CGFloat)space
+{
+    self = [super initWithType:kMTMathAtomSpace value:@""];
+    if (self) {
+        _space = space;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomSpace) {
+        return [self initWithSpace:0];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathSpace initWithType:value:] cannot be called. Use [MTMathSpace initWithSpace:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathSpace* op = [super copyWithZone:zone];
+    op->_space = self.space;
     return op;
 }
 

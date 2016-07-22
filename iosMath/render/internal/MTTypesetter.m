@@ -285,6 +285,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
                 
+            case kMTMathAtomSpace:
             case kMTMathAtomAccent:
                 NSAssert(NO, @"These math atom types are not yet implemented.");
                 break;
