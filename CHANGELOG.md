@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.8.2 (2016-07-23)
+* Support for \\overline and \\underline
+* Includes math spacing: \\, \\; \\> \\! \\quad \\qquad \\' '
+
 ### v0.8.1 (2016-07-17)
 * Added support for binomials
 * New commands supported: \\over, \\atop, \\choose, \\brack, \\brace,
