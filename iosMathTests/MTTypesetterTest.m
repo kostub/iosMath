@@ -1149,5 +1149,51 @@
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
+- (void)testSpacing {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [mathList addAtom:[[MTMathSpace alloc] initWithSpace:9]];
+    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 3)), "Got %@ instead", NSStringFromRange(display.range));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 2);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+    XCTAssertEqual(line.atoms.count, 1);
+    // The x is italicized
+    XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line.hasScript);
+    
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub1;
+    XCTAssertEqual(line2.atoms.count, 1);
+    // The x is italicized
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑦");
+    XCTAssertEqualsCGPoint(line2.position, CGPointMake(21.44, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(2, 1)), "Got %@ instead", NSStringFromRange(line2.range));
+    XCTAssertFalse(line2.hasScript);
+    
+    MTMathList* noSpace = [[MTMathList alloc] init];
+    [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    
+    MTMathListDisplay* noSpaceDisplay = [MTTypesetter createLineForMathList:noSpace font:self.font style:kMTLineStyleDisplay];
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, noSpaceDisplay.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, noSpaceDisplay.descent, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, noSpaceDisplay.width + 10, 0.01);
+}
 
 @end

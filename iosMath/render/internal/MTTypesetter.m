@@ -276,7 +276,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     MTMathAtom *prevNode = nil;
     MTMathAtomType lastType = 0;
     for (MTMathAtom* atom in preprocessed) {
-        lastType = atom.type;
         switch (atom.type) {
             case kMTMathAtomNumber:
             case kMTMathAtomVariable:
@@ -285,7 +284,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
                 
-            case kMTMathAtomSpace:
             case kMTMathAtomAccent:
                 NSAssert(NO, @"These math atom types are not yet implemented.");
                 break;
@@ -293,6 +291,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
             case kMTMathAtomBoundary:
                 NSAssert(NO, @"A boundary atom should never be inside a mathlist.");
                 break;
+                
+            case kMTMathAtomSpace: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                MTMathSpace* space = (MTMathSpace*) atom;
+                // add the desired space
+                _currentPosition.x += space.space * _styleFont.mathTable.muUnit;
+                // Since this is extra space, the desired interelement space between the prevAtom
+                // and the next node is still preserved. To avoid resetting the prevAtom and lastType
+                // we skip to the next node.
+                continue;
+            }
                 
             case kMTMathAtomRadical: {
                 // stash the existing layout
@@ -477,6 +489,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 break;
             }
         }
+        lastType = atom.type;
         prevNode = atom;
     }
     if (_currentLine.length > 0) {

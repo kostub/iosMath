@@ -41,7 +41,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:self.scrollView];
-    [self setHeight:2880 forView:contentView];
+    [self setHeight:3280 forView:contentView];
 
 
     // Demo formulae
@@ -81,7 +81,7 @@
 
     self.demoLabels[9] = [self createMathLabel:@"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i}" withHeight:60];
 
-    self.demoLabels[10] = [self createMathLabel:@"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}dz" withHeight:40];
+    self.demoLabels[10] = [self createMathLabel:@"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}\\,dz" withHeight:40];
 
     self.demoLabels[11] = [self createMathLabel:@"i\\hbar\\frac{\\partial}{\\partial t}\\Psi(x,t) = -\\frac{\\hbar}{2m}\\nabla^2\\Psi(x,t) + V(x)\\Psi(x,t)" withHeight:40];
     
@@ -174,7 +174,7 @@
     self.labels[18].labelMode = kMTMathUILabelModeText;
 
     // Symbol operators with no limits
-    self.labels[19] = [self createMathLabel:@"\\int_{0}^{\\infty}e^x dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
+    self.labels[19] = [self createMathLabel:@"\\int_{0}^{\\infty}e^x \\,dx=\\oint_0^{\\Delta}5\\Gamma" withHeight:60];
 
     // Test italic correction for large ops
     self.labels[20] = [self createMathLabel:@"\\int\\int\\int^{\\infty}\\int_0\\int^{\\infty}_0\\int" withHeight:60];
@@ -196,7 +196,17 @@
     self.labels[29] = [self createMathLabel:@"\\underline{xyz}+\\overline{abc}" withHeight:30];
     self.labels[30] = [self createMathLabel:@"\\underline{\\frac12}+\\overline{\\frac34}" withHeight:50];
     self.labels[31] = [self createMathLabel:@"\\underline{x^\\overline{y}_\\overline{z}+5}" withHeight:50];
-
+    
+    // spacing examples from the TeX book
+    self.labels[32] = [self createMathLabel:@"\\int\\!\\!\\!\\int_D dx\\,dy" withHeight:50];
+    // no spacing
+    self.labels[33] = [self createMathLabel:@"\\int\\int_D dxdy" withHeight:50];
+    self.labels[34] = [self createMathLabel:@"y\\,dx-x\\,dy" withHeight:30];
+    self.labels[35] = [self createMathLabel:@"y dx - x dy" withHeight:30];
+    
+    // large spaces
+    self.labels[36] = [self createMathLabel:@"hello\\ from \\quad the \\qquad other\\ side" withHeight:30];
+    
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }
