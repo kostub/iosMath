@@ -878,7 +878,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     radical.topKern = _styleFont.mathTable.radicalExtraAscender;
     radical.shiftUp = shiftUp;
     radical.lineThickness = radicalRuleThickness;
-    radical.descent = glyphAscent + glyphDescent - radicalAscent;
+    // Note: Until we have radical construction from parts, it is possible that glyphAscent+glyphDescent is less
+    // than the requested height of the glyph (i.e. radicalHeight), so in the case the innerDisplay has a larger
+    // descent we use the innerDisplay's descent.
+    radical.descent = MAX(glyphAscent + glyphDescent  - radicalAscent, innerDisplay.descent);
     radical.width = glyphWidth + innerDisplay.width;
     return radical;
 }

@@ -12,6 +12,7 @@
 #import "MTFontManager.h"
 #import "MTMathListDisplay.h"
 #import "MTMathAtomFactory.h"
+#import "MTMathListBuilder.h"
 
 @interface MTTypesetterTest : XCTestCase
 
@@ -1194,6 +1195,18 @@
     XCTAssertEqualWithAccuracy(display.ascent, noSpaceDisplay.ascent, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, noSpaceDisplay.descent, 0.01);
     XCTAssertEqualWithAccuracy(display.width, noSpaceDisplay.width + 10, 0.01);
+}
+
+// For issue: https://github.com/kostub/iosMath/issues/5
+- (void) testLargeRadicalDescent
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt{5}^x}}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 21.308, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 82.29, 0.01);
 }
 
 @end
