@@ -62,6 +62,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Accent";
         case kMTMathAtomBoundary:
             return @"Boundary";
+        case kMTMathAtomSpace:
+            return @"Space";
     }
 }
 
@@ -81,20 +83,39 @@ static NSString* typeToText(MTMathAtomType type) {
 
 + (instancetype)atomWithType:(MTMathAtomType)type value:(NSString *)value
 {
-    if (type == kMTMathAtomFraction) {
-        return [[MTFraction alloc] init];
-    } else if (type == kMTMathAtomPlaceholder) {
-        // A placeholder is created with a white square.
-        return [[[self class] alloc] initWithType:kMTMathAtomPlaceholder value:@"\u25A1"];
-    } else if (type == kMTMathAtomRadical) {
-        return [[MTRadical alloc] init];
-    } else if (type == kMTMathAtomLargeOperator) {
-        // Default setting of limits is true
-        return [[MTLargeOperator alloc] initWithValue:value limits:YES];
-    } else if (type == kMTMathAtomInner) {
-        return [[MTInner alloc] init];
+    switch (type) {
+        case kMTMathAtomFraction:
+            return [[MTFraction alloc] init];
+            
+        case kMTMathAtomPlaceholder:
+            // A placeholder is created with a white square.
+            return [[[self class] alloc] initWithType:kMTMathAtomPlaceholder value:@"\u25A1"];
+            
+        case kMTMathAtomRadical:
+            return [[MTRadical alloc] init];
+            
+        case kMTMathAtomLargeOperator:
+            // Default setting of limits is true
+            return [[MTLargeOperator alloc] initWithValue:value limits:YES];
+            
+        case kMTMathAtomInner:
+            return [[MTInner alloc] init];
+            
+        case kMTMathAtomOverline:
+            return [[MTOverLine alloc] init];
+            
+        case kMTMathAtomUnderline:
+            return [[MTUnderLine alloc] init];
+            
+        case kMTMathAtomAccent:
+            return [[MTAccent alloc] initWithValue:value];
+            
+        case kMTMathAtomSpace:
+            return [[MTMathSpace alloc] initWithSpace:0];
+            
+        default:
+            return [[MTMathAtom alloc] initWithType:type value:value];
     }
-    return [[[self class] alloc] initWithType:type value:value];
 }
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
@@ -419,6 +440,125 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @end
 
+#pragma mark - MTOverline
+
+@implementation MTOverLine
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomOverline value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomOverline) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTOverline initWithType:value:] cannot be called. Use [MTOverline init] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTOverLine* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    return op;
+}
+
+@end
+
+#pragma mark - MTUnderline
+
+@implementation MTUnderLine
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomUnderline value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomUnderline) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTUnderline initWithType:value:] cannot be called. Use [MTUnderline init] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTUnderLine* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    return op;
+}
+
+@end
+
+#pragma mark - MTAccent
+
+@implementation MTAccent
+
+- (instancetype)initWithValue:(NSString *)value
+{
+    self = [super initWithType:kMTMathAtomAccent value:value];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomAccent) {
+        return [self initWithValue:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTAccent initWithType:value:] cannot be called. Use [MTAccent initWithValue:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTAccent* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    return op;
+}
+
+@end
+
+#pragma mark - MTMathSpace
+
+@implementation MTMathSpace
+
+- (instancetype)initWithSpace:(CGFloat)space
+{
+    self = [super initWithType:kMTMathAtomSpace value:@""];
+    if (self) {
+        _space = space;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomSpace) {
+        return [self initWithSpace:0];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathSpace initWithType:value:] cannot be called. Use [MTMathSpace initWithSpace:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathSpace* op = [super copyWithZone:zone];
+    op->_space = self.space;
+    return op;
+}
+
+@end
+
 #pragma mark - MTMathList
 
 @implementation MTMathList {
@@ -560,6 +700,27 @@ static NSString* typeToText(MTMathAtomType type) {
                 MTInner *inner = (MTInner*) atom;
                 MTInner *newInner = (MTInner*) newNode;
                 newInner.innerList = inner.innerList.finalized;
+                break;
+            }
+                
+            case kMTMathAtomUnderline: {
+                MTUnderLine* underline = (MTUnderLine*) atom;
+                MTUnderLine* newUnderline = (MTUnderLine*) newNode;
+                newUnderline.innerList = underline.innerList.finalized;
+                break;
+            }
+                
+            case kMTMathAtomOverline: {
+                MTOverLine* overLine = (MTOverLine*) atom;
+                MTOverLine* newOverline = (MTOverLine*) newNode;
+                newOverline.innerList = overLine.innerList.finalized;
+                break;
+            }
+                
+            case kMTMathAtomAccent: {
+                MTAccent* accent = (MTAccent*) atom;
+                MTAccent* newAccent = (MTAccent*) newNode;
+                newAccent.innerList = accent.innerList.finalized;
                 break;
             }
                 

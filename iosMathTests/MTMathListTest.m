@@ -474,4 +474,70 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertThrows(inner.rightBoundary = atom);
 }
 
+- (void) testCopyOverline
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+
+    MTOverLine* over = [[MTOverLine alloc] init];
+    XCTAssertEqual(over.type, kMTMathAtomOverline);
+    over.innerList = list;
+    
+    MTOverLine* copy = [over copy];
+    [MTMathListTest checkAtomCopy:copy original:over forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:over.innerList forTest:self];
+}
+
+- (void) testCopyUnderline
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTUnderLine* under = [[MTUnderLine alloc] init];
+    XCTAssertEqual(under.type, kMTMathAtomUnderline);
+    under.innerList = list;
+    
+    MTUnderLine* copy = [under copy];
+    [MTMathListTest checkAtomCopy:copy original:under forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:under.innerList forTest:self];
+}
+
+- (void) testCopyAcccent
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTAccent* accent = [[MTAccent alloc] initWithValue:@"^"];
+    XCTAssertEqual(accent.type, kMTMathAtomAccent);
+    accent.innerList = list;
+    
+    MTAccent* copy = [accent copy];
+    [MTMathListTest checkAtomCopy:copy original:accent forTest:self];
+    [MTMathListTest checkListCopy:copy.innerList original:accent.innerList forTest:self];
+}
+
+- (void) testCopySpace
+{
+    MTMathSpace* space = [[MTMathSpace alloc] initWithSpace:3];
+    XCTAssertEqual(space.type, kMTMathAtomSpace);
+    
+    MTMathSpace* copy = [space copy];
+    [MTMathListTest checkAtomCopy:copy original:space forTest:self];
+    XCTAssertEqual(space.space, copy.space);
+}
 @end

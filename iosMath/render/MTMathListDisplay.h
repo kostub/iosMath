@@ -143,5 +143,17 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+/// Rendering of an list with an overline or underline
+@interface MTLineDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+/** A display representing the inner list that is underlined. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
+@property (nonatomic, readonly) MTMathListDisplay* inner;
+
+@end
+
 
 NS_ASSUME_NONNULL_END

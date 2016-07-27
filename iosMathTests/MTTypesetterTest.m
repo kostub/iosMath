@@ -12,6 +12,7 @@
 #import "MTFontManager.h"
 #import "MTMathListDisplay.h"
 #import "MTMathAtomFactory.h"
+#import "MTMathListBuilder.h"
 
 @interface MTTypesetterTest : XCTestCase
 
@@ -1051,6 +1052,161 @@
     XCTAssertEqualWithAccuracy(display.ascent, 14.96, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.98, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 24.76, 0.01);
+}
+
+- (void)testOverline {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTOverLine* over = [[MTOverLine alloc] init];
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'1']];
+    over.innerList = inner;
+    [mathList addAtom:over];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTLineDisplay class]]);
+    MTLineDisplay* overline = (MTLineDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(overline.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(overline.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(overline.position, CGPointZero));
+    XCTAssertNotNil(overline.inner);
+    
+    MTMathListDisplay* display2 = overline.inner;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subover = display2.subDisplays[0];
+    XCTAssertTrue([subover isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subover;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 17.32, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.02, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
+}
+
+- (void)testUnderline {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTUnderLine* under = [[MTUnderLine alloc] init];
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'1']];
+    under.innerList = inner;
+    [mathList addAtom:under];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTLineDisplay class]]);
+    MTLineDisplay* underline = (MTLineDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(underline.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(underline.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(underline.position, CGPointZero));
+    XCTAssertNotNil(underline.inner);
+    
+    MTMathListDisplay* display2 = underline.inner;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+    
+    MTDisplay* subover = display2.subDisplays[0];
+    XCTAssertTrue([subover isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subover;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"1");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.02, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
+}
+
+- (void)testSpacing {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [mathList addAtom:[[MTMathSpace alloc] initWithSpace:9]];
+    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 3)), "Got %@ instead", NSStringFromRange(display.range));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 2);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+    XCTAssertEqual(line.atoms.count, 1);
+    // The x is italicized
+    XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line.hasScript);
+    
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub1;
+    XCTAssertEqual(line2.atoms.count, 1);
+    // The x is italicized
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑦");
+    XCTAssertEqualsCGPoint(line2.position, CGPointMake(21.44, 0), 0.01);
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(2, 1)), "Got %@ instead", NSStringFromRange(line2.range));
+    XCTAssertFalse(line2.hasScript);
+    
+    MTMathList* noSpace = [[MTMathList alloc] init];
+    [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    
+    MTMathListDisplay* noSpaceDisplay = [MTTypesetter createLineForMathList:noSpace font:self.font style:kMTLineStyleDisplay];
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, noSpaceDisplay.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, noSpaceDisplay.descent, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, noSpaceDisplay.width + 10, 0.01);
+}
+
+// For issue: https://github.com/kostub/iosMath/issues/5
+- (void) testLargeRadicalDescent
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt{5}^x}}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 21.308, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 82.29, 0.01);
 }
 
 @end

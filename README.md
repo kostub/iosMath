@@ -97,6 +97,8 @@ This is a list of formula types that the library currently supports:
 * Combinatorics (\\binom, \\choose etc.)
 * Geometry symbols (e.g. angle, congruence etc.)
 * Ratios, proportions, percents
+* Math spacing
+* Overline and underline
 * Most commonly used math symbols
 
 ### Example
@@ -178,8 +180,6 @@ updates. This includes:
 
 * Support for explicit big delimiters (bigl, bigr etc.)
 * Math accents
-* Over and under symbols
-* Math spacing
 * Aligning equations
 * Some symbols are not yet included
 * Matrices

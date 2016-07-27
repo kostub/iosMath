@@ -88,6 +88,16 @@
 @property (nonatomic, readonly) CGFloat lowerLimitBaselineDropMin;                     // \xi_12 in TeX
 @property (nonatomic, readonly) CGFloat limitExtraAscenderDescender;                   // \xi_13 in TeX, not present in OpenType so we always set it to 0.
 
+#pragma mark Underline
+@property (nonatomic, readonly) CGFloat underbarVerticalGap;                           // 3 \xi_8 in TeX
+@property (nonatomic, readonly) CGFloat underbarRuleThickness;                         // \xi_8 in TeX
+@property (nonatomic, readonly) CGFloat underbarExtraDescender;                        // \xi_8 in TeX
+
+#pragma mark Overline
+@property (nonatomic, readonly) CGFloat overbarVerticalGap;                            // 3 \xi_8 in TeX
+@property (nonatomic, readonly) CGFloat overbarRuleThickness;                          // \xi_8 in TeX
+@property (nonatomic, readonly) CGFloat overbarExtraAscender;                          // \xi_8 in TeX
+
 #pragma mark Constants
 
 @property (nonatomic, readonly) CGFloat axisHeight;                                    // \sigma_22 in TeX
