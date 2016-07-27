@@ -162,37 +162,40 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return dict[atom.nucleus];
 }
 
-+ (NSDictionary*) textToLatexSymbolNames
++ (MTAccent*) accentWithName:(NSString*) accentName
 {
-    static NSDictionary* textToCommands = nil;
-    if (!textToCommands) {
-        NSDictionary* commands = [self supportedLatexSymbols];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:commands.count];
-        for (NSString* command in commands) {
-            MTMathAtom* atom = commands[command];
-            if (atom.nucleus.length == 0) {
-                continue;
-            }
-        
-            NSString* existingCommand = mutableDict[atom.nucleus];
-            if (existingCommand) {
-                // If there are 2 commands for the same symbol, choose one deterministically.
-                if (command.length > existingCommand.length) {
-                    // Keep the shorter command
-                    continue;
-                } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
-                    if ([command compare:existingCommand] == NSOrderedDescending) {
-                        continue;
-                    }
-                }
-            }
-            // In other cases replace the command.
-            mutableDict[atom.nucleus] = command;
-        }
-        textToCommands = [mutableDict copy];
+    NSDictionary<NSString*, NSString*> *accents = [MTMathAtomFactory accents];
+    NSString* accentValue = accents[accentName];
+    if (accentValue) {
+        return [[MTAccent alloc] initWithValue:accentValue];
+    } else {
+        return nil;
     }
-    return textToCommands;
+}
+
++(NSString*) accentName:(MTAccent*) accent
+{
+    NSDictionary* dict = [MTMathAtomFactory accentValueToName];
+    return dict[accent.nucleus];
+}
+
++ (MTMathAtom *)boundaryAtomForDelimiterName:(NSString *)delimName
+{
+    NSDictionary<NSString*, NSString*>* delims = [MTMathAtomFactory delimiters];
+    NSString* delimValue = delims[delimName];
+    if (!delimValue) {
+        return nil;
+    }
+    return [MTMathAtom atomWithType:kMTMathAtomBoundary value:delimValue];
+}
+
++ (NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary
+{
+    if (boundary.type != kMTMathAtomBoundary) {
+        return nil;
+    }
+    NSDictionary* dict = [self delimValueToName];
+    return dict[boundary.nucleus];
 }
 
 + (NSDictionary*) supportedLatexSymbols
@@ -479,6 +482,159 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     };
     }
     return aliases;
+}
+
++ (NSDictionary*) textToLatexSymbolNames
+{
+    static NSDictionary* textToCommands = nil;
+    if (!textToCommands) {
+        NSDictionary* commands = [self supportedLatexSymbols];
+        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:commands.count];
+        for (NSString* command in commands) {
+            MTMathAtom* atom = commands[command];
+            if (atom.nucleus.length == 0) {
+                continue;
+            }
+            
+            NSString* existingCommand = mutableDict[atom.nucleus];
+            if (existingCommand) {
+                // If there are 2 commands for the same symbol, choose one deterministically.
+                if (command.length > existingCommand.length) {
+                    // Keep the shorter command
+                    continue;
+                } else if (command.length == existingCommand.length) {
+                    // If the length is the same, keep the alphabetically first
+                    if ([command compare:existingCommand] == NSOrderedDescending) {
+                        continue;
+                    }
+                }
+            }
+            // In other cases replace the command.
+            mutableDict[atom.nucleus] = command;
+        }
+        textToCommands = [mutableDict copy];
+    }
+    return textToCommands;
+}
+
++ (NSDictionary<NSString*, NSString*>*) accents
+{
+    static NSDictionary* accents = nil;
+    if (!accents) {
+        accents = @{
+                    @"grave" : @"\u0300",
+                    @"acute" : @"\u0301",
+                    @"hat" : @"\u0302",  // In our implementation hat and widehat behave the same.
+                    @"tilde" : @"\u0303", // In our implementation tilde and widetilde behave the same.
+                    @"bar" : @"\u0304",
+                    @"breve" : @"\u0306",
+                    @"dot" : @"\u0307",
+                    @"ddot" : @"\u0308",
+                    @"check" : @"\u030C",
+                    @"vec" : @"\u20D7",
+                    @"widehat" : @"\u0302",
+                    @"widetilde" : @"\u0303",
+                    };
+    }
+    return accents;
+}
+
++ (NSDictionary*) accentValueToName
+{
+    static NSDictionary* accentToCommands = nil;
+    if (!accentToCommands) {
+        NSDictionary* accents = [self accents];
+        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:accents.count];
+        for (NSString* command in accents) {
+            NSString* acc = accents[command];
+            NSString* existingCommand = mutableDict[acc];
+            if (existingCommand) {
+                if (command.length > existingCommand.length) {
+                    // Keep the shorter command
+                    continue;
+                } else if (command.length == existingCommand.length) {
+                    // If the length is the same, keep the alphabetically first
+                    if ([command compare:existingCommand] == NSOrderedDescending) {
+                        continue;
+                    }
+                }
+            }
+            // In other cases replace the command.
+            mutableDict[acc] = command;
+        }
+        accentToCommands = [mutableDict copy];
+    }
+    return accentToCommands;
+}
+
++(NSDictionary<NSString*, NSString*> *) delimiters
+{
+    static NSDictionary* delims = nil;
+    if (!delims) {
+        delims = @{
+                   @"." : @"", // . means no delimiter
+                   @"(" : @"(",
+                   @")" : @")",
+                   @"[" : @"[",
+                   @"]" : @"]",
+                   @"<" : @"\u2329",
+                   @">" : @"\u232A",
+                   @"/" : @"/",
+                   @"\\" : @"\\",
+                   @"|" : @"|",
+                   @"lgroup" : @"\u27EE",
+                   @"rgroup" : @"\u27EF",
+                   @"||" : @"\u2016",
+                   @"Vert" : @"\u2016",
+                   @"vert" : @"|",
+                   @"uparrow" : @"\u2191",
+                   @"downarrow" : @"\u2193",
+                   @"updownarrow" : @"\u2195",
+                   @"Uparrow" : @"21D1",
+                   @"Downarrow" : @"21D3",
+                   @"Updownarrow" : @"21D5",
+                   @"backslash" : @"\\",
+                   @"rangle" : @"\u232A",
+                   @"langle" : @"\u2329",
+                   @"rbrace" : @"}",
+                   @"}" : @"}",
+                   @"{" : @"{",
+                   @"lbrace" : @"{",
+                   @"lceil" : @"\u2308",
+                   @"rceil" : @"\u2309",
+                   @"lfloor" : @"\u230A",
+                   @"rfloor" : @"\u230B",
+                   };
+    }
+    return delims;
+}
+
++ (NSDictionary*) delimValueToName
+{
+    static NSDictionary* delimToCommands = nil;
+    if (!delimToCommands) {
+        NSDictionary* delims = [self delimiters];
+        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
+        for (NSString* command in delims) {
+            NSString* delim = delims[command];
+            NSString* existingCommand = mutableDict[delim];
+            if (existingCommand) {
+                if (command.length > existingCommand.length) {
+                    // Keep the shorter command
+                    continue;
+                } else if (command.length == existingCommand.length) {
+                    // If the length is the same, keep the alphabetically first
+                    if ([command compare:existingCommand] == NSOrderedDescending) {
+                        continue;
+                    }
+                }
+            }
+            // In other cases replace the command.
+            mutableDict[delim] = command;
+        }
+        delimToCommands = [mutableDict copy];
+    }
+    return delimToCommands;
 }
 
 @end

@@ -240,7 +240,7 @@ NSString *const MTParseError = @"ParseError";
     return nil;
 }
 
-- (NSString*) getDelimiterValue:(NSString*) delimiterType
+- (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
 {
     NSString* delim = [self readDelimiter];
     if (!delim) {
@@ -248,20 +248,13 @@ NSString *const MTParseError = @"ParseError";
         [self setError:MTParseErrorMissingDelimiter message:errorMessage];
         return nil;
     }
-    NSDictionary<NSString*, NSString*>* delims = [MTMathListBuilder delimiters];
-    NSString* delimValue = delims[delim];
-    if (!delimValue) {
+    MTMathAtom* boundary = [MTMathAtomFactory boundaryAtomForDelimiterName:delim];
+    if (!boundary) {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid delimiter for \\%@: %@", delimiterType, delim];
         [self setError:MTParseErrorInvalidDelimiter message:errorMessage];
         return nil;
     }
-    return delimValue;
-}
-
-- (NSString*) accentForCommand:(NSString*) command
-{
-    NSDictionary<NSString*, NSString*> *accents = [MTMathListBuilder accents];
-    return accents[command];
+    return boundary;
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -270,11 +263,11 @@ NSString *const MTParseError = @"ParseError";
     if (atom) {
         return atom;
     }
-    NSString* accent = [self accentForCommand:command];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:command];
     if (accent) {
-        MTAccent* accentAtom = [[MTAccent alloc] initWithValue:accent];
-        accentAtom.innerList = [self buildInternal:true];
-        return accentAtom;
+        // The command is an accent
+        accent.innerList = [self buildInternal:true];
+        return accent;
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];
@@ -303,14 +296,13 @@ NSString *const MTParseError = @"ParseError";
         }
         return rad;
     } else if ([command isEqualToString:@"left"]) {
-        NSString* delim = [self getDelimiterValue:@"left"];
-        if (!delim) {
-            return nil;
-        }
         // Save the current inner while a new one gets built.
         MTInner* oldInner = _currentInnerAtom;
         _currentInnerAtom = [MTInner new];
-        _currentInnerAtom.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        _currentInnerAtom.leftBoundary = [self getBoundaryAtom:@"left"];
+        if (!_currentInnerAtom.leftBoundary) {
+            return nil;
+        }
         _currentInnerAtom.innerList = [self buildInternal:false];
         if (!_currentInnerAtom.rightBoundary) {
             // A right node would have set the right boundary so we must be missing the right node.
@@ -350,16 +342,15 @@ NSString *const MTParseError = @"ParseError";
                               @"brace" : @[ @"{", @"}"]};
     }
     if ([command isEqualToString:@"right"]) {
-        NSString* delim = [self getDelimiterValue:@"right"];
-        if (!delim) {
-            return nil;
-        }
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
             [self setError:MTParseErrorMissingLeft message:errorMessage];
             return nil;
         }
-        _currentInnerAtom.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        _currentInnerAtom.rightBoundary = [self getBoundaryAtom:@"right"];
+        if (!_currentInnerAtom.rightBoundary) {
+            return nil;
+        }
         // return the list read so far.
         return list;
     } else if ([fractionCommands objectForKey:command]) {
@@ -392,126 +383,6 @@ NSString *const MTParseError = @"ParseError";
     if (!_error) {
         _error = [NSError errorWithDomain:MTParseError code:code userInfo:@{ NSLocalizedDescriptionKey : message }];
     }
-}
-
-+ (NSDictionary<NSString*, NSString*>*) accents
-{
-    static NSDictionary* accents = nil;
-    if (!accents) {
-        accents = @{
-                    @"grave" : @"\u0300",
-                    @"acute" : @"\u0301",
-                    @"hat" : @"\u0302",  // In our implementation hat and widehat behave the same.
-                    @"tilde" : @"\u0303", // In our implementation tilde and widetilde behave the same.
-                    @"bar" : @"\u0304",
-                    @"breve" : @"\u0306",
-                    @"dot" : @"\u0307",
-                    @"ddot" : @"\u0308",
-                    @"check" : @"\u030C",
-                    @"vec" : @"\u20D7",
-                    @"widehat" : @"\u0302",
-                    @"widetilde" : @"\u0303",
-                    };
-    }
-    return accents;
-}
-
-+(NSDictionary<NSString*, NSString*> *) delimiters
-{
-    static NSDictionary* delims = nil;
-    if (!delims) {
-        delims = @{
-                   @"." : @"", // . means no delimiter
-                   @"(" : @"(",
-                   @")" : @")",
-                   @"[" : @"[",
-                   @"]" : @"]",
-                   @"<" : @"\u2329",
-                   @">" : @"\u232A",
-                   @"/" : @"/",
-                   @"\\" : @"\\",
-                   @"|" : @"|",
-                   @"lgroup" : @"\u27EE",
-                   @"rgroup" : @"\u27EF",
-                   @"||" : @"\u2016",
-                   @"Vert" : @"\u2016",
-                   @"vert" : @"|",
-                   @"uparrow" : @"\u2191",
-                   @"downarrow" : @"\u2193",
-                   @"updownarrow" : @"\u2195",
-                   @"Uparrow" : @"21D1",
-                   @"Downarrow" : @"21D3",
-                   @"Updownarrow" : @"21D5",
-                   @"backslash" : @"\\",
-                   @"rangle" : @"\u232A",
-                   @"langle" : @"\u2329",
-                   @"rbrace" : @"}",
-                   @"}" : @"}",
-                   @"{" : @"{",
-                   @"lbrace" : @"{",
-                   @"lceil" : @"\u2308",
-                   @"rceil" : @"\u2309",
-                   @"lfloor" : @"\u230A",
-                   @"rfloor" : @"\u230B",
-                   };
-    }
-    return delims;
-}
-
-+ (NSDictionary*) delimToCommand
-{
-    static NSDictionary* delimToCommands = nil;
-    if (!delimToCommands) {
-        NSDictionary* delims = [self delimiters];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
-        for (NSString* command in delims) {
-            NSString* delim = delims[command];
-            NSString* existingCommand = mutableDict[delim];
-            if (existingCommand) {
-                if (command.length > existingCommand.length) {
-                    // Keep the shorter command
-                    continue;
-                } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
-                    if ([command compare:existingCommand] == NSOrderedDescending) {
-                        continue;
-                    }
-                }
-            }
-            // In other cases replace the command.
-            mutableDict[delim] = command;
-        }
-        delimToCommands = [mutableDict copy];
-    }
-    return delimToCommands;
-}
-
-+ (NSDictionary*) accentToCommands
-{
-    static NSDictionary* accentToCommands = nil;
-    if (!accentToCommands) {
-        NSDictionary* accents = [self accents];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:accents.count];
-        for (NSString* command in accents) {
-            NSString* acc = accents[command];
-            NSString* existingCommand = mutableDict[acc];
-            if (existingCommand) {
-                if (command.length > existingCommand.length) {
-                    // Keep the shorter command
-                    continue;
-                } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
-                    if ([command compare:existingCommand] == NSOrderedDescending) {
-                        continue;
-                    }
-                }
-            }
-            // In other cases replace the command.
-            mutableDict[acc] = command;
-        }
-        accentToCommands = [mutableDict copy];
-    }
-    return accentToCommands;
 }
 
 + (NSDictionary*) spaceToCommands
@@ -549,9 +420,9 @@ NSString *const MTParseError = @"ParseError";
     return output;
 }
 
-+ (NSString*) delimToString:(NSString*) delim
++ (NSString*) delimToString:(MTMathAtom*) delim
 {
-    NSString* command = self.delimToCommand[delim];
+    NSString* command = [MTMathAtomFactory delimiterNameForBoundaryAtom:delim];
     if (command) {
         NSArray<NSString*>* singleChars = @[ @"(", @")", @"[", @"]", @"<", @">", @"|", @".", @"/"];
         if ([singleChars containsObject:command]) {
@@ -599,13 +470,13 @@ NSString *const MTParseError = @"ParseError";
             MTInner* inner = (MTInner*) atom;
             if (inner.leftBoundary || inner.rightBoundary) {
                 if (inner.leftBoundary) {
-                    [str appendFormat:@"\\left%@ ", [self delimToString:inner.leftBoundary.nucleus]];
+                    [str appendFormat:@"\\left%@ ", [self delimToString:inner.leftBoundary]];
                 } else {
                     [str appendString:@"\\left. "];
                 }
                 [str appendString:[self mathListToString:inner.innerList]];
                 if (inner.rightBoundary) {
-                    [str appendFormat:@"\\right%@ ", [self delimToString:inner.rightBoundary.nucleus]];
+                    [str appendFormat:@"\\right%@ ", [self delimToString:inner.rightBoundary]];
                 } else {
                     [str appendString:@"\\right. "];
                 }
@@ -622,8 +493,7 @@ NSString *const MTParseError = @"ParseError";
             [str appendFormat:@"{%@}", [self mathListToString:under.innerList]];
         } else if (atom.type == kMTMathAtomAccent) {
             MTAccent* accent = (MTAccent*) atom;
-            NSDictionary* accentToCommands = [MTMathListBuilder accentToCommands];
-            [str appendFormat:@"\\%@{%@}", accentToCommands[accent.nucleus], [self mathListToString:accent.innerList]];
+            [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:accent], [self mathListToString:accent.innerList]];
         } else if (atom.type == kMTMathAtomSpace) {
             MTMathSpace* space = (MTMathSpace*) atom;
             NSDictionary* spaceToCommands = [MTMathListBuilder spaceToCommands];

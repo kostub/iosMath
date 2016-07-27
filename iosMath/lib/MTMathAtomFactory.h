@@ -95,6 +95,31 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  the operator and displyed differently. */
 + (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits;
 
+/** Returns an accent with the given name. The name of the accent is the LaTeX name
+ such as `grave`, `hat` etc. If the name is not a recognized accent name, this
+ returns nil. The `innerList` of the returned `MTAccent` is nil.
+ */
++ (MTAccent*) accentWithName:(NSString*) accentName;
+
+/** Returns the accent name for the given accent. This is the reverse of the above
+ function. */
++(NSString*) accentName:(MTAccent*) accent;
+
+/** Creates a new boundary atom for the given delimiter name. If the delimiter name
+ is not recognized it returns nil. A delimiter name can be a single character such
+ as '(' or a latex command such as 'uparrow'. 
+ @note In order to distinguish between the delimiter '|' and the delimiter '\|' the delimiter '\|'
+ the has been renamed to '||'.
+ */
++(MTMathAtom*) boundaryAtomForDelimiterName:(NSString*) delimiterName;
+
+/** Returns the delimiter name for a boundary atom. This is a reverse of the above function.
+ If the atom is not a boundary atom or if the delimiter value is unknown this returns `nil`.
+ @note This is not an exact reverse of the above function. Some delimiters have two names (e.g.
+ `<` and `langle`) and this function always returns the shorter name.
+ */
++ (NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary;
+
 @end
 
 NS_ASSUME_NONNULL_END
