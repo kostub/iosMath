@@ -700,7 +700,7 @@
 
 - (void)testLargeOpNoLimitsText {
     MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbol:@"sin"]];
+    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"sin"]];
     [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
@@ -738,7 +738,7 @@
 - (void)testLargeOpNoLimitsSymbol {
     MTMathList* mathList = [[MTMathList alloc] init];
     // Integral
-    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbol:@"int"]];
+    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"int"]];
     [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
@@ -774,7 +774,7 @@
 - (void)testLargeOpNoLimitsSymbolWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
     // Integral
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"int"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"int"];
     op.superScript = [[MTMathList alloc] init];
     [op.superScript addAtom:[MTMathAtomFactory atomForCharacter:'1']];
     op.subScript = [[MTMathList alloc] init];
@@ -852,9 +852,9 @@
 
 - (void)testLargeOpWithLimitsTextWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"lim"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"lim"];
     op.subScript = [[MTMathList alloc] init];
-    [op.subScript addAtom:[MTMathAtomFactory atomForLatexSymbol:@"infty"]];
+    [op.subScript addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"infty"]];
     [mathList addAtom:op];
     [mathList addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"]];
     
@@ -908,9 +908,9 @@
 
 - (void)testLargeOpWithLimitsSymboltWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"sum"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"sum"];
     op.superScript = [[MTMathList alloc] init];
-    [op.superScript addAtom:[MTMathAtomFactory atomForLatexSymbol:@"infty"]];
+    [op.superScript addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"infty"]];
     op.subScript = [[MTMathList alloc] init];
     [op.subScript addAtom:[MTMathAtomFactory atomForCharacter:'0']];
     [mathList addAtom:op];

@@ -34,9 +34,6 @@ FOUNDATION_EXPORT NSString *const _Nonnull MTParseError;
 /// Builds a mathlist from the given string. Returns nil if there is an error.
 - (nullable MTMathList*) build;
 
-/// List of commands that are supported.
-+ (nonnull NSDictionary<NSString*, MTMathAtom*>*) supportedCommands;
-
 /** Construct a math list from a given string. If there is parse error, returns
  nil. To retrieve the error use the function `[MTMathListBuilder buildFromString:error:]`.
  */

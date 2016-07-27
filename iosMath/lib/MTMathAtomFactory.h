@@ -73,10 +73,19 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (MTMathAtom*) atomForCharacter:(unichar) ch;
 
 /** Returns an atom with the right type for a given latex symbol (e.g. theta)
- If the latex symbol is unknown this will return nil.
- @note: This function does not support latex aliases.
+ If the latex symbol is unknown this will return nil. This supports LaTeX aliases as well.
  */
-+ (MTMathAtom*) atomForLatexSymbol:(NSString*) symbol;
++ (MTMathAtom*) atomForLatexSymbolName:(NSString*) symbolName;
+
+/** Finds the name of the LaTeX symbol name for the given atom. This function is a reverse
+ of the above function. If no latex symbol name corresponds to the atom, then this returns `nil`
+ If nucleus of the atom is empty, then this will return `nil`.
+ @note: This is not an exact reverse of the above in the case of aliases. If an LaTeX alias
+ points to a given symbol, then this function will return the original symbol name and not the
+ alias.
+ @note: This function does not convert MathSpaces to latex command names either.
+ */
++ (NSString*) latexSymbolNameForAtom:(MTMathAtom*) atom;
 
 /** Deprecated. Use (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
  instead. This sets the limits to false. */
