@@ -1062,7 +1062,7 @@
     over.innerList = inner;
     [mathList addAtom:over];
     
-    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay textColor:[UIColor whiteColor]];
     XCTAssertNotNil(display);
     XCTAssertEqual(display.type, kMTLinePositionRegular);
     XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
@@ -1110,7 +1110,7 @@
     under.innerList = inner;
     [mathList addAtom:under];
     
-    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay textColor:[UIColor whiteColor]];
     XCTAssertNotNil(display);
     XCTAssertEqual(display.type, kMTLinePositionRegular);
     XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
@@ -1156,7 +1156,7 @@
     [mathList addAtom:[[MTMathSpace alloc] initWithSpace:9]];
     [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
     
-    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay textColor:[UIColor whiteColor]];
     XCTAssertNotNil(display);
     XCTAssertEqual(display.type, kMTLinePositionRegular);
     XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
@@ -1189,7 +1189,8 @@
     [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     [noSpace addAtom:[MTMathAtomFactory atomForCharacter:'y']];
     
-    MTMathListDisplay* noSpaceDisplay = [MTTypesetter createLineForMathList:noSpace font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* noSpaceDisplay = [MTTypesetter createLineForMathList:noSpace font:self.font style:kMTLineStyleDisplay textColor:[UIColor whiteColor]];
+    
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, noSpaceDisplay.ascent, 0.01);
@@ -1201,7 +1202,7 @@
 - (void) testLargeRadicalDescent
 {
     MTMathList* list = [MTMathListBuilder buildFromString:@"\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt{5}^x}}"];
-    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay textColor:[UIColor whiteColor]];
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);

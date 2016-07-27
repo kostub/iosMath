@@ -1101,7 +1101,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 - (MTDisplay*) makeUnderline:(MTUnderLine*) under
 {
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:under.innerList font:_font style:_style cramped:_cramped];
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:under.innerList font:_font style:_style textColor:[UIColor blackColor]];
     MTLineDisplay* underDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:under.indexRange];
     // Move the line down by the vertical gap.
     underDisplay.lineShiftUp = -(innerListDisplay.descent + _styleFont.mathTable.underbarVerticalGap);
@@ -1114,7 +1114,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 - (MTDisplay*) makeOverline:(MTOverLine*) over
 {
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:over.innerList font:_font style:_style cramped:YES];
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:over.innerList font:_font style:_style textColor:[UIColor blackColor]];
     MTLineDisplay* overDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:over.indexRange];
     overDisplay.lineShiftUp = innerListDisplay.ascent + _styleFont.mathTable.overbarVerticalGap;
     overDisplay.lineThickness = _styleFont.mathTable.underbarRuleThickness;
