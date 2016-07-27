@@ -1,2612 +1,974 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>archiveVersion</key>
-	<string>1</string>
-	<key>classes</key>
-	<dict/>
-	<key>objectVersion</key>
-	<string>46</string>
-	<key>objects</key>
-	<dict>
-		<key>2A6BF4D73475A64FE2BB8DAD</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Check Pods Manifest.lock</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>diff "${PODS_ROOT}/../Podfile.lock" "${PODS_ROOT}/Manifest.lock" &gt; /dev/null
-if [[ $? != 0 ]] ; then
-    cat &lt;&lt; EOM
-error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.
-EOM
-    exit 1
-fi
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>3442884B289896C8F015C1E5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Embed Pods Frameworks</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-frameworks.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>490465BE1D23DA8400F82033</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTTypesetterTest.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>490465BF1D23DA8400F82033</key>
-		<dict>
-			<key>fileRef</key>
-			<string>490465BE1D23DA8400F82033</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EECF317DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathListDisplay.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF417DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathUILabel.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF517DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathUILabel.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF617DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathListDisplay.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF717DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>name</key>
-			<string>MTFontMathTable.h</string>
-			<key>path</key>
-			<string>internal/MTFontMathTable.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF817DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>name</key>
-			<string>MTFontMathTable.m</string>
-			<key>path</key>
-			<string>internal/MTFontMathTable.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECF917DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTFontManager.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECFA17DAED9000939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTFontManager.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EECFF17DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathListBuilder.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0017DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathAtomFactory.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0117DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathAtomFactory.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0217DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathList.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0317DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathList.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0417DAEDB500939107</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathListBuilder.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>492EED0817DAEDD200939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECFA17DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0917DAEDD200939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECF817DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0A17DAEDD200939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECF617DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0B17DAEDD200939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECF517DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0C17DAEDDD00939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECFF17DAEDB500939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0D17DAEDDD00939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EED0117DAEDB500939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>492EED0E17DAEDDD00939107</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EED0317DAEDB500939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>4987307117D546800041B02B</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>492EED0817DAEDD200939107</string>
-				<string>492EED0917DAEDD200939107</string>
-				<string>492EED0A17DAEDD200939107</string>
-				<string>49EEFD7D1D19B664002D15C4</string>
-				<string>492EED0B17DAEDD200939107</string>
-				<string>492EED0C17DAEDDD00939107</string>
-				<string>49DEC8B71CF77B00000053CD</string>
-				<string>49DEC8071CED71C3000053CD</string>
-				<string>492EED0D17DAEDDD00939107</string>
-				<string>49DA6BC719A062A30086B19F</string>
-				<string>492EED0E17DAEDDD00939107</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>4987307217D546800041B02B</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>498730AD17D549A00041B02B</string>
-				<string>498730AC17D548DB0041B02B</string>
-				<string>498730AA17D548D40041B02B</string>
-				<string>498730A917D548CA0041B02B</string>
-				<string>4987307617D546800041B02B</string>
-			</array>
-			<key>isa</key>
-			<string>PBXFrameworksBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>4987307317D546800041B02B</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>dstPath</key>
-			<string>include/${PRODUCT_NAME}</string>
-			<key>dstSubfolderSpec</key>
-			<string>16</string>
-			<key>files</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXCopyFilesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>4987307417D546800041B02B</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>4987309717D546800041B02B</string>
-			<key>buildPhases</key>
-			<array>
-				<string>4987307117D546800041B02B</string>
-				<string>D94FE3521B90DD1F002D11E2</string>
-				<string>4987307217D546800041B02B</string>
-				<string>4987307317D546800041B02B</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>IosMath</string>
-			<key>productName</key>
-			<string>iosMathLib</string>
-			<key>productReference</key>
-			<string>4987307517D546800041B02B</string>
-			<key>productType</key>
-			<string>com.apple.product-type.library.static</string>
-		</dict>
-		<key>4987307517D546800041B02B</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>archive.ar</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>libIosMath.a</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>4987307617D546800041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0117CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>4987307717D546800041B02B</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965F3917CBD02000A555C5</string>
-				<string>49965F3817CBBABD00A555C5</string>
-				<string>4987307817D546800041B02B</string>
-				<string>D94FE3501B90DCA5002D11E2</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>iosMath</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>4987307817D546800041B02B</key>
-		<dict>
-			<key>children</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Supporting Files</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>4987309317D546800041B02B</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>DSTROOT</key>
-				<string>/tmp/iosMathLib.dst</string>
-				<key>OTHER_LDFLAGS</key>
-				<string>-ObjC</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>PUBLIC_HEADERS_FOLDER_PATH</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SKIP_INSTALL</key>
-				<string>YES</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
-		</dict>
-		<key>4987309417D546800041B02B</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>DSTROOT</key>
-				<string>/tmp/iosMathLib.dst</string>
-				<key>OTHER_LDFLAGS</key>
-				<string>-ObjC</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>PUBLIC_HEADERS_FOLDER_PATH</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SKIP_INSTALL</key>
-				<string>YES</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Release</string>
-		</dict>
-		<key>4987309717D546800041B02B</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>4987309317D546800041B02B</string>
-				<string>4987309417D546800041B02B</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<string>0</string>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>498730A417D547450041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F2617CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730A717D548190041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EEF17CE71AC0014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730A817D548190041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EF517CF046A0014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730A917D548CA0041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965EFF17CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730AA17D548D40041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EF217CE74620014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730AB17D548DB0041B02B</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>QuartzCore.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/QuartzCore.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>498730AC17D548DB0041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>498730AB17D548DB0041B02B</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>498730AD17D549A00041B02B</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0317CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965EF317CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>498730AB17D548DB0041B02B</string>
-				<string>49B83EF217CE74620014B739</string>
-				<string>4987307717D546800041B02B</string>
-				<string>49965F0517CBBA2700A555C5</string>
-				<string>49965F2317CBBA2700A555C5</string>
-				<string>49A27B0418EBF5B30030B7EF</string>
-				<string>49965EFE17CBBA2700A555C5</string>
-				<string>49965EFD17CBBA2700A555C5</string>
-				<string>673C67F49848EC78C5FD29E0</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965EF417CBBA2700A555C5</key>
-		<dict>
-			<key>attributes</key>
-			<dict>
-				<key>LastTestingUpgradeCheck</key>
-				<string>0630</string>
-				<key>LastUpgradeCheck</key>
-				<string>0800</string>
-			</dict>
-			<key>buildConfigurationList</key>
-			<string>49965EF717CBBA2700A555C5</string>
-			<key>compatibilityVersion</key>
-			<string>Xcode 3.2</string>
-			<key>developmentRegion</key>
-			<string>English</string>
-			<key>hasScannedForEncodings</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXProject</string>
-			<key>knownRegions</key>
-			<array>
-				<string>en</string>
-			</array>
-			<key>mainGroup</key>
-			<string>49965EF317CBBA2700A555C5</string>
-			<key>productRefGroup</key>
-			<string>49965EFD17CBBA2700A555C5</string>
-			<key>projectDirPath</key>
-			<string></string>
-			<key>projectReferences</key>
-			<array/>
-			<key>projectRoot</key>
-			<string></string>
-			<key>targets</key>
-			<array>
-				<string>49965EFB17CBBA2700A555C5</string>
-				<string>49965F1B17CBBA2700A555C5</string>
-				<string>4987307417D546800041B02B</string>
-				<string>49A27B0018EBF5B30030B7EF</string>
-			</array>
-		</dict>
-		<key>49965EF717CBBA2700A555C5</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>49965F2C17CBBA2700A555C5</string>
-				<string>49965F2D17CBBA2700A555C5</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<string>0</string>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>49965EF817CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>49B83F0017CF2AE90014B739</string>
-				<string>49B83F0217CF2AE90014B739</string>
-				<string>49B83F0817CF2B420014B739</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965EF917CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>49B83EF317CE74620014B739</string>
-				<string>49965F0017CBBA2700A555C5</string>
-				<string>49965F0217CBBA2700A555C5</string>
-				<string>49965F0417CBBA2700A555C5</string>
-				<string>66B91F54A155071228C33E27</string>
-			</array>
-			<key>isa</key>
-			<string>PBXFrameworksBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965EFA17CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>49965F0A17CBBA2700A555C5</string>
-				<string>49DEC81C1CF3CD72000053CD</string>
-				<string>49B83F0317CF2AE90014B739</string>
-				<string>49B83F0417CF2AE90014B739</string>
-				<string>49B83F0517CF2AE90014B739</string>
-			</array>
-			<key>isa</key>
-			<string>PBXResourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965EFB17CBBA2700A555C5</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>49965F2E17CBBA2700A555C5</string>
-			<key>buildPhases</key>
-			<array>
-				<string>E29EDA86FBD87D988339E97B</string>
-				<string>49965EF817CBBA2700A555C5</string>
-				<string>49965EF917CBBA2700A555C5</string>
-				<string>49965EFA17CBBA2700A555C5</string>
-				<string>3442884B289896C8F015C1E5</string>
-				<string>C897D2526C33F372299D91F4</string>
-				<string>7D197A97CF511DE49B30F99A</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>iosMathExample</string>
-			<key>productName</key>
-			<string>iosMath</string>
-			<key>productReference</key>
-			<string>49965EFC17CBBA2700A555C5</string>
-			<key>productType</key>
-			<string>com.apple.product-type.application</string>
-		</dict>
-		<key>49965EFC17CBBA2700A555C5</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.application</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>iosMathExample.app</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>49965EFD17CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965EFC17CBBA2700A555C5</string>
-				<string>49965F1C17CBBA2700A555C5</string>
-				<string>4987307517D546800041B02B</string>
-				<string>49A27B0118EBF5B30030B7EF</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Products</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965EFE17CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965EFF17CBBA2700A555C5</string>
-				<string>49965F0117CBBA2700A555C5</string>
-				<string>49965F0317CBBA2700A555C5</string>
-				<string>49A27B0218EBF5B30030B7EF</string>
-				<string>B7305B3D5272E07D296E1146</string>
-				<string>847963E8DF103FF2BAABFCD8</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Frameworks</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965EFF17CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>UIKit.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/UIKit.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>49965F0017CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965EFF17CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F0117CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>Foundation.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/Foundation.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>49965F0217CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0117CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F0317CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>CoreGraphics.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/CoreGraphics.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>49965F0417CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0317CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F0517CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49B83F0C17CF30550014B739</string>
-				<string>49B83EF717CF2A550014B739</string>
-				<string>49965F0617CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>iosMathExample</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F0617CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49B83F0917CF2EC30014B739</string>
-				<string>49B83EFC17CF2AE90014B739</string>
-				<string>49B83EFD17CF2AE90014B739</string>
-				<string>49B83EFE17CF2AE90014B739</string>
-				<string>49B83EFF17CF2AE90014B739</string>
-				<string>49965F0817CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Supporting Files</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F0817CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965F0917CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXVariantGroup</string>
-			<key>name</key>
-			<string>InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F0917CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.strings</string>
-			<key>name</key>
-			<string>en</string>
-			<key>path</key>
-			<string>en.lproj/InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F0A17CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0817CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F1717CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>498730A717D548190041B02B</string>
-				<string>498730A817D548190041B02B</string>
-				<string>490465BF1D23DA8400F82033</string>
-			</array>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965F1817CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>49965F1F17CBBA2700A555C5</string>
-				<string>49965F2017CBBA2700A555C5</string>
-				<string>A4AF82224BB9060CC51567E8</string>
-			</array>
-			<key>isa</key>
-			<string>PBXFrameworksBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965F1917CBBA2700A555C5</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>498730A417D547450041B02B</string>
-			</array>
-			<key>isa</key>
-			<string>PBXResourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49965F1B17CBBA2700A555C5</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>49965F3117CBBA2700A555C5</string>
-			<key>buildPhases</key>
-			<array>
-				<string>2A6BF4D73475A64FE2BB8DAD</string>
-				<string>49965F1717CBBA2700A555C5</string>
-				<string>49965F1817CBBA2700A555C5</string>
-				<string>49965F1917CBBA2700A555C5</string>
-				<string>89BE4A420E67730DC572540C</string>
-				<string>C6253ABF539A9D25D25B1108</string>
-				<string>BAC153654973553BC0FCB719</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>iosMathTests</string>
-			<key>productName</key>
-			<string>iosMathTests</string>
-			<key>productReference</key>
-			<string>49965F1C17CBBA2700A555C5</string>
-			<key>productType</key>
-			<string>com.apple.product-type.bundle.unit-test</string>
-		</dict>
-		<key>49965F1C17CBBA2700A555C5</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.cfbundle</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>iosMathTests.xctest</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>49965F1F17CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965EFF17CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F2017CBBA2700A555C5</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49965F0117CBBA2700A555C5</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49965F2317CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49B83EEF17CE71AC0014B739</string>
-				<string>49B83EF517CF046A0014B739</string>
-				<string>490465BE1D23DA8400F82033</string>
-				<string>49965F2417CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>iosMathTests</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F2417CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965F2517CBBA2700A555C5</string>
-				<string>49965F2617CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Supporting Files</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F2517CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.xml</string>
-			<key>path</key>
-			<string>iosMathTests-Info.plist</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F2617CBBA2700A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49965F2717CBBA2700A555C5</string>
-			</array>
-			<key>isa</key>
-			<string>PBXVariantGroup</string>
-			<key>name</key>
-			<string>InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F2717CBBA2700A555C5</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.strings</string>
-			<key>name</key>
-			<string>en</string>
-			<key>path</key>
-			<string>en.lproj/InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F2C17CBBA2700A555C5</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>ALWAYS_SEARCH_USER_PATHS</key>
-				<string>NO</string>
-				<key>CLANG_CXX_LANGUAGE_STANDARD</key>
-				<string>gnu++0x</string>
-				<key>CLANG_CXX_LIBRARY</key>
-				<string>libc++</string>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>CLANG_ENABLE_OBJC_ARC</key>
-				<string>YES</string>
-				<key>CLANG_WARN_BOOL_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_CONSTANT_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_EMPTY_BODY</key>
-				<string>YES</string>
-				<key>CLANG_WARN_ENUM_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_INT_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_UNREACHABLE_CODE</key>
-				<string>YES</string>
-				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
-				<string>YES</string>
-				<key>COPY_PHASE_STRIP</key>
-				<string>NO</string>
-				<key>ENABLE_STRICT_OBJC_MSGSEND</key>
-				<string>YES</string>
-				<key>ENABLE_TESTABILITY</key>
-				<string>YES</string>
-				<key>GCC_C_LANGUAGE_STANDARD</key>
-				<string>gnu99</string>
-				<key>GCC_DYNAMIC_NO_PIC</key>
-				<string>NO</string>
-				<key>GCC_NO_COMMON_BLOCKS</key>
-				<string>YES</string>
-				<key>GCC_OPTIMIZATION_LEVEL</key>
-				<string>0</string>
-				<key>GCC_PREPROCESSOR_DEFINITIONS</key>
-				<array>
-					<string>DEBUG=1</string>
-					<string>$(inherited)</string>
-				</array>
-				<key>GCC_SYMBOLS_PRIVATE_EXTERN</key>
-				<string>NO</string>
-				<key>GCC_WARN_64_TO_32_BIT_CONVERSION</key>
-				<string>YES</string>
-				<key>GCC_WARN_ABOUT_RETURN_TYPE</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNDECLARED_SELECTOR</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNINITIALIZED_AUTOS</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNUSED_FUNCTION</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNUSED_VARIABLE</key>
-				<string>YES</string>
-				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
-				<string>6.0</string>
-				<key>ONLY_ACTIVE_ARCH</key>
-				<string>YES</string>
-				<key>SDKROOT</key>
-				<string>iphoneos</string>
-				<key>TARGETED_DEVICE_FAMILY</key>
-				<string>1,2</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
-		</dict>
-		<key>49965F2D17CBBA2700A555C5</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>ALWAYS_SEARCH_USER_PATHS</key>
-				<string>NO</string>
-				<key>CLANG_CXX_LANGUAGE_STANDARD</key>
-				<string>gnu++0x</string>
-				<key>CLANG_CXX_LIBRARY</key>
-				<string>libc++</string>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>CLANG_ENABLE_OBJC_ARC</key>
-				<string>YES</string>
-				<key>CLANG_WARN_BOOL_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_CONSTANT_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_EMPTY_BODY</key>
-				<string>YES</string>
-				<key>CLANG_WARN_ENUM_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_INT_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_UNREACHABLE_CODE</key>
-				<string>YES</string>
-				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
-				<string>YES</string>
-				<key>COPY_PHASE_STRIP</key>
-				<string>YES</string>
-				<key>ENABLE_STRICT_OBJC_MSGSEND</key>
-				<string>YES</string>
-				<key>GCC_C_LANGUAGE_STANDARD</key>
-				<string>gnu99</string>
-				<key>GCC_NO_COMMON_BLOCKS</key>
-				<string>YES</string>
-				<key>GCC_WARN_64_TO_32_BIT_CONVERSION</key>
-				<string>YES</string>
-				<key>GCC_WARN_ABOUT_RETURN_TYPE</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNDECLARED_SELECTOR</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNINITIALIZED_AUTOS</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNUSED_FUNCTION</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNUSED_VARIABLE</key>
-				<string>YES</string>
-				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
-				<string>6.0</string>
-				<key>OTHER_CFLAGS</key>
-				<string>-DNS_BLOCK_ASSERTIONS=1</string>
-				<key>SDKROOT</key>
-				<string>iphoneos</string>
-				<key>TARGETED_DEVICE_FAMILY</key>
-				<string>1,2</string>
-				<key>VALIDATE_PRODUCT</key>
-				<string>YES</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Release</string>
-		</dict>
-		<key>49965F2E17CBBA2700A555C5</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>49965F2F17CBBA2700A555C5</string>
-				<string>49965F3017CBBA2700A555C5</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<string>0</string>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>49965F2F17CBBA2700A555C5</key>
-		<dict>
-			<key>baseConfigurationReference</key>
-			<string>D93290960585498BBAEE4535</string>
-			<key>buildSettings</key>
-			<dict>
-				<key>INFOPLIST_FILE</key>
-				<string>iosMathExample/iosMath-Info.plist</string>
-				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
-				<string>9.0</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>MathChat.iosMathExample</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>PROVISIONING_PROFILE</key>
-				<string></string>
-				<key>WRAPPER_EXTENSION</key>
-				<string>app</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
-		</dict>
-		<key>49965F3017CBBA2700A555C5</key>
-		<dict>
-			<key>baseConfigurationReference</key>
-			<string>B16B9A63054AE3FFB5C36F6B</string>
-			<key>buildSettings</key>
-			<dict>
-				<key>INFOPLIST_FILE</key>
-				<string>iosMathExample/iosMath-Info.plist</string>
-				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
-				<string>9.0</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>MathChat.iosMathExample</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>PROVISIONING_PROFILE</key>
-				<string></string>
-				<key>WRAPPER_EXTENSION</key>
-				<string>app</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Release</string>
-		</dict>
-		<key>49965F3117CBBA2700A555C5</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>49965F3217CBBA2700A555C5</string>
-				<string>49965F3317CBBA2700A555C5</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<string>0</string>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>49965F3217CBBA2700A555C5</key>
-		<dict>
-			<key>baseConfigurationReference</key>
-			<string>BB4250423755E0D3CD2BA614</string>
-			<key>buildSettings</key>
-			<dict>
-				<key>INFOPLIST_FILE</key>
-				<string>iosMathTests/iosMathTests-Info.plist</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>MathChat.${PRODUCT_NAME:rfc1034identifier}</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
-		</dict>
-		<key>49965F3317CBBA2700A555C5</key>
-		<dict>
-			<key>baseConfigurationReference</key>
-			<string>964660A84E6FEDD150C994C8</string>
-			<key>buildSettings</key>
-			<dict>
-				<key>INFOPLIST_FILE</key>
-				<string>iosMathTests/iosMathTests-Info.plist</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>MathChat.${PRODUCT_NAME:rfc1034identifier}</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Release</string>
-		</dict>
-		<key>49965F3817CBBABD00A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49DEC8B51CF77B00000053CD</string>
-				<string>49DEC8B61CF77B00000053CD</string>
-				<string>492EED0017DAEDB500939107</string>
-				<string>492EED0117DAEDB500939107</string>
-				<string>492EED0217DAEDB500939107</string>
-				<string>492EED0317DAEDB500939107</string>
-				<string>492EED0417DAEDB500939107</string>
-				<string>492EECFF17DAEDB500939107</string>
-				<string>49DA6BC319A05F850086B19F</string>
-				<string>49DA6BC619A062A30086B19F</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>lib</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49965F3917CBD02000A555C5</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49EEFD791D19B616002D15C4</string>
-				<string>49DEC8081CEEC865000053CD</string>
-				<string>492EECF317DAED9000939107</string>
-				<string>492EECF617DAED9000939107</string>
-				<string>492EECF417DAED9000939107</string>
-				<string>492EECF517DAED9000939107</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>render</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27AFD18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXSourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49A27AFE18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXFrameworksBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49A27AFF18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>49DEC81A1CF3C69E000053CD</string>
-				<string>49DEC8181CF3C69E000053CD</string>
-				<string>49DEC8161CF3C69E000053CD</string>
-				<string>49DEC8191CF3C69E000053CD</string>
-				<string>49DEC8171CF3C69E000053CD</string>
-				<string>49DEC8151CF3C69E000053CD</string>
-				<string>49A27B0918EBF5B30030B7EF</string>
-			</array>
-			<key>isa</key>
-			<string>PBXResourcesBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>49A27B0018EBF5B30030B7EF</key>
-		<dict>
-			<key>buildConfigurationList</key>
-			<string>49A27B0D18EBF5B30030B7EF</string>
-			<key>buildPhases</key>
-			<array>
-				<string>49A27AFD18EBF5B30030B7EF</string>
-				<string>49A27AFE18EBF5B30030B7EF</string>
-				<string>49A27AFF18EBF5B30030B7EF</string>
-			</array>
-			<key>buildRules</key>
-			<array/>
-			<key>dependencies</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXNativeTarget</string>
-			<key>name</key>
-			<string>MathFontBundle</string>
-			<key>productName</key>
-			<string>MathFontBundle</string>
-			<key>productReference</key>
-			<string>49A27B0118EBF5B30030B7EF</string>
-			<key>productType</key>
-			<string>com.apple.product-type.bundle</string>
-		</dict>
-		<key>49A27B0118EBF5B30030B7EF</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>wrapper.cfbundle</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>MathFontBundle.bundle</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>49A27B0218EBF5B30030B7EF</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>CoreFoundation.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/CoreFoundation.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>49A27B0418EBF5B30030B7EF</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49DEC80F1CF3C69E000053CD</string>
-				<string>49DEC8101CF3C69E000053CD</string>
-				<string>49DEC8111CF3C69E000053CD</string>
-				<string>49DEC8121CF3C69E000053CD</string>
-				<string>49DEC8131CF3C69E000053CD</string>
-				<string>49DEC8141CF3C69E000053CD</string>
-				<string>49A27B0518EBF5B30030B7EF</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>MathFontBundle</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27B0518EBF5B30030B7EF</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49A27B0618EBF5B30030B7EF</string>
-				<string>49A27B0718EBF5B30030B7EF</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Supporting Files</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27B0618EBF5B30030B7EF</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.xml</string>
-			<key>path</key>
-			<string>MathFontBundle-Info.plist</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27B0718EBF5B30030B7EF</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49A27B0818EBF5B30030B7EF</string>
-			</array>
-			<key>isa</key>
-			<string>PBXVariantGroup</string>
-			<key>name</key>
-			<string>InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27B0818EBF5B30030B7EF</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.strings</string>
-			<key>name</key>
-			<string>en</string>
-			<key>path</key>
-			<string>en.lproj/InfoPlist.strings</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49A27B0918EBF5B30030B7EF</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49A27B0718EBF5B30030B7EF</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49A27B0B18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>CLANG_WARN_BOOL_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_DIRECT_OBJC_ISA_USAGE</key>
-				<string>YES_ERROR</string>
-				<key>CLANG_WARN_OBJC_ROOT_CLASS</key>
-				<string>YES_ERROR</string>
-				<key>COMBINE_HIDPI_IMAGES</key>
-				<string>YES</string>
-				<key>GCC_ENABLE_OBJC_EXCEPTIONS</key>
-				<string>YES</string>
-				<key>GCC_PREPROCESSOR_DEFINITIONS</key>
-				<array>
-					<string>DEBUG=1</string>
-					<string>$(inherited)</string>
-				</array>
-				<key>GCC_WARN_64_TO_32_BIT_CONVERSION</key>
-				<string>YES</string>
-				<key>GCC_WARN_ABOUT_RETURN_TYPE</key>
-				<string>YES_ERROR</string>
-				<key>GCC_WARN_UNDECLARED_SELECTOR</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNINITIALIZED_AUTOS</key>
-				<string>YES_AGGRESSIVE</string>
-				<key>GCC_WARN_UNUSED_FUNCTION</key>
-				<string>YES</string>
-				<key>INFOPLIST_FILE</key>
-				<string>MathFontBundle/MathFontBundle-Info.plist</string>
-				<key>INSTALL_PATH</key>
-				<string>$(LOCAL_LIBRARY_DIR)/Bundles</string>
-				<key>MACOSX_DEPLOYMENT_TARGET</key>
-				<string>10.9</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SDKROOT</key>
-				<string>iphoneos</string>
-				<key>SKIP_INSTALL</key>
-				<string>YES</string>
-				<key>WRAPPER_EXTENSION</key>
-				<string>bundle</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Debug</string>
-		</dict>
-		<key>49A27B0C18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildSettings</key>
-			<dict>
-				<key>CLANG_ENABLE_MODULES</key>
-				<string>YES</string>
-				<key>CLANG_WARN_BOOL_CONVERSION</key>
-				<string>YES</string>
-				<key>CLANG_WARN_DIRECT_OBJC_ISA_USAGE</key>
-				<string>YES_ERROR</string>
-				<key>CLANG_WARN_OBJC_ROOT_CLASS</key>
-				<string>YES_ERROR</string>
-				<key>COMBINE_HIDPI_IMAGES</key>
-				<string>YES</string>
-				<key>DEBUG_INFORMATION_FORMAT</key>
-				<string>dwarf-with-dsym</string>
-				<key>ENABLE_NS_ASSERTIONS</key>
-				<string>NO</string>
-				<key>GCC_ENABLE_OBJC_EXCEPTIONS</key>
-				<string>YES</string>
-				<key>GCC_WARN_64_TO_32_BIT_CONVERSION</key>
-				<string>YES</string>
-				<key>GCC_WARN_ABOUT_RETURN_TYPE</key>
-				<string>YES_ERROR</string>
-				<key>GCC_WARN_UNDECLARED_SELECTOR</key>
-				<string>YES</string>
-				<key>GCC_WARN_UNINITIALIZED_AUTOS</key>
-				<string>YES_AGGRESSIVE</string>
-				<key>GCC_WARN_UNUSED_FUNCTION</key>
-				<string>YES</string>
-				<key>INFOPLIST_FILE</key>
-				<string>MathFontBundle/MathFontBundle-Info.plist</string>
-				<key>INSTALL_PATH</key>
-				<string>$(LOCAL_LIBRARY_DIR)/Bundles</string>
-				<key>MACOSX_DEPLOYMENT_TARGET</key>
-				<string>10.9</string>
-				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}</string>
-				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
-				<key>SDKROOT</key>
-				<string>iphoneos</string>
-				<key>SKIP_INSTALL</key>
-				<string>YES</string>
-				<key>WRAPPER_EXTENSION</key>
-				<string>bundle</string>
-			</dict>
-			<key>isa</key>
-			<string>XCBuildConfiguration</string>
-			<key>name</key>
-			<string>Release</string>
-		</dict>
-		<key>49A27B0D18EBF5B30030B7EF</key>
-		<dict>
-			<key>buildConfigurations</key>
-			<array>
-				<string>49A27B0B18EBF5B30030B7EF</string>
-				<string>49A27B0C18EBF5B30030B7EF</string>
-			</array>
-			<key>defaultConfigurationIsVisible</key>
-			<string>0</string>
-			<key>defaultConfigurationName</key>
-			<string>Release</string>
-			<key>isa</key>
-			<string>XCConfigurationList</string>
-		</dict>
-		<key>49B83EEF17CE71AC0014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathListBuilderTest.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EF217CE74620014B739</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>wrapper.framework</string>
-			<key>name</key>
-			<string>CoreText.framework</string>
-			<key>path</key>
-			<string>System/Library/Frameworks/CoreText.framework</string>
-			<key>sourceTree</key>
-			<string>SDKROOT</string>
-		</dict>
-		<key>49B83EF317CE74620014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EF217CE74620014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83EF517CF046A0014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathListTest.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EF717CF2A550014B739</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49B83EF817CF2AE90014B739</string>
-				<string>49B83EF917CF2AE90014B739</string>
-				<string>49B83F0617CF2B420014B739</string>
-				<string>49B83F0717CF2B420014B739</string>
-				<string>49DEC81B1CF3CD72000053CD</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>example</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EF817CF2AE90014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>name</key>
-			<string>AppDelegate.h</string>
-			<key>path</key>
-			<string>example/AppDelegate.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EF917CF2AE90014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>name</key>
-			<string>AppDelegate.m</string>
-			<key>path</key>
-			<string>example/AppDelegate.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EFC17CF2AE90014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>name</key>
-			<string>main.m</string>
-			<key>path</key>
-			<string>example/main.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EFD17CF2AE90014B739</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>image.png</string>
-			<key>name</key>
-			<string>Default-568h@2x.png</string>
-			<key>path</key>
-			<string>example/Default-568h@2x.png</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EFE17CF2AE90014B739</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>image.png</string>
-			<key>name</key>
-			<string>Default.png</string>
-			<key>path</key>
-			<string>example/Default.png</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83EFF17CF2AE90014B739</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>image.png</string>
-			<key>name</key>
-			<string>Default@2x.png</string>
-			<key>path</key>
-			<string>example/Default@2x.png</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83F0017CF2AE90014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EF917CF2AE90014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0217CF2AE90014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EFC17CF2AE90014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0317CF2AE90014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EFD17CF2AE90014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0417CF2AE90014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EFE17CF2AE90014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0517CF2AE90014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83EFF17CF2AE90014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0617CF2B420014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>name</key>
-			<string>ViewController.h</string>
-			<key>path</key>
-			<string>example/ViewController.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83F0717CF2B420014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>name</key>
-			<string>ViewController.m</string>
-			<key>path</key>
-			<string>example/ViewController.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83F0817CF2B420014B739</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49B83F0717CF2B420014B739</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49B83F0917CF2EC30014B739</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.plist.xml</string>
-			<key>path</key>
-			<string>iosMath-Info.plist</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49B83F0C17CF30550014B739</key>
-		<dict>
-			<key>children</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Resources</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DA6BC319A05F850086B19F</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>name</key>
-			<string>MTUnicode.h</string>
-			<key>path</key>
-			<string>../../../iosMath/iosMath/lib/MTUnicode.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DA6BC619A062A30086B19F</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>name</key>
-			<string>MTUnicode.m</string>
-			<key>path</key>
-			<string>../../../iosMath/iosMath/lib/MTUnicode.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DA6BC719A062A30086B19F</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DA6BC619A062A30086B19F</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8041CED71C3000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTFont.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC8051CED71C3000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTFont.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC8061CED71C3000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8041CED71C3000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Public</string>
-				</array>
-			</dict>
-		</dict>
-		<key>49DEC8071CED71C3000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8051CED71C3000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8081CEEC865000053CD</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>492EECF717DAED9000939107</string>
-				<string>492EECF817DAED9000939107</string>
-				<string>49DEC8041CED71C3000053CD</string>
-				<string>49DEC8051CED71C3000053CD</string>
-				<string>492EECF917DAED9000939107</string>
-				<string>492EECFA17DAED9000939107</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>fonts</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC80B1CEF1028000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTFont+Internal.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC80F1CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file.bplist</string>
-			<key>name</key>
-			<string>xits-math.plist</string>
-			<key>path</key>
-			<string>fonts/xits-math.plist</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8101CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file</string>
-			<key>name</key>
-			<string>xits-math.otf</string>
-			<key>path</key>
-			<string>fonts/xits-math.otf</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8111CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file.bplist</string>
-			<key>name</key>
-			<string>texgyretermes-math.plist</string>
-			<key>path</key>
-			<string>fonts/texgyretermes-math.plist</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8121CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file</string>
-			<key>name</key>
-			<string>texgyretermes-math.otf</string>
-			<key>path</key>
-			<string>fonts/texgyretermes-math.otf</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8131CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file.bplist</string>
-			<key>name</key>
-			<string>latinmodern-math.plist</string>
-			<key>path</key>
-			<string>fonts/latinmodern-math.plist</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8141CF3C69E000053CD</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file</string>
-			<key>name</key>
-			<string>latinmodern-math.otf</string>
-			<key>path</key>
-			<string>fonts/latinmodern-math.otf</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>49DEC8151CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC80F1CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8161CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8101CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8171CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8111CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8181CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8121CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8191CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8131CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC81A1CF3C69E000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8141CF3C69E000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC81B1CF3CD72000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>file.xib</string>
-			<key>path</key>
-			<string>View.xib</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC81C1CF3CD72000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC81B1CF3CD72000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8B51CF77B00000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTMathListIndex.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC8B61CF77B00000053CD</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathListIndex.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49DEC8B71CF77B00000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8B51CF77B00000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49DEC8B81CF77B00000053CD</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49DEC8B61CF77B00000053CD</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49EEFD791D19B616002D15C4</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>49DEC80B1CEF1028000053CD</string>
-				<string>49EEFD7A1D19B664002D15C4</string>
-				<string>49EEFD7B1D19B664002D15C4</string>
-				<string>49EEFD7E1D19B94C002D15C4</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>path</key>
-			<string>internal</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49EEFD7A1D19B664002D15C4</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTTypesetter.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49EEFD7B1D19B664002D15C4</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>MTTypesetter.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>49EEFD7C1D19B664002D15C4</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49EEFD7A1D19B664002D15C4</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Private</string>
-				</array>
-			</dict>
-		</dict>
-		<key>49EEFD7D1D19B664002D15C4</key>
-		<dict>
-			<key>fileRef</key>
-			<string>49EEFD7B1D19B664002D15C4</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>49EEFD7E1D19B94C002D15C4</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>MTMathListDisplayInternal.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>66B91F54A155071228C33E27</key>
-		<dict>
-			<key>fileRef</key>
-			<string>B7305B3D5272E07D296E1146</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>673C67F49848EC78C5FD29E0</key>
-		<dict>
-			<key>children</key>
-			<array>
-				<string>D93290960585498BBAEE4535</string>
-				<string>B16B9A63054AE3FFB5C36F6B</string>
-				<string>BB4250423755E0D3CD2BA614</string>
-				<string>964660A84E6FEDD150C994C8</string>
-			</array>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Pods</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>7D197A97CF511DE49B30F99A</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>Embed Pods Frameworks</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-frameworks.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>847963E8DF103FF2BAABFCD8</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>archive.ar</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>libPods-iosMathTests.a</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>89BE4A420E67730DC572540C</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Embed Pods Frameworks</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-frameworks.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>964660A84E6FEDD150C994C8</key>
-		<dict>
-			<key>includeInIndex</key>
-			<string>1</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.xcconfig</string>
-			<key>name</key>
-			<string>Pods-iosMathTests.release.xcconfig</string>
-			<key>path</key>
-			<string>Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.release.xcconfig</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>A4AF82224BB9060CC51567E8</key>
-		<dict>
-			<key>fileRef</key>
-			<string>847963E8DF103FF2BAABFCD8</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>B16B9A63054AE3FFB5C36F6B</key>
-		<dict>
-			<key>includeInIndex</key>
-			<string>1</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.xcconfig</string>
-			<key>name</key>
-			<string>Pods-iosMathExample.release.xcconfig</string>
-			<key>path</key>
-			<string>Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.release.xcconfig</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>B7305B3D5272E07D296E1146</key>
-		<dict>
-			<key>explicitFileType</key>
-			<string>archive.ar</string>
-			<key>includeInIndex</key>
-			<string>0</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>path</key>
-			<string>libPods-iosMathExample.a</string>
-			<key>sourceTree</key>
-			<string>BUILT_PRODUCTS_DIR</string>
-		</dict>
-		<key>BAC153654973553BC0FCB719</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>Embed Pods Frameworks</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-frameworks.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>BB4250423755E0D3CD2BA614</key>
-		<dict>
-			<key>includeInIndex</key>
-			<string>1</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.xcconfig</string>
-			<key>name</key>
-			<string>Pods-iosMathTests.debug.xcconfig</string>
-			<key>path</key>
-			<string>Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.debug.xcconfig</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>C6253ABF539A9D25D25B1108</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Copy Pods Resources</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-resources.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>C897D2526C33F372299D91F4</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Copy Pods Resources</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-resources.sh"
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-		<key>D93290960585498BBAEE4535</key>
-		<dict>
-			<key>includeInIndex</key>
-			<string>1</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>text.xcconfig</string>
-			<key>name</key>
-			<string>Pods-iosMathExample.debug.xcconfig</string>
-			<key>path</key>
-			<string>Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.debug.xcconfig</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>D94FE3501B90DCA5002D11E2</key>
-		<dict>
-			<key>fileEncoding</key>
-			<string>4</string>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>IosMath.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
-		<key>D94FE3521B90DD1F002D11E2</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array>
-				<string>D94FE3541B90DE46002D11E2</string>
-				<string>49DEC8B81CF77B00000053CD</string>
-				<string>D94FE3591B90DE91002D11E2</string>
-				<string>D94FE3531B90DD29002D11E2</string>
-				<string>D94FE3551B90DE5B002D11E2</string>
-				<string>49DEC8061CED71C3000053CD</string>
-				<string>49EEFD7C1D19B664002D15C4</string>
-			</array>
-			<key>isa</key>
-			<string>PBXHeadersBuildPhase</string>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-		</dict>
-		<key>D94FE3531B90DD29002D11E2</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECF417DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Public</string>
-				</array>
-			</dict>
-		</dict>
-		<key>D94FE3541B90DE46002D11E2</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EECF317DAED9000939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Public</string>
-				</array>
-			</dict>
-		</dict>
-		<key>D94FE3551B90DE5B002D11E2</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EED0217DAEDB500939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Public</string>
-				</array>
-			</dict>
-		</dict>
-		<key>D94FE3591B90DE91002D11E2</key>
-		<dict>
-			<key>fileRef</key>
-			<string>492EED0417DAEDB500939107</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>settings</key>
-			<dict>
-				<key>ATTRIBUTES</key>
-				<array>
-					<string>Public</string>
-				</array>
-			</dict>
-		</dict>
-		<key>E29EDA86FBD87D988339E97B</key>
-		<dict>
-			<key>buildActionMask</key>
-			<string>2147483647</string>
-			<key>files</key>
-			<array/>
-			<key>inputPaths</key>
-			<array/>
-			<key>isa</key>
-			<string>PBXShellScriptBuildPhase</string>
-			<key>name</key>
-			<string>[CP] Check Pods Manifest.lock</string>
-			<key>outputPaths</key>
-			<array/>
-			<key>runOnlyForDeploymentPostprocessing</key>
-			<string>0</string>
-			<key>shellPath</key>
-			<string>/bin/sh</string>
-			<key>shellScript</key>
-			<string>diff "${PODS_ROOT}/../Podfile.lock" "${PODS_ROOT}/Manifest.lock" &gt; /dev/null
-if [[ $? != 0 ]] ; then
-    cat &lt;&lt; EOM
-error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.
-EOM
-    exit 1
-fi
-</string>
-			<key>showEnvVarsInLog</key>
-			<string>0</string>
-		</dict>
-	</dict>
-	<key>rootObject</key>
-	<string>49965EF417CBBA2700A555C5</string>
-</dict>
-</plist>
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
+		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
+		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
+		492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF617DAED9000939107 /* MTMathListDisplay.m */; };
+		492EED0B17DAEDD200939107 /* MTMathUILabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF517DAED9000939107 /* MTMathUILabel.m */; };
+		492EED0C17DAEDDD00939107 /* MTMathListBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFF17DAEDB500939107 /* MTMathListBuilder.m */; };
+		492EED0D17DAEDDD00939107 /* MTMathAtomFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EED0117DAEDB500939107 /* MTMathAtomFactory.m */; };
+		492EED0E17DAEDDD00939107 /* MTMathList.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EED0317DAEDB500939107 /* MTMathList.m */; };
+		4987307617D546800041B02B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0117CBBA2700A555C5 /* Foundation.framework */; };
+		498730A417D547450041B02B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49965F2617CBBA2700A555C5 /* InfoPlist.strings */; };
+		498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */; };
+		498730A817D548190041B02B /* MTMathListTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF517CF046A0014B739 /* MTMathListTest.m */; };
+		498730A917D548CA0041B02B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965EFF17CBBA2700A555C5 /* UIKit.framework */; };
+		498730AA17D548D40041B02B /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
+		498730AC17D548DB0041B02B /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 498730AB17D548DB0041B02B /* QuartzCore.framework */; };
+		498730AD17D549A00041B02B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0317CBBA2700A555C5 /* CoreGraphics.framework */; };
+		49965F0017CBBA2700A555C5 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965EFF17CBBA2700A555C5 /* UIKit.framework */; };
+		49965F0217CBBA2700A555C5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0117CBBA2700A555C5 /* Foundation.framework */; };
+		49965F0417CBBA2700A555C5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0317CBBA2700A555C5 /* CoreGraphics.framework */; };
+		49965F0A17CBBA2700A555C5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49965F0817CBBA2700A555C5 /* InfoPlist.strings */; };
+		49965F1F17CBBA2700A555C5 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965EFF17CBBA2700A555C5 /* UIKit.framework */; };
+		49965F2017CBBA2700A555C5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965F0117CBBA2700A555C5 /* Foundation.framework */; };
+		49A27B0918EBF5B30030B7EF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49A27B0718EBF5B30030B7EF /* InfoPlist.strings */; };
+		49B83EF317CE74620014B739 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
+		49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF917CF2AE90014B739 /* AppDelegate.m */; };
+		49B83F0217CF2AE90014B739 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EFC17CF2AE90014B739 /* main.m */; };
+		49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */; };
+		49B83F0417CF2AE90014B739 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFE17CF2AE90014B739 /* Default.png */; };
+		49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFF17CF2AE90014B739 /* Default@2x.png */; };
+		49B83F0817CF2B420014B739 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83F0717CF2B420014B739 /* ViewController.m */; };
+		49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DA6BC619A062A30086B19F /* MTUnicode.m */; };
+		49DEC8061CED71C3000053CD /* MTFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8041CED71C3000053CD /* MTFont.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		49DEC8071CED71C3000053CD /* MTFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DEC8051CED71C3000053CD /* MTFont.m */; };
+		49DEC8151CF3C69E000053CD /* xits-math.plist in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC80F1CF3C69E000053CD /* xits-math.plist */; };
+		49DEC8161CF3C69E000053CD /* xits-math.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8101CF3C69E000053CD /* xits-math.otf */; };
+		49DEC8171CF3C69E000053CD /* texgyretermes-math.plist in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8111CF3C69E000053CD /* texgyretermes-math.plist */; };
+		49DEC8181CF3C69E000053CD /* texgyretermes-math.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8121CF3C69E000053CD /* texgyretermes-math.otf */; };
+		49DEC8191CF3C69E000053CD /* latinmodern-math.plist in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8131CF3C69E000053CD /* latinmodern-math.plist */; };
+		49DEC81A1CF3C69E000053CD /* latinmodern-math.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC8141CF3C69E000053CD /* latinmodern-math.otf */; };
+		49DEC81C1CF3CD72000053CD /* View.xib in Resources */ = {isa = PBXBuildFile; fileRef = 49DEC81B1CF3CD72000053CD /* View.xib */; };
+		49DEC8B71CF77B00000053CD /* MTMathListIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DEC8B51CF77B00000053CD /* MTMathListIndex.m */; };
+		49DEC8B81CF77B00000053CD /* MTMathListIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8B61CF77B00000053CD /* MTMathListIndex.h */; };
+		49EEFD7C1D19B664002D15C4 /* MTTypesetter.h in Headers */ = {isa = PBXBuildFile; fileRef = 49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		49EEFD7D1D19B664002D15C4 /* MTTypesetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */; };
+		66B91F54A155071228C33E27 /* libPods-iosMathExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B7305B3D5272E07D296E1146 /* libPods-iosMathExample.a */; };
+		A4AF82224BB9060CC51567E8 /* libPods-iosMathTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */; };
+		D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF417DAED9000939107 /* MTMathUILabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D94FE3541B90DE46002D11E2 /* MTMathListDisplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF317DAED9000939107 /* MTMathListDisplay.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D94FE3551B90DE5B002D11E2 /* MTMathList.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EED0217DAEDB500939107 /* MTMathList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D94FE3591B90DE91002D11E2 /* MTMathListBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EED0417DAEDB500939107 /* MTMathListBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4987307317D546800041B02B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/${PRODUCT_NAME}";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
+		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
+		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
+		492EECF517DAED9000939107 /* MTMathUILabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathUILabel.m; sourceTree = "<group>"; };
+		492EECF617DAED9000939107 /* MTMathListDisplay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListDisplay.m; sourceTree = "<group>"; };
+		492EECF717DAED9000939107 /* MTFontMathTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTFontMathTable.h; path = internal/MTFontMathTable.h; sourceTree = "<group>"; };
+		492EECF817DAED9000939107 /* MTFontMathTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTFontMathTable.m; path = internal/MTFontMathTable.m; sourceTree = "<group>"; };
+		492EECF917DAED9000939107 /* MTFontManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFontManager.h; sourceTree = "<group>"; };
+		492EECFA17DAED9000939107 /* MTFontManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManager.m; sourceTree = "<group>"; };
+		492EECFF17DAEDB500939107 /* MTMathListBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilder.m; sourceTree = "<group>"; };
+		492EED0017DAEDB500939107 /* MTMathAtomFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathAtomFactory.h; sourceTree = "<group>"; };
+		492EED0117DAEDB500939107 /* MTMathAtomFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathAtomFactory.m; sourceTree = "<group>"; };
+		492EED0217DAEDB500939107 /* MTMathList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathList.h; sourceTree = "<group>"; };
+		492EED0317DAEDB500939107 /* MTMathList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathList.m; sourceTree = "<group>"; };
+		492EED0417DAEDB500939107 /* MTMathListBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListBuilder.h; sourceTree = "<group>"; };
+		4987307517D546800041B02B /* libIosMath.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libIosMath.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		498730AB17D548DB0041B02B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		49965EFC17CBBA2700A555C5 /* iosMathExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosMathExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		49965EFF17CBBA2700A555C5 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		49965F0117CBBA2700A555C5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		49965F0317CBBA2700A555C5 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		49965F0917CBBA2700A555C5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		49965F1C17CBBA2700A555C5 /* iosMathTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosMathTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		49965F2517CBBA2700A555C5 /* iosMathTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iosMathTests-Info.plist"; sourceTree = "<group>"; };
+		49965F2717CBBA2700A555C5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		49A27B0118EBF5B30030B7EF /* MathFontBundle.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MathFontBundle.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		49A27B0218EBF5B30030B7EF /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		49A27B0618EBF5B30030B7EF /* MathFontBundle-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MathFontBundle-Info.plist"; sourceTree = "<group>"; };
+		49A27B0818EBF5B30030B7EF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilderTest.m; sourceTree = "<group>"; };
+		49B83EF217CE74620014B739 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		49B83EF517CF046A0014B739 /* MTMathListTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListTest.m; sourceTree = "<group>"; };
+		49B83EF817CF2AE90014B739 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = example/AppDelegate.h; sourceTree = "<group>"; };
+		49B83EF917CF2AE90014B739 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = example/AppDelegate.m; sourceTree = "<group>"; };
+		49B83EFC17CF2AE90014B739 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = example/main.m; sourceTree = "<group>"; };
+		49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "example/Default-568h@2x.png"; sourceTree = "<group>"; };
+		49B83EFE17CF2AE90014B739 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = example/Default.png; sourceTree = "<group>"; };
+		49B83EFF17CF2AE90014B739 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "example/Default@2x.png"; sourceTree = "<group>"; };
+		49B83F0617CF2B420014B739 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewController.h; path = example/ViewController.h; sourceTree = "<group>"; };
+		49B83F0717CF2B420014B739 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = example/ViewController.m; sourceTree = "<group>"; };
+		49B83F0917CF2EC30014B739 /* iosMath-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iosMath-Info.plist"; sourceTree = "<group>"; };
+		49DA6BC319A05F850086B19F /* MTUnicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTUnicode.h; path = ../../../iosMath/iosMath/lib/MTUnicode.h; sourceTree = "<group>"; };
+		49DA6BC619A062A30086B19F /* MTUnicode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTUnicode.m; path = ../../../iosMath/iosMath/lib/MTUnicode.m; sourceTree = "<group>"; };
+		49DEC8041CED71C3000053CD /* MTFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFont.h; sourceTree = "<group>"; };
+		49DEC8051CED71C3000053CD /* MTFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFont.m; sourceTree = "<group>"; };
+		49DEC80B1CEF1028000053CD /* MTFont+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MTFont+Internal.h"; sourceTree = "<group>"; };
+		49DEC80F1CF3C69E000053CD /* xits-math.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = "xits-math.plist"; path = "fonts/xits-math.plist"; sourceTree = SOURCE_ROOT; };
+		49DEC8101CF3C69E000053CD /* xits-math.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "xits-math.otf"; path = "fonts/xits-math.otf"; sourceTree = SOURCE_ROOT; };
+		49DEC8111CF3C69E000053CD /* texgyretermes-math.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = "texgyretermes-math.plist"; path = "fonts/texgyretermes-math.plist"; sourceTree = SOURCE_ROOT; };
+		49DEC8121CF3C69E000053CD /* texgyretermes-math.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "texgyretermes-math.otf"; path = "fonts/texgyretermes-math.otf"; sourceTree = SOURCE_ROOT; };
+		49DEC8131CF3C69E000053CD /* latinmodern-math.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = "latinmodern-math.plist"; path = "fonts/latinmodern-math.plist"; sourceTree = SOURCE_ROOT; };
+		49DEC8141CF3C69E000053CD /* latinmodern-math.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "latinmodern-math.otf"; path = "fonts/latinmodern-math.otf"; sourceTree = SOURCE_ROOT; };
+		49DEC81B1CF3CD72000053CD /* View.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = View.xib; sourceTree = "<group>"; };
+		49DEC8B51CF77B00000053CD /* MTMathListIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListIndex.m; sourceTree = "<group>"; };
+		49DEC8B61CF77B00000053CD /* MTMathListIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListIndex.h; sourceTree = "<group>"; };
+		49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTypesetter.h; sourceTree = "<group>"; };
+		49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetter.m; sourceTree = "<group>"; };
+		49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplayInternal.h; sourceTree = "<group>"; };
+		847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.release.xcconfig"; sourceTree = "<group>"; };
+		B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.release.xcconfig"; sourceTree = "<group>"; };
+		B7305B3D5272E07D296E1146 /* libPods-iosMathExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4250423755E0D3CD2BA614 /* Pods-iosMathTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.debug.xcconfig"; sourceTree = "<group>"; };
+		D93290960585498BBAEE4535 /* Pods-iosMathExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.debug.xcconfig"; sourceTree = "<group>"; };
+		D94FE3501B90DCA5002D11E2 /* IosMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IosMath.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4987307217D546800041B02B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				498730AD17D549A00041B02B /* CoreGraphics.framework in Frameworks */,
+				498730AC17D548DB0041B02B /* QuartzCore.framework in Frameworks */,
+				498730AA17D548D40041B02B /* CoreText.framework in Frameworks */,
+				498730A917D548CA0041B02B /* UIKit.framework in Frameworks */,
+				4987307617D546800041B02B /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49965EF917CBBA2700A555C5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49B83EF317CE74620014B739 /* CoreText.framework in Frameworks */,
+				49965F0017CBBA2700A555C5 /* UIKit.framework in Frameworks */,
+				49965F0217CBBA2700A555C5 /* Foundation.framework in Frameworks */,
+				49965F0417CBBA2700A555C5 /* CoreGraphics.framework in Frameworks */,
+				66B91F54A155071228C33E27 /* libPods-iosMathExample.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49965F1817CBBA2700A555C5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49965F1F17CBBA2700A555C5 /* UIKit.framework in Frameworks */,
+				49965F2017CBBA2700A555C5 /* Foundation.framework in Frameworks */,
+				A4AF82224BB9060CC51567E8 /* libPods-iosMathTests.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49A27AFE18EBF5B30030B7EF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4987307717D546800041B02B /* iosMath */ = {
+			isa = PBXGroup;
+			children = (
+				49965F3917CBD02000A555C5 /* render */,
+				49965F3817CBBABD00A555C5 /* lib */,
+				4987307817D546800041B02B /* Supporting Files */,
+				D94FE3501B90DCA5002D11E2 /* IosMath.h */,
+			);
+			path = iosMath;
+			sourceTree = "<group>";
+		};
+		4987307817D546800041B02B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		49965EF317CBBA2700A555C5 = {
+			isa = PBXGroup;
+			children = (
+				498730AB17D548DB0041B02B /* QuartzCore.framework */,
+				49B83EF217CE74620014B739 /* CoreText.framework */,
+				4987307717D546800041B02B /* iosMath */,
+				49965F0517CBBA2700A555C5 /* iosMathExample */,
+				49965F2317CBBA2700A555C5 /* iosMathTests */,
+				49A27B0418EBF5B30030B7EF /* MathFontBundle */,
+				49965EFE17CBBA2700A555C5 /* Frameworks */,
+				49965EFD17CBBA2700A555C5 /* Products */,
+				673C67F49848EC78C5FD29E0 /* Pods */,
+			);
+			sourceTree = "<group>";
+		};
+		49965EFD17CBBA2700A555C5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				49965EFC17CBBA2700A555C5 /* iosMathExample.app */,
+				49965F1C17CBBA2700A555C5 /* iosMathTests.xctest */,
+				4987307517D546800041B02B /* libIosMath.a */,
+				49A27B0118EBF5B30030B7EF /* MathFontBundle.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		49965EFE17CBBA2700A555C5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				49965EFF17CBBA2700A555C5 /* UIKit.framework */,
+				49965F0117CBBA2700A555C5 /* Foundation.framework */,
+				49965F0317CBBA2700A555C5 /* CoreGraphics.framework */,
+				49A27B0218EBF5B30030B7EF /* CoreFoundation.framework */,
+				B7305B3D5272E07D296E1146 /* libPods-iosMathExample.a */,
+				847963E8DF103FF2BAABFCD8 /* libPods-iosMathTests.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		49965F0517CBBA2700A555C5 /* iosMathExample */ = {
+			isa = PBXGroup;
+			children = (
+				49B83F0C17CF30550014B739 /* Resources */,
+				49B83EF717CF2A550014B739 /* example */,
+				49965F0617CBBA2700A555C5 /* Supporting Files */,
+			);
+			path = iosMathExample;
+			sourceTree = "<group>";
+		};
+		49965F0617CBBA2700A555C5 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				49B83F0917CF2EC30014B739 /* iosMath-Info.plist */,
+				49B83EFC17CF2AE90014B739 /* main.m */,
+				49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */,
+				49B83EFE17CF2AE90014B739 /* Default.png */,
+				49B83EFF17CF2AE90014B739 /* Default@2x.png */,
+				49965F0817CBBA2700A555C5 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		49965F2317CBBA2700A555C5 /* iosMathTests */ = {
+			isa = PBXGroup;
+			children = (
+				49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */,
+				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
+				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
+				49965F2417CBBA2700A555C5 /* Supporting Files */,
+			);
+			path = iosMathTests;
+			sourceTree = "<group>";
+		};
+		49965F2417CBBA2700A555C5 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				49965F2517CBBA2700A555C5 /* iosMathTests-Info.plist */,
+				49965F2617CBBA2700A555C5 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		49965F3817CBBABD00A555C5 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				49DEC8B51CF77B00000053CD /* MTMathListIndex.m */,
+				49DEC8B61CF77B00000053CD /* MTMathListIndex.h */,
+				492EED0017DAEDB500939107 /* MTMathAtomFactory.h */,
+				492EED0117DAEDB500939107 /* MTMathAtomFactory.m */,
+				492EED0217DAEDB500939107 /* MTMathList.h */,
+				492EED0317DAEDB500939107 /* MTMathList.m */,
+				492EED0417DAEDB500939107 /* MTMathListBuilder.h */,
+				492EECFF17DAEDB500939107 /* MTMathListBuilder.m */,
+				49DA6BC319A05F850086B19F /* MTUnicode.h */,
+				49DA6BC619A062A30086B19F /* MTUnicode.m */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		49965F3917CBD02000A555C5 /* render */ = {
+			isa = PBXGroup;
+			children = (
+				49EEFD791D19B616002D15C4 /* internal */,
+				49DEC8081CEEC865000053CD /* fonts */,
+				492EECF317DAED9000939107 /* MTMathListDisplay.h */,
+				492EECF617DAED9000939107 /* MTMathListDisplay.m */,
+				492EECF417DAED9000939107 /* MTMathUILabel.h */,
+				492EECF517DAED9000939107 /* MTMathUILabel.m */,
+			);
+			path = render;
+			sourceTree = "<group>";
+		};
+		49A27B0418EBF5B30030B7EF /* MathFontBundle */ = {
+			isa = PBXGroup;
+			children = (
+				49DEC80F1CF3C69E000053CD /* xits-math.plist */,
+				49DEC8101CF3C69E000053CD /* xits-math.otf */,
+				49DEC8111CF3C69E000053CD /* texgyretermes-math.plist */,
+				49DEC8121CF3C69E000053CD /* texgyretermes-math.otf */,
+				49DEC8131CF3C69E000053CD /* latinmodern-math.plist */,
+				49DEC8141CF3C69E000053CD /* latinmodern-math.otf */,
+				49A27B0518EBF5B30030B7EF /* Supporting Files */,
+			);
+			path = MathFontBundle;
+			sourceTree = "<group>";
+		};
+		49A27B0518EBF5B30030B7EF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				49A27B0618EBF5B30030B7EF /* MathFontBundle-Info.plist */,
+				49A27B0718EBF5B30030B7EF /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		49B83EF717CF2A550014B739 /* example */ = {
+			isa = PBXGroup;
+			children = (
+				49B83EF817CF2AE90014B739 /* AppDelegate.h */,
+				49B83EF917CF2AE90014B739 /* AppDelegate.m */,
+				49B83F0617CF2B420014B739 /* ViewController.h */,
+				49B83F0717CF2B420014B739 /* ViewController.m */,
+				49DEC81B1CF3CD72000053CD /* View.xib */,
+			);
+			name = example;
+			sourceTree = "<group>";
+		};
+		49B83F0C17CF30550014B739 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		49DEC8081CEEC865000053CD /* fonts */ = {
+			isa = PBXGroup;
+			children = (
+				492EECF717DAED9000939107 /* MTFontMathTable.h */,
+				492EECF817DAED9000939107 /* MTFontMathTable.m */,
+				49DEC8041CED71C3000053CD /* MTFont.h */,
+				49DEC8051CED71C3000053CD /* MTFont.m */,
+				492EECF917DAED9000939107 /* MTFontManager.h */,
+				492EECFA17DAED9000939107 /* MTFontManager.m */,
+			);
+			name = fonts;
+			sourceTree = "<group>";
+		};
+		49EEFD791D19B616002D15C4 /* internal */ = {
+			isa = PBXGroup;
+			children = (
+				49DEC80B1CEF1028000053CD /* MTFont+Internal.h */,
+				49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */,
+				49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */,
+				49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */,
+			);
+			path = internal;
+			sourceTree = "<group>";
+		};
+		673C67F49848EC78C5FD29E0 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D93290960585498BBAEE4535 /* Pods-iosMathExample.debug.xcconfig */,
+				B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */,
+				BB4250423755E0D3CD2BA614 /* Pods-iosMathTests.debug.xcconfig */,
+				964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D94FE3521B90DD1F002D11E2 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D94FE3541B90DE46002D11E2 /* MTMathListDisplay.h in Headers */,
+				49DEC8B81CF77B00000053CD /* MTMathListIndex.h in Headers */,
+				D94FE3591B90DE91002D11E2 /* MTMathListBuilder.h in Headers */,
+				D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */,
+				D94FE3551B90DE5B002D11E2 /* MTMathList.h in Headers */,
+				49DEC8061CED71C3000053CD /* MTFont.h in Headers */,
+				49EEFD7C1D19B664002D15C4 /* MTTypesetter.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		4987307417D546800041B02B /* IosMath */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4987309717D546800041B02B /* Build configuration list for PBXNativeTarget "IosMath" */;
+			buildPhases = (
+				4987307117D546800041B02B /* Sources */,
+				D94FE3521B90DD1F002D11E2 /* Headers */,
+				4987307217D546800041B02B /* Frameworks */,
+				4987307317D546800041B02B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IosMath;
+			productName = iosMathLib;
+			productReference = 4987307517D546800041B02B /* libIosMath.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		49965EFB17CBBA2700A555C5 /* iosMathExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49965F2E17CBBA2700A555C5 /* Build configuration list for PBXNativeTarget "iosMathExample" */;
+			buildPhases = (
+				E29EDA86FBD87D988339E97B /* [CP] Check Pods Manifest.lock */,
+				49965EF817CBBA2700A555C5 /* Sources */,
+				49965EF917CBBA2700A555C5 /* Frameworks */,
+				49965EFA17CBBA2700A555C5 /* Resources */,
+				3442884B289896C8F015C1E5 /* [CP] Embed Pods Frameworks */,
+				C897D2526C33F372299D91F4 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = iosMathExample;
+			productName = iosMath;
+			productReference = 49965EFC17CBBA2700A555C5 /* iosMathExample.app */;
+			productType = "com.apple.product-type.application";
+		};
+		49965F1B17CBBA2700A555C5 /* iosMathTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49965F3117CBBA2700A555C5 /* Build configuration list for PBXNativeTarget "iosMathTests" */;
+			buildPhases = (
+				2A6BF4D73475A64FE2BB8DAD /* [CP] Check Pods Manifest.lock */,
+				49965F1717CBBA2700A555C5 /* Sources */,
+				49965F1817CBBA2700A555C5 /* Frameworks */,
+				49965F1917CBBA2700A555C5 /* Resources */,
+				89BE4A420E67730DC572540C /* [CP] Embed Pods Frameworks */,
+				C6253ABF539A9D25D25B1108 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = iosMathTests;
+			productName = iosMathTests;
+			productReference = 49965F1C17CBBA2700A555C5 /* iosMathTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		49A27B0018EBF5B30030B7EF /* MathFontBundle */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49A27B0D18EBF5B30030B7EF /* Build configuration list for PBXNativeTarget "MathFontBundle" */;
+			buildPhases = (
+				49A27AFD18EBF5B30030B7EF /* Sources */,
+				49A27AFE18EBF5B30030B7EF /* Frameworks */,
+				49A27AFF18EBF5B30030B7EF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MathFontBundle;
+			productName = MathFontBundle;
+			productReference = 49A27B0118EBF5B30030B7EF /* MathFontBundle.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		49965EF417CBBA2700A555C5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastTestingUpgradeCheck = 0630;
+				LastUpgradeCheck = 0800;
+			};
+			buildConfigurationList = 49965EF717CBBA2700A555C5 /* Build configuration list for PBXProject "iosMath" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 49965EF317CBBA2700A555C5;
+			productRefGroup = 49965EFD17CBBA2700A555C5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				49965EFB17CBBA2700A555C5 /* iosMathExample */,
+				49965F1B17CBBA2700A555C5 /* iosMathTests */,
+				4987307417D546800041B02B /* IosMath */,
+				49A27B0018EBF5B30030B7EF /* MathFontBundle */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		49965EFA17CBBA2700A555C5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49965F0A17CBBA2700A555C5 /* InfoPlist.strings in Resources */,
+				49DEC81C1CF3CD72000053CD /* View.xib in Resources */,
+				49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */,
+				49B83F0417CF2AE90014B739 /* Default.png in Resources */,
+				49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49965F1917CBBA2700A555C5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				498730A417D547450041B02B /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49A27AFF18EBF5B30030B7EF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49DEC81A1CF3C69E000053CD /* latinmodern-math.otf in Resources */,
+				49DEC8181CF3C69E000053CD /* texgyretermes-math.otf in Resources */,
+				49DEC8161CF3C69E000053CD /* xits-math.otf in Resources */,
+				49DEC8191CF3C69E000053CD /* latinmodern-math.plist in Resources */,
+				49DEC8171CF3C69E000053CD /* texgyretermes-math.plist in Resources */,
+				49DEC8151CF3C69E000053CD /* xits-math.plist in Resources */,
+				49A27B0918EBF5B30030B7EF /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2A6BF4D73475A64FE2BB8DAD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		3442884B289896C8F015C1E5 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		89BE4A420E67730DC572540C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C6253ABF539A9D25D25B1108 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C897D2526C33F372299D91F4 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E29EDA86FBD87D988339E97B /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4987307117D546800041B02B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				492EED0817DAEDD200939107 /* MTFontManager.m in Sources */,
+				492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */,
+				492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */,
+				49EEFD7D1D19B664002D15C4 /* MTTypesetter.m in Sources */,
+				492EED0B17DAEDD200939107 /* MTMathUILabel.m in Sources */,
+				492EED0C17DAEDDD00939107 /* MTMathListBuilder.m in Sources */,
+				49DEC8B71CF77B00000053CD /* MTMathListIndex.m in Sources */,
+				49DEC8071CED71C3000053CD /* MTFont.m in Sources */,
+				492EED0D17DAEDDD00939107 /* MTMathAtomFactory.m in Sources */,
+				49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */,
+				492EED0E17DAEDDD00939107 /* MTMathList.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49965EF817CBBA2700A555C5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */,
+				49B83F0217CF2AE90014B739 /* main.m in Sources */,
+				49B83F0817CF2B420014B739 /* ViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49965F1717CBBA2700A555C5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */,
+				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
+				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49A27AFD18EBF5B30030B7EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		49965F0817CBBA2700A555C5 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				49965F0917CBBA2700A555C5 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		49965F2617CBBA2700A555C5 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				49965F2717CBBA2700A555C5 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		49A27B0718EBF5B30030B7EF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				49A27B0818EBF5B30030B7EF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4987309317D546800041B02B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DSTROOT = /tmp/iosMathLib.dst;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		4987309417D546800041B02B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DSTROOT = /tmp/iosMathLib.dst;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		49965F2C17CBBA2700A555C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		49965F2D17CBBA2700A555C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		49965F2F17CBBA2700A555C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D93290960585498BBAEE4535 /* Pods-iosMathExample.debug.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = MathChat.iosMathExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		49965F3017CBBA2700A555C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = MathChat.iosMathExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		49965F3217CBBA2700A555C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BB4250423755E0D3CD2BA614 /* Pods-iosMathTests.debug.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "MathChat.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		49965F3317CBBA2700A555C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "MathChat.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		49A27B0B18EBF5B30030B7EF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "MathFontBundle/MathFontBundle-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = "Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		49A27B0C18EBF5B30030B7EF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "MathFontBundle/MathFontBundle-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = "Tactile-Learning.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4987309717D546800041B02B /* Build configuration list for PBXNativeTarget "IosMath" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4987309317D546800041B02B /* Debug */,
+				4987309417D546800041B02B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49965EF717CBBA2700A555C5 /* Build configuration list for PBXProject "iosMath" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49965F2C17CBBA2700A555C5 /* Debug */,
+				49965F2D17CBBA2700A555C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49965F2E17CBBA2700A555C5 /* Build configuration list for PBXNativeTarget "iosMathExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49965F2F17CBBA2700A555C5 /* Debug */,
+				49965F3017CBBA2700A555C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49965F3117CBBA2700A555C5 /* Build configuration list for PBXNativeTarget "iosMathTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49965F3217CBBA2700A555C5 /* Debug */,
+				49965F3317CBBA2700A555C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49A27B0D18EBF5B30030B7EF /* Build configuration list for PBXNativeTarget "MathFontBundle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49A27B0B18EBF5B30030B7EF /* Debug */,
+				49A27B0C18EBF5B30030B7EF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 49965EF417CBBA2700A555C5 /* Project object */;
+}
