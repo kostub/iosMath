@@ -322,5 +322,14 @@
         label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
     }
 }
+- (IBAction)colorButtonPressed:(UIButton *)sender
+{
+    for (MTMathUILabel* label in self.demoLabels) {
+        label.textColor = sender.backgroundColor;
+    }
+    for (MTMathUILabel* label in self.labels) {
+        label.textColor = sender.backgroundColor;
+    }
+}
 
 @end
