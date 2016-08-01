@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSRange range;
 /// Whether the display has a subscript/superscript following it.
 @property (nonatomic, readonly) BOOL hasScript;
+/// The text color for this display
+@property (nonatomic, nullable) UIColor* textColor;
 
 @end
 

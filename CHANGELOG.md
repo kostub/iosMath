@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.8.3 (2016-07-31)
+* Add `textColor` field to `MTMathUILabel` to set the color of the
+  rendered equation.
+* Fixed issue with height of tall radicals set incorrectly.
+
 ### v0.8.2 (2016-07-23)
 * Support for \\overline and \\underline
 * Includes math spacing: \\, \\; \\> \\! \\quad \\qquad \\' '

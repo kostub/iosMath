@@ -147,6 +147,18 @@ label.font = [[MTFontManager fontManager] termesFontWithSize:20];
 This project has 3 fonts bundled with it, but you can use any OTF math
 font.
 
+##### Color
+The default color of the rendered equation is black. You can change
+it to any other color as follows:
+
+```objective-c
+label.textColor = [UIColor redColor];
+```
+
+It is also possible to set different colors for different parts of the
+equation. Just access the `displayList` field and set the `textColor`
+on the underlying displays that you want to change the color of. 
+
 ##### Padding
 The `MTMathUILabel` has top, bottom, left and right padding for finer
 control of placement of the equation in relation to the view. However,
