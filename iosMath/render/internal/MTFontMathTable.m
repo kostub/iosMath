@@ -37,6 +37,12 @@
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
         _mathTable = mathTable;
+        if (![@"1.1" isEqualToString:_mathTable[@"version"]]) {
+            // Invalid version
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
+                                         userInfo:nil];
+        }
     }
     return self;
 }
@@ -386,30 +392,42 @@ static NSString* const kConstants = @"constants";
 
 #pragma mark - Variants
 
-static NSString* const kVariants = @"variants";
+static NSString* const kVertVariants = @"v_variants";
+static NSString* const kHorizVariants = @"h_variants";
 
-- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph
+- (NSArray<NSNumber*>*) getVerticalVariantsForGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVertVariants];
+    return [self getVariantsForGlyph:glyph inDictionary:variants];
+}
+
+- (NSArray<NSNumber*>*) getHorizontalVariantsForGlyph:(CGGlyph) glyph
+{
+    NSDictionary* variants = (NSDictionary*) _mathTable[kHorizVariants];
+    return [self getVariantsForGlyph:glyph inDictionary:variants];
+}
+
+- (NSArray<NSNumber*>*) getVariantsForGlyph:(CGGlyph) glyph inDictionary:(NSDictionary*) variants
+{
     NSString* glyphName = [self.font getGlyphName:glyph];
-    CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
     NSArray* variantGlyphs = (NSArray*) variants[glyphName];
+    NSMutableArray* glyphArray = [NSMutableArray arrayWithCapacity:variantGlyphs.count];
     if (!variantGlyphs) {
         // There are no extra variants, so just add the current glyph to it.
         CGGlyph glyph = [self.font getGlyphWithName:glyphName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)glyph);
+        [glyphArray addObject:@(glyph)];
         return glyphArray;
     }
     for (NSString* glyphVariantName in variantGlyphs) {
         CGGlyph variantGlyph = [self.font getGlyphWithName:glyphVariantName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)variantGlyph);
+        [glyphArray addObject:@(variantGlyph)];
     }
     return glyphArray;
 }
 
 - (CGGlyph) getLargerGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVertVariants];
     NSString* glyphName = [self.font getGlyphName:glyph];
     NSArray* variantGlyphs = (NSArray*) variants[glyphName];
     if (!variantGlyphs) {

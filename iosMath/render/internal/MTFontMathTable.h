@@ -106,9 +106,13 @@
 
 #pragma mark Variants
 
-/** Returns a CFArray of all the vertical variants of the glyph if any.
- This array needs to be released by the caller. */
-- (nonnull CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph CF_RETURNS_RETAINED;
+/** Returns an NSArray of all the vertical variants of the glyph if any. If
+ there are no variants for the glyph, the array contains the given glyph. */
+- (nonnull NSArray<NSNumber*>*) getVerticalVariantsForGlyph:(CGGlyph) glyph;
+
+/** Returns an NSArray of all the horizontal variants of the glyph if any. If
+ there are no variants for the glyph, the array contains the given glyph. */
+- (nonnull NSArray<NSNumber*>*) getHorizontalVariantsForGlyph:(CGGlyph) glyph;
 
 /** Returns a larger vertical variant of the given glyph if any.
  If there is no larger version, this returns the current glyph.

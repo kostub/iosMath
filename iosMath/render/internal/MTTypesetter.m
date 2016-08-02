@@ -888,14 +888,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (CGGlyph) findGlyph:(CGGlyph) glyph withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
-    CFArrayRef variants = [_styleFont.mathTable copyVerticalVariantsForGlyph:glyph];
-    CFIndex numVariants = CFArrayGetCount(variants);
+    NSArray<NSNumber*>* variants = [_styleFont.mathTable getVerticalVariantsForGlyph:glyph];
+    CFIndex numVariants = variants.count;
     CGGlyph glyphs[numVariants];
     for (CFIndex i = 0; i < numVariants; i++) {
-        CGGlyph glyph = (CGGlyph)CFArrayGetValueAtIndex(variants, i);
+        CGGlyph glyph = [variants[i] shortValue];
         glyphs[i] = glyph;
     }
-    CFRelease(variants);
     
     CGRect bboxes[numVariants];
     // Get the bounds for these glyphs
