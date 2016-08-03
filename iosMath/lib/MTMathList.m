@@ -676,6 +676,37 @@ static NSString* typeToText(MTMathAtomType type) {
     return table;
 }
 
+- (void)setCell:(MTMathList *)list forRow:(NSInteger)row column:(NSInteger)column
+{
+    NSParameterAssert(list);
+    
+    if (self.cells.count <= row) {
+        // Add more rows
+        for (NSInteger i = self.cells.count;  i <= row; i++) {
+            _cells[i] = [NSMutableArray array];
+        }
+    }
+    NSMutableArray<MTMathList*> *rowArray = _cells[row];
+    if (rowArray.count <= column) {
+        // Add more columns
+        for (NSInteger i = rowArray.count;  i < column; i++) {
+            rowArray[i] = [[MTMathList alloc] init];
+        }
+    }
+    rowArray[column] = list;
+}
+
+- (void)setAlignment:(MTColumnAlignment)alignment forColumn:(NSInteger)column
+{
+    if (self.alignments.count < column) {
+        // Add more columns
+        for (NSInteger i = self.alignments.count; i < column; i++) {
+            _alignments[i] = @(kMTColumnAlignmentCenter);
+        }
+    }
+    _alignments[column] = @(alignment);
+}
+
 @end
 
 #pragma mark - MTMathList

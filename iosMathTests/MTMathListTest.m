@@ -540,4 +540,99 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkAtomCopy:copy original:space forTest:self];
     XCTAssertEqual(space.space, copy.space);
 }
+
+- (void) testCreateMathTable
+{
+    MTMathTable* table = [[MTMathTable alloc] init];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    [list2 addAtom:atom3];
+    [list2 addAtom:atom2];
+    
+    [table setCell:list forRow:3 column:2];
+    [table setCell:list2 forRow:1 column:0];
+    
+    [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
+    [table setAlignment:kMTColumnAlignmentRight forColumn:1];
+    
+    // Verify that everything is created correctly
+    XCTAssertEqual(table.cells.count, 4);  // 4 rows
+    XCTAssertNotNil(table.cells[0]);
+    XCTAssertEqual(table.cells[0].count, 0); // 0 elements in row 0
+    XCTAssertEqual(table.cells[1].count, 1); // 1 element in row 1
+    XCTAssertNotNil(table.cells[2]);
+    XCTAssertEqual(table.cells[2].count, 0);
+    XCTAssertEqual(table.cells[3].count, 3);
+    
+    // Verify the elements in the rows
+    XCTAssertEqual(table.cells[1][0].atoms.count, 2);
+    XCTAssertEqual(table.cells[1][0], list2);
+    XCTAssertNotNil(table.cells[3][0]);
+    XCTAssertEqual(table.cells[3][0].atoms.count, 0);
+    
+    XCTAssertNotNil(table.cells[3][0]);
+    XCTAssertEqual(table.cells[3][0].atoms.count, 0);
+    
+    XCTAssertNotNil(table.cells[3][1]);
+    XCTAssertEqual(table.cells[3][1].atoms.count, 0);
+    
+    XCTAssertEqual(table.cells[3][2], list);
+    
+    // Verify the alignments
+    XCTAssertEqual(table.alignments.count, 3);
+    XCTAssertEqual(table.alignments[0].integerValue, kMTColumnAlignmentCenter);
+    XCTAssertEqual(table.alignments[1].integerValue, kMTColumnAlignmentRight);
+    XCTAssertEqual(table.alignments[2].integerValue, kMTColumnAlignmentLeft);
+}
+
+- (void) testCopyMathTable
+{
+    MTMathTable* table = [[MTMathTable alloc] init];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    
+    MTMathList* list = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtomFactory placeholder];
+    MTMathAtom* atom2 = [MTMathAtomFactory times];
+    MTMathAtom* atom3 = [MTMathAtomFactory divide];
+    [list addAtom:atom];
+    [list addAtom:atom2];
+    [list addAtom:atom3];
+    
+    MTMathList* list2 = [[MTMathList alloc] init];
+    [list2 addAtom:atom3];
+    [list2 addAtom:atom2];
+    
+    [table setCell:list forRow:0 column:1];
+    [table setCell:list2 forRow:0 column:2];
+    
+    [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
+    [table setAlignment:kMTColumnAlignmentRight forColumn:1];
+    table.interRowOpening = 3;
+    table.interColumnSpacing = 10;
+    
+    MTMathTable* copy = [table copy];
+    [MTMathListTest checkAtomCopy:copy original:table forTest:self];
+    XCTAssertEqual(copy.interColumnSpacing, table.interColumnSpacing);
+    XCTAssertEqual(copy.interRowOpening, table.interRowOpening);
+    XCTAssertEqualObjects(copy.alignments, table.alignments);
+    XCTAssertNotEqual(copy.alignments, table.alignments);
+    
+    XCTAssertNotEqual(copy.cells, table.cells);
+    XCTAssertNotEqual(copy.cells[0], table.cells[0]);
+    XCTAssertEqual(copy.cells[0].count, table.cells[0].count);
+    XCTAssertEqual(copy.cells[0][0].atoms.count, 0);
+    XCTAssertNotEqual(copy.cells[0][0], table.cells[0][0]);
+    [MTMathListTest checkListCopy:copy.cells[0][1] original:list forTest:self];
+    [MTMathListTest checkListCopy:copy.cells[0][2] original:list2 forTest:self];
+}
+
 @end

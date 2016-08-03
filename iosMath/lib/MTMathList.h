@@ -269,7 +269,7 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 @interface MTMathTable : MTMathAtom
 
 /**
- @typedef MTTextAlignment
+ @typedef MTColumnAlignment
  @brief Alignment for a column of MTMathTable
  */
 typedef NS_ENUM(NSInteger, MTColumnAlignment) {
@@ -284,7 +284,8 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// Creates an empty table
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
-/// The alignment for each column (left, right, center)
+/// The alignment for each column (left, right, center). The default alignment
+/// for a column (if not set) is center.
 @property (nonatomic, nonnull, readonly) NSArray<NSNumber*>* alignments;
 /// The cells in the table as a two dimensional array.
 @property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
@@ -294,6 +295,13 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// Additional opening between each row. The opening is in terms of `jots`.
 /// If opening is 0, then normal lineskips are used.
 @property (nonatomic) CGFloat interRowOpening;
+
+/// Set the value of a given cell. The table is automatically resized to contain this cell.
+- (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;
+
+/// Set the alignment of a particular column. The table is automatically resized to
+/// contain this column and any new columns added have their alignment set to center.
+- (void) setAlignment:(MTColumnAlignment) alignment forColumn:(NSInteger) column;
 
 @end
 
