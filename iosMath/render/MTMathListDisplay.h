@@ -66,6 +66,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// It can render itself using the draw method.
 @interface MTMathListDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  @typedef MTLinePosition
  @brief The type of position for a line, i.e. subscript/superscript or regular.

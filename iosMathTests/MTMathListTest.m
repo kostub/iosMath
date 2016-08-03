@@ -587,6 +587,9 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     
     XCTAssertEqual(table.cells[3][2], list);
     
+    XCTAssertEqual(table.numRows, 4);
+    XCTAssertEqual(table.numColumns, 3);
+    
     // Verify the alignments
     XCTAssertEqual(table.alignments.count, 3);
     XCTAssertEqual(table.alignments[0].integerValue, kMTColumnAlignmentCenter);
@@ -616,13 +619,13 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     
     [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
     [table setAlignment:kMTColumnAlignmentRight forColumn:1];
-    table.interRowOpening = 3;
+    table.interRowAdditionalSpacing = 3;
     table.interColumnSpacing = 10;
     
     MTMathTable* copy = [table copy];
     [MTMathListTest checkAtomCopy:copy original:table forTest:self];
     XCTAssertEqual(copy.interColumnSpacing, table.interColumnSpacing);
-    XCTAssertEqual(copy.interRowOpening, table.interRowOpening);
+    XCTAssertEqual(copy.interRowAdditionalSpacing, table.interRowAdditionalSpacing);
     XCTAssertEqualObjects(copy.alignments, table.alignments);
     XCTAssertNotEqual(copy.alignments, table.alignments);
     

@@ -285,7 +285,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 break;
                 
             case kMTMathAtomAccent:
-            case kMTMathAtomTable:
                 NSAssert(NO, @"These math atom types are not yet implemented.");
                 break;
                 
@@ -422,6 +421,23 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
                 }
+                break;
+            }
+                
+            case kMTMathAtomTable: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // We will consider tables as inner
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomInner];
+                atom.type = kMTMathAtomInner;
+                
+                MTMathTable* table = (MTMathTable*) atom;
+                MTDisplay* display = [self makeTable:table];
+                [_displayAtoms addObject:display];
+                _currentPosition.x += display.width;
+                // A table doesn't have subscripts or superscripts
                 break;
             }
                 
@@ -1120,4 +1136,125 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     return overDisplay;
 }
 
+#pragma mark - Table
+
+static const NSInteger kBaseLineSkipPoints = 12;
+static const NSInteger kLineSkipPoints = 1;
+static const NSInteger kLineSkipLimitPoints = 0;
+
+- (MTDisplay*) makeTable:(MTMathTable*) table
+{
+    NSUInteger numColumns = table.numColumns;
+    if (numColumns == 0 || table.numRows == 0) {
+        // Empty table
+        return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
+    }
+    
+    CGFloat columnWidths[numColumns];
+    NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
+    
+    // Position all the columns in each row
+    NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
+    for (NSArray<MTDisplay*>* row in displays) {
+        MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
+        [rowDisplays addObject:rowDisplay];
+    }
+    
+    // Position all the rows
+    [self positionRows:rowDisplays forTable:table];
+    MTMathListDisplay* tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
+    tableDisplay.position = _currentPosition;
+    return tableDisplay;
+}
+
+// Typeset every cell in the table. As a side-effect calculate the max column width of each column.
+- (NSArray<NSArray<MTDisplay*>*>*) typesetCells:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
+{
+    NSMutableArray<NSMutableArray<MTDisplay*>*> *displays = [NSMutableArray arrayWithCapacity:table.numRows];
+    
+    for(NSArray<MTMathList*>* row in table.cells) {
+        NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
+        [displays addObject:colDisplays];
+        for (int i = 0; i < row.count; i++) {
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style];
+            columnWidths[i] = MAX(disp.width, columnWidths[i]);
+            [colDisplays addObject:disp];
+        };
+    };
+    return displays;
+}
+
+- (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
+{
+    CGFloat currentPos = 0;
+    NSRange rowRange = NSMakeRange(NSNotFound, 0);
+    for (int i = 0; i < cols.count; i++) {
+        MTDisplay* col = cols[i];
+        CGFloat colWidth = columnWidths[i];
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        
+        switch (alignment) {
+            case kMTColumnAlignmentRight:
+                currentPos += colWidth - col.width;
+                break;
+                
+            case kMTColumnAlignmentCenter:
+                currentPos += (colWidth - col.width) / 2;
+                break;
+                
+            case kMTColumnAlignmentLeft:
+                // No changes if left aligned
+                break;
+        }
+        if (rowRange.location != NSNotFound) {
+            rowRange = NSUnionRange(rowRange, col.range);
+        } else {
+            rowRange = col.range;
+        }
+        
+        col.position = CGPointMake(0, currentPos);
+        currentPos += table.interColumnSpacing * _styleFont.mathTable.muUnit;
+    };
+    // Create a display for the row
+    MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
+    return rowDisplay;
+}
+
+- (void) positionRows:(NSArray<MTDisplay*>*) rows forTable:(MTMathTable*) table
+{
+    // Position the rows
+    // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
+    CGFloat currPos = 0;
+    CGFloat baselineSkip = table.interRowAdditionalSpacing + kBaseLineSkipPoints;
+    CGFloat lineSkip = table.interRowAdditionalSpacing + kLineSkipPoints;
+    CGFloat lineSkipLimit = table.interRowAdditionalSpacing + kLineSkipLimitPoints;
+    CGFloat prevRowDescent = 0;
+    CGFloat ascent = 0;
+    BOOL first = true;
+    for (MTDisplay* row in rows) {
+        if (first) {
+            row.position = CGPointZero;
+            ascent += row.ascent;
+        } else {
+            CGFloat skip = baselineSkip;
+            if (skip - (prevRowDescent + row.ascent) < lineSkipLimit) {
+                // rows are too close to each other. Space them apart further
+                skip = prevRowDescent + row.ascent + lineSkip;
+            }
+            currPos += skip;
+            row.position = CGPointMake(0, currPos);
+        }
+        prevRowDescent = row.descent;
+    }
+    
+    // Vertically center the whole structure around the axis
+    // The descent of the structure is the position of the last row
+    // plus the descent of the last row.
+    CGFloat descent =  currPos + prevRowDescent;
+    CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
+    
+    for (MTDisplay* row in rows) {
+        row.position = CGPointMake(row.position.x, row.position.y - shiftDown);
+    }
+}
 @end

@@ -634,7 +634,7 @@ static NSString* typeToText(MTMathAtomType type) {
     if (self) {
         self.alignments = [NSMutableArray array];
         self.cells = [NSMutableArray array];
-        self.interRowOpening = 0;
+        self.interRowAdditionalSpacing = 0;
         self.interColumnSpacing = 0;
     }
     return self;
@@ -653,7 +653,7 @@ static NSString* typeToText(MTMathAtomType type) {
 - (id)copyWithZone:(NSZone *)zone
 {
     MTMathTable* op = [super copyWithZone:zone];
-    op.interRowOpening = self.interRowOpening;
+    op.interRowAdditionalSpacing = self.interRowAdditionalSpacing;
     op.interColumnSpacing = self.interColumnSpacing;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
     // Perform a deep copy of the cells.
@@ -705,6 +705,29 @@ static NSString* typeToText(MTMathAtomType type) {
         }
     }
     _alignments[column] = @(alignment);
+}
+
+- (MTColumnAlignment)getAlignmentForColumn:(NSInteger)column
+{
+    if (self.alignments.count < column) {
+        return kMTColumnAlignmentCenter;
+    } else {
+        return self.alignments[column].integerValue;
+    }
+}
+
+- (NSUInteger) numColumns
+{
+    NSUInteger numColumns = 0;
+    for (NSArray* row in self.cells) {
+        numColumns = MAX(numColumns, row.count);
+    }
+    return numColumns;
+}
+
+- (NSUInteger) numRows
+{
+    return self.cells.count;
 }
 
 @end

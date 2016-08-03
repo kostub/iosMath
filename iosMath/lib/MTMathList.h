@@ -290,11 +290,11 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// The cells in the table as a two dimensional array.
 @property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
 
-/// Spacing between each column.
+/// Spacing between each column in mu units.
 @property (nonatomic) CGFloat interColumnSpacing;
-/// Additional opening between each row. The opening is in terms of `jots`.
-/// If opening is 0, then normal lineskips are used.
-@property (nonatomic) CGFloat interRowOpening;
+/// Additional spacing between rows. The spacing is expressed in points.
+/// If the additional spacing is 0, then normal row spacing is used are used.
+@property (nonatomic) CGFloat interRowAdditionalSpacing;
 
 /// Set the value of a given cell. The table is automatically resized to contain this cell.
 - (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;
@@ -302,6 +302,16 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// Set the alignment of a particular column. The table is automatically resized to
 /// contain this column and any new columns added have their alignment set to center.
 - (void) setAlignment:(MTColumnAlignment) alignment forColumn:(NSInteger) column;
+
+/// Gets the alignment for a given column. If the alignment is not specified it defaults
+/// to center.
+- (MTColumnAlignment) getAlignmentForColumn:(NSInteger) column;
+
+/// Number of columns in the table.
+- (NSUInteger) numColumns;
+
+/// Number of rows in the table.
+- (NSUInteger) numRows;
 
 @end
 

@@ -22,7 +22,9 @@
 
 @interface MTMathListDisplay ()
 
-- (instancetype) initWithDisplays:(NSArray*) displays range:(NSRange) range;
+- (instancetype)init NS_UNAVAILABLE;
+
+- (instancetype) initWithDisplays:(NSArray<MTDisplay*>*) displays range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, readwrite) MTLinePosition type;
 @property (nonatomic, readwrite) NSUInteger index;

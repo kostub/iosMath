@@ -160,7 +160,7 @@ static BOOL isIos6Supported() {
 }
 
 
-- (instancetype) initWithDisplays:(NSArray*) displays range:(NSRange) range
+- (instancetype) initWithDisplays:(NSArray<MTDisplay*>*) displays range:(NSRange) range
 {
     self = [super init];
     if (self) {
