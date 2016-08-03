@@ -70,6 +70,13 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// Spacing between math atoms. This denotes both glue and kern for TeX. We do not
     /// distinguish between glue and kern.
     kMTMathAtomSpace = 201,
+    
+    // Atoms after this point are not part of TeX and do not have the usual structure.
+    
+    /// An table atom. This atom does not exist in TeX. It is equivalent to the TeX command
+    /// halign which is handled outside of the TeX math rendering engine. We bring it into our
+    /// math typesetting to handle matrices and other tables.
+    kMTMathAtomTable = 1001,
 };
 
 /** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
@@ -120,6 +127,9 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 /// Makes a deep copy of the atom
 - (id)copyWithZone:(nullable NSZone *)zone;
+
+/// Returns a finalized copy of the atom
+- (instancetype) finalized;
 
 @end
 
@@ -243,6 +253,47 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 /** The amount of space represented by this object in mu units. */
 @property (nonatomic, readonly) CGFloat space;
+
+@end
+
+/** An atom representing an table element. This atom is not like other
+ atoms and is not present in TeX. We use it to represent the `\halign` command
+ in TeX with some simplifications. This is used for matrices, equation
+ alignments and other uses of multiline environments.
+ 
+ The cells in the table are represented as a two dimensional array of
+ `MTMathList` objects. The `MTMathList`s could be empty to denote a missing
+ value in the cell. Additionally an array of alignments indicates how each
+ column will be aligned.
+ */
+@interface MTMathTable : MTMathAtom
+
+/**
+ @typedef MTTextAlignment
+ @brief Alignment for a column of MTMathTable
+ */
+typedef NS_ENUM(NSInteger, MTColumnAlignment) {
+    /// Align left.
+    kMTColumnAlignmentLeft,
+    /// Align center.
+    kMTColumnAlignmentCenter,
+    /// Align right.
+    kMTColumnAlignmentRight,
+};
+
+/// Creates an empty table
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
+/// The alignment for each column (left, right, center)
+@property (nonatomic, nonnull, readonly) NSArray<NSNumber*>* alignments;
+/// The cells in the table as a two dimensional array.
+@property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
+
+/// Spacing between each column.
+@property (nonatomic) CGFloat interColumnSpacing;
+/// Additional opening between each row. The opening is in terms of `jots`.
+/// If opening is 0, then normal lineskips are used.
+@property (nonatomic) CGFloat interRowOpening;
 
 @end
 
