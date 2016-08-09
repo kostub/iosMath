@@ -215,7 +215,7 @@ file for more info.
 ### Fonts
 This distribution contains the following fonts. These fonts are
 licensed as follows:
-* Latin Modern Math]: 
+* Latin Modern Math: 
     [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
 * Tex Gyre Termes:
     [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
