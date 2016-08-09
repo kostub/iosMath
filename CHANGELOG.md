@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.8.4 (2016-08-10)
+* Fix crash for \\epsilon and \\varrho
+* Add commands: \\mho, \\angstrom and \\AA
+
 ### v0.8.3 (2016-07-31)
 * Add `textColor` field to `MTMathUILabel` to set the color of the
   rendered equation.

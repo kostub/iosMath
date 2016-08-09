@@ -195,6 +195,7 @@ updates. This includes:
 * Aligning equations
 * Some symbols are not yet included
 * Matrices
+* Constructing tall radicals and delimiters
 
 ## Related Projects
 
