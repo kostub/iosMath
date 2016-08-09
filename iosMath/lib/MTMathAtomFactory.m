@@ -265,10 +265,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // We mark the following greek chars as ordinary so that we don't try
                      // to automatically italicize them as we do with variables.
                      // These characters fall outside the rules of italicization that we have defined.
-                     @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\U0001D716"],
+                     @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D716"],
                      @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D717"],
                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D719"],
-                     @"varrho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\U0001D71A"],
+                     @"varrho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71A"],
                      @"varpi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71B"],
                      
                      // Capital greek characters
@@ -453,6 +453,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Other symbols
                      @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
                      @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
+                     @"angstrom" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00C5"],
                      @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
                      @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
@@ -463,6 +464,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"ell" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2113"],
                      @"wp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2118"],
                      @"Re" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u211C"],
+                     @"mho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2127"],
                      @"aleph" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2135"],
                      @"forall" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2200"],
                      @"exists" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2203"],
@@ -510,6 +512,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"gets" : @"leftarrow",
                     @"to" : @"rightarrow",
                     @"iff" : @"Longleftrightarrow",
+                    @"AA" : @"angstrom",
                     };
     }
     return aliases;
