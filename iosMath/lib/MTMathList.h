@@ -70,6 +70,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// Spacing between math atoms. This denotes both glue and kern for TeX. We do not
     /// distinguish between glue and kern.
     kMTMathAtomSpace = 201,
+    /// Denotes style changes during rendering.
+    kMTMathAtomStyle,
     
     // Atoms after this point are not part of TeX and do not have the usual structure.
     
@@ -253,6 +255,37 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 /** The amount of space represented by this object in mu units. */
 @property (nonatomic, readonly) CGFloat space;
+
+@end
+
+/**
+ @typedef MTLineStyle
+ @brief Styling of a line of math
+ */
+typedef NS_ENUM(unsigned int, MTLineStyle)  {
+    /// Display style
+    kMTLineStyleDisplay,
+    /// Text style (inline)
+    kMTLineStyleText,
+    /// Script style (for sub/super scripts)
+    kMTLineStyleScript,
+    /// Script script style (for scripts of scripts)
+    kMTLineStypleScriptScript
+};
+
+/** An atom representing a style change.
+ @note None of the usual fields of the `MTMathAtom` apply even though this
+ class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
+ in the nucleus, subscript or superscript fields. */
+@interface MTMathStyle : MTMathAtom
+
+/** Creates a new `MTMathStyle` with the given style.
+ @param style The style to be applied to the rest of the list.
+ */
+- (instancetype) initWithStyle:(MTLineStyle) style NS_DESIGNATED_INITIALIZER;
+
+/** The style represented by this object. */
+@property (nonatomic, readonly) MTLineStyle style;
 
 @end
 

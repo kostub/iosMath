@@ -541,6 +541,16 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqual(space.space, copy.space);
 }
 
+- (void) testCopyStyle
+{
+    MTMathStyle* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript];
+    XCTAssertEqual(style.type, kMTMathAtomStyle);
+    
+    MTMathStyle* copy = [style copy];
+    [MTMathListTest checkAtomCopy:copy original:style forTest:self];
+    XCTAssertEqual(style.style, copy.style);
+}
+
 - (void) testCreateMathTable
 {
     MTMathTable* table = [[MTMathTable alloc] init];

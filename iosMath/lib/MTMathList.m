@@ -64,6 +64,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Boundary";
         case kMTMathAtomSpace:
             return @"Space";
+        case kMTMathAtomStyle:
+            return @"Style";
         case kMTMathAtomTable:
             return @"Table";
     }
@@ -612,6 +614,38 @@ static NSString* typeToText(MTMathAtomType type) {
 {
     MTMathSpace* op = [super copyWithZone:zone];
     op->_space = self.space;
+    return op;
+}
+
+@end
+
+#pragma mark - MTMathStyle
+
+@implementation MTMathStyle
+
+- (instancetype)initWithStyle:(MTLineStyle)style
+{
+    self = [super initWithType:kMTMathAtomStyle value:@""];
+    if (self) {
+        _style = style;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomStyle) {
+        return [self initWithStyle:kMTLineStyleDisplay];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathStyle initWithType:value:] cannot be called. Use [MTMathStyle initWithStyle:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathStyle* op = [super copyWithZone:zone];
+    op->_style = self.style;
     return op;
 }
 
