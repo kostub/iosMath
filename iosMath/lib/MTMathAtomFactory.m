@@ -178,6 +178,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return dict[atom.nucleus];
 }
 
++ (NSArray<NSString *> *)supportedLatexSymbolNames
+{
+    NSDictionary<NSString*, MTMathAtom*>* commands = [MTMathAtomFactory supportedLatexSymbols];
+    return commands.allKeys;
+}
+
 + (MTAccent*) accentWithName:(NSString*) accentName
 {
     NSDictionary<NSString*, NSString*> *accents = [MTMathAtomFactory accents];
@@ -229,9 +235,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return [self fractionWithNumerator:num denominator:denom];
 }
 
-+ (NSDictionary*) supportedLatexSymbols
++ (NSDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
 {
-    static NSDictionary* commands = nil;
+    static NSDictionary<NSString*, MTMathAtom*>* commands = nil;
     if (!commands) {
         commands = @{
                      @"square" : [MTMathAtomFactory placeholder],
@@ -291,10 +297,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"lgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EE"],
                      
                      // Close
-                     @"rceil" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u2309"],
-                     @"rfloor" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u230B"],
-                     @"rangle" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27E9"],
-                     @"rgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EF"],
+                     @"rceil" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"\u2309"],
+                     @"rfloor" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"\u230B"],
+                     @"rangle" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"\u27E9"],
+                     @"rgroup" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"\u27EF"],
                      
                      // Arrows
                      @"leftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2190"],
@@ -456,7 +462,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"angstrom" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00C5"],
                      @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
                      @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
-                     @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
                      @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
                      @"hbar" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u210F"],

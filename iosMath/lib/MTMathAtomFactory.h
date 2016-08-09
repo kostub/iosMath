@@ -92,6 +92,9 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  */
 + (NSString*) latexSymbolNameForAtom:(MTMathAtom*) atom;
 
+/** Returns a list of all supported lated symbols names. */
++ (NSArray<NSString*>*) supportedLatexSymbolNames;
+
 /** Deprecated. Use (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
  instead. This sets the limits to false. */
 + (MTMathAtom *) operatorWithName:(NSString*) name __deprecated;

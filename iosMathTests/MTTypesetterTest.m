@@ -1279,4 +1279,64 @@
         }
     }
 }
+
+- (void) testLatexSymbols
+{
+    // Test all latex symbols
+    NSArray<NSString*>* allSymbols = [MTMathAtomFactory supportedLatexSymbolNames];
+    for (NSString* symName in allSymbols) {
+        MTMathList* list = [[MTMathList alloc] init];
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:symName];
+        XCTAssertNotNil(atom);
+        if (atom.type == kMTMathAtomSpace) {
+            // Skip spaces as they don't get rendered.
+            continue;
+        }
+        
+        [list addAtom:atom];
+        
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"Symbol %@", symName);
+        
+        XCTAssertEqual(display.type, kMTLinePositionRegular);
+        XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+        XCTAssertEqualNSRange(display.range, NSMakeRange(0, 1));
+        XCTAssertFalse(display.hasScript);
+        XCTAssertEqual(display.index, NSNotFound);
+        XCTAssertEqual(display.subDisplays.count, 1, @"Symbol %@", symName);
+        
+        MTDisplay* sub0 = display.subDisplays[0];
+        if (atom.type == kMTMathAtomLargeOperator && atom.nucleus.length == 1) {
+            // These large operators are rendered differently;
+            XCTAssertTrue([sub0 isKindOfClass:[MTLargeGlyphDisplay class]]);
+            MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub0;
+            XCTAssertEqualsCGPoint(glyph.position, CGPointZero, 0.01);
+            XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+            XCTAssertFalse(glyph.hasScript);
+        } else {
+            XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]], @"Symbol %@", symName);
+            MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+            XCTAssertEqual(line.atoms.count, 1);
+            if (atom.type != kMTMathAtomVariable) {
+                XCTAssertEqualObjects(line.attributedString.string, atom.nucleus);
+            }
+            XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+            XCTAssertEqualNSRange(line.range, NSMakeRange(0, 1));
+            XCTAssertFalse(line.hasScript);
+        }
+        
+        // dimensions
+        XCTAssertEqual(display.ascent, sub0.ascent);
+        XCTAssertEqual(display.descent, sub0.descent);
+        XCTAssertEqual(display.width, sub0.width);
+        
+        // All chars will occupy some space.
+        if (![atom.nucleus isEqualToString:@" "]) {
+            // all chars except space have height
+            XCTAssertGreaterThan(display.ascent + display.descent, 0, @"Symbol %@", symName);
+        }
+        // all chars have a width.
+        XCTAssertGreaterThan(display.width, 0);
+    }
+}
 @end
