@@ -133,6 +133,22 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     }
 }
 
++ (MTMathList *)mathListForCharacters:(NSString *)chars
+{
+    NSParameterAssert(chars);
+    NSInteger len = chars.length;
+    unichar buff[len];
+    [chars getCharacters:buff range:NSMakeRange(0, len)];
+    MTMathList* list = [[MTMathList alloc] init];
+    for (NSInteger i = 0; i < len; i++) {
+        MTMathAtom* atom = [self atomForCharacter:buff[i]];
+        if (atom) {
+            [list addAtom:atom];
+        }
+    }
+    return list;
+}
+
 + (MTMathAtom *)atomForLatexSymbolName:(NSString *)symbolName
 {
     NSParameterAssert(symbolName);
@@ -196,6 +212,21 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     }
     NSDictionary* dict = [self delimValueToName];
     return dict[boundary.nucleus];
+}
+
++ (MTFraction *)fractionWithNumerator:(MTMathList *)num denominator:(MTMathList *)denom
+{
+    MTFraction *frac = [[MTFraction alloc] init];
+    frac.numerator = num;
+    frac.denominator = denom;
+    return frac;
+}
+
++ (MTFraction *)fractionWithNumeratorStr:(NSString *)numStr denominatorStr:(NSString *)denomStr
+{
+    MTMathList* num = [self mathListForCharacters:numStr];
+    MTMathList* denom = [self mathListForCharacters:denomStr];
+    return [self fractionWithNumerator:num denominator:denom];
 }
 
 + (NSDictionary*) supportedLatexSymbols

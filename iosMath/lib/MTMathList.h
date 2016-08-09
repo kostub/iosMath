@@ -292,7 +292,7 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 
 /// Spacing between each column in mu units.
 @property (nonatomic) CGFloat interColumnSpacing;
-/// Additional spacing between rows. The spacing is expressed in points.
+/// Additional spacing between rows in jots (one jot is 0.3 times font size).
 /// If the additional spacing is 0, then normal row spacing is used are used.
 @property (nonatomic) CGFloat interRowAdditionalSpacing;
 

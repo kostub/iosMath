@@ -72,6 +72,11 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  */
 + (MTMathAtom*) atomForCharacter:(unichar) ch;
 
+/** Returns a `MTMathList` with one atom per character in the given string. This function
+ does not do any LaTeX conversion or interpretation. It simply uses `atomForCharacter` to
+ convert the characters to atoms. Any character that cannot be converted is ignored. */
++ (MTMathList*) mathListForCharacters:(NSString*) chars;
+
 /** Returns an atom with the right type for a given latex symbol (e.g. theta)
  If the latex symbol is unknown this will return nil. This supports LaTeX aliases as well.
  */
@@ -119,6 +124,14 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  `<` and `langle`) and this function always returns the shorter name.
  */
 + (NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary;
+
+/** Returns a fraction with the given numerator and denominator. */
++ (MTFraction*) fractionWithNumerator:(MTMathList*) num denominator:(MTMathList*) denom;
+
+/** Simplification of above function when numerator and denominator are simple strings.
+ This function uses `mathListForCharacters` to convert the strings to `MTMathList`s. */
++ (MTFraction*) fractionWithNumeratorStr:(NSString*) numStr denominatorStr:(NSString*) denomStr;
+
 
 @end
 

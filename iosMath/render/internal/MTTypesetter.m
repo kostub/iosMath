@@ -1138,9 +1138,10 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 #pragma mark - Table
 
-static const NSInteger kBaseLineSkipPoints = 12;
-static const NSInteger kLineSkipPoints = 1;
-static const NSInteger kLineSkipLimitPoints = 0;
+static const CGFloat kBaseLineSkipMultiplier = 1.2;  // default base line stretch is 12 pt for 10pt font.
+static const CGFloat kLineSkipMultiplier = 0.1;  // default is 1pt for 10pt font.
+static const CGFloat kLineSkipLimitMultiplier = 0;
+static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 
 - (MTDisplay*) makeTable:(MTMathTable*) table
 {
@@ -1151,6 +1152,9 @@ static const NSInteger kLineSkipLimitPoints = 0;
     }
     
     CGFloat columnWidths[numColumns];
+    for (int i = 0; i < numColumns; i++) {
+        columnWidths[i] = 0;
+    }
     NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
     
     // Position all the columns in each row
@@ -1186,20 +1190,21 @@ static const NSInteger kLineSkipLimitPoints = 0;
 
 - (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
-    CGFloat currentPos = 0;
+    CGFloat columnStart = 0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
         CGFloat colWidth = columnWidths[i];
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
         
+        CGFloat cellPos = columnStart;
         switch (alignment) {
             case kMTColumnAlignmentRight:
-                currentPos += colWidth - col.width;
+                cellPos += colWidth - col.width;
                 break;
                 
             case kMTColumnAlignmentCenter:
-                currentPos += (colWidth - col.width) / 2;
+                cellPos += (colWidth - col.width) / 2;
                 break;
                 
             case kMTColumnAlignmentLeft:
@@ -1212,8 +1217,8 @@ static const NSInteger kLineSkipLimitPoints = 0;
             rowRange = col.range;
         }
         
-        col.position = CGPointMake(0, currentPos);
-        currentPos += table.interColumnSpacing * _styleFont.mathTable.muUnit;
+        col.position = CGPointMake(cellPos, 0);
+        columnStart += colWidth + table.interColumnSpacing * _styleFont.mathTable.muUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
@@ -1225,9 +1230,10 @@ static const NSInteger kLineSkipLimitPoints = 0;
     // Position the rows
     // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
     CGFloat currPos = 0;
-    CGFloat baselineSkip = table.interRowAdditionalSpacing + kBaseLineSkipPoints;
-    CGFloat lineSkip = table.interRowAdditionalSpacing + kLineSkipPoints;
-    CGFloat lineSkipLimit = table.interRowAdditionalSpacing + kLineSkipLimitPoints;
+    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * _styleFont.fontSize;
+    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * _styleFont.fontSize;
+    CGFloat lineSkip = openup + kLineSkipMultiplier * _styleFont.fontSize;
+    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * _styleFont.fontSize;
     CGFloat prevRowDescent = 0;
     CGFloat ascent = 0;
     BOOL first = true;
@@ -1235,13 +1241,15 @@ static const NSInteger kLineSkipLimitPoints = 0;
         if (first) {
             row.position = CGPointZero;
             ascent += row.ascent;
+            first = false;
         } else {
             CGFloat skip = baselineSkip;
             if (skip - (prevRowDescent + row.ascent) < lineSkipLimit) {
                 // rows are too close to each other. Space them apart further
                 skip = prevRowDescent + row.ascent + lineSkip;
             }
-            currPos += skip;
+            // We are going down so we decrease the y value.
+            currPos -= skip;
             row.position = CGPointMake(0, currPos);
         }
         prevRowDescent = row.descent;
@@ -1250,7 +1258,7 @@ static const NSInteger kLineSkipLimitPoints = 0;
     // Vertically center the whole structure around the axis
     // The descent of the structure is the position of the last row
     // plus the descent of the last row.
-    CGFloat descent =  currPos + prevRowDescent;
+    CGFloat descent =  - currPos + prevRowDescent;
     CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
     
     for (MTDisplay* row in rows) {

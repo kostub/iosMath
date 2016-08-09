@@ -65,11 +65,7 @@
 }
 
 - (void)testMultipleVariables {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'z']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'w']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"xyzw"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -100,11 +96,7 @@
 }
 
 - (void)testVariablesAndNumbers {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'2']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'w']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"xy2w"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -135,13 +127,7 @@
 }
 
 - (void)testEquationWithOperatorsAndRelations {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'2']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'+']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'3']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'=']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"2x+3=y"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -174,6 +160,11 @@
 #define XCTAssertEqualsCGPoint(p1, p2, accuracy, ...) \
     XCTAssertEqualWithAccuracy(p1.x, p2.x, accuracy, __VA_ARGS__); \
     XCTAssertEqualWithAccuracy(p1.y, p2.y, accuracy, __VA_ARGS__)
+
+
+#define XCTAssertEqualNSRange(r1, r2, ...) \
+    XCTAssertEqual(r1.location, r2.location, __VA_ARGS__); \
+    XCTAssertEqual(r1.length, r2.length, __VA_ARGS__)
 
 - (void)testSuperscript {
     MTMathList* mathList = [[MTMathList alloc] init];
@@ -1209,4 +1200,83 @@
     XCTAssertEqualWithAccuracy(display.width, 82.29, 0.01);
 }
 
+- (void) testMathTable
+{
+    MTMathList* c00 = [MTMathAtomFactory mathListForCharacters:@"1"];
+    MTMathList* c01 = [MTMathAtomFactory mathListForCharacters:@"y+z"];
+    MTMathList* c02 = [MTMathAtomFactory mathListForCharacters:@"y"];
+    
+    MTMathList* c11 = [[MTMathList alloc] init];
+    [c11 addAtom:[MTMathAtomFactory fractionWithNumeratorStr:@"1" denominatorStr:@"2x"]];
+    MTMathList* c12 = [MTMathAtomFactory mathListForCharacters:@"x-y"];
+    
+    MTMathList* c20 = [MTMathAtomFactory mathListForCharacters:@"x+5"];
+    MTMathList* c22 = [MTMathAtomFactory mathListForCharacters:@"12"];
+
+    
+    MTMathTable* table = [[MTMathTable alloc] init];
+    [table setCell:c00 forRow:0 column:0];
+    [table setCell:c01 forRow:0 column:1];
+    [table setCell:c02 forRow:0 column:2];
+    [table setCell:c11 forRow:1 column:1];
+    [table setCell:c12 forRow:1 column:2];
+    [table setCell:c20 forRow:2 column:0];
+    [table setCell:c22 forRow:2 column:2];
+    
+    // alignments
+    [table setAlignment:kMTColumnAlignmentRight forColumn:0];
+    [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
+    
+    table.interColumnSpacing = 18; // 1 quad
+    
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:table];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
+    
+    MTMathListDisplay* display2 = (MTMathListDisplay*) sub0;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertEqualNSRange(display2.range, NSMakeRange(0, 1));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 3);
+    CGFloat rowPos[3] = { 30.31, -2.67, -31.95};
+    // alignment is right, center, left.
+    CGFloat cellPos[3][3] = { { 35.89, 65.89, 129.438 }, { 45.89, 76.94, 129.438}, { 0, 87.66, 129.438}};
+    // check the 3 rows of the matrix
+    for (int i = 0; i < 3; i++) {
+        MTDisplay* sub0i = display2.subDisplays[i];
+        XCTAssertTrue([sub0i isKindOfClass:[MTMathListDisplay class]]);
+        
+        MTMathListDisplay* row = (MTMathListDisplay*) sub0i;
+        XCTAssertEqual(row.type, kMTLinePositionRegular);
+        XCTAssertEqualsCGPoint(row.position, CGPointMake(0, rowPos[i]), 0.01);
+        XCTAssertTrue(NSEqualRanges(row.range, NSMakeRange(0, 3)));
+        XCTAssertFalse(row.hasScript);
+        XCTAssertEqual(row.index, NSNotFound);
+        XCTAssertEqual(row.subDisplays.count, 3);
+        
+        for (int j = 0; j < 3; j++) {
+            MTDisplay* sub0ij = row.subDisplays[j];
+            XCTAssertTrue([sub0ij isKindOfClass:[MTMathListDisplay class]]);
+            
+            MTMathListDisplay* col = (MTMathListDisplay*) sub0ij;
+            XCTAssertEqual(col.type, kMTLinePositionRegular);
+            XCTAssertEqualsCGPoint(col.position, CGPointMake(cellPos[i][j], 0) ,0.01);
+            XCTAssertFalse(col.hasScript);
+            XCTAssertEqual(col.index, NSNotFound);
+        }
+    }
+}
 @end

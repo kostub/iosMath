@@ -709,7 +709,7 @@ static NSString* typeToText(MTMathAtomType type) {
 
 - (MTColumnAlignment)getAlignmentForColumn:(NSInteger)column
 {
-    if (self.alignments.count < column) {
+    if (self.alignments.count <= column) {
         return kMTColumnAlignmentCenter;
     } else {
         return self.alignments[column].integerValue;
