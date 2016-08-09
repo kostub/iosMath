@@ -625,6 +625,7 @@ NSString *const MTParseError = @"ParseError";
                       // Other symbols
                       @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
                       @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
+                      @"angstrom" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00C5"],
                       @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
                       @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
                       @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
@@ -635,6 +636,7 @@ NSString *const MTParseError = @"ParseError";
                       @"ell" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2113"],
                       @"wp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2118"],
                       @"Re" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u211C"],
+                      @"mho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2127"],
                       @"aleph" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2135"],
                       @"forall" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2200"],
                       @"exists" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2203"],
@@ -682,6 +684,7 @@ NSString *const MTParseError = @"ParseError";
                      @"gets" : @"leftarrow",
                      @"to" : @"rightarrow",
                      @"iff" : @"Longleftrightarrow",
+                     @"AA" : @"angstrom",
                      };
     }
     return aliases;
