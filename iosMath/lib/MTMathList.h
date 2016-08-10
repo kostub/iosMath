@@ -270,7 +270,7 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
     /// Script style (for sub/super scripts)
     kMTLineStyleScript,
     /// Script script style (for scripts of scripts)
-    kMTLineStypleScriptScript
+    kMTLineStyleScriptScript
 };
 
 /** An atom representing a style change.
@@ -359,8 +359,13 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
  */
 @interface MTMathList : NSObject<NSCopying>
 
+/** Create a `MTMathList` given a list of atoms. The list of atoms should be
+ terminated by `nil`.
+ */
++ (instancetype) mathListWithAtoms:(MTMathAtom*) firstAtom, ... NS_REQUIRES_NIL_TERMINATION;
+
 /// A list of MathAtoms
-@property (nonatomic, readonly) NSArray* atoms;
+@property (nonatomic, readonly) NSArray<__kindof MTMathAtom*>* atoms;
 
 /** Initializes an empty math list. */
 - (instancetype) init NS_DESIGNATED_INITIALIZER;

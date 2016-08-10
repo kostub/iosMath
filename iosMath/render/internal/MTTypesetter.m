@@ -190,13 +190,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         _font = font;
         _displayAtoms = [NSMutableArray array];
         _currentPosition = CGPointZero;
-        _style = style;
         _cramped = cramped;
         _spaced = spaced;
         _currentLine = [NSMutableAttributedString new];
         _currentAtoms = [NSMutableArray array];
-        
-        _styleFont = [_font copyFontWithSize:[[self class] getStyleSize:_style font:_font]];
+        self.style = style;
         _currentLineIndexRange = NSMakeRange(NSNotFound, NSNotFound);
     }
     return self;
@@ -252,9 +250,14 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         case kMTLineStyleScript:
             return original * font.mathTable.scriptScaleDown;
             
-        case kMTLineStypleScriptScript:
+        case kMTLineStyleScriptScript:
             return original * font.mathTable.scriptScriptScaleDown;
     }
+}
+
+- (void) setStyle:(MTLineStyle) style {
+    _style = style;
+    _styleFont = [_font copyFontWithSize:[[self class] getStyleSize:_style font:_font]];
 }
 
 - (void) addInterElementSpace:(MTMathAtom*) prevNode currentType:(MTMathAtomType) type
@@ -285,7 +288,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 break;
                 
             case kMTMathAtomAccent:
-            case kMTMathAtomStyle:
                 NSAssert(NO, @"These math atom types are not yet implemented.");
                 break;
                 
@@ -307,6 +309,18 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 continue;
             }
                 
+            case kMTMathAtomStyle: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                MTMathStyle* style = (MTMathStyle*) atom;
+                self.style = style.style;
+                // We need to preserve the prevNode for any interelement space changes.
+                // so we skip to the next node.
+                continue;
+            }
+                
             case kMTMathAtomRadical: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -318,7 +332,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 MTRadicalDisplay* displayRad = [self makeRadical:rad.radicand range:rad.indexRange];
                 if (rad.degree) {
                     // add the degree to the radical
-                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_styleFont style:kMTLineStypleScriptScript];
+                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_font style:kMTLineStyleScriptScript];
                     [displayRad setDegree:degree fontMetrics:_styleFont.mathTable];
                 }
                 [_displayAtoms addObject:displayRad];
@@ -590,9 +604,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         case kMTLineStyleText:
             return kMTLineStyleScript;
         case kMTLineStyleScript:
-            return kMTLineStypleScriptScript;
-        case kMTLineStypleScriptScript:
-            return kMTLineStypleScriptScript;
+            return kMTLineStyleScriptScript;
+        case kMTLineStyleScriptScript:
+            return kMTLineStyleScriptScript;
     }
 }
 
@@ -760,8 +774,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
 
 - (MTLineStyle) fractionStyle
 {
-    if (_style == kMTLineStypleScriptScript) {
-        return kMTLineStypleScriptScript;
+    if (_style == kMTLineStyleScriptScript) {
+        return kMTLineStyleScriptScript;
     }
     return _style + 1;
 }

@@ -1339,4 +1339,72 @@
         XCTAssertGreaterThan(display.width, 0);
     }
 }
+
+- (void) testStyleChanges
+{
+    MTFraction* frac = [MTMathAtomFactory fractionWithNumeratorStr:@"1" denominatorStr:@"2"];
+    MTMathList* list = [MTMathList mathListWithAtoms:frac, nil];
+    MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+    MTMathList* textList = [MTMathList mathListWithAtoms:style, frac, nil];
+    
+    // This should make the display same as text.
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:textList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* textDisplay = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleText];
+    MTMathListDisplay* originalDisplay = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    
+    // Display should be the same as rendering the fraction in text style.
+    XCTAssertEqual(display.ascent, textDisplay.ascent);
+    XCTAssertEqual(display.descent, textDisplay.descent);
+    XCTAssertEqual(display.width, textDisplay.width);
+    
+    // Original display should be larger than display since it is greater.
+    XCTAssertGreaterThan(originalDisplay.ascent, display.ascent);
+    XCTAssertGreaterThan(originalDisplay.descent, display.descent);
+    XCTAssertGreaterThan(originalDisplay.width, display.width);
+}
+
+- (void) testStyleMiddle
+{
+    MTMathAtom* atom1 = [MTMathAtomFactory atomForCharacter:'x'];
+    MTMathAtom* style1 = [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript];
+    MTMathAtom* atom2 = [MTMathAtomFactory atomForCharacter:'y'];
+    MTMathAtom* style2 = [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript];
+    MTMathAtom* atom3 = [MTMathAtomFactory atomForCharacter:'z'];
+    MTMathList* list = [MTMathList mathListWithAtoms:atom1, style1, atom2, style2, atom3, nil];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertEqualNSRange(display.range, NSMakeRange(0, 5));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 3);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+    XCTAssertEqual(line.atoms.count, 1);
+    XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+    XCTAssertEqualNSRange(line.range, NSMakeRange(0, 1));
+    XCTAssertFalse(line.hasScript);
+    
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line1 = (MTCTLineDisplay*) sub1;
+    XCTAssertEqual(line1.atoms.count, 1);
+    XCTAssertEqualObjects(line1.attributedString.string, @"𝑦");
+    XCTAssertEqualNSRange(line1.range, NSMakeRange(2, 1));
+    XCTAssertFalse(line1.hasScript);
+    
+    MTDisplay* sub2 = display.subDisplays[2];
+    XCTAssertTrue([sub2 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub2;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑧");
+    XCTAssertEqualNSRange(line2.range, NSMakeRange(4, 1));
+    XCTAssertFalse(line2.hasScript);
+}
+
 @end

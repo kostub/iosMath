@@ -772,6 +772,19 @@ static NSString* typeToText(MTMathAtomType type) {
     NSMutableArray* _atoms;
 }
 
++ (instancetype)mathListWithAtoms:(MTMathAtom *)firstAtom, ...
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    va_list args;
+    va_start(args, firstAtom);
+    for (MTMathAtom* atom = firstAtom; atom != nil; atom = va_arg(args, MTMathAtom*))
+    {
+        [list addAtom:atom];
+    }
+    va_end(args);
+    return list;
+}
+
 - (instancetype)init
 {
     self = [super init];
