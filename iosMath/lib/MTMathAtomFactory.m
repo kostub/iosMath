@@ -494,6 +494,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"!" : [[MTMathSpace alloc] initWithSpace:-3],
                      @"quad" : [[MTMathSpace alloc] initWithSpace:18],  // quad = 1em = 18mu
                      @"qquad" : [[MTMathSpace alloc] initWithSpace:36], // qquad = 2em
+                     
+                     // Style
+                     @"displaystyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleDisplay],
+                     @"textstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleText],
+                     @"scriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript],
+                     @"scriptscriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript],
                      };
         
     }

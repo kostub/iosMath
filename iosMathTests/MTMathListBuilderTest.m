@@ -875,6 +875,29 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\! ", @"%@", desc);
 }
 
+- (void) testMathStyle
+{
+    NSString *str = @"\\textstyle y \\scriptstyle x";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+    
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @4, @"%@", desc);
+    MTMathStyle* style = list.atoms[0];
+    XCTAssertEqual(style.type, kMTMathAtomStyle, @"%@", desc);
+    XCTAssertEqualObjects(style.nucleus, @"", @"%@", desc);
+    XCTAssertEqual(style.style, kMTLineStyleText);
+    
+    MTMathStyle* style2 = list.atoms[2];
+    XCTAssertEqual(style2.type, kMTMathAtomStyle, @"%@", desc);
+    XCTAssertEqualObjects(style2.nucleus, @"", @"%@", desc);
+    XCTAssertEqual(style2.style, kMTLineStyleScript);
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\textstyle y\\scriptstyle x", @"%@", desc);
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],

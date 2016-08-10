@@ -401,6 +401,20 @@ NSString *const MTParseError = @"ParseError";
     return spaceToCommands;
 }
 
++ (NSDictionary*) styleToCommands
+{
+    static NSDictionary* styleToCommands = nil;
+    if (!styleToCommands) {
+        styleToCommands = @{
+                            @(kMTLineStyleDisplay) : @"displaystyle",
+                            @(kMTLineStyleText) : @"textstyle",
+                            @(kMTLineStyleScript) : @"scriptstyle",
+                            @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
+                            };
+    }
+    return styleToCommands;
+}
+
 + (MTMathList *)buildFromString:(NSString *)str
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
@@ -503,6 +517,11 @@ NSString *const MTParseError = @"ParseError";
             } else {
                 [str appendFormat:@"\\mkern%.1fmu", space.space];
             }
+        } else if (atom.type == kMTMathAtomStyle) {
+            MTMathStyle* style = (MTMathStyle*) atom;
+            NSDictionary* styleToCommands = [MTMathListBuilder styleToCommands];
+            NSString* command = styleToCommands[@(style.style)];
+            [str appendFormat:@"\\%@ ", command];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

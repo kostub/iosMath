@@ -1288,8 +1288,8 @@
         MTMathList* list = [[MTMathList alloc] init];
         MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:symName];
         XCTAssertNotNil(atom);
-        if (atom.type == kMTMathAtomSpace) {
-            // Skip spaces as they don't get rendered.
+        if (atom.type >= kMTMathAtomBoundary) {
+            // Skip these types as they aren't symbols.
             continue;
         }
         
