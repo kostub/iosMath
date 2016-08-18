@@ -662,7 +662,7 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @implementation MTMathTable
 
-- (instancetype)init
+- (instancetype)initWithEnvironment:(NSString *)env
 {
     self = [super initWithType:kMTMathAtomTable value:@""];
     if (self) {
@@ -670,8 +670,14 @@ static NSString* typeToText(MTMathAtomType type) {
         self.cells = [NSMutableArray array];
         self.interRowAdditionalSpacing = 0;
         self.interColumnSpacing = 0;
+        _environment = env;
     }
     return self;
+}
+
+- (instancetype)init
+{
+    return [self initWithEnvironment:nil];
 }
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
@@ -689,6 +695,7 @@ static NSString* typeToText(MTMathAtomType type) {
     MTMathTable* op = [super copyWithZone:zone];
     op.interRowAdditionalSpacing = self.interRowAdditionalSpacing;
     op.interColumnSpacing = self.interColumnSpacing;
+    op->_environment = self.environment;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
     // Perform a deep copy of the cells.
     NSMutableArray* cellCopy = [NSMutableArray arrayWithCapacity:self.cells.count];

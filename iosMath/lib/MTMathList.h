@@ -314,14 +314,19 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
     kMTColumnAlignmentRight,
 };
 
-/// Creates an empty table
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+/// Creates an empty table with a nil environment
+- (instancetype)init;
+
+/// Creates a table with a given environment
+- (instancetype)initWithEnvironment:(nullable NSString*) env NS_DESIGNATED_INITIALIZER;
 
 /// The alignment for each column (left, right, center). The default alignment
 /// for a column (if not set) is center.
 @property (nonatomic, nonnull, readonly) NSArray<NSNumber*>* alignments;
 /// The cells in the table as a two dimensional array.
 @property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
+/// The name of the environment that this table denotes.
+@property (nonatomic, nullable, readonly) NSString* environment;
 
 /// Spacing between each column in mu units.
 @property (nonatomic) CGFloat interColumnSpacing;

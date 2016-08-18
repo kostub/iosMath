@@ -235,6 +235,54 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return [self fractionWithNumerator:num denominator:denom];
 }
 
++ (MTMathAtom *)tableWithEnvironment:(NSString *)env rows:(NSArray<NSArray<MTMathList *> *> *)rows error:(NSError * _Nullable __autoreleasing *)error
+{
+    MTMathTable* table = [[MTMathTable alloc] initWithEnvironment:env];
+    for (int i = 0; i < rows.count; i++) {
+        NSArray<MTMathList*>* row = rows[i];
+        for (int j = 0; j < row.count; j++) {
+            [table setCell:row[j] forRow:i column:j];
+        }
+    }
+    static NSDictionary<NSString*, NSArray*>* matrixEnvs = nil;
+    if (!matrixEnvs) {
+        matrixEnvs = @{ @"matrix" : @[],
+                        @"pmatrix" : @[ @"(", @")"],
+                        @"bmatrix" : @[ @"[", @"]"],
+                        @"Bmatrix" : @[ @"{", @"}"],
+                        @"vmatrix" : @[ @"vert", @"vert"],
+                        @"Vmatrix" : @[ @"Vert", @"Vert"], };
+    }
+    if ([matrixEnvs objectForKey:env]) {
+        table.interRowAdditionalSpacing = 0;
+        table.interColumnSpacing = 18;
+        // All the lists are in textstyle
+        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+        for (int i = 0; i < table.cells.count; i++) {
+            NSArray<MTMathList*>* row = table.cells[i];
+            for (int j = 0; j < row.count; j++) {
+                [row[j] insertAtom:style atIndex:0];
+            }
+        }
+        // Add delimiters
+        NSArray* delims = [matrixEnvs objectForKey:env];
+        if (delims.count == 2) {
+            MTInner* inner = [[MTInner alloc] init];
+            inner.leftBoundary = [self boundaryAtomForDelimiterName:delims[0]];
+            inner.rightBoundary = [self boundaryAtomForDelimiterName:delims[1]];
+            inner.innerList = [MTMathList mathListWithAtoms:table, nil];
+            return inner;
+        } else {
+            return table;
+        }
+    }
+    if (error) {
+        NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];
+        *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidEnv userInfo:@{ NSLocalizedDescriptionKey : message }];
+    }
+    return nil;
+}
+
 + (NSDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
 {
     static NSDictionary<NSString*, MTMathAtom*>* commands = nil;

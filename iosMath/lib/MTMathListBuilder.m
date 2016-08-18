@@ -14,11 +14,35 @@
 
 NSString *const MTParseError = @"ParseError";
 
+@interface MTEnvProperties : NSObject
+
+@property (nonatomic, readonly) NSString* envName;
+@property (nonatomic) BOOL ended;
+@property (nonatomic) NSInteger numRows;
+
+@end
+
+@implementation MTEnvProperties
+
+- (instancetype)initWithName:(NSString*) name
+{
+    self = [super init];
+    if (self) {
+        _envName = name;
+        _numRows = 0;
+        _ended = NO;
+    }
+    return self;
+}
+
+@end
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
     NSUInteger _length;
     MTInner* _currentInnerAtom;
+    MTEnvProperties* _currentEnv;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -89,7 +113,7 @@ NSString *const MTParseError = @"ParseError";
         MTMathAtom* atom = nil;
         unichar ch = [self getNextCharacter];
         if (oneCharOnly) {
-            if (ch == '^' || ch == '}' || ch == '_') {
+            if (ch == '^' || ch == '}' || ch == '_' || ch == '&') {
                 // this is not the character we are looking for.
                 // They are meant for the caller to look at.
                 [self unlookCharacter];
@@ -141,7 +165,7 @@ NSString *const MTParseError = @"ParseError";
             NSAssert(stop == 0, @"This should have been handled before");
             // We encountered a closing brace when there is no stop set, that means there was no
             // corresponding opening brace.
-            NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
+            NSString* errorMessage = @"Mismatched braces.";
             [self setError:MTParseErrorMismatchBraces message:errorMessage];
             return nil;
         } else if (ch == '\\') {
@@ -156,7 +180,21 @@ NSString *const MTParseError = @"ParseError";
             atom = [self atomForCommand:command];
             if (atom == nil) {
                 // this was an unknown command,
-                // we flag an error and return.
+                // we flag an error and return
+                // (note setError will not set the error if there is already one, so we flag internal error
+                // in the odd case that an _error is not set.
+                [self setError:MTParseErrorInternalError message:@"Internal error"];
+                return nil;
+            }
+        } else if (ch == '&') {
+            // used for column separation in tables
+            NSAssert(!oneCharOnly, @"This should have been handled before");
+            if (_currentEnv) {
+                return list;
+            } else {
+                // TODO: assume the eqalign env
+                NSString* errorMessage = @"Can't use & without a begin.";
+                [self setError:MTParseErrorMissingEnv message:errorMessage];
                 return nil;
             }
         } else {
@@ -188,23 +226,13 @@ NSString *const MTParseError = @"ParseError";
     return list;
 }
 
-- (NSString*) readCommand
+- (NSString*) readString
 {
-    static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
-        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!' ];
-        singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
-    // a command is a string of all upper and lower case characters.
+    // a string of all upper and lower case characters.
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        // Single char commands
-        if (mutable.length == 0 && [singleCharCommands containsObject:@(ch)]) {
-            // These are single char commands.
-            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
-            break;
-        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
         } else {
             // we went too far
@@ -215,15 +243,69 @@ NSString *const MTParseError = @"ParseError";
     return mutable;
 }
 
-- (NSString*) readDelimiter
+- (void) skipSpaces
 {
-    while([self hasCharacters]) {
+    while ([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        // Ignore spaces and nonascii.
         if (ch < 0x21 || ch > 0x7E) {
             // skip non ascii characters and spaces
             continue;
-        } else if (ch == '\\') {
+        } else {
+            [self unlookCharacter];
+        }
+    }
+}
+
+#define MTAssertNotSpace(ch) NSAssert((ch) >= 0x21 && (ch) <= 0x7E, @"Expected non space character %c", (ch));
+
+- (BOOL) expectCharacter:(unichar) ch
+{
+    MTAssertNotSpace(ch);
+    [self skipSpaces];
+    
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        MTAssertNotSpace(c);
+        if (c == ch) {
+            return YES;
+        } else {
+            [self unlookCharacter];
+            return NO;
+        }
+    }
+    return NO;
+}
+
+- (NSString*) readCommand
+{
+    static NSSet<NSNumber*>* singleCharCommands = nil;
+    if (!singleCharCommands) {
+        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!' ];
+        singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
+    }
+    if ([self hasCharacters]) {
+        // Check if we have a single character command.
+        unichar ch = [self getNextCharacter];
+        // Single char commands
+        if ([singleCharCommands containsObject:@(ch)]) {
+            return [NSString stringWithCharacters:&ch length:1];
+        } else {
+            // not a known single character command
+            [self unlookCharacter];
+        }
+    }
+    // otherwise a command is a string of all upper and lower case characters.
+    return [self readString];
+}
+
+- (NSString*) readDelimiter
+{
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        MTAssertNotSpace(ch);
+        if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
             if ([command isEqualToString:@"|"]) {
@@ -238,6 +320,26 @@ NSString *const MTParseError = @"ParseError";
     }
     // We ran out of characters for delimiter
     return nil;
+}
+
+- (NSString*) readEnvironment
+{
+    if (![self expectCharacter:'{']) {
+        // We didn't find an opening brace, so no env found.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
+        return nil;
+    }
+    
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+    NSString* env = [self readString];
+    
+    if (![self expectCharacter:'}']) {
+        // We didn't find an closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
+    }
+    return env;
 }
 
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
@@ -324,6 +426,18 @@ NSString *const MTParseError = @"ParseError";
         MTUnderLine* under = [MTUnderLine new];
         under.innerList = [self buildInternal:true];
         return under;
+    } else if ([command isEqualToString:@"begin"]) {
+        // Save the current env till an new one gets built.
+        MTEnvProperties* oldEnv = _currentEnv;
+        NSString* env = [self readEnvironment];
+        if (!env) {
+            return nil;
+        }
+        _currentEnv = [[MTEnvProperties alloc] initWithName:env];
+        MTMathAtom* table = [self buildTable];
+        // reinstate the old env.
+        _currentEnv = oldEnv;
+        return table;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
@@ -373,6 +487,36 @@ NSString *const MTParseError = @"ParseError";
         MTMathList* fracList = [MTMathList new];
         [fracList addAtom:frac];
         return fracList;
+    } else if ([command isEqualToString:@"\\"] || [command isEqualToString:@"cr"]) {
+        if (_currentEnv) {
+            // Stop the current list and increment the row count
+            _currentEnv.numRows++;
+            return list;
+        } else {
+            // TODO: Automatically start a displaylines environment
+            NSString* errorMessage = [NSString stringWithFormat:@"Cannot use \\%@ without a begin/end", command];
+            [self setError:MTParseErrorMissingEnv message:errorMessage];
+            return nil;
+        }
+    } else if ([command isEqualToString:@"end"]) {
+        if (!_currentEnv) {
+            NSString* errorMessage = @"Missing \\begin";
+            [self setError:MTParseErrorMissingBegin message:errorMessage];
+            return nil;
+        }
+        NSString* env = [self readEnvironment];
+        if (!env) {
+            return nil;
+        }
+        if (![env isEqualToString:_currentEnv.envName])
+        {
+            NSString* errorMessage = [NSString stringWithFormat:@"Begin environment name %@ does not match end name: %@", _currentEnv.envName, env];
+            [self setError:MTParseErrorInvalidEnv message:errorMessage];
+            return nil;
+        }
+        // Finish the current environment.
+        _currentEnv.ended = YES;
+        return list;
     }
     return nil;
 }
@@ -383,6 +527,39 @@ NSString *const MTParseError = @"ParseError";
     if (!_error) {
         _error = [NSError errorWithDomain:MTParseError code:code userInfo:@{ NSLocalizedDescriptionKey : message }];
     }
+}
+
+- (MTMathAtom*) buildTable
+{
+    NSInteger currentRow = 0;
+    NSInteger currentCol = 0;
+    NSMutableArray<NSMutableArray<MTMathList*>*>* rows = [NSMutableArray array];
+    rows[0] = [NSMutableArray array];
+    while (!_currentEnv.ended && [self hasCharacters]) {
+        MTMathList* list = [self buildInternal:NO];
+        if (!list) {
+            // If there is an error building the list, bail out early.
+            return nil;
+        }
+        rows[currentRow][currentCol] = list;
+        currentCol++;
+        if (_currentEnv.numRows > currentRow) {
+            currentRow = _currentEnv.numRows;
+            rows[currentRow] = [NSMutableArray array];
+            currentCol = 0;
+        }
+    }
+    if (!_currentEnv.ended) {
+        [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
+        return nil;
+    }
+    NSError* error;
+    MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    if (!table && !_error) {
+        _error = error;
+        return nil;
+    }
+    return table;
 }
 
 + (NSDictionary*) spaceToCommands

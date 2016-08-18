@@ -135,7 +135,13 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  This function uses `mathListForCharacters` to convert the strings to `MTMathList`s. */
 + (MTFraction*) fractionWithNumeratorStr:(NSString*) numStr denominatorStr:(NSString*) denomStr;
 
-
+/** Builds a table for a given environment with the given rows. Returns a `MTMathAtom` containing the
+ table and any other atoms necessary for the given environment. Returns nil and sets error
+ if the table could not be built.
+ @note The reason this function returns a `MTMathAtom` and not a `MTMathTable` is because some
+ matrix environments are have builtin delimiters added to the table and hence are returned as inner atoms.
+ */
++ (MTMathAtom*) tableWithEnvironment:(NSString*) env rows:(NSArray<NSArray<MTMathList*>*>*) rows error:(NSError**) error;
 @end
 
 NS_ASSUME_NONNULL_END

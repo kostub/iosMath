@@ -70,6 +70,16 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMissingRight,
     /// There is no \left corresponding to the \right command.
     MTParseErrorMissingLeft,
+    /// The environment given to the \begin command is not recognized
+    MTParseErrorInvalidEnv,
+    /// A command is used which is only valid inside a \begin,\end environment
+    MTParseErrorMissingEnv,
+    /// There is no \begin corresponding to the \end command.
+    MTParseErrorMissingBegin,
+    /// There is no \end corresponding to the \begin command.
+    MTParseErrorMissingEnd,
+    /// Internal error, due to a programming mistake.
+    MTParseErrorInternalError,
 };
 
 @end
