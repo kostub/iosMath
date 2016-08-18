@@ -252,6 +252,7 @@ NSString *const MTParseError = @"ParseError";
             continue;
         } else {
             [self unlookCharacter];
+            return;
         }
     }
 }
