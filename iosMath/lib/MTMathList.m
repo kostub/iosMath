@@ -792,6 +792,13 @@ static NSString* typeToText(MTMathAtomType type) {
     return list;
 }
 
++ (instancetype)mathListWithAtomsArray:(NSArray<MTMathAtom *> *)atoms
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    [list->_atoms addObjectsFromArray:atoms];
+    return list;
+}
+
 - (instancetype)init
 {
     self = [super init];

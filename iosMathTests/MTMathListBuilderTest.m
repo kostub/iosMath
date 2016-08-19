@@ -898,6 +898,96 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\textstyle y\\scriptstyle x", @"%@", desc);
 }
 
+- (void) testMatrix
+{
+    NSString *str = @"\\begin{matrix} x & y \\\\ z & w \\end{matrix}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertEqualObjects(table.environment, @"matrix");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    XCTAssertEqual(table.interColumnSpacing, 18);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 2);
+            MTMathStyle* style = cell.atoms[0];
+            XCTAssertEqual(style.type, kMTMathAtomStyle);
+            XCTAssertEqual(style.style, kMTLineStyleText);
+            
+            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    // TODO: get rid of the textstyles
+    XCTAssertEqualObjects(latex, @"\\begin{matrix}x&y\\\\ z&w\\end{matrix}");
+}
+
+- (void) testPMatrix
+{
+    NSString *str = @"\\begin{pmatrix} x & y \\\\ z & w \\end{pmatrix}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTInner* inner = list.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomInner, @"%@", str);
+    XCTAssertEqualObjects(inner.nucleus, @"", @"%@", str);
+    
+    MTMathList* innerList = inner.innerList;
+    XCTAssertNotNil(innerList, @"%@", str);
+    
+    XCTAssertNotNil(inner.leftBoundary, @"%@", str);
+    XCTAssertEqual(inner.leftBoundary.type, kMTMathAtomBoundary, @"%@", str);
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus, @"(", @"%@", str);
+    
+    XCTAssertNotNil(inner.rightBoundary, @"%@", str);
+    XCTAssertEqual(inner.rightBoundary.type, kMTMathAtomBoundary, @"%@", str);
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, @")", @"%@", str);
+    
+    XCTAssertEqualObjects(@(innerList.atoms.count), @1);
+    MTMathTable* table = innerList.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertEqualObjects(table.environment, @"matrix");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    XCTAssertEqual(table.interColumnSpacing, 18);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 2);
+            MTMathStyle* style = cell.atoms[0];
+            XCTAssertEqual(style.type, kMTMathAtomStyle);
+            XCTAssertEqual(style.style, kMTLineStyleText);
+            
+            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    // TODO: get rid of the textstyles
+    XCTAssertEqualObjects(latex, @"\\left( \\begin{matrix}x&y\\\\ z&w\\end{matrix}\\right) ");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -916,6 +1006,21 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\left(\\frac12", @(MTParseErrorMissingRight)],
               @[@"\\left(5 + \\left| \\frac12 \\right)", @(MTParseErrorMissingRight)],
               @[@"5+ \\left|\\frac12\\right| \\right)", @(MTParseErrorMissingLeft)],
+              @[@"\\begin matrix \\end matrix", @(MTParseErrorCharacterNotFound)], // missing {
+              @[@"\\begin", @(MTParseErrorCharacterNotFound)], // missing {
+              @[@"\\begin{", @(MTParseErrorCharacterNotFound)], // missing }
+              @[@"\\begin{matrix parens}", @(MTParseErrorCharacterNotFound)], // missing } (no spaces in env)
+              @[@"\\begin{matrix} x", @(MTParseErrorMissingEnd)],
+              @[@"\\begin{matrix} x \\end", @(MTParseErrorCharacterNotFound)], // missing {
+              @[@"\\begin{matrix} x \\end + 3", @(MTParseErrorCharacterNotFound)], // missing {
+              @[@"\\begin{matrix} x \\end{", @(MTParseErrorCharacterNotFound)], // missing }
+              @[@"\\begin{matrix} x \\end{matrix + 3", @(MTParseErrorCharacterNotFound)], // missing }
+              @[@"\\begin{matrix} x \\end{pmatrix}", @(MTParseErrorInvalidEnv)],
+              @[@"x \\end{matrix}", @(MTParseErrorMissingBegin)],
+              @[@"x & y", @(MTParseErrorMissingEnv)],
+              @[@"x \\\\ y", @(MTParseErrorMissingEnv)],
+              @[@"\\begin{hello} x \\end{hello}", @(MTParseErrorInvalidEnv)],
+              @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               ];
 };
 

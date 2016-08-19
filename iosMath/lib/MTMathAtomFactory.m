@@ -254,6 +254,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                         @"Vmatrix" : @[ @"Vert", @"Vert"], };
     }
     if ([matrixEnvs objectForKey:env]) {
+        // it is set to matrix as the delimiters are converted to latex outside the table.
+        table.environment = @"matrix";
         table.interRowAdditionalSpacing = 0;
         table.interColumnSpacing = 18;
         // All the lists are in textstyle

@@ -326,7 +326,7 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// The cells in the table as a two dimensional array.
 @property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
 /// The name of the environment that this table denotes.
-@property (nonatomic, nullable, readonly) NSString* environment;
+@property (nonatomic, nullable) NSString* environment;
 
 /// Spacing between each column in mu units.
 @property (nonatomic) CGFloat interColumnSpacing;
@@ -368,6 +368,9 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
  terminated by `nil`.
  */
 + (instancetype) mathListWithAtoms:(MTMathAtom*) firstAtom, ... NS_REQUIRES_NIL_TERMINATION;
+
+/** Create a `MTMathList` given a list of atoms. */
++ (instancetype) mathListWithAtomsArray:(NSArray<MTMathAtom*>*) atoms;
 
 /// A list of MathAtoms
 @property (nonatomic, readonly) NSArray<__kindof MTMathAtom*>* atoms;

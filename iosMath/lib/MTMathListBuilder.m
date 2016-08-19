@@ -281,7 +281,7 @@ NSString *const MTParseError = @"ParseError";
 {
     static NSSet<NSNumber*>* singleCharCommands = nil;
     if (!singleCharCommands) {
-        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!' ];
+        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
         singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
     }
     if ([self hasCharacters]) {
@@ -675,6 +675,30 @@ NSString *const MTParseError = @"ParseError";
             } else {
                 [str appendFormat:@"{%@}", [self mathListToString:inner.innerList]];
             }
+        } else if (atom.type == kMTMathAtomTable) {
+            MTMathTable* table = (MTMathTable*) atom;
+            [str appendFormat:@"\\begin{%@}", table.environment];
+            for (int i = 0; i < table.numRows; i++) {
+                NSArray<MTMathList*>* row = table.cells[i];
+                for (int j = 0; j < row.count; j++) {
+                    MTMathList* cell = row[j];
+                    if ([table.environment isEqualToString:@"matrix"]) {
+                        if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
+                            // remove the first atom.
+                            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count-1)];
+                            cell = [MTMathList mathListWithAtomsArray:atoms];
+                        }
+                    }
+                    [str appendString:[self mathListToString:cell]];
+                    if (j < row.count - 1) {
+                        [str appendString:@"&"];
+                    }
+                }
+                if (i < table.numRows - 1) {
+                    [str appendString:@"\\\\ "];
+                }
+            }
+            [str appendFormat:@"\\end{%@}", table.environment];
         } else if (atom.type == kMTMathAtomOverline) {
             [str appendString:@"\\overline"];
             MTOverLine* over = (MTOverLine*) atom;
