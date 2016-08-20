@@ -78,6 +78,8 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMissingBegin,
     /// There is no \end corresponding to the \begin command.
     MTParseErrorMissingEnd,
+    /// The number of columns do not match the environment
+    MTParseErrorInvalidNumColumns,
     /// Internal error, due to a programming mistake.
     MTParseErrorInternalError,
 };

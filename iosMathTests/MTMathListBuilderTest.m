@@ -1017,7 +1017,6 @@ static NSArray* getTestDataLeftRight() {
     
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    // TODO: get rid of the textstyles
     XCTAssertEqualObjects(latex, @"x\\\\ y");
 }
 
@@ -1050,8 +1049,75 @@ static NSArray* getTestDataLeftRight() {
     
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    // TODO: get rid of the textstyles
     XCTAssertEqualObjects(latex, @"x&y\\\\ z&w");
+}
+
+- (void) testEqalign
+{
+    NSString *str1 = @"\\begin{eqalign}x&y\\\\ z&w\\end{eqalign}";
+    NSString *str2 = @"\\begin{split}x&y\\\\ z&w\\end{split}";
+    for (NSString* str in @[str1, str2]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        
+        XCTAssertNotNil(list);
+        XCTAssertEqualObjects(@(list.atoms.count), @1);
+        MTMathTable* table = list.atoms[0];
+        XCTAssertEqual(table.type, kMTMathAtomTable);
+        XCTAssertEqualObjects(table.nucleus, @"");
+        XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+        XCTAssertEqual(table.interColumnSpacing, 0);
+        XCTAssertEqual(table.numRows, 2);
+        XCTAssertEqual(table.numColumns, 2);
+        
+        for (int i = 0; i < 2; i++) {
+            MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+            XCTAssertEqual(alignment, (i == 0) ? kMTColumnAlignmentRight: kMTColumnAlignmentLeft);
+            for (int j = 0; j < 2; j++) {
+                MTMathList* cell = table.cells[j][i];
+                XCTAssertEqual(cell.atoms.count, 1);
+                MTMathAtom* atom = cell.atoms[0];
+                XCTAssertEqual(atom.type, kMTMathAtomVariable);
+            }
+        }
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, str);
+    }
+}
+
+- (void) testDisplayLines
+{
+    NSString *str1 = @"\\begin{displaylines}x\\\\ y\\end{displaylines}";
+    NSString *str2 = @"\\begin{gather}x\\\\ y\\end{gather}";
+    for (NSString* str in @[str1, str2]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        
+        XCTAssertNotNil(list);
+        XCTAssertEqualObjects(@(list.atoms.count), @1);
+        MTMathTable* table = list.atoms[0];
+        XCTAssertEqual(table.type, kMTMathAtomTable);
+        XCTAssertEqualObjects(table.nucleus, @"");
+        XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+        XCTAssertEqual(table.interColumnSpacing, 0);
+        XCTAssertEqual(table.numRows, 2);
+        XCTAssertEqual(table.numColumns, 1);
+        
+        for (int i = 0; i < 1; i++) {
+            MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+            XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+            for (int j = 0; j < 2; j++) {
+                MTMathList* cell = table.cells[j][i];
+                XCTAssertEqual(cell.atoms.count, 1);
+                MTMathAtom* atom = cell.atoms[0];
+                XCTAssertEqual(atom.type, kMTMathAtomVariable);
+            }
+        }
+        
+        // convert it back to latex
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, str);
+    }
 }
 
 static NSArray* getTestDataParseErrors() {
@@ -1083,8 +1149,10 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} x \\end{matrix + 3", @(MTParseErrorCharacterNotFound)], // missing }
               @[@"\\begin{matrix} x \\end{pmatrix}", @(MTParseErrorInvalidEnv)],
               @[@"x \\end{matrix}", @(MTParseErrorMissingBegin)],
-              @[@"\\begin{hello} x \\end{hello}", @(MTParseErrorInvalidEnv)],
+              @[@"\\begin{notanenv} x \\end{notanenv}", @(MTParseErrorInvalidEnv)],
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
+              @[@"\\begin{displaylines} x & y \\end{displaylines}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
               ];
 };
 

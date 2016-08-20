@@ -286,6 +286,27 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             [table setAlignment:kMTColumnAlignmentLeft forColumn:i];
         }
         return table;
+    } else if ([env isEqualToString:@"eqalign"] || [env isEqualToString:@"split"]) {
+        if (table.numColumns != 2) {
+            NSString* message = @"eqalign environment can only have 2 columns";
+            *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
+            return nil;
+        }
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 0;
+        [table setAlignment:kMTColumnAlignmentRight forColumn:0];
+        [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
+        return table;
+    } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"]) {
+        if (table.numColumns != 1) {
+            NSString* message = @"displaylines environment can only have 1 column";
+            *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
+            return nil;
+        }
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 0;
+        [table setAlignment:kMTColumnAlignmentCenter forColumn:0];
+        return table;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];
