@@ -307,6 +307,43 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.interColumnSpacing = 0;
         [table setAlignment:kMTColumnAlignmentCenter forColumn:0];
         return table;
+    } else if ([env isEqualToString:@"eqnarray"]) {
+        if (table.numColumns != 3) {
+            NSString* message = @"eqnarray environment can only have 3 columns";
+            *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
+            return nil;
+        }
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 18;
+        [table setAlignment:kMTColumnAlignmentRight forColumn:0];
+        [table setAlignment:kMTColumnAlignmentCenter forColumn:1];
+        [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
+        return table;
+    } else if ([env isEqualToString:@"cases"]) {
+        if (table.numColumns != 2) {
+            NSString* message = @"cases environment can only have 2 columns";
+            *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
+            return nil;
+        }
+        table.interRowAdditionalSpacing = 0;
+        table.interColumnSpacing = 18;
+        [table setAlignment:kMTColumnAlignmentLeft forColumn:0];
+        [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
+        // All the lists are in textstyle
+        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+        for (int i = 0; i < table.cells.count; i++) {
+            NSArray<MTMathList*>* row = table.cells[i];
+            for (int j = 0; j < row.count; j++) {
+                [row[j] insertAtom:style atIndex:0];
+            }
+        }
+        // Add delimiters
+        MTInner* inner = [[MTInner alloc] init];
+        inner.leftBoundary = [self boundaryAtomForDelimiterName:@"{"];
+        inner.rightBoundary = [self boundaryAtomForDelimiterName:@"."];
+        MTMathAtom* space = [self atomForLatexSymbolName:@","];
+        inner.innerList = [MTMathList mathListWithAtoms:space, table, nil];
+        return inner;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];
