@@ -192,10 +192,9 @@ NSString *const MTParseError = @"ParseError";
             if (_currentEnv) {
                 return list;
             } else {
-                // TODO: assume the eqalign env
-                NSString* errorMessage = @"Can't use & without a begin.";
-                [self setError:MTParseErrorMissingEnv message:errorMessage];
-                return nil;
+                // Create a new table with the current list and a default env
+                MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
+                return [MTMathList mathListWithAtoms:table, nil];
             }
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
@@ -428,16 +427,11 @@ NSString *const MTParseError = @"ParseError";
         under.innerList = [self buildInternal:true];
         return under;
     } else if ([command isEqualToString:@"begin"]) {
-        // Save the current env till an new one gets built.
-        MTEnvProperties* oldEnv = _currentEnv;
         NSString* env = [self readEnvironment];
         if (!env) {
             return nil;
         }
-        _currentEnv = [[MTEnvProperties alloc] initWithName:env];
-        MTMathAtom* table = [self buildTable];
-        // reinstate the old env.
-        _currentEnv = oldEnv;
+        MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
         return table;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
@@ -494,10 +488,9 @@ NSString *const MTParseError = @"ParseError";
             _currentEnv.numRows++;
             return list;
         } else {
-            // TODO: Automatically start a displaylines environment
-            NSString* errorMessage = [NSString stringWithFormat:@"Cannot use \\%@ without a begin/end", command];
-            [self setError:MTParseErrorMissingEnv message:errorMessage];
-            return nil;
+            // Create a new table with the current list and a default env
+            MTMathAtom* table = [self buildTable:nil firstList:list row:YES];
+            return [MTMathList mathListWithAtoms:table, nil];
         }
     } else if ([command isEqualToString:@"end"]) {
         if (!_currentEnv) {
@@ -530,12 +523,25 @@ NSString *const MTParseError = @"ParseError";
     }
 }
 
-- (MTMathAtom*) buildTable
+- (MTMathAtom*) buildTable:(NSString*) env firstList:(MTMathList*) firstList row:(BOOL) isRow
 {
+    // Save the current env till an new one gets built.
+    MTEnvProperties* oldEnv = _currentEnv;
+    _currentEnv = [[MTEnvProperties alloc] initWithName:env];
     NSInteger currentRow = 0;
     NSInteger currentCol = 0;
     NSMutableArray<NSMutableArray<MTMathList*>*>* rows = [NSMutableArray array];
     rows[0] = [NSMutableArray array];
+    if (firstList) {
+        rows[currentRow][currentCol] = firstList;
+        if (isRow) {
+            _currentEnv.numRows++;
+            currentRow++;
+            rows[currentRow] = [NSMutableArray array];
+        } else {
+            currentCol++;
+        }
+    }
     while (!_currentEnv.ended && [self hasCharacters]) {
         MTMathList* list = [self buildInternal:NO];
         if (!list) {
@@ -550,7 +556,7 @@ NSString *const MTParseError = @"ParseError";
             currentCol = 0;
         }
     }
-    if (!_currentEnv.ended) {
+    if (!_currentEnv.ended && _currentEnv.envName) {
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
         return nil;
     }
@@ -560,6 +566,8 @@ NSString *const MTParseError = @"ParseError";
         _error = error;
         return nil;
     }
+    // reinstate the old env.
+    _currentEnv = oldEnv;
     return table;
 }
 
@@ -677,7 +685,9 @@ NSString *const MTParseError = @"ParseError";
             }
         } else if (atom.type == kMTMathAtomTable) {
             MTMathTable* table = (MTMathTable*) atom;
-            [str appendFormat:@"\\begin{%@}", table.environment];
+            if (table.environment) {
+                [str appendFormat:@"\\begin{%@}", table.environment];
+            }
             for (int i = 0; i < table.numRows; i++) {
                 NSArray<MTMathList*>* row = table.cells[i];
                 for (int j = 0; j < row.count; j++) {
@@ -698,7 +708,9 @@ NSString *const MTParseError = @"ParseError";
                     [str appendString:@"\\\\ "];
                 }
             }
-            [str appendFormat:@"\\end{%@}", table.environment];
+            if (table.environment) {
+                [str appendFormat:@"\\end{%@}", table.environment];
+            }
         } else if (atom.type == kMTMathAtomOverline) {
             [str appendString:@"\\overline"];
             MTOverLine* over = (MTOverLine*) atom;

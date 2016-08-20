@@ -988,6 +988,72 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\left( \\begin{matrix}x&y\\\\ z&w\\end{matrix}\\right) ");
 }
 
+- (void) testDefaultTable
+{
+    NSString *str = @"x \\\\ y";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertNil(table.environment);
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 1);
+    
+    for (int i = 0; i < 1; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentLeft);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    // TODO: get rid of the textstyles
+    XCTAssertEqualObjects(latex, @"x\\\\ y");
+}
+
+- (void) testDefaultTableWithCols
+{
+    NSString *str = @"x & y \\\\ z & w";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertNil(table.environment);
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentLeft);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    // TODO: get rid of the textstyles
+    XCTAssertEqualObjects(latex, @"x&y\\\\ z&w");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -1017,8 +1083,6 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} x \\end{matrix + 3", @(MTParseErrorCharacterNotFound)], // missing }
               @[@"\\begin{matrix} x \\end{pmatrix}", @(MTParseErrorInvalidEnv)],
               @[@"x \\end{matrix}", @(MTParseErrorMissingBegin)],
-              @[@"x & y", @(MTParseErrorMissingEnv)],
-              @[@"x \\\\ y", @(MTParseErrorMissingEnv)],
               @[@"\\begin{hello} x \\end{hello}", @(MTParseErrorInvalidEnv)],
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               ];

@@ -277,6 +277,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         } else {
             return table;
         }
+    } else if (!env) {
+        // The default env.
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 0;
+        int cols = table.numColumns;
+        for (int i = 0; i < cols; i++) {
+            [table setAlignment:kMTColumnAlignmentLeft forColumn:i];
+        }
+        return table;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];
