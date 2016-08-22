@@ -53,6 +53,7 @@
     _displayList = nil;
     _displayErrorInline = true;
     self.backgroundColor = [UIColor clearColor];
+    _textColor = [UIColor blackColor];
     _errorLabel = [[UILabel alloc] init];
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;
@@ -105,6 +106,14 @@
     [self setNeedsLayout];
 }
 
+- (void)setTextColor:(UIColor *)textColor
+{
+    NSParameterAssert(textColor);
+    _textColor = textColor;
+    _displayList.textColor = textColor;
+    [self setNeedsDisplay];
+}
+
 - (void)setTextAlignment:(MTTextAlignment)textAlignment
 {
     _textAlignment = textAlignment;
@@ -144,6 +153,7 @@
 {
     if (_mathList) {
         _displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
+        _displayList.textColor = _textColor;
         
         // Determine x position based on alignment
         CGFloat textX = 0;

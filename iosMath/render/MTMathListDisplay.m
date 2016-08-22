@@ -106,6 +106,15 @@ static BOOL isIos6Supported() {
     _line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)(_attributedString));
 }
 
+- (void) setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
+    [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
+                    range:NSMakeRange(0, attrStr.length)];
+    self.attributedString = attrStr;
+}
+
 - (void) computeDimensions:(MTFont*) font
 {
     NSArray* runs = (__bridge NSArray *)(CTLineGetGlyphRuns(_line));
@@ -134,8 +143,12 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    CGContextSaveGState(context);
+    
     CGContextSetTextPosition(context, self.position.x, self.position.y);
     CTLineDraw(_line, context);
+    
+    CGContextRestoreGState(context);
 }
 
 @end
@@ -169,6 +182,15 @@ static BOOL isIos6Supported() {
 - (void) setIndex:(NSUInteger) index
 {
     _index = index;
+}
+
+- (void) setTextColor:(UIColor *)textColor
+{
+    // Set the color on all subdisplays
+    [super setTextColor:textColor];
+    for (MTDisplay* displayAtom in self.subDisplays) {
+        displayAtom.textColor = textColor;
+    }
 }
 
 - (void)draw:(CGContextRef)context
@@ -276,10 +298,21 @@ static BOOL isIos6Supported() {
     [self updateNumeratorPosition];
 }
 
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    _numerator.textColor = textColor;
+    _denominator.textColor = textColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     [_numerator draw:context];
     [_denominator draw:context];
+
+    CGContextSaveGState(context);
+    
+    [self.textColor setStroke];
     
     // draw the horizontal line
     UIBezierPath* path = [UIBezierPath bezierPath];
@@ -287,6 +320,8 @@ static BOOL isIos6Supported() {
     [path addLineToPoint:CGPointMake(self.position.x + self.width, self.position.y + self.linePosition)];
     path.lineWidth = self.lineThickness;
     [path stroke];
+    
+    CGContextRestoreGState(context);
 }
 
 @end
@@ -359,6 +394,13 @@ static BOOL isIos6Supported() {
     self.radicand.position = CGPointMake(self.position.x + _radicalShift + _glyphWidth, self.position.y);
 }
 
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    self.radicand.textColor = textColor;
+    self.degree.textColor = textColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     // draw the radicand & degree at its position
@@ -366,6 +408,8 @@ static BOOL isIos6Supported() {
     [self.degree draw:context];
 
     CGContextSaveGState(context);
+    [self.textColor setStroke];
+    [self.textColor setFill];
 
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
     CGContextTranslateCTM(context, self.position.x + _radicalShift, self.position.y);
@@ -418,6 +462,8 @@ static BOOL isIos6Supported() {
 {
     CGContextSaveGState(context);
 
+    [self.textColor setFill];
+    
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
     CGContextTranslateCTM(context, self.position.x, self.position.y);
     CGContextSetTextPosition(context, 0, 0);
@@ -528,6 +574,14 @@ static BOOL isIos6Supported() {
     _nucleus.position = CGPointMake(self.position.x + (self.width - _nucleus.width)/2, self.position.y);
 }
 
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    self.upperLimit.textColor = textColor;
+    self.lowerLimit.textColor = textColor;
+    _nucleus.textColor = textColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     // Draw the elements.
@@ -554,9 +608,19 @@ static BOOL isIos6Supported() {
     return self;
 }
 
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    _inner.textColor = textColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     [self.inner draw:context];
+    
+    CGContextSaveGState(context);
+    
+    [self.textColor setStroke];
     
     // draw the horizontal line
     UIBezierPath* path = [UIBezierPath bezierPath];
@@ -566,6 +630,8 @@ static BOOL isIos6Supported() {
     [path addLineToPoint:lineEnd];
     path.lineWidth = self.lineThickness;
     [path stroke];
+    
+    CGContextRestoreGState(context);
 }
 
 - (void) setPosition:(CGPoint)position
