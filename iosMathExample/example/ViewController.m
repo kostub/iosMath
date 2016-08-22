@@ -230,7 +230,6 @@
     MTMathUILabel* label = [[MTMathUILabel alloc] init];
     [self setHeight:height forView:label];
     label.latex = latex;
-    label.textColor = [UIColor blueColor];
     return label;
 }
 

@@ -106,7 +106,4 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
 /** The internal display of the MTMathUILabel. This is for advanced use only. */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
 
-/** The color used to render the text. */
-@property (nonatomic, nullable) UIColor *textColor;
-
 @end
