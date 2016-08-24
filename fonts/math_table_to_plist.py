@@ -15,12 +15,14 @@ def process_font(font_file, out_file):
     v_variants = get_v_variants(math_table)
     h_variants = get_h_variants(math_table)
     assembly = get_v_assembly(math_table)
+    accents = get_accent_attachments(math_table)
     pl = {
-            "version" : "1.1",
+            "version" : "1.2",
             "constants": constants,
             "v_variants" : v_variants,
             "h_variants" : h_variants,
             "italic" : italic_c,
+            "accents" : accents,
             "v_assembly" : assembly }
     plistlib.writePlist(pl, out_file)
 
@@ -111,6 +113,26 @@ def get_italic_correction(math_table):
             raise "Don't know how to process device table for italic correction."
         italic_dict[name] = record.Value
     return italic_dict
+
+def get_accent_attachments(math_table):
+    glyph_info = math_table.MathGlyphInfo
+    if glyph_info is None:
+        raise "Cannot find MathGlyphInfo in MATH table."
+    attach = glyph_info.MathTopAccentAttachment
+    if attach is None:
+        raise "Cannot find Top Accent Attachment in GlyphInfo"
+
+    glyphs = attach.TopAccentCoverage.glyphs
+    count = attach.TopAccentAttachmentCount
+    records = attach.TopAccentAttachment
+    attach_dict = {}
+    for i in xrange(count):
+        name = glyphs[i]
+        record = records[i]
+        if record.DeviceTable is not None:
+            raise "Don't know how to process device table for accent attachment."
+        attach_dict[name] = record.Value
+    return attach_dict
 
 def get_v_variants(math_table):
     variants = math_table.MathVariants
