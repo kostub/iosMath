@@ -440,7 +440,7 @@ static BOOL isIos6Supported() {
 
 #pragma mark - MTLargeGlyphDisplay
 
-@implementation MTLargeGlyphDisplay {
+@implementation MTGlyphDisplay {
     CGGlyph _glyph;
     MTFont* _font;
 }
@@ -651,7 +651,7 @@ static BOOL isIos6Supported() {
 
 @implementation MTAccentDisplay
 
-- (instancetype)initWithAccent:(MTLargeGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range
+- (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range
 {
     self = [super init];
     if (self) {

@@ -65,7 +65,7 @@
 @end
 
 // Rendering of an large glyph as an MTDisplay
-@interface MTLargeGlyphDisplay()
+@interface MTGlyphDisplay()
 
 - (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
 
@@ -97,6 +97,6 @@
 
 @interface MTAccentDisplay ()
 
-- (instancetype)initWithAccent:(MTLargeGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @end

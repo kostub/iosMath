@@ -124,8 +124,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
-/// Rendering a large glyph as a display
-@interface MTLargeGlyphDisplay : MTDisplay
+/// Rendering a glyph as a display
+@interface MTGlyphDisplay : MTDisplay
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -171,7 +171,7 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 /** A display representing the accent. It's position is relative to the current display.
  */
-@property (nonatomic, readonly) MTLargeGlyphDisplay* accent;
+@property (nonatomic, readonly) MTGlyphDisplay* accent;
 
 @end
 

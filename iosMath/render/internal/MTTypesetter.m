@@ -864,7 +864,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     CGFloat glyphHeight = self.fractionDelimiterHeight;
     CGPoint position = CGPointZero;
     if (frac.leftDelimiter.length > 0) {
-        MTLargeGlyphDisplay* leftGlyph = [self findGlyphForBoundary:frac.leftDelimiter withHeight:glyphHeight];
+        MTGlyphDisplay* leftGlyph = [self findGlyphForBoundary:frac.leftDelimiter withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
@@ -875,7 +875,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     [innerElements addObject:display];
     
     if (frac.rightDelimiter.length > 0) {
-        MTLargeGlyphDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
+        MTGlyphDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
         [innerElements addObject:rightGlyph];
@@ -1005,7 +1005,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         CGFloat ascent, descent, width;
         getBboxDetails(bbox, &ascent, &descent, &width);
         CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
-        MTLargeGlyphDisplay* glyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
+        MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
         glyphDisplay.ascent = ascent;
         glyphDisplay.descent = descent;
         glyphDisplay.width = width;
@@ -1086,7 +1086,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     NSMutableArray* innerElements = [[NSMutableArray alloc] init];
     CGPoint position = CGPointZero;
     if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
-        MTLargeGlyphDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
+        MTGlyphDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
@@ -1097,7 +1097,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     [innerElements addObject:innerListDisplay];
     
     if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
-        MTLargeGlyphDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
+        MTGlyphDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
         [innerElements addObject:rightGlyph];
@@ -1106,14 +1106,14 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     return innerDisplay;
 }
 
-- (MTLargeGlyphDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
+- (MTGlyphDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:delimiter];
     CGGlyph glyph = [self findGlyph:leftGlyph withHeight:glyphHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     
     // Create a glyph display
-    MTLargeGlyphDisplay* glyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:NSMakeRange(NSNotFound, 0) font:_styleFont];
+    MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:NSMakeRange(NSNotFound, 0) font:_styleFont];
     glyphDisplay.ascent = glyphAscent;
     glyphDisplay.descent = glyphDescent;
     glyphDisplay.width = glyphWidth;
@@ -1240,7 +1240,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat shift = skew + (accenteeWidth - glyphWidth)/2;
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(shift, height);
-    MTLargeGlyphDisplay* accentGlyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
+    MTGlyphDisplay* accentGlyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
     accentGlyphDisplay.ascent = glyphAscent;
     accentGlyphDisplay.descent = glyphDescent;
     accentGlyphDisplay.width = glyphWidth;

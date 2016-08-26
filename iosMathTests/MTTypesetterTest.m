@@ -628,8 +628,8 @@
     XCTAssertEqual(display0.subDisplays.count, 3);
     
     MTDisplay* subLeft = display0.subDisplays[0];
-    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue([subLeft isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) subLeft;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
@@ -678,8 +678,8 @@
     XCTAssertFalse(line3.hasScript);
     
     MTDisplay* subRight = display0.subDisplays[2];
-    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
+    XCTAssertTrue([subRight isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) subRight;
     XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(23.66, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
@@ -743,8 +743,8 @@
     XCTAssertEqual(display.subDisplays.count, 2);
     
     MTDisplay* sub0 = display.subDisplays[0];
-    XCTAssertTrue([sub0 isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub0;
+    XCTAssertTrue([sub0 isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub0;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)));
     XCTAssertFalse(glyph.hasScript);
@@ -821,8 +821,8 @@
     XCTAssertFalse(line3.hasScript);
     
     MTDisplay* sub2 = display.subDisplays[2];
-    XCTAssertTrue([sub2 isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub2;
+    XCTAssertTrue([sub2 isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub2;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)));
     XCTAssertTrue(glyph.hasScript); // There are subscripts and superscripts
@@ -1003,8 +1003,8 @@
     XCTAssertEqual(display2.subDisplays.count, 3);
     
     MTDisplay* subLeft = display2.subDisplays[0];
-    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue([subLeft isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) subLeft;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
@@ -1029,8 +1029,8 @@
     XCTAssertFalse(line.hasScript);
     
     MTDisplay* subRight = display2.subDisplays[2];
-    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
+    XCTAssertTrue([subRight isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) subRight;
     XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(18.1, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
@@ -1308,8 +1308,8 @@
         MTDisplay* sub0 = display.subDisplays[0];
         if (atom.type == kMTMathAtomLargeOperator && atom.nucleus.length == 1) {
             // These large operators are rendered differently;
-            XCTAssertTrue([sub0 isKindOfClass:[MTLargeGlyphDisplay class]]);
-            MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub0;
+            XCTAssertTrue([sub0 isKindOfClass:[MTGlyphDisplay class]]);
+            MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub0;
             XCTAssertEqualsCGPoint(glyph.position, CGPointZero, 0.01);
             XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
             XCTAssertFalse(glyph.hasScript);
