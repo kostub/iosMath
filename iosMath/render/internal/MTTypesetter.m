@@ -287,10 +287,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
                 
-            case kMTMathAtomAccent:
-                NSAssert(NO, @"These math atom types are not yet implemented.");
-                break;
-                
             case kMTMathAtomBoundary:
                 NSAssert(NO, @"A boundary atom should never be inside a mathlist.");
                 break;
@@ -432,6 +428,27 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
                 MTDisplay* display = [self makeOverline:over];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
+                // add super scripts || subscripts
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+
+            case kMTMathAtomAccent: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Accent is considered as Ord in rule 16.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+
+                MTAccent* accent = (MTAccent*) atom;
+                MTDisplay* display = [self makeAccent:accent];
+                [_displayAtoms addObject:display];
+                _currentPosition.x += display.width;
+
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
@@ -706,7 +723,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     _currentPosition.x += MAX(superScript.width + delta, subscript.width) + _styleFont.mathTable.spaceAfterScript;
 }
 
-#pragma mark Fractions
+#pragma mark - Fractions
 
 - (CGFloat) numeratorShiftUp:(BOOL) hasRule {
     if (hasRule) {
@@ -868,7 +885,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     return innerDisplay;
 }
 
-#pragma mark - Radicals
+#pragma mark Radicals
 
 - (CGFloat) radicalVerticalGap
 {
@@ -1046,25 +1063,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     }
 }
 
-#pragma mark - Scaling
-
-// TeX has this weird scaling by 2^16 to make all the computations
-// using integers rather than floating point. This makes some translations
-// of computations a little difficult. Some helper functions to manage scaling.
-
-static const NSInteger kTexScale = 0x10000; // 2^16
-
-- (NSInteger) scale:(CGFloat) f
-{
-    return (NSInteger) f * kTexScale;
-}
-
-- (CGFloat) descale:(NSInteger) i
-{
-    return ((CGFloat) i) / kTexScale;
-}
-
-#pragma mark - Large delimiters
+#pragma mark Large delimiters
 
 // Delimiter shortfall from plain.tex
 static const NSInteger kDelimiterFactor = 901;
@@ -1124,7 +1123,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     return glyphDisplay;
 }
 
-#pragma mark - Underline/Overline
+#pragma mark Underline/Overline
 
 - (MTDisplay*) makeUnderline:(MTUnderLine*) under
 {
@@ -1149,6 +1148,111 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     overDisplay.descent = innerListDisplay.descent;
     overDisplay.width = innerListDisplay.width;
     return overDisplay;
+}
+
+#pragma mark Accents
+
+// The distance the accent must be moved off center.
+- (CGFloat) getSkew:(MTAccent*) accent accenteeWidth:(CGFloat) width
+{
+    if (accent.innerList.atoms.count != 1) {
+        // Not a single char list.
+        return 0;
+    }
+    MTMathAtom* innerAtom = accent.innerList.atoms[0];
+    if (innerAtom.nucleus.length != 1) {
+        // A complex atom, not a simple char.
+        return 0;
+    }
+    if (accent.nucleus.length == 0) {
+        // No accent
+        return 0;
+    }
+
+    CGGlyph accenteeGlyph = [self findGlyphForCharacterAtIndex:innerAtom.nucleus.length - 1 inString:innerAtom.nucleus];
+    CGFloat accenteeAdjustment = [_styleFont.mathTable getTopAccentAdjustment:accenteeGlyph];
+    if (accenteeAdjustment > 0) {
+        // Skew is the distance the center of the accent must be skewed from the center of the accentee.
+        // Since the top adjustment is from the start of the glyph, we change the origin to the center to get the skew.
+        return (accenteeAdjustment - width/2);
+    } else {
+        // No skew
+        return 0;
+    }
+}
+
+// Find the largest horizontal variant if exists, with width less than max width.
+- (CGGlyph) findVariantGlyph:(CGGlyph) glyph withMaxWidth:(CGFloat) maxWidth glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
+{
+    NSArray<NSNumber*>* variants = [_styleFont.mathTable getHorizontalVariantsForGlyph:glyph];
+    CFIndex numVariants = variants.count;
+    NSAssert(numVariants > 0, @"A glyph is always it's own variant, so number of variants should be > 0");
+    CGGlyph glyphs[numVariants];
+    for (CFIndex i = 0; i < numVariants; i++) {
+        CGGlyph glyph = [variants[i] shortValue];
+        glyphs[i] = glyph;
+    }
+
+    CGGlyph curGlyph = glyphs[0];  // if no other glyph is found, we'll return the first one.
+    CGRect bboxes[numVariants];
+    // Get the bounds for these glyphs
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
+    for (int i = 0; i < numVariants; i++) {
+        CGRect bounds = bboxes[i];
+        CGFloat ascent, descent, width;
+        getBboxDetails(bounds, &ascent, &descent, &width);
+
+        if (width > maxWidth) {
+            if (i == 0) {
+                // glyph dimensions are not yet set
+                *glyphWidth = width;
+                *glyphAscent = ascent;
+                *glyphDescent = descent;
+            }
+            return curGlyph;
+        } else {
+            curGlyph = glyphs[i];
+            *glyphWidth = width;
+            *glyphAscent = ascent;
+            *glyphDescent = descent;
+        }
+    }
+    // We exhausted all the variants and none was larger than the width, so we return the largest
+    return curGlyph;
+}
+
+- (MTDisplay*) makeAccent:(MTAccent*) accent
+{
+    MTMathListDisplay* accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:YES];
+    if (accent.nucleus.length == 0) {
+        // no accent!
+        return accentee;
+    }
+    CGGlyph accentGlyph = [self findGlyphForCharacterAtIndex:accent.nucleus.length - 1 inString:accent.nucleus];
+    CGFloat accenteeWidth = accentee.width;
+    CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth];
+    CGFloat glyphAscent, glyphDescent, glyphWidth;
+    accentGlyph = [self findVariantGlyph:accentGlyph withMaxWidth:accenteeWidth glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
+    CGFloat delta = MIN(accentee.ascent, _styleFont.mathTable.accentBaseHeight);
+
+    // TODO: subscript/superscript business for single char accentees.
+
+    CGFloat shift = skew + (accenteeWidth - glyphWidth)/2;
+    CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
+    CGPoint accentPosition = CGPointMake(shift, height);
+    MTLargeGlyphDisplay* accentGlyphDisplay = [[MTLargeGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
+    accentGlyphDisplay.ascent = glyphAscent;
+    accentGlyphDisplay.descent = glyphDescent;
+    accentGlyphDisplay.width = glyphWidth;
+
+    MTAccentDisplay* display = [[MTAccentDisplay alloc] initWithAccent:accentGlyphDisplay accentee:accentee range:accent.indexRange];
+    display.width = accentee.width;
+    display.descent = accentee.descent;
+    CGFloat ascent = accentee.ascent - delta + glyphAscent;
+    display.ascent = MAX(accentee.ascent, ascent);
+    display.position = _currentPosition;
+
+    return display;
 }
 
 #pragma mark - Table

@@ -281,7 +281,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         // The default env.
         table.interRowAdditionalSpacing = 1;
         table.interColumnSpacing = 0;
-        int cols = table.numColumns;
+        NSInteger cols = table.numColumns;
         for (int i = 0; i < cols; i++) {
             [table setAlignment:kMTColumnAlignmentLeft forColumn:i];
         }

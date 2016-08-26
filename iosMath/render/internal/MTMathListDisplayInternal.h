@@ -95,3 +95,8 @@
 
 @end
 
+@interface MTAccentDisplay ()
+
+- (instancetype)initWithAccent:(MTLargeGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@end

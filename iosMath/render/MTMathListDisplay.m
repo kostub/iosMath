@@ -646,3 +646,51 @@ static BOOL isIos6Supported() {
 }
 
 @end
+
+#pragma mark - MTAccentDisplay
+
+@implementation MTAccentDisplay
+
+- (instancetype)initWithAccent:(MTLargeGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range
+{
+    self = [super init];
+    if (self) {
+        _accent = glyph;
+        _accentee = accentee;
+        _accentee.position = CGPointZero;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    _accentee.textColor = textColor;
+    _accent.textColor = textColor;
+}
+
+- (void) setPosition:(CGPoint)position
+{
+    super.position = position;
+    [self updateAccenteePosition];
+}
+
+- (void) updateAccenteePosition
+{
+    self.accentee.position = CGPointMake(self.position.x, self.position.y);
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [self.accentee draw:context];
+
+    CGContextSaveGState(context);
+    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextSetTextPosition(context, 0, 0);
+
+    [self.accent draw:context];
+
+    CGContextRestoreGState(context);
+}
+@end

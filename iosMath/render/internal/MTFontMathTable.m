@@ -37,7 +37,7 @@
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
         _mathTable = mathTable;
-        if (![@"1.1" isEqualToString:_mathTable[@"version"]]) {
+        if (![@"1.2" isEqualToString:_mathTable[@"version"]]) {
             // Invalid version
             @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                            reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
@@ -456,6 +456,21 @@ static NSString* const kItalic = @"italic";
     NSNumber* val = (NSNumber*) italics[glyphName];
     // if val is nil, this returns 0.
     return [self fontUnitsToPt:val.intValue];
+}
+
+#pragma mark - Top Accent Adjustment
+
+static NSString* const kAccents = @"accents";
+- (CGFloat) getTopAccentAdjustment:(CGGlyph) glyph
+{
+    NSDictionary* accents = (NSDictionary*) _mathTable[kAccents];
+    NSString* glyphName = [self.font getGlyphName:glyph];
+    NSNumber* val = (NSNumber*) accents[glyphName];
+    if (val) {
+        return [self fontUnitsToPt:val.intValue];
+    } else {
+        return -1;
+    }
 }
 
 @end

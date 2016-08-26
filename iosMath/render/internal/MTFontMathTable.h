@@ -104,6 +104,10 @@
 @property (nonatomic, readonly) CGFloat scriptScaleDown;
 @property (nonatomic, readonly) CGFloat scriptScriptScaleDown;
 
+#pragma mark Accent
+
+@property (nonatomic, readonly) CGFloat accentBaseHeight;                              // \fontdimen5 in TeX (x-height)
+
 #pragma mark Variants
 
 /** Returns an NSArray of all the vertical variants of the glyph if any. If
@@ -124,5 +128,11 @@
 /** Returns the italic correction for the given glyph if any. If there
  isn't any this returns 0. */
 - (CGFloat) getItalicCorrection:(CGGlyph) glyph;
+
+#pragma mark Accents
+
+/** Returns the adjustment to the top accent for the given glyph if any.
+ If there isn't any this returns -1. */
+- (CGFloat) getTopAccentAdjustment:(CGGlyph) glyph;
 
 @end
