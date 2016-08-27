@@ -1245,16 +1245,27 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     accentGlyph = [self findVariantGlyph:accentGlyph withMaxWidth:accenteeWidth glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     CGFloat delta = MIN(accentee.ascent, _styleFont.mathTable.accentBaseHeight);
+
     CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
-
-    // TODO: subscript/superscript business for single char accentees.
-
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(skew, height);
     MTGlyphDisplay* accentGlyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
     accentGlyphDisplay.ascent = glyphAscent;
     accentGlyphDisplay.descent = glyphDescent;
     accentGlyphDisplay.width = glyphWidth;
+
+    if ([self isSingleCharAccentee:accent] && (accent.subScript || accent.superScript)) {
+        // Attach the super/subscripts to the accentee instead of the accent.
+        MTMathAtom* innerAtom = accent.innerList.atoms[0];
+        innerAtom.superScript = accent.superScript;
+        innerAtom.subScript = accent.subScript;
+        accent.superScript = nil;
+        accent.subScript = nil;
+        // Remake the accentee (now with sub/superscripts)
+        // Note: Latex adjusts the heights in case the height of the char is different in non-cramped mode. However this shouldn't be the case since cramping
+        // only affects fractions and superscripts. We skip adjusting the heights.
+        accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:_cramped];
+    }
 
     MTAccentDisplay* display = [[MTAccentDisplay alloc] initWithAccent:accentGlyphDisplay accentee:accentee range:accent.indexRange];
     display.width = accentee.width;
