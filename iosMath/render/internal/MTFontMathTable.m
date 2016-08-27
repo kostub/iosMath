@@ -469,7 +469,10 @@ static NSString* const kAccents = @"accents";
     if (val) {
         return [self fontUnitsToPt:val.intValue];
     } else {
-        return -1;
+        // If no top accent is defined then it is the center of the advance width.
+        CGSize advances;
+        CTFontGetAdvancesForGlyphs(self.font.ctFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
+        return advances.width/2;
     }
 }
 

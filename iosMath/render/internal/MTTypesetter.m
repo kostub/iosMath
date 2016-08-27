@@ -1152,33 +1152,42 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 #pragma mark Accents
 
-// The distance the accent must be moved off center.
-- (CGFloat) getSkew:(MTAccent*) accent accenteeWidth:(CGFloat) width
+- (BOOL) isSingleCharAccentee:(MTAccent*) accent
 {
     if (accent.innerList.atoms.count != 1) {
         // Not a single char list.
         return 0;
     }
     MTMathAtom* innerAtom = accent.innerList.atoms[0];
-    if (innerAtom.nucleus.length != 1) {
+    if (innerAtom.nucleus.unicodeLength != 1) {
         // A complex atom, not a simple char.
-        return 0;
+        return NO;
     }
+    if (innerAtom.subScript || innerAtom.superScript) {
+        return NO;
+    }
+    return YES;
+}
+
+// The distance the accent must be moved from the beginning.
+- (CGFloat) getSkew:(MTAccent*) accent accenteeWidth:(CGFloat) width accentGlyph:(CGGlyph) accentGlyph
+{
     if (accent.nucleus.length == 0) {
         // No accent
         return 0;
     }
-
-    CGGlyph accenteeGlyph = [self findGlyphForCharacterAtIndex:innerAtom.nucleus.length - 1 inString:innerAtom.nucleus];
-    CGFloat accenteeAdjustment = [_styleFont.mathTable getTopAccentAdjustment:accenteeGlyph];
-    if (accenteeAdjustment > 0) {
-        // Skew is the distance the center of the accent must be skewed from the center of the accentee.
-        // Since the top adjustment is from the start of the glyph, we change the origin to the center to get the skew.
-        return (accenteeAdjustment - width/2);
+    CGFloat accentAdjustment = [_styleFont.mathTable getTopAccentAdjustment:accentGlyph];
+    CGFloat accenteeAdjustment = 0;
+    if (![self isSingleCharAccentee:accent]) {
+        // use the center of the accentee
+        accenteeAdjustment = width/2;
     } else {
-        // No skew
-        return 0;
+        MTMathAtom* innerAtom = accent.innerList.atoms[0];
+        CGGlyph accenteeGlyph = [self findGlyphForCharacterAtIndex:innerAtom.nucleus.length - 1 inString:innerAtom.nucleus];
+        accenteeAdjustment = [_styleFont.mathTable getTopAccentAdjustment:accenteeGlyph];
     }
+    // The adjustments need to aligned, so skew is just the difference.
+    return (accenteeAdjustment - accentAdjustment);
 }
 
 // Find the largest horizontal variant if exists, with width less than max width.
@@ -1202,20 +1211,20 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         CGFloat ascent, descent;
-        CGFloat width = advances[i].width;
+        CGFloat width = CGRectGetMaxX(bounds);
         getBboxDetails(bounds, &ascent, &descent);
 
         if (width > maxWidth) {
             if (i == 0) {
                 // glyph dimensions are not yet set
-                *glyphWidth = width;
+                *glyphWidth = advances[i].width;
                 *glyphAscent = ascent;
                 *glyphDescent = descent;
             }
             return curGlyph;
         } else {
             curGlyph = glyphs[i];
-            *glyphWidth = width;
+            *glyphWidth = advances[i].width;
             *glyphAscent = ascent;
             *glyphDescent = descent;
         }
@@ -1233,16 +1242,15 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     }
     CGGlyph accentGlyph = [self findGlyphForCharacterAtIndex:accent.nucleus.length - 1 inString:accent.nucleus];
     CGFloat accenteeWidth = accentee.width;
-    CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth];
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     accentGlyph = [self findVariantGlyph:accentGlyph withMaxWidth:accenteeWidth glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     CGFloat delta = MIN(accentee.ascent, _styleFont.mathTable.accentBaseHeight);
+    CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
 
     // TODO: subscript/superscript business for single char accentees.
 
-    CGFloat shift = skew + (accenteeWidth - glyphWidth)/2;
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
-    CGPoint accentPosition = CGPointMake(shift, height);
+    CGPoint accentPosition = CGPointMake(skew, height);
     MTGlyphDisplay* accentGlyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
     accentGlyphDisplay.ascent = glyphAscent;
     accentGlyphDisplay.descent = glyphDescent;

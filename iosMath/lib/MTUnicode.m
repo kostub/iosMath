@@ -20,3 +20,14 @@ const UTF32Char kMTUnicodeMathItalicStart = 0x1D44E;
 const UTF32Char kMTUnicodeMathCapitalItalicStart = 0x1D434;
 const UTF32Char kMTUnicodeGreekMathItalicStart = 0x1D6FC;
 const UTF32Char kMTUnicodeGreekMathCapitalItalicStart = 0x1D6E2;
+
+@implementation NSString (Unicode)
+
+
+- (NSUInteger)unicodeLength
+{
+    // Each unicode char is represented as 4 bytes in utf-32.
+    return [self lengthOfBytesUsingEncoding:NSUTF32StringEncoding] / 4;
+}
+
+@end

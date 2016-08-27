@@ -22,3 +22,10 @@ FOUNDATION_EXPORT const UTF32Char kMTUnicodeMathItalicStart;
 FOUNDATION_EXPORT const UTF32Char kMTUnicodeGreekMathItalicStart;
 FOUNDATION_EXPORT const UTF32Char kMTUnicodeMathCapitalItalicStart;
 FOUNDATION_EXPORT const UTF32Char kMTUnicodeGreekMathCapitalItalicStart;
+
+
+@interface NSString (Unicode)
+
+- (NSUInteger) unicodeLength;
+
+@end

@@ -206,6 +206,11 @@
     
     // large spaces
     self.labels[36] = [self createMathLabel:@"hello\\ from \\quad the \\qquad other\\ side" withHeight:30];
+
+    // Accents
+    self.labels[37] = [self createMathLabel:@"\\vec x \\; \\hat y \\; \\breve {x^2} \\; \\tilde x^2 " withHeight:30];
+    self.labels[38] = [self createMathLabel:@"\\hat{xyz} \\; \\widehat{xyz}\\; \\vec{2ab}" withHeight:30];
+    self.labels[39] = [self createMathLabel:@"\\hat{\\frac12} \\; \\hat{\\sqrt 3}" withHeight:50];
     
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
