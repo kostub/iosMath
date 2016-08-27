@@ -122,7 +122,7 @@ static NSString* mathItalicize(NSString* str) {
     return retval;
 }
 
-static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFloat* width)
+static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 {
     if (ascent) {
         *ascent = MAX(0, CGRectGetMaxY(bbox) - 0);
@@ -131,10 +131,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     if (descent) {
         // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
         *descent = MAX(0, 0 - CGRectGetMinY(bbox));
-    }
-    
-    if (width) {
-        *width = CGRectGetMaxX(bbox);
     }
 }
 
@@ -946,12 +942,15 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
     }
     
     CGRect bboxes[numVariants];
+    CGSize advances[numVariants];
     // Get the bounds for these glyphs
     CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
+    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
     CGFloat ascent, descent, width;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
-        getBboxDetails(bounds, &ascent, &descent, &width);
+        width = advances[i].width;
+        getBboxDetails(bounds, &ascent, &descent);
         
         if (ascent + descent >= height) {
             *glyphAscent = ascent;
@@ -1002,8 +1001,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent, CGFlo
         
         // vertically center
         CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
-        CGFloat ascent, descent, width;
-        getBboxDetails(bbox, &ascent, &descent, &width);
+        CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
+        CGFloat ascent, descent;
+        getBboxDetails(bbox, &ascent, &descent);
         CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
         MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
         glyphDisplay.ascent = ascent;
@@ -1195,12 +1195,15 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
     CGGlyph curGlyph = glyphs[0];  // if no other glyph is found, we'll return the first one.
     CGRect bboxes[numVariants];
+    CGSize advances[numVariants];
     // Get the bounds for these glyphs
     CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
+    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
-        CGFloat ascent, descent, width;
-        getBboxDetails(bounds, &ascent, &descent, &width);
+        CGFloat ascent, descent;
+        CGFloat width = advances[i].width;
+        getBboxDetails(bounds, &ascent, &descent);
 
         if (width > maxWidth) {
             if (i == 0) {
