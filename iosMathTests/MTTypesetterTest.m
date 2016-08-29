@@ -1407,4 +1407,111 @@
     XCTAssertFalse(line2.hasScript);
 }
 
+- (void)testAccent {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:@"hat"];
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    accent.innerList = inner;
+    [mathList addAtom:accent];
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTAccentDisplay class]]);
+    MTAccentDisplay* accentDisp = (MTAccentDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(accentDisp.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
+    XCTAssertNotNil(accentDisp.accentee);
+    XCTAssertNotNil(accentDisp.accent);
+
+    MTMathListDisplay* display2 = accentDisp.accentee;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+
+    MTDisplay* subaccentee = display2.subDisplays[0];
+    XCTAssertTrue([subaccentee isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subaccentee;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+
+    MTGlyphDisplay* glyph = accentDisp.accent;
+    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(11.86, 0), 0.01);
+    XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+    XCTAssertFalse(glyph.hasScript);
+
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 14.68, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 11.44, 0.01);
+}
+
+- (void)testWideAccent {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:@"hat"];
+    accent.innerList = [MTMathAtomFactory mathListForCharacters:@"xyzw"];
+    [mathList addAtom:accent];
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTAccentDisplay class]]);
+    MTAccentDisplay* accentDisp = (MTAccentDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(accentDisp.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
+    XCTAssertNotNil(accentDisp.accentee);
+    XCTAssertNotNil(accentDisp.accent);
+
+    MTMathListDisplay* display2 = accentDisp.accentee;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 4)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+
+    MTDisplay* subaccentee = display2.subDisplays[0];
+    XCTAssertTrue([subaccentee isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subaccentee;
+    XCTAssertEqual(line2.atoms.count, 4);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑥𝑦𝑧𝑤");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 4)));
+    XCTAssertFalse(line2.hasScript);
+
+    MTGlyphDisplay* glyph = accentDisp.accent;
+    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(3.47, 0), 0.01);
+    XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+    XCTAssertFalse(glyph.hasScript);
+
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 14.98, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
+}
+
+
 @end
