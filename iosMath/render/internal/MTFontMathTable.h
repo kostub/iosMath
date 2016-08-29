@@ -104,11 +104,19 @@
 @property (nonatomic, readonly) CGFloat scriptScaleDown;
 @property (nonatomic, readonly) CGFloat scriptScriptScaleDown;
 
+#pragma mark Accent
+
+@property (nonatomic, readonly) CGFloat accentBaseHeight;                              // \fontdimen5 in TeX (x-height)
+
 #pragma mark Variants
 
-/** Returns a CFArray of all the vertical variants of the glyph if any.
- This array needs to be released by the caller. */
-- (nonnull CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph CF_RETURNS_RETAINED;
+/** Returns an NSArray of all the vertical variants of the glyph if any. If
+ there are no variants for the glyph, the array contains the given glyph. */
+- (nonnull NSArray<NSNumber*>*) getVerticalVariantsForGlyph:(CGGlyph) glyph;
+
+/** Returns an NSArray of all the horizontal variants of the glyph if any. If
+ there are no variants for the glyph, the array contains the given glyph. */
+- (nonnull NSArray<NSNumber*>*) getHorizontalVariantsForGlyph:(CGGlyph) glyph;
 
 /** Returns a larger vertical variant of the given glyph if any.
  If there is no larger version, this returns the current glyph.
@@ -120,5 +128,11 @@
 /** Returns the italic correction for the given glyph if any. If there
  isn't any this returns 0. */
 - (CGFloat) getItalicCorrection:(CGGlyph) glyph;
+
+#pragma mark Accents
+
+/** Returns the adjustment to the top accent for the given glyph if any.
+ If there isn't any this returns -1. */
+- (CGFloat) getTopAccentAdjustment:(CGGlyph) glyph;
 
 @end

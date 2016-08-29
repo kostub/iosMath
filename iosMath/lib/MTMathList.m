@@ -64,6 +64,10 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Boundary";
         case kMTMathAtomSpace:
             return @"Space";
+        case kMTMathAtomStyle:
+            return @"Style";
+        case kMTMathAtomTable:
+            return @"Table";
     }
 }
 
@@ -222,6 +226,18 @@ static NSString* typeToText(MTMathAtomType type) {
     self.superScript = atom.superScript;
 }
 
+- (instancetype)finalized
+{
+    MTMathAtom* newNode = [self copy];
+    if (newNode.superScript) {
+        newNode.superScript = newNode.superScript.finalized;
+    }
+    if (newNode.subScript) {
+        newNode.subScript = newNode.subScript.finalized;
+    }
+    return newNode;
+}
+
 @end
 
 #pragma mark - MTFraction
@@ -286,6 +302,14 @@ static NSString* typeToText(MTMathAtomType type) {
     return frac;
 }
 
+- (instancetype)finalized
+{
+    MTFraction* newFrac = [super finalized];
+    newFrac.numerator = newFrac.numerator.finalized;
+    newFrac.denominator = newFrac.denominator.finalized;
+    return newFrac;
+}
+
 @end
 
 #pragma mark - MTRadical
@@ -332,6 +356,14 @@ static NSString* typeToText(MTMathAtomType type) {
     rad.radicand = [self.radicand copyWithZone:zone];
     rad.degree = [self.degree copyWithZone:zone];
     return rad;
+}
+
+- (instancetype)finalized
+{
+    MTRadical* newRad = [super finalized];
+    newRad.radicand = newRad.radicand.finalized;
+    newRad.degree = newRad.degree.finalized;
+    return newRad;
 }
 
 @end
@@ -438,6 +470,13 @@ static NSString* typeToText(MTMathAtomType type) {
     return inner;
 }
 
+- (instancetype)finalized
+{
+    MTInner *newInner = [super finalized];
+    newInner.innerList = newInner.innerList.finalized;
+    return newInner;
+}
+
 @end
 
 #pragma mark - MTOverline
@@ -465,6 +504,13 @@ static NSString* typeToText(MTMathAtomType type) {
     MTOverLine* op = [super copyWithZone:zone];
     op.innerList = [self.innerList copyWithZone:zone];
     return op;
+}
+
+- (instancetype)finalized
+{
+    MTOverLine* newOverline = [super finalized];
+    newOverline.innerList = newOverline.innerList.finalized;
+    return newOverline;
 }
 
 @end
@@ -496,6 +542,13 @@ static NSString* typeToText(MTMathAtomType type) {
     return op;
 }
 
+- (instancetype)finalized
+{
+    MTUnderLine* newUnderline = [super finalized];
+    newUnderline.innerList = newUnderline.innerList.finalized;
+    return newUnderline;
+}
+
 @end
 
 #pragma mark - MTAccent
@@ -523,6 +576,13 @@ static NSString* typeToText(MTMathAtomType type) {
     MTAccent* op = [super copyWithZone:zone];
     op.innerList = [self.innerList copyWithZone:zone];
     return op;
+}
+
+- (instancetype)finalized
+{
+    MTAccent* newAccent = [super finalized];
+    newAccent.innerList = newAccent.innerList.finalized;
+    return newAccent;
 }
 
 @end
@@ -559,10 +619,184 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @end
 
+#pragma mark - MTMathStyle
+
+@implementation MTMathStyle
+
+- (instancetype)initWithStyle:(MTLineStyle)style
+{
+    self = [super initWithType:kMTMathAtomStyle value:@""];
+    if (self) {
+        _style = style;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomStyle) {
+        return [self initWithStyle:kMTLineStyleDisplay];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathStyle initWithType:value:] cannot be called. Use [MTMathStyle initWithStyle:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathStyle* op = [super copyWithZone:zone];
+    op->_style = self.style;
+    return op;
+}
+
+@end
+
+#pragma mark - MTMathTable
+
+@interface MTMathTable ()
+
+@property (nonatomic, nonnull) NSMutableArray<NSNumber*>* alignments;
+@property (nonatomic, nonnull) NSMutableArray<NSMutableArray<MTMathList*>*>* cells;
+
+@end
+
+@implementation MTMathTable
+
+- (instancetype)initWithEnvironment:(NSString *)env
+{
+    self = [super initWithType:kMTMathAtomTable value:@""];
+    if (self) {
+        self.alignments = [NSMutableArray array];
+        self.cells = [NSMutableArray array];
+        self.interRowAdditionalSpacing = 0;
+        self.interColumnSpacing = 0;
+        _environment = env;
+    }
+    return self;
+}
+
+- (instancetype)init
+{
+    return [self initWithEnvironment:nil];
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomTable) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathTable initWithType:value:] cannot be called. Use [MTMathTable init] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathTable* op = [super copyWithZone:zone];
+    op.interRowAdditionalSpacing = self.interRowAdditionalSpacing;
+    op.interColumnSpacing = self.interColumnSpacing;
+    op->_environment = self.environment;
+    op.alignments = [NSMutableArray arrayWithArray:self.alignments];
+    // Perform a deep copy of the cells.
+    NSMutableArray* cellCopy = [NSMutableArray arrayWithCapacity:self.cells.count];
+    for (NSMutableArray* row in self.cells) {
+        [cellCopy addObject:[[NSMutableArray alloc] initWithArray:row copyItems:YES]];
+    }
+    op.cells = cellCopy;
+    return op;
+}
+
+- (instancetype)finalized
+{
+    MTMathTable* table = [super finalized];
+    for (NSMutableArray<MTMathList*>* row in table.cells) {
+        for (int i = 0; i < row.count; i++) {
+            row[i] = row[i].finalized;
+        }
+    }
+    return table;
+}
+
+- (void)setCell:(MTMathList *)list forRow:(NSInteger)row column:(NSInteger)column
+{
+    NSParameterAssert(list);
+    
+    if (self.cells.count <= row) {
+        // Add more rows
+        for (NSInteger i = self.cells.count;  i <= row; i++) {
+            _cells[i] = [NSMutableArray array];
+        }
+    }
+    NSMutableArray<MTMathList*> *rowArray = _cells[row];
+    if (rowArray.count <= column) {
+        // Add more columns
+        for (NSInteger i = rowArray.count;  i < column; i++) {
+            rowArray[i] = [[MTMathList alloc] init];
+        }
+    }
+    rowArray[column] = list;
+}
+
+- (void)setAlignment:(MTColumnAlignment)alignment forColumn:(NSInteger)column
+{
+    if (self.alignments.count < column) {
+        // Add more columns
+        for (NSInteger i = self.alignments.count; i < column; i++) {
+            _alignments[i] = @(kMTColumnAlignmentCenter);
+        }
+    }
+    _alignments[column] = @(alignment);
+}
+
+- (MTColumnAlignment)getAlignmentForColumn:(NSInteger)column
+{
+    if (self.alignments.count <= column) {
+        return kMTColumnAlignmentCenter;
+    } else {
+        return self.alignments[column].integerValue;
+    }
+}
+
+- (NSUInteger) numColumns
+{
+    NSUInteger numColumns = 0;
+    for (NSArray* row in self.cells) {
+        numColumns = MAX(numColumns, row.count);
+    }
+    return numColumns;
+}
+
+- (NSUInteger) numRows
+{
+    return self.cells.count;
+}
+
+@end
+
 #pragma mark - MTMathList
 
 @implementation MTMathList {
     NSMutableArray* _atoms;
+}
+
++ (instancetype)mathListWithAtoms:(MTMathAtom *)firstAtom, ...
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    va_list args;
+    va_start(args, firstAtom);
+    for (MTMathAtom* atom = firstAtom; atom != nil; atom = va_arg(args, MTMathAtom*))
+    {
+        [list addAtom:atom];
+    }
+    va_end(args);
+    return list;
+}
+
++ (instancetype)mathListWithAtomsArray:(NSArray<MTMathAtom *> *)atoms
+{
+    MTMathList* list = [[MTMathList alloc] init];
+    [list->_atoms addObjectsFromArray:atoms];
+    return list;
 }
 
 - (instancetype)init
@@ -643,19 +877,13 @@ static NSString* typeToText(MTMathAtomType type) {
     
     MTMathAtom* prevNode = nil;
     for (MTMathAtom* atom in self.atoms) {
-        MTMathAtom* newNode = [atom copy];
+        MTMathAtom* newNode = [atom finalized];
         // Each character is given a separate index.
         if (NSEqualRanges(zeroRange, atom.indexRange)) {
             NSUInteger index = (prevNode == nil) ? 0 : prevNode.indexRange.location + prevNode.indexRange.length;
             newNode.indexRange = NSMakeRange(index, 1);
         }
-        if (newNode.superScript) {
-            newNode.superScript = newNode.superScript.finalized;
-        }
-        if (newNode.subScript) {
-            newNode.subScript = newNode.subScript.finalized;
-        }
-        
+
         switch (newNode.type) {
             case kMTMathAtomBinaryOperator: {
                 if (isNotBinaryOperator(prevNode)) {
@@ -679,50 +907,6 @@ static NSString* typeToText(MTMathAtomType type) {
                     continue;
                 }
                 break;
-                
-            case kMTMathAtomFraction: {
-                MTFraction* frac = (MTFraction*) atom;
-                MTFraction* newFrac = (MTFraction*) newNode;
-                newFrac.numerator = frac.numerator.finalized;
-                newFrac.denominator = frac.denominator.finalized;
-                break;
-            }
-
-            case kMTMathAtomRadical: {
-                MTRadical* rad = (MTRadical*) atom;
-                MTRadical* newRad = (MTRadical*) newNode;
-                newRad.radicand = rad.radicand.finalized;
-                newRad.degree = rad.degree.finalized;
-                break;
-            }
-                
-            case kMTMathAtomInner: {
-                MTInner *inner = (MTInner*) atom;
-                MTInner *newInner = (MTInner*) newNode;
-                newInner.innerList = inner.innerList.finalized;
-                break;
-            }
-                
-            case kMTMathAtomUnderline: {
-                MTUnderLine* underline = (MTUnderLine*) atom;
-                MTUnderLine* newUnderline = (MTUnderLine*) newNode;
-                newUnderline.innerList = underline.innerList.finalized;
-                break;
-            }
-                
-            case kMTMathAtomOverline: {
-                MTOverLine* overLine = (MTOverLine*) atom;
-                MTOverLine* newOverline = (MTOverLine*) newNode;
-                newOverline.innerList = overLine.innerList.finalized;
-                break;
-            }
-                
-            case kMTMathAtomAccent: {
-                MTAccent* accent = (MTAccent*) atom;
-                MTAccent* newAccent = (MTAccent*) newNode;
-                newAccent.innerList = accent.innerList.finalized;
-                break;
-            }
                 
             default:
                 break;

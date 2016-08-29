@@ -65,11 +65,7 @@
 }
 
 - (void)testMultipleVariables {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'z']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'w']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"xyzw"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -100,11 +96,7 @@
 }
 
 - (void)testVariablesAndNumbers {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'2']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'w']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"xy2w"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -135,13 +127,7 @@
 }
 
 - (void)testEquationWithOperatorsAndRelations {
-    MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'2']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'+']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'3']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'=']];
-    [mathList addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:@"2x+3=y"];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
     XCTAssertNotNil(display);
@@ -174,6 +160,11 @@
 #define XCTAssertEqualsCGPoint(p1, p2, accuracy, ...) \
     XCTAssertEqualWithAccuracy(p1.x, p2.x, accuracy, __VA_ARGS__); \
     XCTAssertEqualWithAccuracy(p1.y, p2.y, accuracy, __VA_ARGS__)
+
+
+#define XCTAssertEqualNSRange(r1, r2, ...) \
+    XCTAssertEqual(r1.location, r2.location, __VA_ARGS__); \
+    XCTAssertEqual(r1.length, r2.length, __VA_ARGS__)
 
 - (void)testSuperscript {
     MTMathList* mathList = [[MTMathList alloc] init];
@@ -375,7 +366,7 @@
 
     MTMathListDisplay* display2 = radical.radicand;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(17.08, 0), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(16.66, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -393,7 +384,7 @@
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 27.08, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 26.66, 0.01);
 }
 
 - (void)testRadicalWithDegree {
@@ -427,7 +418,7 @@
     
     MTMathListDisplay* display2 = radical.radicand;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(17.08, 0), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(16.66, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -462,7 +453,7 @@
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 27.08, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 26.66, 0.01);
 }
 
 - (void)testFraction {
@@ -637,8 +628,8 @@
     XCTAssertEqual(display0.subDisplays.count, 3);
     
     MTDisplay* subLeft = display0.subDisplays[0];
-    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue([subLeft isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) subLeft;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
@@ -648,13 +639,13 @@
     MTFractionDisplay* fraction = (MTFractionDisplay*) subFrac;
     XCTAssertTrue(NSEqualRanges(fraction.range, NSMakeRange(0, 1)));
     XCTAssertFalse(fraction.hasScript);
-    XCTAssertEqualsCGPoint(fraction.position, CGPointMake(13.66, 0), 0.01);
+    XCTAssertEqualsCGPoint(fraction.position, CGPointMake(14.72, 0), 0.01);
     XCTAssertNotNil(fraction.numerator);
     XCTAssertNotNil(fraction.denominator);
     
     MTMathListDisplay* display2 = fraction.numerator;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(13.66, 13.54), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(14.72, 13.54), 0.01);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -671,7 +662,7 @@
     
     MTMathListDisplay* display3 = fraction.denominator;
     XCTAssertEqual(display3.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display3.position, CGPointMake(13.66, -13.72), 0.01);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(14.72, -13.72), 0.01);
     XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display3.hasScript);
     XCTAssertEqual(display3.index, NSNotFound);
@@ -687,21 +678,21 @@
     XCTAssertFalse(line3.hasScript);
     
     MTDisplay* subRight = display0.subDisplays[2];
-    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
-    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(23.66, 0), 0.01);
+    XCTAssertTrue([subRight isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) subRight;
+    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(24.72, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 28.92, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 18.94, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 33.88, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 39.44, 0.01);
 }
 
 - (void)testLargeOpNoLimitsText {
     MTMathList* mathList = [[MTMathList alloc] init];
-    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbol:@"sin"]];
+    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"sin"]];
     [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
@@ -739,7 +730,7 @@
 - (void)testLargeOpNoLimitsSymbol {
     MTMathList* mathList = [[MTMathList alloc] init];
     // Integral
-    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbol:@"int"]];
+    [mathList addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"int"]];
     [mathList addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
@@ -752,8 +743,8 @@
     XCTAssertEqual(display.subDisplays.count, 2);
     
     MTDisplay* sub0 = display.subDisplays[0];
-    XCTAssertTrue([sub0 isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub0;
+    XCTAssertTrue([sub0 isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub0;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)));
     XCTAssertFalse(glyph.hasScript);
@@ -763,19 +754,19 @@
     MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub1;
     XCTAssertEqual(line2.atoms.count, 1);
     XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
-    XCTAssertEqualsCGPoint(line2.position, CGPointMake(22.213, 0), 0.01);
+    XCTAssertEqualsCGPoint(line2.position, CGPointMake(23.313, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 27.22, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 17.24, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 33.653, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 34.753, 0.01);
 }
 
 - (void)testLargeOpNoLimitsSymbolWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
     // Integral
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"int"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"int"];
     op.superScript = [[MTMathList alloc] init];
     [op.superScript addAtom:[MTMathAtomFactory atomForCharacter:'1']];
     op.subScript = [[MTMathList alloc] init];
@@ -796,7 +787,7 @@
     XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
     MTMathListDisplay* display0 = (MTMathListDisplay*) sub0;
     XCTAssertEqual(display0.type, kMTLinePositionSuperscript);
-    XCTAssertEqualsCGPoint(display0.position, CGPointMake(18.88, 23.72), 0.01);
+    XCTAssertEqualsCGPoint(display0.position, CGPointMake(19.98, 23.72), 0.01);
     XCTAssertTrue(NSEqualRanges(display0.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display0.hasScript);
     XCTAssertEqual(display0.index, 0);
@@ -815,7 +806,7 @@
     MTMathListDisplay* display1 = (MTMathListDisplay*) sub1;
     XCTAssertEqual(display1.type, kMTLinePositionSubscript);
     // Due to italic correction, positioned before subscript.
-    XCTAssertEqualsCGPoint(display1.position, CGPointMake(7.06, -20.04), 0.01);
+    XCTAssertEqualsCGPoint(display1.position, CGPointMake(8.16, -20.04), 0.01);
     XCTAssertTrue(NSEqualRanges(display1.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display1.hasScript);
     XCTAssertEqual(display1.index, 0);
@@ -830,8 +821,8 @@
     XCTAssertFalse(line3.hasScript);
     
     MTDisplay* sub2 = display.subDisplays[2];
-    XCTAssertTrue([sub2 isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) sub2;
+    XCTAssertTrue([sub2 isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub2;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)));
     XCTAssertTrue(glyph.hasScript); // There are subscripts and superscripts
@@ -841,21 +832,21 @@
     MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub3;
     XCTAssertEqual(line2.atoms.count, 1);
     XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
-    XCTAssertEqualsCGPoint(line2.position, CGPointMake(30.333, 0), 0.01);
+    XCTAssertEqualsCGPoint(line2.position, CGPointMake(31.433, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line1.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 33.044, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 20.362, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 41.773, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 42.873, 0.01);
 }
 
 
 - (void)testLargeOpWithLimitsTextWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"lim"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"lim"];
     op.subScript = [[MTMathList alloc] init];
-    [op.subScript addAtom:[MTMathAtomFactory atomForLatexSymbol:@"infty"]];
+    [op.subScript addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"infty"]];
     [mathList addAtom:op];
     [mathList addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"]];
     
@@ -909,9 +900,9 @@
 
 - (void)testLargeOpWithLimitsSymboltWithScripts {
     MTMathList* mathList = [[MTMathList alloc] init];
-    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbol:@"sum"];
+    MTMathAtom* op = [MTMathAtomFactory atomForLatexSymbolName:@"sum"];
     op.superScript = [[MTMathList alloc] init];
-    [op.superScript addAtom:[MTMathAtomFactory atomForLatexSymbol:@"infty"]];
+    [op.superScript addAtom:[MTMathAtomFactory atomForLatexSymbolName:@"infty"]];
     op.subScript = [[MTMathList alloc] init];
     [op.subScript addAtom:[MTMathAtomFactory atomForCharacter:'0']];
     [mathList addAtom:op];
@@ -937,7 +928,7 @@
     
     MTMathListDisplay* display2 = largeOp.lowerLimit;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.38, -21.684), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.94, -21.684), 0.01);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -953,7 +944,7 @@
     
     MTMathListDisplay* displayU = largeOp.upperLimit;
     XCTAssertEqual(displayU.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(6.89, 23.168), 0.01);
+    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(7.44, 23.168), 0.01);
     XCTAssertTrue(NSEqualRanges(displayU.range, NSMakeRange(0, 1)));
     XCTAssertFalse(displayU.hasScript);
     XCTAssertEqual(displayU.index, NSNotFound);
@@ -972,13 +963,13 @@
     MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub3;
     XCTAssertEqual(line2.atoms.count, 1);
     XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
-    XCTAssertEqualsCGPoint(line2.position, CGPointMake(31.0933, 0), 0.01);
+    XCTAssertEqualsCGPoint(line2.position, CGPointMake(32.2133, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 29.356, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 22.006, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 42.533, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 43.653, 0.01);
 }
 
 - (void)testInner {
@@ -987,7 +978,7 @@
     MTInner* inner = [[MTInner alloc] init];
     inner.innerList = innerList;
     inner.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
-    inner.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@"("];
+    inner.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:@")"];
     
     MTMathList* mathList = [[MTMathList alloc] init];
     [mathList addAtom:inner];
@@ -1012,8 +1003,8 @@
     XCTAssertEqual(display2.subDisplays.count, 3);
     
     MTDisplay* subLeft = display2.subDisplays[0];
-    XCTAssertTrue([subLeft isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph = (MTLargeGlyphDisplay*) subLeft;
+    XCTAssertTrue([subLeft isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) subLeft;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
@@ -1022,7 +1013,7 @@
     XCTAssertTrue([sub3 isKindOfClass:[MTMathListDisplay class]]);
     MTMathListDisplay* display3 = (MTMathListDisplay*) sub3;
     XCTAssertEqual(display3.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display3.position, CGPointMake(6.66, 0), 0.01);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(7.78, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display3.hasScript);
     XCTAssertEqual(display3.index, NSNotFound);
@@ -1038,9 +1029,9 @@
     XCTAssertFalse(line.hasScript);
     
     MTDisplay* subRight = display2.subDisplays[2];
-    XCTAssertTrue([subRight isKindOfClass:[MTLargeGlyphDisplay class]]);
-    MTLargeGlyphDisplay* glyph2 = (MTLargeGlyphDisplay*) subRight;
-    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(18.1, 0), 0.01);
+    XCTAssertTrue([subRight isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) subRight;
+    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(19.22, 0), 0.01);
     XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
     
@@ -1051,7 +1042,7 @@
     
     XCTAssertEqualWithAccuracy(display.ascent, 14.96, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.98, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 24.76, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 27, 0.01);
 }
 
 - (void)testOverline {
@@ -1206,7 +1197,321 @@
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 21.308, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 82.29, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 81.448, 0.01);
 }
+
+- (void) testMathTable
+{
+    MTMathList* c00 = [MTMathAtomFactory mathListForCharacters:@"1"];
+    MTMathList* c01 = [MTMathAtomFactory mathListForCharacters:@"y+z"];
+    MTMathList* c02 = [MTMathAtomFactory mathListForCharacters:@"y"];
+    
+    MTMathList* c11 = [[MTMathList alloc] init];
+    [c11 addAtom:[MTMathAtomFactory fractionWithNumeratorStr:@"1" denominatorStr:@"2x"]];
+    MTMathList* c12 = [MTMathAtomFactory mathListForCharacters:@"x-y"];
+    
+    MTMathList* c20 = [MTMathAtomFactory mathListForCharacters:@"x+5"];
+    MTMathList* c22 = [MTMathAtomFactory mathListForCharacters:@"12"];
+
+    
+    MTMathTable* table = [[MTMathTable alloc] init];
+    [table setCell:c00 forRow:0 column:0];
+    [table setCell:c01 forRow:0 column:1];
+    [table setCell:c02 forRow:0 column:2];
+    [table setCell:c11 forRow:1 column:1];
+    [table setCell:c12 forRow:1 column:2];
+    [table setCell:c20 forRow:2 column:0];
+    [table setCell:c22 forRow:2 column:2];
+    
+    // alignments
+    [table setAlignment:kMTColumnAlignmentRight forColumn:0];
+    [table setAlignment:kMTColumnAlignmentLeft forColumn:2];
+    
+    table.interColumnSpacing = 18; // 1 quad
+    
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:table];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
+    
+    MTMathListDisplay* display2 = (MTMathListDisplay*) sub0;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertEqualNSRange(display2.range, NSMakeRange(0, 1));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 3);
+    CGFloat rowPos[3] = { 30.31, -2.67, -31.95};
+    // alignment is right, center, left.
+    CGFloat cellPos[3][3] = { { 35.89, 65.89, 129.438 }, { 45.89, 76.94, 129.438}, { 0, 87.66, 129.438}};
+    // check the 3 rows of the matrix
+    for (int i = 0; i < 3; i++) {
+        MTDisplay* sub0i = display2.subDisplays[i];
+        XCTAssertTrue([sub0i isKindOfClass:[MTMathListDisplay class]]);
+        
+        MTMathListDisplay* row = (MTMathListDisplay*) sub0i;
+        XCTAssertEqual(row.type, kMTLinePositionRegular);
+        XCTAssertEqualsCGPoint(row.position, CGPointMake(0, rowPos[i]), 0.01);
+        XCTAssertTrue(NSEqualRanges(row.range, NSMakeRange(0, 3)));
+        XCTAssertFalse(row.hasScript);
+        XCTAssertEqual(row.index, NSNotFound);
+        XCTAssertEqual(row.subDisplays.count, 3);
+        
+        for (int j = 0; j < 3; j++) {
+            MTDisplay* sub0ij = row.subDisplays[j];
+            XCTAssertTrue([sub0ij isKindOfClass:[MTMathListDisplay class]]);
+            
+            MTMathListDisplay* col = (MTMathListDisplay*) sub0ij;
+            XCTAssertEqual(col.type, kMTLinePositionRegular);
+            XCTAssertEqualsCGPoint(col.position, CGPointMake(cellPos[i][j], 0) ,0.01);
+            XCTAssertFalse(col.hasScript);
+            XCTAssertEqual(col.index, NSNotFound);
+        }
+    }
+}
+
+- (void) testLatexSymbols
+{
+    // Test all latex symbols
+    NSArray<NSString*>* allSymbols = [MTMathAtomFactory supportedLatexSymbolNames];
+    for (NSString* symName in allSymbols) {
+        MTMathList* list = [[MTMathList alloc] init];
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:symName];
+        XCTAssertNotNil(atom);
+        if (atom.type >= kMTMathAtomBoundary) {
+            // Skip these types as they aren't symbols.
+            continue;
+        }
+        
+        [list addAtom:atom];
+        
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"Symbol %@", symName);
+        
+        XCTAssertEqual(display.type, kMTLinePositionRegular);
+        XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+        XCTAssertEqualNSRange(display.range, NSMakeRange(0, 1));
+        XCTAssertFalse(display.hasScript);
+        XCTAssertEqual(display.index, NSNotFound);
+        XCTAssertEqual(display.subDisplays.count, 1, @"Symbol %@", symName);
+        
+        MTDisplay* sub0 = display.subDisplays[0];
+        if (atom.type == kMTMathAtomLargeOperator && atom.nucleus.length == 1) {
+            // These large operators are rendered differently;
+            XCTAssertTrue([sub0 isKindOfClass:[MTGlyphDisplay class]]);
+            MTGlyphDisplay* glyph = (MTGlyphDisplay*) sub0;
+            XCTAssertEqualsCGPoint(glyph.position, CGPointZero, 0.01);
+            XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+            XCTAssertFalse(glyph.hasScript);
+        } else {
+            XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]], @"Symbol %@", symName);
+            MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+            XCTAssertEqual(line.atoms.count, 1);
+            if (atom.type != kMTMathAtomVariable) {
+                XCTAssertEqualObjects(line.attributedString.string, atom.nucleus);
+            }
+            XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+            XCTAssertEqualNSRange(line.range, NSMakeRange(0, 1));
+            XCTAssertFalse(line.hasScript);
+        }
+        
+        // dimensions
+        XCTAssertEqual(display.ascent, sub0.ascent);
+        XCTAssertEqual(display.descent, sub0.descent);
+        XCTAssertEqual(display.width, sub0.width);
+        
+        // All chars will occupy some space.
+        if (![atom.nucleus isEqualToString:@" "]) {
+            // all chars except space have height
+            XCTAssertGreaterThan(display.ascent + display.descent, 0, @"Symbol %@", symName);
+        }
+        // all chars have a width.
+        XCTAssertGreaterThan(display.width, 0);
+    }
+}
+
+- (void) testStyleChanges
+{
+    MTFraction* frac = [MTMathAtomFactory fractionWithNumeratorStr:@"1" denominatorStr:@"2"];
+    MTMathList* list = [MTMathList mathListWithAtoms:frac, nil];
+    MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+    MTMathList* textList = [MTMathList mathListWithAtoms:style, frac, nil];
+    
+    // This should make the display same as text.
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:textList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* textDisplay = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleText];
+    MTMathListDisplay* originalDisplay = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    
+    // Display should be the same as rendering the fraction in text style.
+    XCTAssertEqual(display.ascent, textDisplay.ascent);
+    XCTAssertEqual(display.descent, textDisplay.descent);
+    XCTAssertEqual(display.width, textDisplay.width);
+    
+    // Original display should be larger than display since it is greater.
+    XCTAssertGreaterThan(originalDisplay.ascent, display.ascent);
+    XCTAssertGreaterThan(originalDisplay.descent, display.descent);
+    XCTAssertGreaterThan(originalDisplay.width, display.width);
+}
+
+- (void) testStyleMiddle
+{
+    MTMathAtom* atom1 = [MTMathAtomFactory atomForCharacter:'x'];
+    MTMathAtom* style1 = [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript];
+    MTMathAtom* atom2 = [MTMathAtomFactory atomForCharacter:'y'];
+    MTMathAtom* style2 = [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript];
+    MTMathAtom* atom3 = [MTMathAtomFactory atomForCharacter:'z'];
+    MTMathList* list = [MTMathList mathListWithAtoms:atom1, style1, atom2, style2, atom3, nil];
+    
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertEqualNSRange(display.range, NSMakeRange(0, 5));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 3);
+    
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+    XCTAssertEqual(line.atoms.count, 1);
+    XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+    XCTAssertEqualNSRange(line.range, NSMakeRange(0, 1));
+    XCTAssertFalse(line.hasScript);
+    
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line1 = (MTCTLineDisplay*) sub1;
+    XCTAssertEqual(line1.atoms.count, 1);
+    XCTAssertEqualObjects(line1.attributedString.string, @"𝑦");
+    XCTAssertEqualNSRange(line1.range, NSMakeRange(2, 1));
+    XCTAssertFalse(line1.hasScript);
+    
+    MTDisplay* sub2 = display.subDisplays[2];
+    XCTAssertTrue([sub2 isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) sub2;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑧");
+    XCTAssertEqualNSRange(line2.range, NSMakeRange(4, 1));
+    XCTAssertFalse(line2.hasScript);
+}
+
+- (void)testAccent {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:@"hat"];
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    accent.innerList = inner;
+    [mathList addAtom:accent];
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTAccentDisplay class]]);
+    MTAccentDisplay* accentDisp = (MTAccentDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(accentDisp.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
+    XCTAssertNotNil(accentDisp.accentee);
+    XCTAssertNotNil(accentDisp.accent);
+
+    MTMathListDisplay* display2 = accentDisp.accentee;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+
+    MTDisplay* subaccentee = display2.subDisplays[0];
+    XCTAssertTrue([subaccentee isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subaccentee;
+    XCTAssertEqual(line2.atoms.count, 1);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑥");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(line2.hasScript);
+
+    MTGlyphDisplay* glyph = accentDisp.accent;
+    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(11.86, 0), 0.01);
+    XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+    XCTAssertFalse(glyph.hasScript);
+
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 14.68, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 11.44, 0.01);
+}
+
+- (void)testWideAccent {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:@"hat"];
+    accent.innerList = [MTMathAtomFactory mathListForCharacters:@"xyzw"];
+    [mathList addAtom:accent];
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.index, NSNotFound);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTAccentDisplay class]]);
+    MTAccentDisplay* accentDisp = (MTAccentDisplay*) sub0;
+    XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(accentDisp.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
+    XCTAssertNotNil(accentDisp.accentee);
+    XCTAssertNotNil(accentDisp.accent);
+
+    MTMathListDisplay* display2 = accentDisp.accentee;
+    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertEqualsCGPoint(display2.position, CGPointZero, 0.01);
+    XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 4)));
+    XCTAssertFalse(display2.hasScript);
+    XCTAssertEqual(display2.index, NSNotFound);
+    XCTAssertEqual(display2.subDisplays.count, 1);
+
+    MTDisplay* subaccentee = display2.subDisplays[0];
+    XCTAssertTrue([subaccentee isKindOfClass:[MTCTLineDisplay class]]);
+    MTCTLineDisplay* line2 = (MTCTLineDisplay*) subaccentee;
+    XCTAssertEqual(line2.atoms.count, 4);
+    XCTAssertEqualObjects(line2.attributedString.string, @"𝑥𝑦𝑧𝑤");
+    XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 4)));
+    XCTAssertFalse(line2.hasScript);
+
+    MTGlyphDisplay* glyph = accentDisp.accent;
+    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(3.47, 0), 0.01);
+    XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
+    XCTAssertFalse(glyph.hasScript);
+
+    // dimensions
+    XCTAssertEqualWithAccuracy(display.ascent, 14.98, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
+}
+
 
 @end
