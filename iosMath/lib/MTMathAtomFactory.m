@@ -286,9 +286,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             [table setAlignment:kMTColumnAlignmentLeft forColumn:i];
         }
         return table;
-    } else if ([env isEqualToString:@"eqalign"] || [env isEqualToString:@"split"]) {
+    } else if ([env isEqualToString:@"eqalign"] || [env isEqualToString:@"split"] || [env isEqualToString:@"aligned"]) {
         if (table.numColumns != 2) {
-            NSString* message = @"eqalign environment can only have 2 columns";
+            NSString* message = [NSString stringWithFormat:@"%@ environment can only have 2 columns", env];
             *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
             return nil;
         }
@@ -299,7 +299,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         return table;
     } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"]) {
         if (table.numColumns != 1) {
-            NSString* message = @"displaylines environment can only have 1 column";
+            NSString* message = [NSString stringWithFormat:@"%@ environment can only have 2 columns", env];
             *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
             return nil;
         }
