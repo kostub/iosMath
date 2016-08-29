@@ -699,6 +699,13 @@ NSString *const MTParseError = @"ParseError";
                             cell = [MTMathList mathListWithAtomsArray:atoms];
                         }
                     }
+                    if ([table.environment isEqualToString:@"eqalign"] || [table.environment isEqualToString:@"aligned"] || [table.environment isEqualToString:@"split"]) {
+                        if (j == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
+                            // Empty nucleus added for spacing. Remove it.
+                            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count-1)];
+                            cell = [MTMathList mathListWithAtomsArray:atoms];
+                        }
+                    }
                     [str appendString:[self mathListToString:cell]];
                     if (j < row.count - 1) {
                         [str appendString:@"&"];

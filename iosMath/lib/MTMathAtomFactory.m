@@ -292,6 +292,14 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
             return nil;
         }
+        // Add a spacer before each of the second column elements. This is to create the correct spacing for = and other releations.
+        MTMathAtom* spacer = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+        for (int i = 0; i < table.cells.count; i++) {
+            NSArray<MTMathList*>* row = table.cells[i];
+            if (row.count >= 1) {
+                [row[1] insertAtom:spacer atIndex:0];
+            }
+        }
         table.interRowAdditionalSpacing = 1;
         table.interColumnSpacing = 0;
         [table setAlignment:kMTColumnAlignmentRight forColumn:0];

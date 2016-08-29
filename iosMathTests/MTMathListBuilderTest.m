@@ -1056,7 +1056,8 @@ static NSArray* getTestDataLeftRight() {
 {
     NSString *str1 = @"\\begin{eqalign}x&y\\\\ z&w\\end{eqalign}";
     NSString *str2 = @"\\begin{split}x&y\\\\ z&w\\end{split}";
-    for (NSString* str in @[str1, str2]) {
+    NSString *str3 = @"\\begin{aligned}x&y\\\\ z&w\\end{aligned}";
+    for (NSString* str in @[str1, str2, str3]) {
         MTMathList* list = [MTMathListBuilder buildFromString:str];
         
         XCTAssertNotNil(list);
@@ -1074,9 +1075,14 @@ static NSArray* getTestDataLeftRight() {
             XCTAssertEqual(alignment, (i == 0) ? kMTColumnAlignmentRight: kMTColumnAlignmentLeft);
             for (int j = 0; j < 2; j++) {
                 MTMathList* cell = table.cells[j][i];
-                XCTAssertEqual(cell.atoms.count, 1);
-                MTMathAtom* atom = cell.atoms[0];
-                XCTAssertEqual(atom.type, kMTMathAtomVariable);
+                if (i == 0) {
+                    XCTAssertEqual(cell.atoms.count, 1);
+                    MTMathAtom* atom = cell.atoms[0];
+                    XCTAssertEqual(atom.type, kMTMathAtomVariable);
+                } else {
+                    XCTAssertEqual(cell.atoms.count, 2);
+                    [self checkAtomTypes:cell types:@[@(kMTMathAtomOrdinary), @(kMTMathAtomVariable)] desc:str];
+                }
             }
         }
         
