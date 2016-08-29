@@ -307,7 +307,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         return table;
     } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"]) {
         if (table.numColumns != 1) {
-            NSString* message = [NSString stringWithFormat:@"%@ environment can only have 2 columns", env];
+            NSString* message = [NSString stringWithFormat:@"%@ environment can only have 1 column", env];
             *error = [NSError errorWithDomain:MTParseError code:MTParseErrorInvalidNumColumns userInfo:@{ NSLocalizedDescriptionKey : message }];
             return nil;
         }
