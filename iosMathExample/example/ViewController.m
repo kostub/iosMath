@@ -128,6 +128,10 @@
                            "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T C_m^{(s)-1} \\right) "
                            "" withHeight:90];
 
+    self.demoLabels[20] = [self createMathLabel:@"f(x) = \\begin{cases}"
+                           "\\frac{e^x}{2} & x \\geq 0 \\\\"
+                           "1 & x < 0"
+                           "\\end{cases}" withHeight:60];
 
 
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
