@@ -1,5 +1,19 @@
 ## Changelog
 
+### v0.9.0 (2016-08-29)
+* Added support for matrix environments (matrix, pmatrix, bmatrix,
+  Bmatrix, vmatrix, Vmatrix)
+* Added support for equation alignment (eqalign, displaylines, gather,
+  split, aligned, eqnarray)
+* Added support for the \\\\ command to split long equations
+* Added support for math accents (e.g. \\hat, \\tilde etc.)
+* Added support for `cases` environment.
+* Added support for style commands (e.g. \\displaystyle etc.)
+* Improve rendering of square roots and large symbols
+* API changes:
+  * Updated API for `MTMathAtomFactory`.
+  * Rename `MTLargeGlyphDisplay` to `MTGlyphDisplay`
+
 ### v0.8.4 (2016-08-10)
 * Fix crash for \\epsilon and \\varrho
 * Add commands: \\mho, \\angstrom and \\AA
