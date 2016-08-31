@@ -16,6 +16,7 @@
 #import "MTFontManager.h"
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
+#import "MTMathAtomFactory.h"
 
 static BOOL isIos6Supported() {
     static BOOL initialized = false;
@@ -109,9 +110,41 @@ static BOOL isIos6Supported() {
 - (void) setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
+    
+    [self colorText];
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    
+    [self colorText];
+}
+
+- (void) colorText
+{
+    // Color all text
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
+    if (self.placeholderColor == nil) {
+        self.attributedString = attrStr;
+        return;
+    }
+    
+    // Color empty placeholders
+    NSRange whiteSquareRange = [attrStr.string rangeOfString:MTSymbolWhiteSquare];
+    if (whiteSquareRange.location != NSNotFound) {
+        [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.placeholderColor.CGColor
+                        range:whiteSquareRange];
+    }
+    
+    // Color filled placeholders
+    NSRange blackSquareRange = [attrStr.string rangeOfString:MTSymbolBlackSquare];
+    if (blackSquareRange.location != NSNotFound) {
+        [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.placeholderColor.CGColor
+                        range:blackSquareRange];
+    }
     self.attributedString = attrStr;
 }
 
@@ -190,6 +223,15 @@ static BOOL isIos6Supported() {
     [super setTextColor:textColor];
     for (MTDisplay* displayAtom in self.subDisplays) {
         displayAtom.textColor = textColor;
+    }
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    
+    for (MTDisplay* displayAtom in self.subDisplays) {
+        displayAtom.placeholderColor = placeholderColor;
     }
 }
 
@@ -305,6 +347,13 @@ static BOOL isIos6Supported() {
     _denominator.textColor = textColor;
 }
 
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    _numerator.placeholderColor = placeholderColor;
+    _denominator.placeholderColor = placeholderColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     [_numerator draw:context];
@@ -399,6 +448,13 @@ static BOOL isIos6Supported() {
     [super setTextColor:textColor];
     self.radicand.textColor = textColor;
     self.degree.textColor = textColor;
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    self.radicand.placeholderColor = placeholderColor;
+    self.degree.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context
@@ -582,6 +638,14 @@ static BOOL isIos6Supported() {
     _nucleus.textColor = textColor;
 }
 
+- (void)setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    self.upperLimit.placeholderColor = placeholderColor;
+    self.lowerLimit.placeholderColor = placeholderColor;
+    _nucleus.placeholderColor = placeholderColor;
+}
+
 - (void)draw:(CGContextRef)context
 {
     // Draw the elements.
@@ -612,6 +676,12 @@ static BOOL isIos6Supported() {
 {
     [super setTextColor:textColor];
     _inner.textColor = textColor;
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    _inner.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context

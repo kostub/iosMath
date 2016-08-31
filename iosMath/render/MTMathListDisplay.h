@@ -43,6 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL hasScript;
 /// The text color for this display
 @property (nonatomic, nullable) UIColor* textColor;
+/// The color of placeholder if any in this display
+@property (nonatomic, nullable) UIColor* placeholderColor;
 
 @end
 
