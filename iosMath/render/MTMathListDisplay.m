@@ -127,6 +127,10 @@ static BOOL isIos6Supported() {
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
+    if (self.placeholderColor == nil) {
+        self.attributedString = attrStr;
+        return;
+    }
     
     // Color empty placeholders
     NSRange whiteSquareRange = [attrStr.string rangeOfString:MTSymbolWhiteSquare];
