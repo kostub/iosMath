@@ -100,6 +100,9 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
 /** This sets the text color of the rendered math formula. The default color is black. */
 @property (nonatomic, nonnull) UIColor* textColor;
 
+/** Sets the placeholder color of the rendered math formula. The default color is black. */
+@property (nonatomic, nonnull) UIColor* placeholderColor;
+
 /** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;
 
