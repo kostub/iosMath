@@ -89,6 +89,51 @@
     
     self.demoLabels[13] = [self createMathLabel:@"{n \\brace k} = \\frac{1}{k!}\\sum_{j=0}^k (-1)^{k-j}\\binom{k}{j}(k-j)^n" withHeight:60];
 
+    self.demoLabels[14] = [self createMathLabel:@"f(x) = \\int_{-\\infty}^\\infty\\hat f(\\xi)\\,e^{2 \\pi i \\xi x}\\,d\\xi" withHeight:40];
+
+    self.demoLabels[15] = [self createMathLabel:@"\\begin{gather}"
+                           "\\dot{x} = \\sigma(y-x) \\\\"
+                           "\\dot{y} = \\rho x - y - xz \\\\"
+                           "\\dot{z} = -\\beta z + xy"
+                           "\\end{gather}" withHeight:70];
+
+    self.demoLabels[16] = [self createMathLabel:@"\\vec V_1 \\times \\vec V_2 =  \\begin{vmatrix}"
+                           "\\hat \\imath &\\hat \\jmath &\\hat k \\\\"
+                           "\\frac{\\partial X}{\\partial u} &  \\frac{\\partial Y}{\\partial u} & 0 \\\\"
+                           "\\frac{\\partial X}{\\partial v} &  \\frac{\\partial Y}{\\partial v} & 0"
+                           "\\end{vmatrix}" withHeight:70];
+
+    self.demoLabels[17] = [self createMathLabel:@"\\begin{eqalign}"
+                           "\\nabla \\cdot \\vec{E} & = \\frac {\\rho} {\\varepsilon_0} \\\\"
+                           "\\nabla \\cdot \\vec{B} & = 0 \\\\"
+                           "\\nabla \\times \\vec{E} &= - \\frac{\\partial\\vec{B}}{\\partial t} \\\\"
+                           "\\nabla \\times \\vec{B} & = \\mu_0\\vec{J} + \\mu_0\\varepsilon_0 \\frac{\\partial\\vec{E}}{\\partial t}"
+                           "\\end{eqalign}" withHeight:140];
+
+    self.demoLabels[18] = [self createMathLabel:@"\\begin{pmatrix}"
+                           "a & b\\\\ c & d"
+                           "\\end{pmatrix}"
+                           "\\begin{pmatrix}"
+                           "\\alpha & \\beta \\\\ \\gamma & \\delta"
+                           "\\end{pmatrix} = "
+                           "\\begin{pmatrix}"
+                           "a\\alpha + b\\gamma & a\\beta + b \\delta \\\\"
+                           "c\\alpha + d\\gamma & c\\beta + d \\delta "
+                           "\\end{pmatrix}"
+                                     withHeight:60];
+
+    self.demoLabels[19] = [self createMathLabel:@"Q(\\lambda,\\hat{\\lambda}) = "
+                           "-\\frac{1}{2} P(O \\mid \\lambda ) \\sum_s \\sum_m \\sum_t \\gamma_m^{(s)} (t) +\\\\ "
+                           "\\quad \\left( \\log(2 \\pi ) + \\log \\left| C_m^{(s)} \\right| + "
+                           "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T C_m^{(s)-1} \\right) "
+                           "" withHeight:90];
+
+    self.demoLabels[20] = [self createMathLabel:@"f(x) = \\begin{cases}"
+                           "\\frac{e^x}{2} & x \\geq 0 \\\\"
+                           "1 & x < 0"
+                           "\\end{cases}" withHeight:60];
+
+
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
         self.demoLabels[i].fontSize = 15;
         [self addLabelWithIndex:i inArray:self.demoLabels toView:contentView];
@@ -206,6 +251,11 @@
     
     // large spaces
     self.labels[36] = [self createMathLabel:@"hello\\ from \\quad the \\qquad other\\ side" withHeight:30];
+
+    // Accents
+    self.labels[37] = [self createMathLabel:@"\\vec x \\; \\hat y \\; \\breve {x^2} \\; \\tilde x \\tilde x^2 x^2 " withHeight:30];
+    self.labels[38] = [self createMathLabel:@"\\hat{xyz} \\; \\widehat{xyz}\\; \\vec{2ab}" withHeight:30];
+    self.labels[39] = [self createMathLabel:@"\\hat{\\frac12} \\; \\hat{\\sqrt 3}" withHeight:50];
     
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];

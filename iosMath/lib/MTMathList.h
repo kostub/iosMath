@@ -70,6 +70,15 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// Spacing between math atoms. This denotes both glue and kern for TeX. We do not
     /// distinguish between glue and kern.
     kMTMathAtomSpace = 201,
+    /// Denotes style changes during rendering.
+    kMTMathAtomStyle,
+    
+    // Atoms after this point are not part of TeX and do not have the usual structure.
+    
+    /// An table atom. This atom does not exist in TeX. It is equivalent to the TeX command
+    /// halign which is handled outside of the TeX math rendering engine. We bring it into our
+    /// math typesetting to handle matrices and other tables.
+    kMTMathAtomTable = 1001,
 };
 
 /** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
@@ -120,6 +129,9 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 /// Makes a deep copy of the atom
 - (id)copyWithZone:(nullable NSZone *)zone;
+
+/// Returns a finalized copy of the atom
+- (instancetype) finalized;
 
 @end
 
@@ -246,6 +258,101 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
+/**
+ @typedef MTLineStyle
+ @brief Styling of a line of math
+ */
+typedef NS_ENUM(unsigned int, MTLineStyle)  {
+    /// Display style
+    kMTLineStyleDisplay,
+    /// Text style (inline)
+    kMTLineStyleText,
+    /// Script style (for sub/super scripts)
+    kMTLineStyleScript,
+    /// Script script style (for scripts of scripts)
+    kMTLineStyleScriptScript
+};
+
+/** An atom representing a style change.
+ @note None of the usual fields of the `MTMathAtom` apply even though this
+ class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
+ in the nucleus, subscript or superscript fields. */
+@interface MTMathStyle : MTMathAtom
+
+/** Creates a new `MTMathStyle` with the given style.
+ @param style The style to be applied to the rest of the list.
+ */
+- (instancetype) initWithStyle:(MTLineStyle) style NS_DESIGNATED_INITIALIZER;
+
+/** The style represented by this object. */
+@property (nonatomic, readonly) MTLineStyle style;
+
+@end
+
+/** An atom representing an table element. This atom is not like other
+ atoms and is not present in TeX. We use it to represent the `\halign` command
+ in TeX with some simplifications. This is used for matrices, equation
+ alignments and other uses of multiline environments.
+ 
+ The cells in the table are represented as a two dimensional array of
+ `MTMathList` objects. The `MTMathList`s could be empty to denote a missing
+ value in the cell. Additionally an array of alignments indicates how each
+ column will be aligned.
+ */
+@interface MTMathTable : MTMathAtom
+
+/**
+ @typedef MTColumnAlignment
+ @brief Alignment for a column of MTMathTable
+ */
+typedef NS_ENUM(NSInteger, MTColumnAlignment) {
+    /// Align left.
+    kMTColumnAlignmentLeft,
+    /// Align center.
+    kMTColumnAlignmentCenter,
+    /// Align right.
+    kMTColumnAlignmentRight,
+};
+
+/// Creates an empty table with a nil environment
+- (instancetype)init;
+
+/// Creates a table with a given environment
+- (instancetype)initWithEnvironment:(nullable NSString*) env NS_DESIGNATED_INITIALIZER;
+
+/// The alignment for each column (left, right, center). The default alignment
+/// for a column (if not set) is center.
+@property (nonatomic, nonnull, readonly) NSArray<NSNumber*>* alignments;
+/// The cells in the table as a two dimensional array.
+@property (nonatomic, nonnull, readonly) NSArray<NSArray<MTMathList*>*>* cells;
+/// The name of the environment that this table denotes.
+@property (nonatomic, nullable) NSString* environment;
+
+/// Spacing between each column in mu units.
+@property (nonatomic) CGFloat interColumnSpacing;
+/// Additional spacing between rows in jots (one jot is 0.3 times font size).
+/// If the additional spacing is 0, then normal row spacing is used are used.
+@property (nonatomic) CGFloat interRowAdditionalSpacing;
+
+/// Set the value of a given cell. The table is automatically resized to contain this cell.
+- (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;
+
+/// Set the alignment of a particular column. The table is automatically resized to
+/// contain this column and any new columns added have their alignment set to center.
+- (void) setAlignment:(MTColumnAlignment) alignment forColumn:(NSInteger) column;
+
+/// Gets the alignment for a given column. If the alignment is not specified it defaults
+/// to center.
+- (MTColumnAlignment) getAlignmentForColumn:(NSInteger) column;
+
+/// Number of columns in the table.
+- (NSUInteger) numColumns;
+
+/// Number of rows in the table.
+- (NSUInteger) numRows;
+
+@end
+
 /** A representation of a list of math objects.
 
     This list can be constructed directly or built with
@@ -257,8 +364,16 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
  */
 @interface MTMathList : NSObject<NSCopying>
 
+/** Create a `MTMathList` given a list of atoms. The list of atoms should be
+ terminated by `nil`.
+ */
++ (instancetype) mathListWithAtoms:(MTMathAtom*) firstAtom, ... NS_REQUIRES_NIL_TERMINATION;
+
+/** Create a `MTMathList` given a list of atoms. */
++ (instancetype) mathListWithAtomsArray:(NSArray<MTMathAtom*>*) atoms;
+
 /// A list of MathAtoms
-@property (nonatomic, readonly) NSArray* atoms;
+@property (nonatomic, readonly) NSArray<__kindof MTMathAtom*>* atoms;
 
 /** Initializes an empty math list. */
 - (instancetype) init NS_DESIGNATED_INITIALIZER;

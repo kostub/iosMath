@@ -22,7 +22,9 @@
 
 @interface MTMathListDisplay ()
 
-- (instancetype) initWithDisplays:(NSArray*) displays range:(NSRange) range;
+- (instancetype)init NS_UNAVAILABLE;
+
+- (instancetype) initWithDisplays:(NSArray<MTDisplay*>*) displays range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, readwrite) MTLinePosition type;
 @property (nonatomic, readwrite) NSUInteger index;
@@ -63,7 +65,7 @@
 @end
 
 // Rendering of an large glyph as an MTDisplay
-@interface MTLargeGlyphDisplay()
+@interface MTGlyphDisplay()
 
 - (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
 
@@ -93,3 +95,8 @@
 
 @end
 
+@interface MTAccentDisplay ()
+
+- (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@end

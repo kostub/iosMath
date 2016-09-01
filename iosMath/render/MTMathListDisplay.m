@@ -193,7 +193,7 @@ static BOOL isIos6Supported() {
 }
 
 
-- (instancetype) initWithDisplays:(NSArray*) displays range:(NSRange) range
+- (instancetype) initWithDisplays:(NSArray<MTDisplay*>*) displays range:(NSRange) range
 {
     self = [super init];
     if (self) {
@@ -496,7 +496,7 @@ static BOOL isIos6Supported() {
 
 #pragma mark - MTLargeGlyphDisplay
 
-@implementation MTLargeGlyphDisplay {
+@implementation MTGlyphDisplay {
     CGGlyph _glyph;
     MTFont* _font;
 }
@@ -715,4 +715,52 @@ static BOOL isIos6Supported() {
     self.inner.position = CGPointMake(self.position.x, self.position.y);
 }
 
+@end
+
+#pragma mark - MTAccentDisplay
+
+@implementation MTAccentDisplay
+
+- (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range
+{
+    self = [super init];
+    if (self) {
+        _accent = glyph;
+        _accentee = accentee;
+        _accentee.position = CGPointZero;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)setTextColor:(UIColor *)textColor
+{
+    [super setTextColor:textColor];
+    _accentee.textColor = textColor;
+    _accent.textColor = textColor;
+}
+
+- (void) setPosition:(CGPoint)position
+{
+    super.position = position;
+    [self updateAccenteePosition];
+}
+
+- (void) updateAccenteePosition
+{
+    self.accentee.position = CGPointMake(self.position.x, self.position.y);
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [self.accentee draw:context];
+
+    CGContextSaveGState(context);
+    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextSetTextPosition(context, 0, 0);
+
+    [self.accent draw:context];
+
+    CGContextRestoreGState(context);
+}
 @end

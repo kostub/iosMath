@@ -21,7 +21,7 @@ library:
 
 ![Quadratic Formula](img/quadratic.png) 
 
-![Gauss Integral](img/gaussintegral.png)
+![Calculus](img/calculus.png)
 
 ![AM-GM](img/amgm.png)
 
@@ -99,6 +99,9 @@ This is a list of formula types that the library currently supports:
 * Ratios, proportions, percents
 * Math spacing
 * Overline and underline
+* Math accents
+* Matrices
+* Equation alignment
 * Most commonly used math symbols
 
 ### Example
@@ -191,11 +194,9 @@ some important pieces that are missing and will be included in future
 updates. This includes:
 
 * Support for explicit big delimiters (bigl, bigr etc.)
-* Math accents
-* Aligning equations
-* Some symbols are not yet included
-* Matrices
 * Constructing tall radicals and delimiters
+* Support for specifing fonts such as `\cal` or `\rm`
+* Addition of missing plain TeX commands 
 
 ## Related Projects
 

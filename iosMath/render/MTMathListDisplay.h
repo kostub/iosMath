@@ -68,6 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// It can render itself using the draw method.
 @interface MTMathListDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  @typedef MTLinePosition
  @brief The type of position for a line, i.e. subscript/superscript or regular.
@@ -124,8 +126,8 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
-/// Rendering a large glyph as a display
-@interface MTLargeGlyphDisplay : MTDisplay
+/// Rendering a glyph as a display
+@interface MTGlyphDisplay : MTDisplay
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -159,5 +161,20 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+/// Rendering an accent as a display
+@interface MTAccentDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+/** A display representing the inner list that is accented. It's position is relative
+ to the parent is not treated as a sub-display.
+ */
+@property (nonatomic, readonly) MTMathListDisplay* accentee;
+
+/** A display representing the accent. It's position is relative to the current display.
+ */
+@property (nonatomic, readonly) MTGlyphDisplay* accent;
+
+@end
 
 NS_ASSUME_NONNULL_END

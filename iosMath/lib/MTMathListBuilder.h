@@ -34,9 +34,6 @@ FOUNDATION_EXPORT NSString *const _Nonnull MTParseError;
 /// Builds a mathlist from the given string. Returns nil if there is an error.
 - (nullable MTMathList*) build;
 
-/// List of commands that are supported.
-+ (nonnull NSDictionary<NSString*, MTMathAtom*>*) supportedCommands;
-
 /** Construct a math list from a given string. If there is parse error, returns
  nil. To retrieve the error use the function `[MTMathListBuilder buildFromString:error:]`.
  */
@@ -73,6 +70,18 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMissingRight,
     /// There is no \left corresponding to the \right command.
     MTParseErrorMissingLeft,
+    /// The environment given to the \begin command is not recognized
+    MTParseErrorInvalidEnv,
+    /// A command is used which is only valid inside a \begin,\end environment
+    MTParseErrorMissingEnv,
+    /// There is no \begin corresponding to the \end command.
+    MTParseErrorMissingBegin,
+    /// There is no \end corresponding to the \begin command.
+    MTParseErrorMissingEnd,
+    /// The number of columns do not match the environment
+    MTParseErrorInvalidNumColumns,
+    /// Internal error, due to a programming mistake.
+    MTParseErrorInternalError,
 };
 
 @end

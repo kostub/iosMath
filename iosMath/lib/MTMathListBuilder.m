@@ -14,11 +14,35 @@
 
 NSString *const MTParseError = @"ParseError";
 
+@interface MTEnvProperties : NSObject
+
+@property (nonatomic, readonly) NSString* envName;
+@property (nonatomic) BOOL ended;
+@property (nonatomic) NSInteger numRows;
+
+@end
+
+@implementation MTEnvProperties
+
+- (instancetype)initWithName:(NSString*) name
+{
+    self = [super init];
+    if (self) {
+        _envName = name;
+        _numRows = 0;
+        _ended = NO;
+    }
+    return self;
+}
+
+@end
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
     NSUInteger _length;
     MTInner* _currentInnerAtom;
+    MTEnvProperties* _currentEnv;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -89,7 +113,7 @@ NSString *const MTParseError = @"ParseError";
         MTMathAtom* atom = nil;
         unichar ch = [self getNextCharacter];
         if (oneCharOnly) {
-            if (ch == '^' || ch == '}' || ch == '_') {
+            if (ch == '^' || ch == '}' || ch == '_' || ch == '&') {
                 // this is not the character we are looking for.
                 // They are meant for the caller to look at.
                 [self unlookCharacter];
@@ -141,7 +165,7 @@ NSString *const MTParseError = @"ParseError";
             NSAssert(stop == 0, @"This should have been handled before");
             // We encountered a closing brace when there is no stop set, that means there was no
             // corresponding opening brace.
-            NSString* errorMessage = [NSString stringWithFormat:@"Mismatched braces."];
+            NSString* errorMessage = @"Mismatched braces.";
             [self setError:MTParseErrorMismatchBraces message:errorMessage];
             return nil;
         } else if (ch == '\\') {
@@ -156,8 +180,21 @@ NSString *const MTParseError = @"ParseError";
             atom = [self atomForCommand:command];
             if (atom == nil) {
                 // this was an unknown command,
-                // we flag an error and return.
+                // we flag an error and return
+                // (note setError will not set the error if there is already one, so we flag internal error
+                // in the odd case that an _error is not set.
+                [self setError:MTParseErrorInternalError message:@"Internal error"];
                 return nil;
+            }
+        } else if (ch == '&') {
+            // used for column separation in tables
+            NSAssert(!oneCharOnly, @"This should have been handled before");
+            if (_currentEnv) {
+                return list;
+            } else {
+                // Create a new table with the current list and a default env
+                MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
+                return [MTMathList mathListWithAtoms:table, nil];
             }
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
@@ -188,23 +225,13 @@ NSString *const MTParseError = @"ParseError";
     return list;
 }
 
-- (NSString*) readCommand
+- (NSString*) readString
 {
-    static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
-        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!' ];
-        singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
-    // a command is a string of all upper and lower case characters.
+    // a string of all upper and lower case characters.
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        // Single char commands
-        if (mutable.length == 0 && [singleCharCommands containsObject:@(ch)]) {
-            // These are single char commands.
-            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
-            break;
-        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
             [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
         } else {
             // we went too far
@@ -215,15 +242,70 @@ NSString *const MTParseError = @"ParseError";
     return mutable;
 }
 
-- (NSString*) readDelimiter
+- (void) skipSpaces
 {
-    while([self hasCharacters]) {
+    while ([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        // Ignore spaces and nonascii.
         if (ch < 0x21 || ch > 0x7E) {
             // skip non ascii characters and spaces
             continue;
-        } else if (ch == '\\') {
+        } else {
+            [self unlookCharacter];
+            return;
+        }
+    }
+}
+
+#define MTAssertNotSpace(ch) NSAssert((ch) >= 0x21 && (ch) <= 0x7E, @"Expected non space character %c", (ch));
+
+- (BOOL) expectCharacter:(unichar) ch
+{
+    MTAssertNotSpace(ch);
+    [self skipSpaces];
+    
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        MTAssertNotSpace(c);
+        if (c == ch) {
+            return YES;
+        } else {
+            [self unlookCharacter];
+            return NO;
+        }
+    }
+    return NO;
+}
+
+- (NSString*) readCommand
+{
+    static NSSet<NSNumber*>* singleCharCommands = nil;
+    if (!singleCharCommands) {
+        NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
+        singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
+    }
+    if ([self hasCharacters]) {
+        // Check if we have a single character command.
+        unichar ch = [self getNextCharacter];
+        // Single char commands
+        if ([singleCharCommands containsObject:@(ch)]) {
+            return [NSString stringWithCharacters:&ch length:1];
+        } else {
+            // not a known single character command
+            [self unlookCharacter];
+        }
+    }
+    // otherwise a command is a string of all upper and lower case characters.
+    return [self readString];
+}
+
+- (NSString*) readDelimiter
+{
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        MTAssertNotSpace(ch);
+        if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
             if ([command isEqualToString:@"|"]) {
@@ -240,7 +322,27 @@ NSString *const MTParseError = @"ParseError";
     return nil;
 }
 
-- (NSString*) getDelimiterValue:(NSString*) delimiterType
+- (NSString*) readEnvironment
+{
+    if (![self expectCharacter:'{']) {
+        // We didn't find an opening brace, so no env found.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
+        return nil;
+    }
+    
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+    NSString* env = [self readString];
+    
+    if (![self expectCharacter:'}']) {
+        // We didn't find an closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
+    }
+    return env;
+}
+
+- (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
 {
     NSString* delim = [self readDelimiter];
     if (!delim) {
@@ -248,40 +350,26 @@ NSString *const MTParseError = @"ParseError";
         [self setError:MTParseErrorMissingDelimiter message:errorMessage];
         return nil;
     }
-    NSDictionary<NSString*, NSString*>* delims = [MTMathListBuilder delimiters];
-    NSString* delimValue = delims[delim];
-    if (!delimValue) {
+    MTMathAtom* boundary = [MTMathAtomFactory boundaryAtomForDelimiterName:delim];
+    if (!boundary) {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid delimiter for \\%@: %@", delimiterType, delim];
         [self setError:MTParseErrorInvalidDelimiter message:errorMessage];
         return nil;
     }
-    return delimValue;
-}
-
-- (NSString*) accentForCommand:(NSString*) command
-{
-    NSDictionary<NSString*, NSString*> *accents = [MTMathListBuilder accents];
-    return accents[command];
+    return boundary;
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
-    NSDictionary* aliases = [MTMathListBuilder aliases];
-    // First check if this is an alias
-    NSString* canonicalCommand = aliases[command];
-    if (canonicalCommand) {
-        // Switch to the canonical command
-        command = canonicalCommand;
-    }
-    MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbol:command];
+    MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:command];
     if (atom) {
         return atom;
     }
-    NSString* accent = [self accentForCommand:command];
+    MTAccent* accent = [MTMathAtomFactory accentWithName:command];
     if (accent) {
-        MTAccent* accentAtom = [[MTAccent alloc] initWithValue:accent];
-        accentAtom.innerList = [self buildInternal:true];
-        return accentAtom;
+        // The command is an accent
+        accent.innerList = [self buildInternal:true];
+        return accent;
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];
@@ -310,14 +398,13 @@ NSString *const MTParseError = @"ParseError";
         }
         return rad;
     } else if ([command isEqualToString:@"left"]) {
-        NSString* delim = [self getDelimiterValue:@"left"];
-        if (!delim) {
-            return nil;
-        }
         // Save the current inner while a new one gets built.
         MTInner* oldInner = _currentInnerAtom;
         _currentInnerAtom = [MTInner new];
-        _currentInnerAtom.leftBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        _currentInnerAtom.leftBoundary = [self getBoundaryAtom:@"left"];
+        if (!_currentInnerAtom.leftBoundary) {
+            return nil;
+        }
         _currentInnerAtom.innerList = [self buildInternal:false];
         if (!_currentInnerAtom.rightBoundary) {
             // A right node would have set the right boundary so we must be missing the right node.
@@ -339,6 +426,13 @@ NSString *const MTParseError = @"ParseError";
         MTUnderLine* under = [MTUnderLine new];
         under.innerList = [self buildInternal:true];
         return under;
+    } else if ([command isEqualToString:@"begin"]) {
+        NSString* env = [self readEnvironment];
+        if (!env) {
+            return nil;
+        }
+        MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
+        return table;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
@@ -357,16 +451,15 @@ NSString *const MTParseError = @"ParseError";
                               @"brace" : @[ @"{", @"}"]};
     }
     if ([command isEqualToString:@"right"]) {
-        NSString* delim = [self getDelimiterValue:@"right"];
-        if (!delim) {
-            return nil;
-        }
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
             [self setError:MTParseErrorMissingLeft message:errorMessage];
             return nil;
         }
-        _currentInnerAtom.rightBoundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:delim];
+        _currentInnerAtom.rightBoundary = [self getBoundaryAtom:@"right"];
+        if (!_currentInnerAtom.rightBoundary) {
+            return nil;
+        }
         // return the list read so far.
         return list;
     } else if ([fractionCommands objectForKey:command]) {
@@ -389,6 +482,35 @@ NSString *const MTParseError = @"ParseError";
         MTMathList* fracList = [MTMathList new];
         [fracList addAtom:frac];
         return fracList;
+    } else if ([command isEqualToString:@"\\"] || [command isEqualToString:@"cr"]) {
+        if (_currentEnv) {
+            // Stop the current list and increment the row count
+            _currentEnv.numRows++;
+            return list;
+        } else {
+            // Create a new table with the current list and a default env
+            MTMathAtom* table = [self buildTable:nil firstList:list row:YES];
+            return [MTMathList mathListWithAtoms:table, nil];
+        }
+    } else if ([command isEqualToString:@"end"]) {
+        if (!_currentEnv) {
+            NSString* errorMessage = @"Missing \\begin";
+            [self setError:MTParseErrorMissingBegin message:errorMessage];
+            return nil;
+        }
+        NSString* env = [self readEnvironment];
+        if (!env) {
+            return nil;
+        }
+        if (![env isEqualToString:_currentEnv.envName])
+        {
+            NSString* errorMessage = [NSString stringWithFormat:@"Begin environment name %@ does not match end name: %@", _currentEnv.envName, env];
+            [self setError:MTParseErrorInvalidEnv message:errorMessage];
+            return nil;
+        }
+        // Finish the current environment.
+        _currentEnv.ended = YES;
+        return list;
     }
     return nil;
 }
@@ -401,428 +523,52 @@ NSString *const MTParseError = @"ParseError";
     }
 }
 
-+ (NSDictionary*) supportedCommands
+- (MTMathAtom*) buildTable:(NSString*) env firstList:(MTMathList*) firstList row:(BOOL) isRow
 {
-    static NSDictionary* commands = nil;
-    if (!commands) {
-        commands = @{
-                      @"square" : [MTMathAtomFactory placeholder],
-                      
-                      // Greek characters
-                      @"alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B1"],
-                      @"beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B2"],
-                      @"gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B3"],
-                      @"delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B4"],
-                      @"varepsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B5"],
-                      @"zeta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B6"],
-                      @"eta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B7"],
-                      @"theta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B8"],
-                      @"iota" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B9"],
-                      @"kappa" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BA"],
-                      @"lambda" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BB"],
-                      @"mu" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BC"],
-                      @"nu" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BD"],
-                      @"xi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BE"],
-                      @"omicron" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BF"],
-                      @"pi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C0"],
-                      @"rho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
-                      @"varsigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
-                      @"sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C3"],
-                      @"tau" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C4"],
-                      @"upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C5"],
-                      @"varphi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C6"],
-                      @"chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C7"],
-                      @"psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C8"],
-                      @"omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C9"],
-                      // We mark the following greek chars as ordinary so that we don't try
-                      // to automatically italicize them as we do with variables.
-                      // These characters fall outside the rules of italicization that we have defined.
-                      @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D716"],
-                      @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D717"],
-                      @"phi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D719"],
-                      @"varrho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71A"],
-                      @"varpi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71B"],
-
-                      // Capital greek characters
-                      @"Gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0393"],
-                      @"Delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0394"],
-                      @"Theta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0398"],
-                      @"Lambda" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039B"],
-                      @"Xi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u039E"],
-                      @"Pi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A0"],
-                      @"Sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A3"],
-                      @"Upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A5"],
-                      @"Phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A6"],
-                      @"Psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A8"],
-                      @"Omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03A9"],
-
-                      // Open
-                      @"lceil" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u2308"],
-                      @"lfloor" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u230A"],
-                      @"langle" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27E8"],
-                      @"lgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EE"],
-
-                      // Close
-                      @"rceil" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u2309"],
-                      @"rfloor" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u230B"],
-                      @"rangle" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27E9"],
-                      @"rgroup" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"\u27EF"],
-
-                      // Arrows
-                      @"leftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2190"],
-                      @"uparrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2191"],
-                      @"rightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2192"],
-                      @"downarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2193"],
-                      @"leftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2194"],
-                      @"updownarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2195"],
-                      @"nwarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2196"],
-                      @"nearrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2197"],
-                      @"searrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2198"],
-                      @"swarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2199"],
-                      @"mapsto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A6"],
-                      @"Leftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D0"],
-                      @"Uparrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D1"],
-                      @"Rightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D2"],
-                      @"Downarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D3"],
-                      @"Leftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D4"],
-                      @"Updownarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21D5"],
-                      @"longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F5"],
-                      @"longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F6"],
-                      @"longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F7"],
-                      @"Longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F8"],
-                      @"Longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F9"],
-                      @"Longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FA"],
-
-
-                      // Relations
-                      @"leq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolLessEqual],
-                      @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
-                      @"neq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolNotEqual],
-                      @"in" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2208"],
-                      @"notin" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2209"],
-                      @"ni" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u220B"],
-                      @"propto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u221D"],
-                      @"mid" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2223"],
-                      @"parallel" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2225"],
-                      @"sim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u223C"],
-                      @"simeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2243"],
-                      @"cong" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2245"],
-                      @"approx" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2248"],
-                      @"asymp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224D"],
-                      @"doteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2250"],
-                      @"equiv" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2261"],
-                      @"gg" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226A"],
-                      @"ll" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226B"],
-                      @"prec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227A"],
-                      @"succ" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227B"],
-                      @"subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2282"],
-                      @"supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2283"],
-                      @"subseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2286"],
-                      @"supseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2287"],
-                      @"sqsubset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u228F"],
-                      @"sqsupset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2290"],
-                      @"sqsubseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2291"],
-                      @"sqsupseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2292"],
-                      @"models" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A7"],
-                      @"perp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27C2"],
-
-                      // operators
-                      @"times" : [MTMathAtomFactory times],
-                      @"div"   : [MTMathAtomFactory divide],
-                      @"pm"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"],
-                      @"dagger" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2020"],
-                      @"ddagger" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2021"],
-                      @"mp"    : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2213"],
-                      @"setminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2216"],
-                      @"ast"   : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2217"],
-                      @"circ"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2218"],
-                      @"bullet" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2219"],
-                      @"wedge" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2227"],
-                      @"vee" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2228"],
-                      @"cap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2229"],
-                      @"cup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u222A"],
-                      @"wr" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2240"],
-                      @"uplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u228E"],
-                      @"sqcap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2293"],
-                      @"sqcup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2294"],
-                      @"oplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2295"],
-                      @"ominus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2296"],
-                      @"otimes" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2297"],
-                      @"oslash" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2298"],
-                      @"odot" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2299"],
-                      @"star"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C6"],
-                      @"cdot"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C5"],
-                      @"amalg" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2A3F"],
-
-                      // No limit operators
-                      @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
-                      @"lg" : [MTMathAtomFactory operatorWithName:@"lg" limits:NO],
-                      @"ln" : [MTMathAtomFactory operatorWithName:@"ln" limits:NO],
-                      @"sin" : [MTMathAtomFactory operatorWithName:@"sin" limits:NO],
-                      @"arcsin" : [MTMathAtomFactory operatorWithName:@"arcsin" limits:NO],
-                      @"sinh" : [MTMathAtomFactory operatorWithName:@"sinh" limits:NO],
-                      @"cos" : [MTMathAtomFactory operatorWithName:@"cos" limits:NO],
-                      @"arccos" : [MTMathAtomFactory operatorWithName:@"arccos" limits:NO],
-                      @"cosh" : [MTMathAtomFactory operatorWithName:@"cosh" limits:NO],
-                      @"tan" : [MTMathAtomFactory operatorWithName:@"tan" limits:NO],
-                      @"arctan" : [MTMathAtomFactory operatorWithName:@"arctan" limits:NO],
-                      @"tanh" : [MTMathAtomFactory operatorWithName:@"tanh" limits:NO],
-                      @"cot" : [MTMathAtomFactory operatorWithName:@"cot" limits:NO],
-                      @"coth" : [MTMathAtomFactory operatorWithName:@"coth" limits:NO],
-                      @"sec" : [MTMathAtomFactory operatorWithName:@"sec" limits:NO],
-                      @"csc" : [MTMathAtomFactory operatorWithName:@"csc" limits:NO],
-                      @"arg" : [MTMathAtomFactory operatorWithName:@"arg" limits:NO],
-                      @"ker" : [MTMathAtomFactory operatorWithName:@"ker" limits:NO],
-                      @"dim" : [MTMathAtomFactory operatorWithName:@"dim" limits:NO],
-                      @"hom" : [MTMathAtomFactory operatorWithName:@"hom" limits:NO],
-                      @"exp" : [MTMathAtomFactory operatorWithName:@"exp" limits:NO],
-                      @"deg" : [MTMathAtomFactory operatorWithName:@"deg" limits:NO],
-
-                      // Limit operators
-                      @"lim" : [MTMathAtomFactory operatorWithName:@"lim" limits:YES],
-                      @"limsup" : [MTMathAtomFactory operatorWithName:@"lim sup" limits:YES],
-                      @"liminf" : [MTMathAtomFactory operatorWithName:@"lim inf" limits:YES],
-                      @"max" : [MTMathAtomFactory operatorWithName:@"max" limits:YES],
-                      @"min" : [MTMathAtomFactory operatorWithName:@"min" limits:YES],
-                      @"sup" : [MTMathAtomFactory operatorWithName:@"sup" limits:YES],
-                      @"inf" : [MTMathAtomFactory operatorWithName:@"inf" limits:YES],
-                      @"det" : [MTMathAtomFactory operatorWithName:@"det" limits:YES],
-                      @"Pr" : [MTMathAtomFactory operatorWithName:@"Pr" limits:YES],
-                      @"gcd" : [MTMathAtomFactory operatorWithName:@"gcd" limits:YES],
-
-                      // Large operators
-                      @"prod" : [MTMathAtomFactory operatorWithName:@"\u220F" limits:YES],
-                      @"coprod" : [MTMathAtomFactory operatorWithName:@"\u2210" limits:YES],
-                      @"sum" : [MTMathAtomFactory operatorWithName:@"\u2211" limits:YES],
-                      @"int" : [MTMathAtomFactory operatorWithName:@"\u222B" limits:NO],
-                      @"oint" : [MTMathAtomFactory operatorWithName:@"\u222E" limits:NO],
-                      @"bigwedge" : [MTMathAtomFactory operatorWithName:@"\u22C0" limits:YES],
-                      @"bigvee" : [MTMathAtomFactory operatorWithName:@"\u22C1" limits:YES],
-                      @"bigcap" : [MTMathAtomFactory operatorWithName:@"\u22C2" limits:YES],
-                      @"bigcup" : [MTMathAtomFactory operatorWithName:@"\u22C3" limits:YES],
-                      @"bigodot" : [MTMathAtomFactory operatorWithName:@"\u2A00" limits:YES],
-                      @"bigoplus" : [MTMathAtomFactory operatorWithName:@"\u2A01" limits:YES],
-                      @"bigotimes" : [MTMathAtomFactory operatorWithName:@"\u2A02" limits:YES],
-                      @"biguplus" : [MTMathAtomFactory operatorWithName:@"\u2A04" limits:YES],
-                      @"bigsqcup" : [MTMathAtomFactory operatorWithName:@"\u2A06" limits:YES],
-
-                      // Latex command characters
-                      @"{" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"{"],
-                      @"}" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"}"],
-                      @"$" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"{"],
-                      @"&" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"&"],
-                      @"#" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"#"],
-                      @"%" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"%"],
-                      @"_" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"_"],
-                      @" " : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@" "],
-                      @"backslash" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\\"],
-
-                      // Punctuation
-                      // Note: \colon is different from : which is a relation
-                      @"colon" : [MTMathAtom atomWithType:kMTMathAtomPunctuation value:@":"],
-                      @"cdotp" : [MTMathAtom atomWithType:kMTMathAtomPunctuation value:@"\u00B7"],
-
-                      // Other symbols
-                      @"degree" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00B0"],
-                      @"neg" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00AC"],
-                      @"angstrom" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u00C5"],
-                      @"|" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2016"],
-                      @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
-                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
-                      @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
-                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
-                      @"hbar" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u210F"],
-                      @"Im" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2111"],
-                      @"ell" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2113"],
-                      @"wp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2118"],
-                      @"Re" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u211C"],
-                      @"mho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2127"],
-                      @"aleph" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2135"],
-                      @"forall" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2200"],
-                      @"exists" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2203"],
-                      @"emptyset" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2205"],
-                      @"nabla" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2207"],
-                      @"infty" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u221E"],
-                      @"angle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2220"],
-                      @"top" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22A4"],
-                      @"bot" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22A5"],
-                      @"vdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EE"],
-                      @"cdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EF"],
-                      @"ddots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22F1"],
-                      @"triangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B3"],
-                      @"imath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A4"],
-                      @"jmath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A5"],
-                      @"partial" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D715"],
-                      
-                      // Spacing
-                      @"," : [[MTMathSpace alloc] initWithSpace:3],
-                      @">" : [[MTMathSpace alloc] initWithSpace:4],
-                      @";" : [[MTMathSpace alloc] initWithSpace:5],
-                      @"!" : [[MTMathSpace alloc] initWithSpace:-3],
-                      @"quad" : [[MTMathSpace alloc] initWithSpace:18],  // quad = 1em = 18mu
-                      @"qquad" : [[MTMathSpace alloc] initWithSpace:36], // qquad = 2em
-                      };
-        
-    }
-    return commands;
-}
-
-+ (NSDictionary*) aliases
-{
-    static NSDictionary* aliases = nil;
-    if (!aliases) {
-        aliases = @{
-                     @"lnot" : @"neg",
-                     @"land" : @"wedge",
-                     @"lor" : @"vee",
-                     @"ne" : @"neq",
-                     @"le" : @"leq",
-                     @"ge" : @"geq",
-                     @"lbrace" : @"{",
-                     @"rbrace" : @"}",
-                     @"Vert" : @"|",
-                     @"gets" : @"leftarrow",
-                     @"to" : @"rightarrow",
-                     @"iff" : @"Longleftrightarrow",
-                     @"AA" : @"angstrom",
-                     };
-    }
-    return aliases;
-}
-
-+ (NSDictionary<NSString*, NSString*>*) accents
-{
-    static NSDictionary* accents = nil;
-    if (!accents) {
-        accents = @{
-                    @"grave" : @"\u0300",
-                    @"acute" : @"\u0301",
-                    @"hat" : @"\u0302",  // In our implementation hat and widehat behave the same.
-                    @"tilde" : @"\u0303", // In our implementation tilde and widetilde behave the same.
-                    @"bar" : @"\u0304",
-                    @"breve" : @"\u0306",
-                    @"dot" : @"\u0307",
-                    @"ddot" : @"\u0308",
-                    @"check" : @"\u030C",
-                    @"vec" : @"\u20D7",
-                    @"widehat" : @"\u0302",
-                    @"widetilde" : @"\u0303",
-                    };
-    }
-    return accents;
-}
-
-+(NSDictionary<NSString*, NSString*> *) delimiters
-{
-    static NSDictionary* delims = nil;
-    if (!delims) {
-        delims = @{
-                   @"." : @"", // . means no delimiter
-                   @"(" : @"(",
-                   @")" : @")",
-                   @"[" : @"[",
-                   @"]" : @"]",
-                   @"<" : @"\u2329",
-                   @">" : @"\u232A",
-                   @"/" : @"/",
-                   @"\\" : @"\\",
-                   @"|" : @"|",
-                   @"lgroup" : @"\u27EE",
-                   @"rgroup" : @"\u27EF",
-                   @"||" : @"\u2016",
-                   @"Vert" : @"\u2016",
-                   @"vert" : @"|",
-                   @"uparrow" : @"\u2191",
-                   @"downarrow" : @"\u2193",
-                   @"updownarrow" : @"\u2195",
-                   @"Uparrow" : @"21D1",
-                   @"Downarrow" : @"21D3",
-                   @"Updownarrow" : @"21D5",
-                   @"backslash" : @"\\",
-                   @"rangle" : @"\u232A",
-                   @"langle" : @"\u2329",
-                   @"rbrace" : @"}",
-                   @"}" : @"}",
-                   @"{" : @"{",
-                   @"lbrace" : @"{",
-                   @"lceil" : @"\u2308",
-                   @"rceil" : @"\u2309",
-                   @"lfloor" : @"\u230A",
-                   @"rfloor" : @"\u230B",
-                   };
-    }
-    return delims;
-}
-
-+ (NSDictionary*) textToCommands
-{
-    static NSDictionary* textToCommands = nil;
-    if (!textToCommands) {
-        NSDictionary* commands = [self supportedCommands];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:commands.count];
-        for (NSString* command in commands) {
-            MTMathAtom* atom = commands[command];
-            mutableDict[atom.nucleus] = command;
+    // Save the current env till an new one gets built.
+    MTEnvProperties* oldEnv = _currentEnv;
+    _currentEnv = [[MTEnvProperties alloc] initWithName:env];
+    NSInteger currentRow = 0;
+    NSInteger currentCol = 0;
+    NSMutableArray<NSMutableArray<MTMathList*>*>* rows = [NSMutableArray array];
+    rows[0] = [NSMutableArray array];
+    if (firstList) {
+        rows[currentRow][currentCol] = firstList;
+        if (isRow) {
+            _currentEnv.numRows++;
+            currentRow++;
+            rows[currentRow] = [NSMutableArray array];
+        } else {
+            currentCol++;
         }
-        textToCommands = [mutableDict copy];
     }
-    return textToCommands;
-}
-
-+ (NSDictionary*) delimToCommand
-{
-    static NSDictionary* delimToCommands = nil;
-    if (!delimToCommands) {
-        NSDictionary* delims = [self delimiters];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
-        for (NSString* command in delims) {
-            NSString* delim = delims[command];
-            NSString* existingCommand = mutableDict[delim];
-            if (existingCommand) {
-                if (command.length > existingCommand.length) {
-                    // Keep the shorter command
-                    continue;
-                } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
-                    if ([command compare:existingCommand] == NSOrderedDescending) {
-                        continue;
-                    }
-                }
-            }
-            // In other cases replace the command.
-            mutableDict[delim] = command;
+    while (!_currentEnv.ended && [self hasCharacters]) {
+        MTMathList* list = [self buildInternal:NO];
+        if (!list) {
+            // If there is an error building the list, bail out early.
+            return nil;
         }
-        delimToCommands = [mutableDict copy];
-    }
-    return delimToCommands;
-}
-
-+ (NSDictionary*) accentToCommands
-{
-    static NSDictionary* accentToCommands = nil;
-    if (!accentToCommands) {
-        NSDictionary* accents = [self accents];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:accents.count];
-        for (NSString* command in accents) {
-            NSString* acc = accents[command];
-            NSString* existingCommand = mutableDict[acc];
-            if (existingCommand) {
-                if (command.length > existingCommand.length) {
-                    // Keep the shorter command
-                    continue;
-                } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
-                    if ([command compare:existingCommand] == NSOrderedDescending) {
-                        continue;
-                    }
-                }
-            }
-            // In other cases replace the command.
-            mutableDict[acc] = command;
+        rows[currentRow][currentCol] = list;
+        currentCol++;
+        if (_currentEnv.numRows > currentRow) {
+            currentRow = _currentEnv.numRows;
+            rows[currentRow] = [NSMutableArray array];
+            currentCol = 0;
         }
-        accentToCommands = [mutableDict copy];
     }
-    return accentToCommands;
+    if (!_currentEnv.ended && _currentEnv.envName) {
+        [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
+        return nil;
+    }
+    NSError* error;
+    MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    if (!table && !_error) {
+        _error = error;
+        return nil;
+    }
+    // reinstate the old env.
+    _currentEnv = oldEnv;
+    return table;
 }
 
 + (NSDictionary*) spaceToCommands
@@ -839,6 +585,20 @@ NSString *const MTParseError = @"ParseError";
                     };
     }
     return spaceToCommands;
+}
+
++ (NSDictionary*) styleToCommands
+{
+    static NSDictionary* styleToCommands = nil;
+    if (!styleToCommands) {
+        styleToCommands = @{
+                            @(kMTLineStyleDisplay) : @"displaystyle",
+                            @(kMTLineStyleText) : @"textstyle",
+                            @(kMTLineStyleScript) : @"scriptstyle",
+                            @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
+                            };
+    }
+    return styleToCommands;
 }
 
 + (MTMathList *)buildFromString:(NSString *)str
@@ -860,9 +620,9 @@ NSString *const MTParseError = @"ParseError";
     return output;
 }
 
-+ (NSString*) delimToString:(NSString*) delim
++ (NSString*) delimToString:(MTMathAtom*) delim
 {
-    NSString* command = self.delimToCommand[delim];
+    NSString* command = [MTMathAtomFactory delimiterNameForBoundaryAtom:delim];
     if (command) {
         NSArray<NSString*>* singleChars = @[ @"(", @")", @"[", @"]", @"<", @">", @"|", @".", @"/"];
         if ([singleChars containsObject:command]) {
@@ -878,7 +638,6 @@ NSString *const MTParseError = @"ParseError";
 
 + (NSString *)mathListToString:(MTMathList *)ml
 {
-    NSDictionary* textToCommands = [self textToCommands];
     NSMutableString* str = [NSMutableString string];
     for (MTMathAtom* atom in ml.atoms) {
         if (atom.type == kMTMathAtomFraction) {
@@ -911,18 +670,53 @@ NSString *const MTParseError = @"ParseError";
             MTInner* inner = (MTInner*) atom;
             if (inner.leftBoundary || inner.rightBoundary) {
                 if (inner.leftBoundary) {
-                    [str appendFormat:@"\\left%@ ", [self delimToString:inner.leftBoundary.nucleus]];
+                    [str appendFormat:@"\\left%@ ", [self delimToString:inner.leftBoundary]];
                 } else {
                     [str appendString:@"\\left. "];
                 }
                 [str appendString:[self mathListToString:inner.innerList]];
                 if (inner.rightBoundary) {
-                    [str appendFormat:@"\\right%@ ", [self delimToString:inner.rightBoundary.nucleus]];
+                    [str appendFormat:@"\\right%@ ", [self delimToString:inner.rightBoundary]];
                 } else {
                     [str appendString:@"\\right. "];
                 }
             } else {
                 [str appendFormat:@"{%@}", [self mathListToString:inner.innerList]];
+            }
+        } else if (atom.type == kMTMathAtomTable) {
+            MTMathTable* table = (MTMathTable*) atom;
+            if (table.environment) {
+                [str appendFormat:@"\\begin{%@}", table.environment];
+            }
+            for (int i = 0; i < table.numRows; i++) {
+                NSArray<MTMathList*>* row = table.cells[i];
+                for (int j = 0; j < row.count; j++) {
+                    MTMathList* cell = row[j];
+                    if ([table.environment isEqualToString:@"matrix"]) {
+                        if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
+                            // remove the first atom.
+                            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count-1)];
+                            cell = [MTMathList mathListWithAtomsArray:atoms];
+                        }
+                    }
+                    if ([table.environment isEqualToString:@"eqalign"] || [table.environment isEqualToString:@"aligned"] || [table.environment isEqualToString:@"split"]) {
+                        if (j == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
+                            // Empty nucleus added for spacing. Remove it.
+                            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count-1)];
+                            cell = [MTMathList mathListWithAtomsArray:atoms];
+                        }
+                    }
+                    [str appendString:[self mathListToString:cell]];
+                    if (j < row.count - 1) {
+                        [str appendString:@"&"];
+                    }
+                }
+                if (i < table.numRows - 1) {
+                    [str appendString:@"\\\\ "];
+                }
+            }
+            if (table.environment) {
+                [str appendFormat:@"\\end{%@}", table.environment];
             }
         } else if (atom.type == kMTMathAtomOverline) {
             [str appendString:@"\\overline"];
@@ -934,8 +728,7 @@ NSString *const MTParseError = @"ParseError";
             [str appendFormat:@"{%@}", [self mathListToString:under.innerList]];
         } else if (atom.type == kMTMathAtomAccent) {
             MTAccent* accent = (MTAccent*) atom;
-            NSDictionary* accentToCommands = [MTMathListBuilder accentToCommands];
-            [str appendFormat:@"\\%@{%@}", accentToCommands[accent.nucleus], [self mathListToString:accent.innerList]];
+            [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:accent], [self mathListToString:accent.innerList]];
         } else if (atom.type == kMTMathAtomSpace) {
             MTMathSpace* space = (MTMathSpace*) atom;
             NSDictionary* spaceToCommands = [MTMathListBuilder spaceToCommands];
@@ -945,6 +738,11 @@ NSString *const MTParseError = @"ParseError";
             } else {
                 [str appendFormat:@"\\mkern%.1fmu", space.space];
             }
+        } else if (atom.type == kMTMathAtomStyle) {
+            MTMathStyle* style = (MTMathStyle*) atom;
+            NSDictionary* styleToCommands = [MTMathListBuilder styleToCommands];
+            NSString* command = styleToCommands[@(style.style)];
+            [str appendFormat:@"\\%@ ", command];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {
@@ -954,7 +752,7 @@ NSString *const MTParseError = @"ParseError";
             // math minus
             [str appendString:@"-"];
         } else {
-            NSString* command = textToCommands[atom.nucleus];
+            NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:atom];
             if (command) {
                 [str appendFormat:@"\\%@ ", command];
             } else {

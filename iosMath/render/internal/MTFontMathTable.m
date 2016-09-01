@@ -37,6 +37,12 @@
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
         _mathTable = mathTable;
+        if (![@"1.2" isEqualToString:_mathTable[@"version"]]) {
+            // Invalid version
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
+                                         userInfo:nil];
+        }
     }
     return self;
 }
@@ -386,30 +392,42 @@ static NSString* const kConstants = @"constants";
 
 #pragma mark - Variants
 
-static NSString* const kVariants = @"variants";
+static NSString* const kVertVariants = @"v_variants";
+static NSString* const kHorizVariants = @"h_variants";
 
-- (CFArrayRef) copyVerticalVariantsForGlyph:(CGGlyph) glyph
+- (NSArray<NSNumber*>*) getVerticalVariantsForGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVertVariants];
+    return [self getVariantsForGlyph:glyph inDictionary:variants];
+}
+
+- (NSArray<NSNumber*>*) getHorizontalVariantsForGlyph:(CGGlyph) glyph
+{
+    NSDictionary* variants = (NSDictionary*) _mathTable[kHorizVariants];
+    return [self getVariantsForGlyph:glyph inDictionary:variants];
+}
+
+- (NSArray<NSNumber*>*) getVariantsForGlyph:(CGGlyph) glyph inDictionary:(NSDictionary*) variants
+{
     NSString* glyphName = [self.font getGlyphName:glyph];
-    CFMutableArrayRef glyphArray = CFArrayCreateMutable(NULL, 0, NULL);
     NSArray* variantGlyphs = (NSArray*) variants[glyphName];
+    NSMutableArray* glyphArray = [NSMutableArray arrayWithCapacity:variantGlyphs.count];
     if (!variantGlyphs) {
         // There are no extra variants, so just add the current glyph to it.
         CGGlyph glyph = [self.font getGlyphWithName:glyphName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)glyph);
+        [glyphArray addObject:@(glyph)];
         return glyphArray;
     }
     for (NSString* glyphVariantName in variantGlyphs) {
         CGGlyph variantGlyph = [self.font getGlyphWithName:glyphVariantName];
-        CFArrayAppendValue(glyphArray, (void*)(uintptr_t)variantGlyph);
+        [glyphArray addObject:@(variantGlyph)];
     }
     return glyphArray;
 }
 
 - (CGGlyph) getLargerGlyph:(CGGlyph) glyph
 {
-    NSDictionary* variants = (NSDictionary*) _mathTable[kVariants];
+    NSDictionary* variants = (NSDictionary*) _mathTable[kVertVariants];
     NSString* glyphName = [self.font getGlyphName:glyph];
     NSArray* variantGlyphs = (NSArray*) variants[glyphName];
     if (!variantGlyphs) {
@@ -438,6 +456,24 @@ static NSString* const kItalic = @"italic";
     NSNumber* val = (NSNumber*) italics[glyphName];
     // if val is nil, this returns 0.
     return [self fontUnitsToPt:val.intValue];
+}
+
+#pragma mark - Top Accent Adjustment
+
+static NSString* const kAccents = @"accents";
+- (CGFloat) getTopAccentAdjustment:(CGGlyph) glyph
+{
+    NSDictionary* accents = (NSDictionary*) _mathTable[kAccents];
+    NSString* glyphName = [self.font getGlyphName:glyph];
+    NSNumber* val = (NSNumber*) accents[glyphName];
+    if (val) {
+        return [self fontUnitsToPt:val.intValue];
+    } else {
+        // If no top accent is defined then it is the center of the advance width.
+        CGSize advances;
+        CTFontGetAdvancesForGlyphs(self.font.ctFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
+        return advances.width/2;
+    }
 }
 
 @end

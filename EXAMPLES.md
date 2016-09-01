@@ -48,6 +48,13 @@ x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
 
 ![Limit](img/limit.png)
 
+## Calculus
+```LaTeX
+f(x) = \int_{-\infty}^\infty\hat f(\xi)\,e^{2 \pi i \xi x}\,d\xi
+```
+
+![Calculus](img/calculus.png)
+
 ## Stirling Numbers of the Second Kind
 ```LaTeX
 {n \brace k} = \frac{1}{k!}\sum_{j=0}^k (-1)^{k-j}\binom{k}{j}(k-j)^n
@@ -88,4 +95,78 @@ i\hbar\frac{\partial}{\partial t}\Psi(x,t) = -\frac{\hbar}{2m}\nabla^2\Psi(x,t) 
 
 ![Schroedinger](img/schroedinger.png)
 
+## Lorentz Equations
+Use the `gather` or `displaylines` environments to center multiple
+equations.
+```LaTeX
+\begin{gather}
+\dot{x} = \sigma(y-x) \\
+\dot{y} = \rho x - y - xz \\
+\dot{z} = -\beta z + xy"
+\end{gather}
+```
 
+![Lorentz](img/lorentz.png)
+
+## Cross product
+```LaTeX
+\vec V_1 \times \vec V_2 =  \begin{vmatrix}
+\hat \imath &\hat \jmath &\hat k \\
+\frac{\partial X}{\partial u} & \frac{\partial Y}{\partial u} & 0 \\
+\frac{\partial X}{\partial v} & \frac{\partial Y}{\partial v} & 0
+\end{vmatrix}
+```
+
+![Cross Product](img/cross.png)
+
+## Maxwell's Equations
+Use the `aligned`, `eqalign` or `split` environments to align
+multiple equations.
+```LaTeX
+\begin{eqalign}
+\nabla \cdot \vec{E} & = \frac {\rho} {\varepsilon_0} \\
+\nabla \cdot \vec{B} & = 0 \\
+\nabla \times \vec{E} &= - \frac{\partial\vec{B}}{\partial t} \\
+\nabla \times \vec{B} & = \mu_0\vec{J} + \mu_0\varepsilon_0 \frac{\partial\vec{E}}{\partial t}
+\end{eqalign}
+```
+
+![Maxwell's Equations](img/maxwell.png)
+
+## Matrix multiplication
+Supported matrix environments: `matrix`, `pmatrix`, `bmatrix`, `Bmatrix`,
+`vmatrix`, `Vmatrix`.
+```LaTeX
+\begin{pmatrix}
+a & b\\ c & d
+\end{pmatrix}
+\begin{pmatrix}
+\alpha & \beta \\ \gamma & \delta
+\end{pmatrix} = 
+\begin{pmatrix}
+a\alpha + b\gamma & a\beta + b \delta \\
+c\alpha + d\gamma & c\beta + d \delta 
+\end{pmatrix}
+```
+
+![Matrix Multiplication](img/matrixmult.png)
+
+## Cases
+```LaTeX
+f(x) = \begin{cases}
+\frac{e^x}{2} & x \geq 0 \\
+1 & x < 0
+\end{cases}
+```
+
+![Cases](img/cases.png)
+
+## Splitting long equations
+```LaTeX
+Q(\lambda,\hat{\lambda}) = 
+-\frac{1}{2} P(O \mid \lambda ) \sum_s \sum_m \sum_t \gamma_m^{(s)} (t) +\\ 
+\quad \left( \log(2 \pi ) + \log \left| C_m^{(s)} \right| + 
+\left( o_t - \hat{\mu}_m^{(s)} \right) ^T C_m^{(s)-1} \right) 
+```
+
+![Long equation](img/long.png)
