@@ -12,6 +12,7 @@
 #import "ViewController.h"
 #import "MTMathUILabel.h"
 #import "MTFontManager.h"
+#import "UIView+Image.h"
 
 @interface ViewController ()
 
@@ -260,6 +261,24 @@
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }
+}
+
+-(void)viewDidAppear:(BOOL)animated{
+    
+    [super viewDidAppear:animated];
+    
+    //MTMathUILabel convert to image
+    
+    [self.demoLabels enumerateObjectsUsingBlock:^(MTMathUILabel * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        NSData *imageForLatex = [obj generateLatexImageWithType:kLatexTypePng];
+        NSString  *pngPath = [NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/%lu.png",(unsigned long)idx]];
+    
+        NSLog(@"latex_image stored path:%@",pngPath);
+        
+        // Write image to PNG
+        [imageForLatex writeToFile:pngPath atomically:YES];
+    }];
 }
 
 - (void)didReceiveMemoryWarning

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		277D01091D8FAE8C0046B5C2 /* UIView+Image.m in Sources */ = {isa = PBXBuildFile; fileRef = 277D01081D8FAE8C0046B5C2 /* UIView+Image.m */; };
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
@@ -72,6 +73,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		277D01071D8FAE8C0046B5C2 /* UIView+Image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Image.h"; sourceTree = "<group>"; };
+		277D01081D8FAE8C0046B5C2 /* UIView+Image.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Image.m"; sourceTree = "<group>"; };
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
 		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
@@ -184,9 +187,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		277D01001D8FAD640046B5C2 /* LatexToImage */ = {
+			isa = PBXGroup;
+			children = (
+				277D01071D8FAE8C0046B5C2 /* UIView+Image.h */,
+				277D01081D8FAE8C0046B5C2 /* UIView+Image.m */,
+			);
+			path = LatexToImage;
+			sourceTree = "<group>";
+		};
 		4987307717D546800041B02B /* iosMath */ = {
 			isa = PBXGroup;
 			children = (
+				277D01001D8FAD640046B5C2 /* LatexToImage */,
 				49965F3917CBD02000A555C5 /* render */,
 				49965F3817CBBABD00A555C5 /* lib */,
 				4987307817D546800041B02B /* Supporting Files */,
@@ -668,6 +681,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				277D01091D8FAE8C0046B5C2 /* UIView+Image.m in Sources */,
 				49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */,
 				49B83F0217CF2AE90014B739 /* main.m in Sources */,
 				49B83F0817CF2B420014B739 /* ViewController.m in Sources */,
