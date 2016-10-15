@@ -17,7 +17,7 @@ def process_font(font_file, out_file):
     assembly = get_v_assembly(math_table)
     accents = get_accent_attachments(math_table)
     pl = {
-            "version" : "1.2",
+            "version" : "1.3",
             "constants": constants,
             "v_variants" : v_variants,
             "h_variants" : h_variants,
@@ -92,6 +92,9 @@ def get_constants(math_table):
     ]
     consts_2 = { c : getattr(constants, c).Value for c in record_consts }
     consts.update(consts_2)
+    
+    variants = math_table.MathVariants
+    consts['MinConnectorOverlap'] = variants.MinConnectorOverlap
     return consts
 
 def get_italic_correction(math_table):
