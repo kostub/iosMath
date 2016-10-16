@@ -903,6 +903,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGGlyph radicalGlyph = [self findGlyphForCharacterAtIndex:0 inString:@"\u221A"];
     CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     
+    // Create a glyph display
+    MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:NSMakeRange(NSNotFound, 0) font:_styleFont];
+    glyphDisplay.ascent = glyphAscent;
+    glyphDisplay.descent = glyphDescent;
+    glyphDisplay.width = glyphWidth;
+
+    
     // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
     // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
     // Latex computes delta as descent - (h(inner) + d(inner) + clearance)
@@ -917,11 +924,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     // The new ascent of the radical glyph should be thickness + adjusted clearance + h(inner)
     CGFloat radicalAscent = radicalRuleThickness + clearance + innerDisplay.ascent;
     CGFloat shiftUp = radicalAscent - glyphAscent;  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
+    glyphDisplay.shiftDown = -shiftUp;
     
-    MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyph glyphWidth:glyphWidth position:_currentPosition range:range font:_styleFont];
+    MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyphDisplay position:_currentPosition range:range];
     radical.ascent = radicalAscent + _styleFont.mathTable.radicalExtraAscender;
     radical.topKern = _styleFont.mathTable.radicalExtraAscender;
-    radical.shiftUp = shiftUp;
     radical.lineThickness = radicalRuleThickness;
     // Note: Until we have radical construction from parts, it is possible that glyphAscent+glyphDescent is less
     // than the requested height of the glyph (i.e. radicalHeight), so in the case the innerDisplay has a larger
@@ -930,6 +937,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     radical.width = glyphWidth + innerDisplay.width;
     return radical;
 }
+
+#pragma mark Glyphs
 
 - (CGGlyph) findGlyph:(CGGlyph) glyph withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
@@ -985,6 +994,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     }
     return glyph[0];
 }
+
+#pragma mark Large Operators
 
 - (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
 {

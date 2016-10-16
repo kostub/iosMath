@@ -54,13 +54,12 @@
 
 @interface MTRadicalDisplay ()
 
-- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(CGGlyph) glyph glyphWidth:(CGFloat) glyphWidth position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(MTDisplay*) glyph position:(CGPoint) position range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 - (void) setDegree:(MTMathListDisplay *)degree fontMetrics:(MTFontMathTable*) fontMetrics;
 
 @property (nonatomic) CGFloat topKern;
 @property (nonatomic) CGFloat lineThickness;
-@property (nonatomic) CGFloat shiftUp;
 
 @end
 
