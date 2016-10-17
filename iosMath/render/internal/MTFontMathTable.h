@@ -14,6 +14,27 @@
 
 @class MTFont;
 
+/** MTGlyphPart represents a part of a glyph used for assembling a large vertical or horizontal
+ glyph. */
+@interface MTGlyphPart : NSObject
+
+/// The glyph that represents this part
+@property (nonatomic, readonly) CGGlyph glyph;
+
+/// Full advance width/height for this part, in the direction of the extension in points.
+@property (nonatomic, readonly) CGFloat fullAdvance;
+
+/// Advance width/ height of the straight bar connector material at the beginning of the glyph in points.
+@property (nonatomic, readonly) CGFloat startConnectorLength;
+
+/// Advance width/ height of the straight bar connector material at the end of the glyph in points.
+@property (nonatomic, readonly) CGFloat endConnectorLength;
+
+/// If this part is an extender. If set, the part can be skipped or repeated.
+@property (nonatomic, readonly) BOOL isExtender;
+
+@end
+
 /** This class represents the Math table of an open type font.
  
  The math table is documented here: https://www.microsoft.com/typography/otspec/math.htm
@@ -134,5 +155,14 @@
 /** Returns the adjustment to the top accent for the given glyph if any.
  If there isn't any this returns -1. */
 - (CGFloat) getTopAccentAdjustment:(CGGlyph) glyph;
+
+#pragma mark Glyph Construction
+
+/** Minimum overlap of connecting glyphs during glyph construction */
+@property (nonatomic, readonly) CGFloat minConnectorOverlap;
+
+/** Returns an array of the glyph parts to be used for constructing vertical variants
+ of this glyph. If there is no glyph assembly defined, returns nil. */
+- (nullable NSArray<MTGlyphPart*>*) getVerticalGlyphAssemblyForGlyph:(CGGlyph) glyph;
 
 @end

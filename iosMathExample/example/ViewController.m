@@ -41,7 +41,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:self.scrollView];
-    [self setHeight:3280 forView:contentView];
+    [self setHeight:4280 forView:contentView];
 
 
     // Demo formulae
@@ -256,7 +256,14 @@
     self.labels[37] = [self createMathLabel:@"\\vec x \\; \\hat y \\; \\breve {x^2} \\; \\tilde x \\tilde x^2 x^2 " withHeight:30];
     self.labels[38] = [self createMathLabel:@"\\hat{xyz} \\; \\widehat{xyz}\\; \\vec{2ab}" withHeight:30];
     self.labels[39] = [self createMathLabel:@"\\hat{\\frac12} \\; \\hat{\\sqrt 3}" withHeight:50];
+
+    // large roots
+    self.labels[40] = [self createMathLabel:@"\\sqrt{1+\\sqrt{1+\\sqrt{1+\\sqrt{1+\\sqrt{1+\\cdots}}}}}" withHeight:80];
     
+    self.labels[41] = [self createMathLabel:@"\\begin{bmatrix}"
+                           "a & b\\\\ c & d \\\\ e & f \\\\ g &  h \\\\ i & j"
+                           "\\end{bmatrix}"
+                                     withHeight:120];
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }

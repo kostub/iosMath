@@ -440,14 +440,16 @@ static BOOL isIos6Supported() {
     MTFont* _font;
 }
 
-- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font
+@synthesize shiftDown;
+
+- (instancetype)initWithGlpyh:(CGGlyph) glyph range:(NSRange) range font:(MTFont*) font
 {
     self = [super init];
     if (self) {
         _font = font;
         _glyph = glyph;
 
-        self.position = position;
+        self.position = CGPointZero;
         self.range = range;
     }
     return self;
@@ -460,14 +462,85 @@ static BOOL isIos6Supported() {
     [self.textColor setFill];
     
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextTranslateCTM(context, self.position.x, self.position.y - self.shiftDown);
     CGContextSetTextPosition(context, 0, 0);
 
-    // Draw the glyph.
-    CGPoint glyphPosition = CGPointMake(0, -self.shiftDown);
-    CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
+    CTFontDrawGlyphs(_font.ctFont, &_glyph, &CGPointZero, 1, context);
 
     CGContextRestoreGState(context);
+}
+
+- (CGFloat)ascent
+{
+    return super.ascent - self.shiftDown;
+}
+
+- (CGFloat)descent
+{
+    return super.descent + self.shiftDown;
+}
+
+@end
+
+#pragma mark - MTGlyphConstructionDisplay
+
+@implementation MTGlyphConstructionDisplay {
+    CGGlyph *_glyphs;
+    CGPoint *_positions;
+    MTFont* _font;
+    int _numGlyphs;
+}
+
+@synthesize shiftDown;
+
+- (instancetype)initWithGlyphs:(NSArray<NSNumber *> *)glyphs offsets:(NSArray<NSNumber *> *)offsets font:(MTFont *)font
+{
+    self = [super init];
+    if (self) {
+        NSAssert(glyphs.count == offsets.count, @"Glyphs and offsets need to match");
+        _numGlyphs = glyphs.count;
+        _glyphs = malloc(sizeof(CGGlyph) * _numGlyphs);
+        _positions = malloc(sizeof(CGPoint) * _numGlyphs);
+        for (int i = 0; i < _numGlyphs; i++) {
+            _glyphs[i] = glyphs[i].shortValue;
+            _positions[i] = CGPointMake(0, offsets[i].floatValue);
+        }
+        _font = font;
+        self.position = CGPointZero;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    CGContextSaveGState(context);
+    
+    [self.textColor setFill];
+    
+    // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
+    CGContextTranslateCTM(context, self.position.x, self.position.y - self.shiftDown);
+    CGContextSetTextPosition(context, 0, 0);
+    
+    // Draw the glyphs.
+    CTFontDrawGlyphs(_font.ctFont, _glyphs, _positions, _numGlyphs, context);
+    
+    CGContextRestoreGState(context);
+}
+
+- (CGFloat)ascent
+{
+    return super.ascent - self.shiftDown;
+}
+
+- (CGFloat)descent
+{
+    return super.descent + self.shiftDown;
+}
+
+- (void)dealloc
+{
+    free(_glyphs);
+    free(_positions);
 }
 
 @end
