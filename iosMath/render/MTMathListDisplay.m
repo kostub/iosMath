@@ -488,7 +488,7 @@ static BOOL isIos6Supported() {
     CGGlyph *_glyphs;
     CGPoint *_positions;
     MTFont* _font;
-    int _numGlyphs;
+    NSInteger _numGlyphs;
 }
 
 @synthesize shiftDown;
