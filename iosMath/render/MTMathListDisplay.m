@@ -329,20 +329,16 @@ static BOOL isIos6Supported() {
 #pragma mark - MTRadicalDisplay
 
 @implementation MTRadicalDisplay {
-    CGGlyph _glyph;
-    MTFont* _font;
-    CGFloat _glyphWidth;
+    MTDisplay* _radicalGlyph;
     CGFloat _radicalShift;
 }
 
-- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(CGGlyph) glyph glyphWidth:(CGFloat) glyphWidth position:(CGPoint) position range:(NSRange) range font:(MTFont*) font
+- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(MTDisplay*) glyph position:(CGPoint) position range:(NSRange) range
 {
     self = [super init];
     if (self) {
         _radicand = radicand;
-        _font = font;
-        _glyph = glyph;
-        _glyphWidth = glyphWidth;
+        _radicalGlyph = glyph;
         _radicalShift = 0;
 
         self.position = position;
@@ -374,7 +370,7 @@ static BOOL isIos6Supported() {
     // Note: position of degree is relative to parent.
     self.degree.position = CGPointMake(self.position.x + kernBefore, self.position.y + raise);
     // Update the width by the _radicalShift
-    self.width = _radicalShift + _glyphWidth + self.radicand.width;
+    self.width = _radicalShift + _radicalGlyph.width + self.radicand.width;
     // update the position of the radicand
     [self updateRadicandPosition];
 }
@@ -391,7 +387,7 @@ static BOOL isIos6Supported() {
     // This is to make the positioning of the radical consistent with fractions and
     // have the cursor position finding algorithm work correctly.
     // move the radicand by the width of the radical sign
-    self.radicand.position = CGPointMake(self.position.x + _radicalShift + _glyphWidth, self.position.y);
+    self.radicand.position = CGPointMake(self.position.x + _radicalShift + _radicalGlyph.width, self.position.y);
 }
 
 - (void)setTextColor:(UIColor *)textColor
@@ -416,8 +412,7 @@ static BOOL isIos6Supported() {
     CGContextSetTextPosition(context, 0, 0);
 
     // Draw the glyph.
-    CGPoint glyphPosition = CGPointMake(0, _shiftUp);
-    CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
+    [_radicalGlyph draw:context];
 
     // Draw the VBOX
     // for the kern of, we don't need to draw anything.
@@ -425,7 +420,7 @@ static BOOL isIos6Supported() {
 
     // draw the horizontal line with the given thickness
     UIBezierPath* path = [UIBezierPath bezierPath];
-    CGPoint lineStart = CGPointMake(_glyphWidth, self.ascent - heightFromTop - self.lineThickness / 2); // subtract half the line thickness to center the line
+    CGPoint lineStart = CGPointMake(_radicalGlyph.width, self.ascent - heightFromTop - self.lineThickness / 2); // subtract half the line thickness to center the line
     CGPoint lineEnd = CGPointMake(lineStart.x + self.radicand.width, lineStart.y);
     [path moveToPoint:lineStart];
     [path addLineToPoint:lineEnd];
@@ -438,21 +433,23 @@ static BOOL isIos6Supported() {
 
 @end
 
-#pragma mark - MTLargeGlyphDisplay
+#pragma mark - MTGlyphDisplay
 
 @implementation MTGlyphDisplay {
     CGGlyph _glyph;
     MTFont* _font;
 }
 
-- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font
+@synthesize shiftDown;
+
+- (instancetype)initWithGlpyh:(CGGlyph) glyph range:(NSRange) range font:(MTFont*) font
 {
     self = [super init];
     if (self) {
         _font = font;
         _glyph = glyph;
 
-        self.position = position;
+        self.position = CGPointZero;
         self.range = range;
     }
     return self;
@@ -465,17 +462,90 @@ static BOOL isIos6Supported() {
     [self.textColor setFill];
     
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextTranslateCTM(context, self.position.x, self.position.y - self.shiftDown);
     CGContextSetTextPosition(context, 0, 0);
 
-    // Draw the glyph.
-    CGPoint glyphPosition = CGPointMake(0, -self.shiftDown);
-    CTFontDrawGlyphs(_font.ctFont, &_glyph, &glyphPosition, 1, context);
+    CTFontDrawGlyphs(_font.ctFont, &_glyph, &CGPointZero, 1, context);
 
     CGContextRestoreGState(context);
 }
 
+- (CGFloat)ascent
+{
+    return super.ascent - self.shiftDown;
+}
+
+- (CGFloat)descent
+{
+    return super.descent + self.shiftDown;
+}
+
 @end
+
+#pragma mark - MTGlyphConstructionDisplay
+
+@implementation MTGlyphConstructionDisplay {
+    CGGlyph *_glyphs;
+    CGPoint *_positions;
+    MTFont* _font;
+    NSInteger _numGlyphs;
+}
+
+@synthesize shiftDown;
+
+- (instancetype)initWithGlyphs:(NSArray<NSNumber *> *)glyphs offsets:(NSArray<NSNumber *> *)offsets font:(MTFont *)font
+{
+    self = [super init];
+    if (self) {
+        NSAssert(glyphs.count == offsets.count, @"Glyphs and offsets need to match");
+        _numGlyphs = glyphs.count;
+        _glyphs = malloc(sizeof(CGGlyph) * _numGlyphs);
+        _positions = malloc(sizeof(CGPoint) * _numGlyphs);
+        for (int i = 0; i < _numGlyphs; i++) {
+            _glyphs[i] = glyphs[i].shortValue;
+            _positions[i] = CGPointMake(0, offsets[i].floatValue);
+        }
+        _font = font;
+        self.position = CGPointZero;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    CGContextSaveGState(context);
+    
+    [self.textColor setFill];
+    
+    // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
+    CGContextTranslateCTM(context, self.position.x, self.position.y - self.shiftDown);
+    CGContextSetTextPosition(context, 0, 0);
+    
+    // Draw the glyphs.
+    CTFontDrawGlyphs(_font.ctFont, _glyphs, _positions, _numGlyphs, context);
+    
+    CGContextRestoreGState(context);
+}
+
+- (CGFloat)ascent
+{
+    return super.ascent - self.shiftDown;
+}
+
+- (CGFloat)descent
+{
+    return super.descent + self.shiftDown;
+}
+
+- (void)dealloc
+{
+    free(_glyphs);
+    free(_positions);
+}
+
+@end
+
+#pragma mark - MTLargeOpLimitsDisplay
 
 @implementation MTLargeOpLimitsDisplay {
     CGFloat _limitShift;

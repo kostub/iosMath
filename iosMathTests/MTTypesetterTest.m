@@ -685,9 +685,9 @@
     XCTAssertFalse(glyph2.hasScript);
     
     // dimensions
-    XCTAssertEqualWithAccuracy(display.ascent, 28.92, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 18.94, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 39.44, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 28.93, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 18.93, 0.001);
+    XCTAssertEqualWithAccuracy(display.width, 39.44, 0.001);
 }
 
 - (void)testLargeOpNoLimitsText {
@@ -759,7 +759,7 @@
     XCTAssertFalse(line2.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 27.22, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 17.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 17.23, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 34.753, 0.01);
 }
 
@@ -787,7 +787,7 @@
     XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
     MTMathListDisplay* display0 = (MTMathListDisplay*) sub0;
     XCTAssertEqual(display0.type, kMTLinePositionSuperscript);
-    XCTAssertEqualsCGPoint(display0.position, CGPointMake(19.98, 23.72), 0.01);
+    XCTAssertEqualsCGPoint(display0.position, CGPointMake(19.98, 23.73), 0.001);
     XCTAssertTrue(NSEqualRanges(display0.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display0.hasScript);
     XCTAssertEqual(display0.index, 0);
@@ -806,7 +806,7 @@
     MTMathListDisplay* display1 = (MTMathListDisplay*) sub1;
     XCTAssertEqual(display1.type, kMTLinePositionSubscript);
     // Due to italic correction, positioned before subscript.
-    XCTAssertEqualsCGPoint(display1.position, CGPointMake(8.16, -20.04), 0.01);
+    XCTAssertEqualsCGPoint(display1.position, CGPointMake(8.16, -20.03), 0.001);
     XCTAssertTrue(NSEqualRanges(display1.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display1.hasScript);
     XCTAssertEqual(display1.index, 0);
@@ -836,9 +836,9 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line1.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 33.044, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 20.362, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 42.873, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 33.054, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 20.352, 0.001);
+    XCTAssertEqualWithAccuracy(display.width, 42.873, 0.001);
 }
 
 
@@ -928,7 +928,7 @@
     
     MTMathListDisplay* display2 = largeOp.lowerLimit;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.94, -21.684), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.94, -21.674), 0.001);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -944,7 +944,7 @@
     
     MTMathListDisplay* displayU = largeOp.upperLimit;
     XCTAssertEqual(displayU.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(7.44, 23.168), 0.01);
+    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(7.44, 23.178), 0.001);
     XCTAssertTrue(NSEqualRanges(displayU.range, NSMakeRange(0, 1)));
     XCTAssertFalse(displayU.hasScript);
     XCTAssertEqual(displayU.index, NSNotFound);
@@ -967,9 +967,9 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 29.356, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 22.006, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 43.653, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 29.366, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 21.996, 0.001);
+    XCTAssertEqualWithAccuracy(display.width, 43.653, 0.001);
 }
 
 - (void)testInner {
@@ -1040,8 +1040,8 @@
     XCTAssertEqual(display.descent, display2.descent);
     XCTAssertEqual(display.width, display2.width);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 14.96, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.98, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 14.97, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 4.97, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 27, 0.01);
 }
 
@@ -1197,7 +1197,7 @@
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 21.308, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 81.448, 0.01);
+    XCTAssertEqualWithAccuracy(display.width, 82.569, 0.01);
 }
 
 - (void) testMathTable

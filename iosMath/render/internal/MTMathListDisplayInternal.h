@@ -20,6 +20,13 @@
 
 @end
 
+// The Downshift protocol allows an MTDisplay to be shifted down by a given amount.
+@protocol DownShift <NSObject>
+
+@property (nonatomic) CGFloat shiftDown;
+
+@end
+
 @interface MTMathListDisplay ()
 
 - (instancetype)init NS_UNAVAILABLE;
@@ -54,23 +61,27 @@
 
 @interface MTRadicalDisplay ()
 
-- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(CGGlyph) glyph glyphWidth:(CGFloat) glyphWidth position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWitRadicand:(MTMathListDisplay*) radicand glpyh:(MTDisplay*) glyph position:(CGPoint) position range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 - (void) setDegree:(MTMathListDisplay *)degree fontMetrics:(MTFontMathTable*) fontMetrics;
 
 @property (nonatomic) CGFloat topKern;
 @property (nonatomic) CGFloat lineThickness;
-@property (nonatomic) CGFloat shiftUp;
 
 @end
 
 // Rendering of an large glyph as an MTDisplay
-@interface MTGlyphDisplay()
+@interface MTGlyphDisplay() <DownShift>
 
-- (instancetype)initWithGlpyh:(CGGlyph) glyph  position:(CGPoint) position range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithGlpyh:(CGGlyph) glyph range:(NSRange) range font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
 
-// Shift the glyph down by the given amount.
-@property (nonatomic) CGFloat shiftDown;
+@end
+
+// Rendering of a constructed glyph as an MTDisplay
+@interface MTGlyphConstructionDisplay : MTDisplay<DownShift>
+
+- (instancetype) init NS_UNAVAILABLE;
+- (instancetype) initWithGlyphs:(NSArray<NSNumber*>*) glyphs offsets:(NSArray<NSNumber*>*) offsets font:(MTFont*) font NS_DESIGNATED_INITIALIZER;
 
 @end
 

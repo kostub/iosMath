@@ -194,7 +194,6 @@ some important pieces that are missing and will be included in future
 updates. This includes:
 
 * Support for explicit big delimiters (bigl, bigr etc.)
-* Constructing tall radicals and delimiters
 * Support for specifing fonts such as `\cal` or `\rm`
 * Addition of missing plain TeX commands 
 
