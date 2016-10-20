@@ -64,6 +64,7 @@
 {
     NSParameterAssert(font);
     _font = font;
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
 
@@ -72,6 +73,7 @@
     _fontSize = fontSize;
     MTFont* font = [_font copyFontWithSize:_fontSize];
     self.font = font;
+    [self invalidateIntrinsicContentSize];
 }
 
 - (void) setMathList:(MTMathList *)mathList
@@ -79,6 +81,7 @@
     _mathList = mathList;
     _error = nil;
     _latex = [MTMathListBuilder mathListToString:mathList];
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
 
@@ -97,12 +100,14 @@
         _errorLabel.hidden = !self.displayErrorInline;
         _errorLabel.textColor = [UIColor redColor];
     }
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
 
 - (void)setLabelMode:(MTMathUILabelMode)labelMode
 {
     _labelMode = labelMode;
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
 
@@ -117,6 +122,7 @@
 - (void)setTextAlignment:(MTTextAlignment)textAlignment
 {
     _textAlignment = textAlignment;
+    [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
 
@@ -195,6 +201,11 @@
     size.width = displayList.width + _paddingLeft + _paddingRight;
     size.height = displayList.ascent + displayList.descent + _paddingTop + _paddingBottom;
     return size;
+}
+
+- (CGSize) intrinsicContentSize
+{
+    return [self sizeThatFits:CGSizeZero];
 }
 
 @end
