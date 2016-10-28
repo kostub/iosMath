@@ -35,6 +35,8 @@
 @property (nonatomic) FontPickerDelegate* pickerDelegate;
 @property (weak, nonatomic) IBOutlet UITextField *colorField;
 @property (nonatomic) ColorPickerDelegate* colorPickerDelegate;
+@property (weak, nonatomic) IBOutlet MTMathUILabel *mathLabel;
+@property (weak, nonatomic) IBOutlet UITextField *latexField;
 
 @end
 
@@ -72,6 +74,8 @@
     picker.dataSource = self.colorPickerDelegate;
     self.colorField.inputView = picker;
     self.colorField.delegate = self;
+
+    self.latexField.delegate = self;
 
     UIView* contentView = [[UIView alloc] init];
     [self addFullSizeView:contentView to:self.scrollView];
@@ -430,6 +434,19 @@
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
+    if (textField == self.latexField) {
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    if (textField == self.latexField) {
+        [textField resignFirstResponder];
+        self.mathLabel.latex = self.latexField.text;
+        return YES;
+    }
     return NO;
 }
 
