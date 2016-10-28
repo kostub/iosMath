@@ -159,7 +159,7 @@
     self.labels[3] = [self createMathLabel:@"5\\times(-2 \\div 1) = -10" withHeight:40];
     self.labels[3].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
     self.labels[3].textAlignment = kMTTextAlignmentRight;
-    self.labels[3].paddingRight = 20;
+    self.labels[3].contentInsets = UIEdgeInsetsMake(0, 0, 0, 20);
 
     self.labels[4] = [self createMathLabel:@"-h - (5xy+2) = z" withHeight:40];
 
@@ -171,7 +171,7 @@
     // Display mode fraction
     self.labels[6] = [self createMathLabel:@"\\frac{x+\\frac{12}{5}}{y}+\\frac1z = \\frac{xz+y+\\frac{12}{5}z}{yz}" withHeight:60];
     self.labels[6].backgroundColor = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
-    self.labels[6].paddingLeft = 20;
+    self.labels[6].contentInsets = UIEdgeInsetsMake(0, 20, 0, 0);
 
     // fraction in fraction in text mode
     self.labels[7] = [self createMathLabel:@"\\frac{x+\\frac{12}{5}}{y}+\\frac1z = \\frac{xz+y+\\frac{12}{5}z}{yz}" withHeight:60];
@@ -264,6 +264,7 @@
                            "a & b\\\\ c & d \\\\ e & f \\\\ g &  h \\\\ i & j"
                            "\\end{bmatrix}"
                                      withHeight:120];
+    self.labels[42] = [self createMathLabel:@"x{\\scriptstyle y}z" withHeight:30];
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }

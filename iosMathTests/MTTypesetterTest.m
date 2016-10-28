@@ -758,7 +758,7 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 27.22, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 27.23, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 17.23, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 34.753, 0.01);
 }

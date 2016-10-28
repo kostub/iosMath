@@ -42,10 +42,7 @@
     self.layer.geometryFlipped = YES;  // For ease of interaction with the CoreText coordinate system.
     // default font size
     _fontSize = 20;
-    _paddingLeft = 0;
-    _paddingRight = 0;
-    _paddingTop = 0;
-    _paddingBottom = 0;
+    _contentInsets = UIEdgeInsetsZero;
     _labelMode = kMTMathUILabelModeDisplay;
     MTFont* font = [MTFontManager fontManager].defaultFont;
     self.font = font;
@@ -73,7 +70,13 @@
     _fontSize = fontSize;
     MTFont* font = [_font copyFontWithSize:_fontSize];
     self.font = font;
+}
+
+- (void)setContentInsets:(UIEdgeInsets)contentInsets
+{
+    _contentInsets = contentInsets;
     [self invalidateIntrinsicContentSize];
+    [self setNeedsLayout];
 }
 
 - (void) setMathList:(MTMathList *)mathList
@@ -165,24 +168,24 @@
         CGFloat textX = 0;
         switch (self.textAlignment) {
             case kMTTextAlignmentLeft:
-                textX = _paddingLeft;
+                textX = self.contentInsets.left;
                 break;
             case kMTTextAlignmentCenter:
-                textX = (self.bounds.size.width - _paddingLeft - _paddingRight - _displayList.width) / 2 + _paddingLeft;
+                textX = (self.bounds.size.width - self.contentInsets.left - self.contentInsets.right - _displayList.width) / 2 + self.contentInsets.left;
                 break;
             case kMTTextAlignmentRight:
-                textX = (self.bounds.size.width - _displayList.width -_paddingRight);
+                textX = (self.bounds.size.width - _displayList.width - self.contentInsets.right);
                 break;
         }
         
-        CGFloat availableHeight = self.bounds.size.height - _paddingBottom - _paddingTop;
+        CGFloat availableHeight = self.bounds.size.height - self.contentInsets.bottom - self.contentInsets.top;
         // center things vertically
         CGFloat height = _displayList.ascent + _displayList.descent;
         if (height < _fontSize/2) {
             // Set the height to the half the size of the font
             height = _fontSize/2;
         }        
-        CGFloat textY = (availableHeight - height) / 2 + _displayList.descent + _paddingBottom;
+        CGFloat textY = (availableHeight - height) / 2 + _displayList.descent + self.contentInsets.bottom;
         _displayList.position = CGPointMake(textX, textY);
     } else {
         _displayList = nil;
@@ -198,8 +201,8 @@
         displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
     }
 
-    size.width = displayList.width + _paddingLeft + _paddingRight;
-    size.height = displayList.ascent + displayList.descent + _paddingTop + _paddingBottom;
+    size.width = displayList.width + self.contentInsets.left + self.contentInsets.right;
+    size.height = displayList.ascent + displayList.descent + self.contentInsets.top + self.contentInsets.bottom;
     return size;
 }
 

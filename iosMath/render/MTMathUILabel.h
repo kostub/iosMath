@@ -57,19 +57,6 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  */
 IB_DESIGNABLE @interface MTMathUILabel : UIView
 
-/** Padding to add to the left of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingLeft;
-/** Padding to add to the right of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingRight;
-/** Padding to add to the top of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingTop;
-/** Padding to add to the bottom of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingBottom;
-
 /** The `MTMathList` to render. Setting this will remove any 
  `latex` that has already been set. If `latex` has been set, this will
  return the parsed `MTMathList` if the `latex` parses successfully. Use this
@@ -98,6 +85,12 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 
 /** This sets the text color of the rendered math formula. The default color is black. */
 @property (nonatomic, nonnull) IBInspectable UIColor* textColor;
+
+/** The minimum distance from the margin of the view to the rendered math. This value is 
+ `UIEdgeInsetsZero` by default. This is useful if you need some padding between the math and 
+ the border/background color. sizeThatFits: will have its returned size increased by these insets.
+ */
+@property (nonatomic) IBInspectable UIEdgeInsets contentInsets;
 
 /** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;
