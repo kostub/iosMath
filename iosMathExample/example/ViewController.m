@@ -13,10 +13,28 @@
 #import "MTMathUILabel.h"
 #import "MTFontManager.h"
 
-@interface ViewController ()
+@interface FontPickerDelegate : NSObject <UIPickerViewDelegate, UIPickerViewDataSource>
+
+@property (nonatomic) NSArray<NSString*> *fontNames;
+@property (nonatomic, weak) ViewController* controller;
+
+@end
+
+@interface ColorPickerDelegate : NSObject <UIPickerViewDelegate, UIPickerViewDataSource>
+
+@property (nonatomic) NSArray<UIColor*> *colors;
+@property (nonatomic, weak) ViewController* controller;
+
+@end
+
+@interface ViewController () <UITextFieldDelegate>
 
 @property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* demoLabels;
 @property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* labels;
+@property (weak, nonatomic) IBOutlet UITextField *fontField;
+@property (nonatomic) FontPickerDelegate* pickerDelegate;
+@property (weak, nonatomic) IBOutlet UITextField *colorField;
+@property (nonatomic) ColorPickerDelegate* colorPickerDelegate;
 
 @end
 
@@ -36,6 +54,25 @@
 {
     [super viewDidLoad];
 
+    // Setup the font picker
+    self.pickerDelegate = [[FontPickerDelegate alloc] init];
+    self.pickerDelegate.controller = self;
+    UIPickerView* picker = [[UIPickerView alloc] init];
+    picker.delegate = self.pickerDelegate;
+    picker.dataSource = self.pickerDelegate;
+    self.fontField.inputView = picker;
+    self.fontField.delegate = self;
+    self.fontField.text = self.pickerDelegate.fontNames[0];
+
+    // Setup the color picker
+    self.colorPickerDelegate = [[ColorPickerDelegate alloc] init];
+    self.colorPickerDelegate.controller = self;
+    picker = [[UIPickerView alloc] init];
+    picker.delegate = self.colorPickerDelegate;
+    picker.dataSource = self.colorPickerDelegate;
+    self.colorField.inputView = picker;
+    self.colorField.delegate = self;
+
     UIView* contentView = [[UIView alloc] init];
     [self addFullSizeView:contentView to:self.scrollView];
     // set the size of the content view
@@ -52,7 +89,7 @@
     // This is first label so set the height from the top
     UIView* view = self.demoLabels[0];
     NSDictionary *views = NSDictionaryOfVariableBindings(view);
-    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(30)-[view]"
+    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(10)-[view]"
                                                                                     options:0
                                                                                     metrics:nil
                                                                                       views:views]];
@@ -351,7 +388,7 @@
 }
 
 #pragma mark Buttons
-- (IBAction)latinButtonPressed:(id)sender
+- (void)latinButtonPressed:(id)sender
 {
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
@@ -361,7 +398,7 @@
     }
 }
 
-- (IBAction)termesButtonPressed:(id)sender
+- (void)termesButtonPressed:(id)sender
 {
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
@@ -371,7 +408,7 @@
     }
 }
 
-- (IBAction)xitsButtonPressed:(id)sender
+- (void)xitsButtonPressed:(id)sender
 {
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
@@ -380,14 +417,106 @@
         label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
     }
 }
-- (IBAction)colorButtonPressed:(UIButton *)sender
+
+- (void) changeColor:(UIColor*) color
 {
     for (MTMathUILabel* label in self.demoLabels) {
-        label.textColor = sender.backgroundColor;
+        label.textColor = color;
     }
     for (MTMathUILabel* label in self.labels) {
-        label.textColor = sender.backgroundColor;
+        label.textColor = color;
     }
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+    return NO;
+}
+
+@end
+
+@implementation FontPickerDelegate
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.fontNames = @[@"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math"];
+    }
+    return self;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    return self.fontNames.count;
+}
+
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
+{
+    return self.fontNames[row];
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
+{
+    self.controller.fontField.text = self.fontNames[row];
+    [self.controller.fontField resignFirstResponder];
+    switch (row) {
+        case 0:
+            [self.controller latinButtonPressed:nil];
+            break;
+
+        case 1:
+            [self.controller termesButtonPressed:nil];
+
+        case 2:
+            [self.controller xitsButtonPressed:nil];
+
+        default:
+            break;
+    }
+}
+
+@end
+
+@implementation ColorPickerDelegate
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.colors = @[UIColor.blackColor, UIColor.blueColor, UIColor.redColor, UIColor.greenColor];
+    }
+    return self;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    return self.colors.count;
+}
+
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
+{
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+    label.backgroundColor = self.colors[row];
+    return label;
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
+{
+    UIColor* color = self.colors[row];
+    self.controller.colorField.backgroundColor = color;
+    [self.controller changeColor:color];
+    [self.controller.colorField resignFirstResponder];
 }
 
 @end
