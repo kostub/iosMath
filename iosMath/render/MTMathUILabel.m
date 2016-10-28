@@ -54,6 +54,7 @@
     _errorLabel = [[UILabel alloc] init];
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;
+    _errorLabel.textColor = [UIColor redColor];
     [self addSubview:_errorLabel];
 }
 
@@ -101,7 +102,8 @@
         _errorLabel.text = error.localizedDescription;
         _errorLabel.frame = self.bounds;
         _errorLabel.hidden = !self.displayErrorInline;
-        _errorLabel.textColor = [UIColor redColor];
+    } else {
+        _errorLabel.hidden = YES;
     }
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
