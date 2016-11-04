@@ -8,7 +8,6 @@
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
-
 @import UIKit;
 @import CoreText;
 
@@ -56,20 +55,7 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  When created it uses `[MTFontManager defaultFont]` as its font. This can be changed using
  the `font` parameter.
  */
-@interface MTMathUILabel : UIView
-
-/** Padding to add to the left of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingLeft;
-/** Padding to add to the right of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingRight;
-/** Padding to add to the top of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingTop;
-/** Padding to add to the bottom of the label. It is prefered
- to use Auto Layout instead of padding. */
-@property (nonatomic) CGFloat paddingBottom;
+IB_DESIGNABLE @interface MTMathUILabel : UIView
 
 /** The `MTMathList` to render. Setting this will remove any 
  `latex` that has already been set. If `latex` has been set, this will
@@ -83,7 +69,7 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  has been set. If latex has not been set, this will return the latex output for the
  `mathList` that is set.
  @see error */
-@property (nonatomic, nullable) NSString* latex;
+@property (nonatomic, nullable) IBInspectable NSString* latex;
 
 /** This contains any error that occurred when parsing the latex. */
 @property (nonatomic, readonly, nullable) NSError* error;
@@ -95,10 +81,16 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
 @property (nonatomic, nonnull) MTFont* font;
 
 /** Convenience method to just set the size of the font without changing the fontface. */
-@property (nonatomic) CGFloat fontSize;
+@property (nonatomic) IBInspectable CGFloat fontSize;
 
 /** This sets the text color of the rendered math formula. The default color is black. */
-@property (nonatomic, nonnull) UIColor* textColor;
+@property (nonatomic, nonnull) IBInspectable UIColor* textColor;
+
+/** The minimum distance from the margin of the view to the rendered math. This value is 
+ `UIEdgeInsetsZero` by default. This is useful if you need some padding between the math and 
+ the border/background color. sizeThatFits: will have its returned size increased by these insets.
+ */
+@property (nonatomic) IBInspectable UIEdgeInsets contentInsets;
 
 /** Sets the placeholder color of the rendered math formula. The default color is black. */
 @property (nonatomic, nonnull) UIColor* placeholderColor;

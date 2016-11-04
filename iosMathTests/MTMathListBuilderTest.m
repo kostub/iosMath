@@ -12,6 +12,7 @@
 @import XCTest;
 
 #import "MTMathListBuilder.h"
+#import "MTMathAtomFactory.h"
 
 @interface MTMathListBuilderTest : XCTestCase
 
@@ -931,7 +932,6 @@ static NSArray* getTestDataLeftRight() {
     
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    // TODO: get rid of the textstyles
     XCTAssertEqualObjects(latex, @"\\begin{matrix}x&y\\\\ z&w\\end{matrix}");
 }
 
@@ -984,7 +984,6 @@ static NSArray* getTestDataLeftRight() {
     
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    // TODO: get rid of the textstyles
     XCTAssertEqualObjects(latex, @"\\left( \\begin{matrix}x&y\\\\ z&w\\end{matrix}\\right) ");
 }
 
@@ -1177,6 +1176,25 @@ static NSArray* getTestDataParseErrors() {
             NSInteger code = [num integerValue];
             XCTAssertEqual(error.code, code, @"%@", desc);
         }
+}
+
+- (void) testCustom
+{
+    NSString* str = @"\\lcm(a,b)";
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    
+    [MTMathAtomFactory addLatexSymbol:@"lcm" value:[MTMathAtomFactory operatorWithName:@"lcm" limits:NO]];
+    error = nil;
+    list = [MTMathListBuilder buildFromString:str error:&error];
+    NSArray* atomTypes = @[@(kMTMathAtomLargeOperator), @(kMTMathAtomOpen), @(kMTMathAtomVariable), @(kMTMathAtomPunctuation), @(kMTMathAtomVariable), @(kMTMathAtomClose)];
+    [self checkAtomTypes:list types:atomTypes desc:@"Error for lcm"];
+    
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\lcm (a,b)");
 }
 
 @end

@@ -43,16 +43,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return [MTMathAtom atomWithType:kMTMathAtomPlaceholder value:MTSymbolWhiteSquare];
 }
 
-+ (MTMathAtom *)openParens
-{
-    return [MTMathAtom atomWithType:kMTMathAtomOpen value:@"("];
-}
-
-+ (MTMathAtom *)closeParens
-{
-    return [MTMathAtom atomWithType:kMTMathAtomClose value:@")"];
-}
-
 + (MTFraction *)placeholderFraction
 {
     MTFraction *frac = [MTFraction new];
@@ -79,11 +69,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     rad.radicand = [MTMathList new];
     [rad.radicand addAtom:[self placeholder]];
     return rad;
-}
-
-+ (MTMathAtom *)operatorWithName:(NSString *)name
-{
-    return [[MTLargeOperator alloc] initWithValue:name limits:NO];
 }
 
 + (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
@@ -160,7 +145,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         symbolName = canonicalName;
     }
     
-    NSDictionary* commands = [MTMathAtomFactory supportedLatexSymbols];
+    NSDictionary* commands = [self supportedLatexSymbols];
     MTMathAtom* atom = commands[symbolName];
     if (atom) {
         // Return a copy of the atom since atoms are mutable.
@@ -176,6 +161,18 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     }
     NSDictionary* dict = [MTMathAtomFactory textToLatexSymbolNames];
     return dict[atom.nucleus];
+}
+
++ (void)addLatexSymbol:(NSString *)name value:(MTMathAtom *)atom
+{
+    NSParameterAssert(name);
+    NSParameterAssert(atom);
+    NSMutableDictionary<NSString*, MTMathAtom*>* commands = [self supportedLatexSymbols];
+    commands[name] = atom;
+    if (atom.nucleus.length != 0) {
+        NSMutableDictionary<NSString*, NSString*>* dict = [self textToLatexSymbolNames];
+        dict[atom.nucleus] = name;
+    }
 }
 
 + (NSArray<NSString *> *)supportedLatexSymbolNames
@@ -360,11 +357,11 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return nil;
 }
 
-+ (NSDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
++ (NSMutableDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
 {
-    static NSDictionary<NSString*, MTMathAtom*>* commands = nil;
+    static NSMutableDictionary<NSString*, MTMathAtom*>* commands = nil;
     if (!commands) {
-        commands = @{
+        commands = [NSMutableDictionary dictionaryWithDictionary:@{
                      @"square" : [MTMathAtomFactory placeholder],
                      
                      // Greek characters
@@ -625,7 +622,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"textstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleText],
                      @"scriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript],
                      @"scriptscriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript],
-                     };
+                     }];
         
     }
     return commands;
@@ -654,19 +651,19 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return aliases;
 }
 
-+ (NSDictionary*) textToLatexSymbolNames
++ (NSMutableDictionary<NSString*, NSString*>*) textToLatexSymbolNames
 {
-    static NSDictionary* textToCommands = nil;
+    static NSMutableDictionary<NSString*, NSString*>* textToCommands = nil;
     if (!textToCommands) {
         NSDictionary* commands = [self supportedLatexSymbols];
-        NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:commands.count];
+        textToCommands = [NSMutableDictionary dictionaryWithCapacity:commands.count];
         for (NSString* command in commands) {
             MTMathAtom* atom = commands[command];
             if (atom.nucleus.length == 0) {
                 continue;
             }
             
-            NSString* existingCommand = mutableDict[atom.nucleus];
+            NSString* existingCommand = textToCommands[atom.nucleus];
             if (existingCommand) {
                 // If there are 2 commands for the same symbol, choose one deterministically.
                 if (command.length > existingCommand.length) {
@@ -680,9 +677,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                 }
             }
             // In other cases replace the command.
-            mutableDict[atom.nucleus] = command;
+            textToCommands[atom.nucleus] = command;
         }
-        textToCommands = [mutableDict copy];
     }
     return textToCommands;
 }

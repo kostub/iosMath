@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.9.1 (2016-10-17)
+* Support for constructing arbitrarily tall delimiters and radicals.
+* Fix placement of limits on large operators for the XITS font.
+* Allow MTMathUILabel to be used in the interface builder.
+
 ### v0.9.0 (2016-08-29)
 * Added support for matrix environments (matrix, pmatrix, bmatrix,
   Bmatrix, vmatrix, Vmatrix)

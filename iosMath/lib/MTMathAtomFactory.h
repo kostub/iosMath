@@ -54,12 +54,6 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 
 #pragma mark -
 
-/** Returns an atom for the open parens sign. */
-+ (MTMathAtom *)openParens __deprecated_msg("Use [MTMathAtomFactory atomForCharacter:'('] instead");
-
-/** Returns an atom for the close parens sign. */
-+ (MTMathAtom *)closeParens __deprecated_msg("Use [MTMathAtomFactory atomForCharacter:')'] instead");
-
 /** Gets the atom with the right type for the given character. If an atom
  cannot be determined for a given character this returns nil. 
  This function follows latex conventions for assigning types to the atoms.
@@ -92,12 +86,14 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  */
 + (NSString*) latexSymbolNameForAtom:(MTMathAtom*) atom;
 
+/** Define a latex symbol for rendering. This function allows defining custom symbols that are
+ not already present in the default set, or override existing symbols with new meaning.
+ e.g. to define a symbol for "lcm" one can call:
+ `[MTMathAtomFactory addLatexSymbol:@"lcm" value:[MTMathAtomFactory operatorWithName:@"lcm" limits:NO]]` */
++ (void) addLatexSymbol:(NSString*) name value:(MTMathAtom*) atom;
+
 /** Returns a list of all supported lated symbols names. */
 + (NSArray<NSString*>*) supportedLatexSymbolNames;
-
-/** Deprecated. Use (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
- instead. This sets the limits to false. */
-+ (MTMathAtom *) operatorWithName:(NSString*) name __deprecated;
 
 /** Returns a large opertor for the given name. If limits is true, limits are set up on 
  the operator and displyed differently. */

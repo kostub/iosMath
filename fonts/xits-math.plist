@@ -2697,6 +2697,8 @@
 		<integer>150</integer>
 		<key>MathLeading</key>
 		<integer>150</integer>
+		<key>MinConnectorOverlap</key>
+		<integer>50</integer>
 		<key>OverbarExtraAscender</key>
 		<integer>66</integer>
 		<key>OverbarRuleThickness</key>
@@ -6624,6 +6626,6 @@
 		</array>
 	</dict>
 	<key>version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 </dict>
 </plist>

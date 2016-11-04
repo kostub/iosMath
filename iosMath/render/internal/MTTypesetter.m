@@ -860,7 +860,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGFloat glyphHeight = self.fractionDelimiterHeight;
     CGPoint position = CGPointZero;
     if (frac.leftDelimiter.length > 0) {
-        MTGlyphDisplay* leftGlyph = [self findGlyphForBoundary:frac.leftDelimiter withHeight:glyphHeight];
+        MTDisplay* leftGlyph = [self findGlyphForBoundary:frac.leftDelimiter withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
@@ -871,7 +871,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     [innerElements addObject:display];
     
     if (frac.rightDelimiter.length > 0) {
-        MTGlyphDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
+        MTDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
         [innerElements addObject:rightGlyph];
@@ -892,23 +892,45 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     }
 }
 
+- (MTDisplay<DownShift>*)getRadicalGlyphWithHeight:(CGFloat)radicalHeight
+{
+    CGFloat glyphAscent, glyphDescent, glyphWidth;
+    
+    CGGlyph radicalGlyph = [self findGlyphForCharacterAtIndex:0 inString:@"\u221A"];
+    CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
+    
+    MTDisplay<DownShift>* glyphDisplay;
+    if (glyphAscent + glyphDescent < radicalHeight) {
+        // the glyphs is not as large as required. A glyph needs to be constructed using the extenders.
+        glyphDisplay = [self constructGlyph:radicalGlyph withHeight:radicalHeight];
+    }
+    
+    if (!glyphDisplay) {
+        // No constructed display so use the glyph we got.
+        glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph range:NSMakeRange(NSNotFound, 0) font:_styleFont];
+        glyphDisplay.ascent = glyphAscent;
+        glyphDisplay.descent = glyphDescent;
+        glyphDisplay.width = glyphWidth;
+    }
+    return glyphDisplay;
+}
+
 - (MTRadicalDisplay*) makeRadical:(MTMathList*) radicand range:(NSRange) range
 {
     MTMathListDisplay* innerDisplay = [MTTypesetter createLineForMathList:radicand font:_font style:_style cramped:YES];
     CGFloat clearance = self.radicalVerticalGap;
     CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
-    CGFloat glyphAscent, glyphDescent, glyphWidth;
-    
-    CGGlyph radicalGlyph = [self findGlyphForCharacterAtIndex:0 inString:@"\u221A"];
-    CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
+
+    MTDisplay<DownShift>* glyph = [self getRadicalGlyphWithHeight:radicalHeight];
+
     
     // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
     // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
     // Latex computes delta as descent - (h(inner) + d(inner) + clearance)
     // but since we may not have ascent == thickness, we modify the delta calculation slightly.
     // If the font designer followes Latex conventions, it will be identical.
-    CGFloat delta = (glyphDescent + glyphAscent) - (innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness);
+    CGFloat delta = (glyph.descent + glyph.ascent) - (innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness);
     if (delta > 0) {
         clearance += delta/2;  // increase the clearance to center the radicand inside the sign.
     }
@@ -916,20 +938,22 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     // we need to shift the radical glyph up, to coincide with the baseline of inner.
     // The new ascent of the radical glyph should be thickness + adjusted clearance + h(inner)
     CGFloat radicalAscent = radicalRuleThickness + clearance + innerDisplay.ascent;
-    CGFloat shiftUp = radicalAscent - glyphAscent;  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
+    CGFloat shiftUp = radicalAscent - glyph.ascent;  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
+    glyph.shiftDown = -shiftUp;
     
-    MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyph glyphWidth:glyphWidth position:_currentPosition range:range font:_styleFont];
+    MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyph position:_currentPosition range:range];
     radical.ascent = radicalAscent + _styleFont.mathTable.radicalExtraAscender;
     radical.topKern = _styleFont.mathTable.radicalExtraAscender;
-    radical.shiftUp = shiftUp;
     radical.lineThickness = radicalRuleThickness;
     // Note: Until we have radical construction from parts, it is possible that glyphAscent+glyphDescent is less
     // than the requested height of the glyph (i.e. radicalHeight), so in the case the innerDisplay has a larger
     // descent we use the innerDisplay's descent.
-    radical.descent = MAX(glyphAscent + glyphDescent  - radicalAscent, innerDisplay.descent);
-    radical.width = glyphWidth + innerDisplay.width;
+    radical.descent = MAX(glyph.ascent + glyph.descent  - radicalAscent, innerDisplay.descent);
+    radical.width = glyph.width + innerDisplay.width;
     return radical;
 }
+
+#pragma mark Glyphs
 
 - (CGGlyph) findGlyph:(CGGlyph) glyph withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
@@ -959,14 +983,97 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             return glyphs[i];
         }
     }
-    // TODO: none of the glyphs are as large as required. A glyph needs to be constructed using the extenders.
     *glyphAscent = ascent;
     *glyphDescent = descent;
     *glyphWidth = width;
     return glyphs[numVariants - 1];
 }
 
-#pragma Large Operators
+- (MTGlyphConstructionDisplay*) constructGlyph:(CGGlyph) glyph withHeight:(CGFloat) glyphHeight
+{
+    NSArray<MTGlyphPart*>* parts = [_styleFont.mathTable getVerticalGlyphAssemblyForGlyph:glyph];
+    if (parts.count == 0) {
+        return nil;
+    }
+    NSArray<NSNumber*>* glyphs, *offsets;
+    CGFloat height;
+    [self constructGlyphWithParts:parts height:glyphHeight glyphs:&glyphs offsets:&offsets height:&height];
+    CGGlyph first = glyphs[0].shortValue;
+    CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &first, NULL, 1);
+    MTGlyphConstructionDisplay* display = [[MTGlyphConstructionDisplay alloc] initWithGlyphs:glyphs offsets:offsets font:_styleFont];
+    display.width = width;
+    display.ascent = height;
+    display.descent = 0;   // it's upto the rendering to adjust the display up or down.
+    return display;
+}
+
+- (void) constructGlyphWithParts:(NSArray<MTGlyphPart*>*) parts height:(CGFloat) glyphHeight glyphs:(NSArray<NSNumber*>**) glyphs offsets:(NSArray<NSNumber*>**) offsets height:(CGFloat*) height
+{
+    NSParameterAssert(glyphs);
+    NSParameterAssert(offsets);
+
+    for (int numExtenders = 0; true; numExtenders++) {
+        NSMutableArray<NSNumber*>* glyphsRv = [NSMutableArray array];
+        NSMutableArray<NSNumber*>* offsetsRv = [NSMutableArray array];
+        
+        MTGlyphPart* prev = nil;
+        CGFloat minDistance = _styleFont.mathTable.minConnectorOverlap;
+        CGFloat minOffset = 0;
+        CGFloat maxDelta = CGFLOAT_MAX;  // the maximum amount we can increase the offsets by
+        
+        for (MTGlyphPart* part in parts) {
+            int repeats = 1;
+            if (part.isExtender) {
+                repeats = numExtenders;
+            }
+            // add the extender num extender times
+            for (int i = 0; i < repeats; i++) {
+                [glyphsRv addObject:[NSNumber numberWithShort:part.glyph]];
+                if (prev) {
+                    CGFloat maxOverlap = MIN(prev.endConnectorLength, part.startConnectorLength);
+                    // the minimum amount we can add to the offset
+                    CGFloat minOffsetDelta = prev.fullAdvance - maxOverlap;
+                    // The maximum amount we can add to the offset.
+                    CGFloat maxOffsetDelta = prev.fullAdvance - minDistance;
+                    // we can increase the offsets by at most max - min.
+                    maxDelta = MIN(maxDelta, maxOffsetDelta - minOffsetDelta);
+                    minOffset = minOffset + minOffsetDelta;
+                }
+                [offsetsRv addObject:[NSNumber numberWithFloat:minOffset]];
+                prev = part;
+            }
+        }
+        
+        NSAssert(glyphsRv.count == offsetsRv.count, @"Offsets should match the glyphs");
+        if (!prev) {
+            continue;   // maybe only extenders
+        }
+        CGFloat minHeight = minOffset + prev.fullAdvance;
+        CGFloat maxHeight = minHeight + maxDelta * (glyphsRv.count - 1);
+        if (minHeight >= glyphHeight) {
+            // we are done
+            *glyphs = glyphsRv;
+            *offsets = offsetsRv;
+            *height = minHeight;
+            return;
+        } else if (glyphHeight <= maxHeight) {
+            // spread the delta equally between all the connectors
+            CGFloat delta = glyphHeight - minHeight;
+            CGFloat deltaIncrease = delta / (glyphsRv.count - 1);
+            CGFloat lastOffset = 0;
+            for (int i = 0; i < offsetsRv.count; i++) {
+                CGFloat offset = offsetsRv[i].floatValue + i*deltaIncrease;
+                offsetsRv[i] = [NSNumber numberWithFloat:offset];
+                lastOffset = offset;
+            }
+            // we are done
+            *glyphs = glyphsRv;
+            *offsets = offsetsRv;
+            *height = lastOffset + prev.fullAdvance;
+            return;
+        }
+    }
+}
 
 - (CGGlyph) findGlyphForCharacterAtIndex:(NSUInteger) index inString:(NSString*) str
 {
@@ -985,6 +1092,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     }
     return glyph[0];
 }
+
+#pragma mark Large Operators
 
 - (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
 {
@@ -1005,7 +1114,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         CGFloat ascent, descent;
         getBboxDetails(bbox, &ascent, &descent);
         CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
-        MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:_currentPosition range:op.indexRange font:_styleFont];
+        MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph range:op.indexRange font:_styleFont];
         glyphDisplay.ascent = ascent;
         glyphDisplay.descent = descent;
         glyphDisplay.width = width;
@@ -1015,6 +1124,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             glyphDisplay.width -= delta;
         }
         glyphDisplay.shiftDown = shiftDown;
+        glyphDisplay.position = _currentPosition;
         return [self addLimitsToDisplay:glyphDisplay forOperator:op delta:delta];
     } else {
         // Create a regular node
@@ -1086,7 +1196,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     NSMutableArray* innerElements = [[NSMutableArray alloc] init];
     CGPoint position = CGPointZero;
     if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
-        MTGlyphDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
+        MTDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
@@ -1097,7 +1207,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     [innerElements addObject:innerListDisplay];
     
     if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
-        MTGlyphDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
+        MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
         [innerElements addObject:rightGlyph];
@@ -1106,19 +1216,27 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     return innerDisplay;
 }
 
-- (MTGlyphDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
+- (MTDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:delimiter];
     CGGlyph glyph = [self findGlyph:leftGlyph withHeight:glyphHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
+ 
+    MTDisplay<DownShift>* glyphDisplay;
+    if (glyphAscent + glyphDescent < glyphHeight) {
+        // we didn't find a pre-built glyph that is large enough
+        glyphDisplay = [self constructGlyph:leftGlyph withHeight:glyphHeight];
+    }
     
-    // Create a glyph display
-    MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph position:CGPointZero range:NSMakeRange(NSNotFound, 0) font:_styleFont];
-    glyphDisplay.ascent = glyphAscent;
-    glyphDisplay.descent = glyphDescent;
-    glyphDisplay.width = glyphWidth;
+    if (!glyphDisplay) {
+        // Create a glyph display
+        glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph range:NSMakeRange(NSNotFound, 0) font:_styleFont];
+        glyphDisplay.ascent = glyphAscent;
+        glyphDisplay.descent = glyphDescent;
+        glyphDisplay.width = glyphWidth;
+    }
     // Center the glyph on the axis
-    CGFloat shiftDown = 0.5*(glyphAscent - glyphDescent) - _styleFont.mathTable.axisHeight;
+    CGFloat shiftDown = 0.5*(glyphDisplay.ascent - glyphDisplay.descent) - _styleFont.mathTable.axisHeight;
     glyphDisplay.shiftDown = shiftDown;
     return glyphDisplay;
 }
@@ -1249,10 +1367,11 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(skew, height);
-    MTGlyphDisplay* accentGlyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:accentGlyph position:accentPosition range:accent.indexRange font:_styleFont];
+    MTGlyphDisplay* accentGlyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:accentGlyph range:accent.indexRange font:_styleFont];
     accentGlyphDisplay.ascent = glyphAscent;
     accentGlyphDisplay.descent = glyphDescent;
     accentGlyphDisplay.width = glyphWidth;
+    accentGlyphDisplay.position = accentPosition;
 
     if ([self isSingleCharAccentee:accent] && (accent.subScript || accent.superScript)) {
         // Attach the super/subscripts to the accentee instead of the accent.

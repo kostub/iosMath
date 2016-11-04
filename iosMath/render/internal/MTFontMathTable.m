@@ -13,6 +13,21 @@
 #import "MTFont.h"
 #import "MTFont+Internal.h"
 
+
+@interface MTGlyphPart ()
+
+@property (nonatomic) CGGlyph glyph;
+@property (nonatomic) CGFloat fullAdvance;
+@property (nonatomic) CGFloat startConnectorLength;
+@property (nonatomic) CGFloat endConnectorLength;
+@property (nonatomic) BOOL isExtender;
+
+@end
+
+@implementation MTGlyphPart
+
+@end
+
 @interface MTFontMathTable ()
 
 // The font for this math table.
@@ -37,7 +52,7 @@
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
         _mathTable = mathTable;
-        if (![@"1.2" isEqualToString:_mathTable[@"version"]]) {
+        if (![@"1.3" isEqualToString:_mathTable[@"version"]]) {
             // Invalid version
             @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                            reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
@@ -474,6 +489,49 @@ static NSString* const kAccents = @"accents";
         CTFontGetAdvancesForGlyphs(self.font.ctFont, kCTFontHorizontalOrientation, &glyph, &advances, 1);
         return advances.width/2;
     }
+}
+
+#pragma mark - Glyph Assembly
+
+- (CGFloat)minConnectorOverlap
+{
+    return [self constantFromTable:@"MinConnectorOverlap"];
+}
+
+static NSString* const kVertAssembly = @"v_assembly";
+static NSString* const kAssemblyParts = @"parts";
+
+- (NSArray<MTGlyphPart *> *)getVerticalGlyphAssemblyForGlyph:(CGGlyph)glyph
+{
+    NSDictionary* assemblyTable = (NSDictionary*) _mathTable[kVertAssembly];
+    NSString* glyphName = [self.font getGlyphName:glyph];
+    NSDictionary* assemblyInfo = (NSDictionary*) assemblyTable[glyphName];
+    if (!assemblyInfo) {
+        // No vertical assembly defined for glyph
+        return nil;
+    }
+    NSArray* parts = (NSArray*) assemblyInfo[kAssemblyParts];
+    if (!parts) {
+        // parts should always have been defined, but if it isn't return nil
+        return nil;
+    }
+    NSMutableArray<MTGlyphPart*>* rv = [NSMutableArray array];
+    for (NSDictionary* partInfo in parts) {
+        MTGlyphPart* part = [[MTGlyphPart alloc] init];
+        NSNumber* adv = (NSNumber*) partInfo[@"advance"];
+        part.fullAdvance = [self fontUnitsToPt:adv.intValue];
+        NSNumber* end = (NSNumber*) partInfo[@"endConnector"];
+        part.endConnectorLength = [self fontUnitsToPt:end.intValue];
+        NSNumber* start = (NSNumber*) partInfo[@"startConnector"];
+        part.startConnectorLength = [self fontUnitsToPt:start.intValue];
+        NSNumber* ext = (NSNumber*) partInfo[@"extender"];
+        part.isExtender = ext.boolValue;
+        NSString* glyphName = (NSString*) partInfo[@"glyph"];
+        part.glyph = [self.font getGlyphWithName:glyphName];
+        
+        [rv addObject:part];
+    }
+    return rv;
 }
 
 @end
