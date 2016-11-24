@@ -76,6 +76,11 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return [[MTLargeOperator alloc] initWithValue:name limits:limits];
 }
 
++ (MTMathAtom *)atomForAnyCharacter:(unichar) ch{
+    NSString *chStr = [NSString stringWithCharacters:&ch length:1];
+    return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
+}
+
 + (MTMathAtom *)atomForCharacter:(unichar)ch
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];

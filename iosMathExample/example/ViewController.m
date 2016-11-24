@@ -84,10 +84,10 @@
     [self setEqualWidths:contentView andView:self.scrollView];
     [self setHeight:4280 forView:contentView];
 
-
     // Demo formulae
     // Quadratic formula
-    self.demoLabels[0] = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" withHeight:60];
+    self.demoLabels[0] = [self createMathLabel:@"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\\\ \
+                          \\text{syntax is frac\\{-b \\pm \\sqrt\\{b^2-4ac\\}\\}\\{2a\\}}" withHeight:60];
     [self addLabelAsSubview:self.demoLabels[0] to:contentView];
     self.demoLabels[0].fontSize = 15;
     // This is first label so set the height from the top
