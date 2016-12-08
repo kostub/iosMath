@@ -45,6 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) UIColor* textColor;
 /// The color of placeholder if any in this display
 @property (nonatomic, nullable) UIColor* placeholderColor;
+/// Can the text color be overwritten? It cannot for ceratin displays that are already colored.
+@property (nonatomic) BOOL canOverwriteTextColor;
 
 @end
 

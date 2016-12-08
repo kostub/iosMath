@@ -10,6 +10,7 @@
 //
 
 #import "MTMathList.h"
+#import "UIColor+HexString.h"
 
 // Returns true if the current binary operator is not really binary.
 static BOOL isNotBinaryOperator(MTMathAtom* prevNode)
@@ -68,6 +69,10 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Style";
         case kMTMathAtomTable:
             return @"Table";
+        case kMTMathAtomText:
+            return @"Text";
+        case kMTMathAtomColor:
+            return @"Color";
     }
 }
 
@@ -117,6 +122,11 @@ static NSString* typeToText(MTMathAtomType type) {
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
             
+        case kMTMathAtomText:
+            return [[MTMathText alloc] initWithText:@""];
+        
+        case kMTMathAtomColor:
+            return [[MTMathColor alloc] initWithColor:[UIColor blackColor]];
         default:
             return [[MTMathAtom alloc] initWithType:type value:value];
     }
@@ -614,6 +624,84 @@ static NSString* typeToText(MTMathAtomType type) {
 {
     MTMathSpace* op = [super copyWithZone:zone];
     op->_space = self.space;
+    return op;
+}
+
+@end
+
+#pragma mark - MTMathColor
+
+@implementation MTMathColor
+
+- (instancetype)initWithColor:(UIColor*) color
+{
+    self = [super initWithType:kMTMathAtomColor value:@""];
+    
+    if (self) {
+        _color = color;
+    }
+    
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomColor) {
+        UIColor *color = [UIColor colorFromHexString:value];
+        return [self initWithColor:color];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathColor initWithType:value:] cannot be called. Use [MTMathColor initWithColor:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathColor* op = [super copyWithZone:zone];
+    op->_color = self.color;
+    op->_innerList = self.innerList;
+    return op;
+}
+
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithString:@"\\color"];
+    if (self.innerList) {
+        [str appendFormat:@"[%@]", self.innerList.stringValue];
+    }
+    
+    return str;
+}
+
+@end
+
+#pragma mark - MTMathText
+
+@implementation MTMathText
+
+- (instancetype)initWithText:(NSString *)text
+{
+    self = [super initWithType:kMTMathAtomText value:@""];
+    if (self) {
+        _text = text;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomText) {
+        return [self initWithText:value];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathText initWithType:value:] cannot be called. Use [MTMathSpace initWithText:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathText* op = [super copyWithZone:zone];
+    op->_text = self.text;
     return op;
 }
 

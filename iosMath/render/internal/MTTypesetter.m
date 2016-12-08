@@ -30,15 +30,16 @@ NSArray* getInterElementSpaces() {
     if (!interElementSpaceArray) {
         interElementSpaceArray =
         //   ordinary             operator             binary               relation            open                 close               punct               // fraction
-        @[ @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // ordinary
-           @[@(kMTSpaceThin),     @(kMTSpaceThin),     @(kMTSpaceInvalid),  @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // operator
-           @[@(kMTSpaceNSMedium), @(kMTSpaceNSMedium), @(kMTSpaceInvalid),  @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceInvalid), @(kMTSpaceInvalid), @(kMTSpaceNSMedium)],  // binary
-           @[@(kMTSpaceNSThick),  @(kMTSpaceNSThick),  @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNSThick),  @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThick)],   // relation
-           @[@(kMTSpaceNone),     @(kMTSpaceNone),     @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNone)],      // open
-           @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // close
-           @[@(kMTSpaceNSThin),   @(kMTSpaceNSThin),   @(kMTSpaceInvalid),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin),   @(kMTSpaceNSThin),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin)],    // punct
-           @[@(kMTSpaceNSThin),   @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNSThin),   @(kMTSpaceNone),    @(kMTSpaceNSThin),  @(kMTSpaceNSThin)],    // fraction
-           @[@(kMTSpaceNSMedium), @(kMTSpaceNSThin),   @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)]];   // radical
+        @[ @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // ordinary
+           @[@(kMTSpaceThin),     @(kMTSpaceThin),     @(kMTSpaceInvalid),  @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // operator
+           @[@(kMTSpaceNSMedium), @(kMTSpaceNSMedium), @(kMTSpaceInvalid),  @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceInvalid), @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceNSThick)],  // binary
+           @[@(kMTSpaceNSThick),  @(kMTSpaceNSThick),  @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNSThick),  @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThick), @(kMTSpaceNSThick)],   // relation
+           @[@(kMTSpaceNone),     @(kMTSpaceNone),     @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNone), @(kMTSpaceNSThick)],      // open
+           @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // close
+           @[@(kMTSpaceNSThin),   @(kMTSpaceNSThin),   @(kMTSpaceInvalid),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin),   @(kMTSpaceNSThin),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // punct
+           @[@(kMTSpaceNSThin),   @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNSThin),   @(kMTSpaceNone),    @(kMTSpaceNSThin),  @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // fraction
+           @[@(kMTSpaceNSMedium), @(kMTSpaceNSThin),   @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)], // radical
+           @[@(kMTSpaceNSThick), @(kMTSpaceNSThick),   @(kMTSpaceNSThick), @(kMTSpaceNSThick), @(kMTSpaceNSThick),     @(kMTSpaceNSThick),    @(kMTSpaceNSThick),    @(kMTSpaceNSThick), @(kMTSpaceNSThick)]];
     }
     return interElementSpaceArray;
 }
@@ -48,7 +49,9 @@ NSArray* getInterElementSpaces() {
 NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) {
     switch (type) {
         case kMTMathAtomOrdinary:
-        case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
+        case kMTMathAtomColor:
+        case kMTMathAtomPlaceholder:
+            // A placeholder is treated as ordinary
             return 0;
         case kMTMathAtomLargeOperator:
             return 1;
@@ -74,6 +77,13 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
             } else {
                 NSCAssert(false, @"Interelement space undefined for radical on the right. Treat radical as ordinary.");
                 return -1;
+            }
+        }
+        case kMTMathAtomText: {
+            if (row) {
+                return 9;
+            } else {
+                return 8;
             }
         }
             
@@ -299,6 +309,48 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // and the next node is still preserved. To avoid resetting the prevAtom and lastType
                 // we skip to the next node.
                 continue;
+            }
+                
+            case kMTMathAtomText: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomText];
+                MTMathText* text = (MTMathText*) atom;
+                UIFont *font = [UIFont systemFontOfSize:_font.fontSize weight:UIFontWeightThin];
+                CTFontRef fontRef = CTFontCreateWithName((CFStringRef)font.fontName, font.pointSize, NULL);
+                NSDictionary *attrsDictionary = [NSDictionary dictionaryWithObject:(__bridge id)fontRef
+                                                                            forKey:(NSString*)kCTFontAttributeName];
+                NSAttributedString *attrString = [[NSAttributedString alloc] initWithString:text.text attributes:attrsDictionary];
+                [_currentLine setAttributedString:attrString];
+                break;
+            }
+                
+            case kMTMathAtomColor: {
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                
+                MTMathColor *colorAtom = (MTMathColor*) atom;
+                NSArray* preprocessedAtoms = [MTTypesetter preprocessMathList:colorAtom.innerList.finalized];
+//                if (colorAtom.innerList.finalized != nil && colorAtom.innerList.finalized.atoms.count > 0) {
+//
+//                    [self addInterElementSpace:prevNode currentType:colorAtom.innerList.finalized.atoms[0].type];
+//                }
+                if (preprocessedAtoms.count > 0) {
+                    [self addInterElementSpace:prevNode currentType:((MTMathAtom*)preprocessedAtoms[0]).type];
+                 }
+////
+                MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
+//                colorAtom.innerList.fina
+                display.textColor = colorAtom.color;
+                display.position = _currentPosition;
+                display.canOverwriteTextColor = NO;
+                _currentPosition.x += display.width;
+                [_displayAtoms addObject:display];
+                break;
             }
                 
             case kMTMathAtomStyle: {
@@ -551,7 +603,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (MTCTLineDisplay*) addDisplayLine
 {
     // add the font
-    [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, _currentLine.length)];
+    CTFontRef font = (__bridge CTFontRef)([_currentLine attribute:(NSString *)kCTFontAttributeName atIndex:0 effectiveRange:nil]);
+    if (font == nil) {
+        [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, _currentLine.length)];
+    }
+    
     /*NSAssert(_currentLineIndexRange.length == numCodePoints(_currentLine.string),
      @"The length of the current line: %@ does not match the length of the range (%d, %d)",
      _currentLine, _currentLineIndexRange.location, _currentLineIndexRange.length);*/
