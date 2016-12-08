@@ -80,6 +80,9 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 /** The MTFont to use for rendering. */
 @property (nonatomic, nonnull) MTFont* font;
 
+/** The UIFont for rendering the text command. */
+@property (nonatomic, nonnull) UIFont* textFont;
+
 /** Convenience method to just set the size of the font without changing the fontface. */
 @property (nonatomic) IBInspectable CGFloat fontSize;
 
