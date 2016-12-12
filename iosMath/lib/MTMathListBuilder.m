@@ -11,6 +11,7 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "UIColor+HexString.h"
 
 NSString *const MTParseError = @"ParseError";
 
@@ -359,6 +360,24 @@ NSString *const MTParseError = @"ParseError";
     return boundary;
 }
 
+- (NSString *) readRaw {
+    NSMutableString *result = [[NSMutableString alloc] initWithString:@""];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '{') {
+            continue;
+        }
+        
+        if (ch == '}') {
+            return result;
+        }
+        
+        [result appendString:[NSString stringWithCharacters:&ch length:1]];
+    }
+    
+    return result;
+}
+
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
     MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:command];
@@ -370,6 +389,17 @@ NSString *const MTParseError = @"ParseError";
         // The command is an accent
         accent.innerList = [self buildInternal:true];
         return accent;
+    } else if ([command isEqualToString:@"text"]) {
+        MTMathText* text = [[MTMathText alloc] initWithText:[self readRaw]];
+        return text;
+        
+    } else if ([command isEqualToString:@"color"]) {
+        NSString* hex = [self readRaw];
+        UIColor* color = [UIColor colorFromHexString:hex];
+        MTMathColor* mathColor = [[MTMathColor alloc] initWithColor:color];
+        mathColor.innerList = [self buildInternal:true];
+        
+        return mathColor;
     } else if ([command isEqualToString:@"frac"]) {
         // A fraction command has 2 arguments
         MTFraction* frac = [MTFraction new];

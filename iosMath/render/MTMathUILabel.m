@@ -46,11 +46,14 @@
     _labelMode = kMTMathUILabelModeDisplay;
     MTFont* font = [MTFontManager fontManager].defaultFont;
     self.font = font;
+    UIFont* textFont = [UIFont systemFontOfSize:_fontSize];
+    self.textFont = textFont;
     _textAlignment = kMTTextAlignmentLeft;
     _displayList = nil;
     _displayErrorInline = true;
     self.backgroundColor = [UIColor clearColor];
     _textColor = [UIColor blackColor];
+    _placeholderColor = [UIColor blackColor];
     _errorLabel = [[UILabel alloc] init];
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;
@@ -62,6 +65,14 @@
 {
     NSParameterAssert(font);
     _font = font;
+    [self invalidateIntrinsicContentSize];
+    [self setNeedsLayout];
+}
+
+- (void)setTextFont:(UIFont *)textFont
+{
+    NSParameterAssert(textFont);
+    _textFont = textFont;
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
@@ -124,6 +135,14 @@
     [self setNeedsDisplay];
 }
 
+- (void)setPlaceholderColor:(UIColor *)placeholderColor
+{
+    NSParameterAssert(placeholderColor);
+    _placeholderColor = placeholderColor;
+     _displayList.placeholderColor = placeholderColor;
+    [self setNeedsDisplay];
+}
+
 - (void)setTextAlignment:(MTTextAlignment)textAlignment
 {
     _textAlignment = textAlignment;
@@ -163,8 +182,13 @@
 - (void) layoutSubviews
 {
     if (_mathList) {
-        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
+        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
         _displayList.textColor = _textColor;
+        _displayList.placeholderColor = _placeholderColor;
+//        for (int i = 0; i < _displayList.subDisplays.count; i++) {
+//            MTDisplay *subDisplay = _displayList.subDisplays[0];
+//            subDisplay.position = CGPointMake(0.0, _displayList.descent * i);
+//        }
         
         // Determine x position based on alignment
         CGFloat textX = 0;
@@ -200,7 +224,7 @@
 {
     MTMathListDisplay* displayList = nil;
     if (_mathList) {
-        displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
+        displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
     }
 
     size.width = displayList.width + self.contentInsets.left + self.contentInsets.right;

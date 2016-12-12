@@ -80,6 +80,9 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 /** The MTFont to use for rendering. */
 @property (nonatomic, nonnull) MTFont* font;
 
+/** The UIFont for rendering the text command. */
+@property (nonatomic, nonnull) UIFont* textFont;
+
 /** Convenience method to just set the size of the font without changing the fontface. */
 @property (nonatomic) IBInspectable CGFloat fontSize;
 
@@ -91,6 +94,9 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
  the border/background color. sizeThatFits: will have its returned size increased by these insets.
  */
 @property (nonatomic) IBInspectable UIEdgeInsets contentInsets;
+
+/** Sets the placeholder color of the rendered math formula. The default color is black. */
+@property (nonatomic, nonnull) UIColor* placeholderColor;
 
 /** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;

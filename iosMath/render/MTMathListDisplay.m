@@ -16,6 +16,7 @@
 #import "MTFontManager.h"
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
+#import "MTMathAtomFactory.h"
 
 static BOOL isIos6Supported() {
     static BOOL initialized = false;
@@ -35,8 +36,29 @@ static BOOL isIos6Supported() {
 
 @implementation MTDisplay
 
+- (id)init {
+    self = [super init];
+    
+    if (self) {
+        self.canOverwriteTextColor = YES;
+    }
+    
+    return self;
+}
+
 - (void)draw:(CGContextRef)context
 {
+}
+
+- (void)setTextColor:(UIColor *)textColor
+{
+    
+    if (self.canOverwriteTextColor == YES) {
+        _textColor = textColor;
+    } else {
+        // foo
+        NSLog(@"%@", self.textColor);
+    }
 }
 
 - (CGRect) displayBounds
@@ -80,6 +102,8 @@ static BOOL isIos6Supported() {
         self.position = position;
         self.attributedString = attrString;
         self.range = range;
+        self.canOverwriteTextColor = YES;
+        
         _atoms = atoms;
         // We can't use typographic bounds here as the ascent and descent returned are for the font and not for the line.
         self.width = CTLineGetTypographicBounds(_line, NULL, NULL, NULL);
@@ -109,9 +133,41 @@ static BOOL isIos6Supported() {
 - (void) setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
+    
+    [self colorText];
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    
+    [self colorText];
+}
+
+- (void) colorText
+{
+    // Color all text
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
+    if (self.placeholderColor == nil) {
+        self.attributedString = attrStr;
+        return;
+    }
+    
+    // Color empty placeholders
+    NSRange whiteSquareRange = [attrStr.string rangeOfString:MTSymbolWhiteSquare];
+    if (whiteSquareRange.location != NSNotFound) {
+        [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.placeholderColor.CGColor
+                        range:whiteSquareRange];
+    }
+    
+    // Color filled placeholders
+    NSRange blackSquareRange = [attrStr.string rangeOfString:MTSymbolBlackSquare];
+    if (blackSquareRange.location != NSNotFound) {
+        [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.placeholderColor.CGColor
+                        range:blackSquareRange];
+    }
     self.attributedString = attrStr;
 }
 
@@ -189,7 +245,16 @@ static BOOL isIos6Supported() {
     // Set the color on all subdisplays
     [super setTextColor:textColor];
     for (MTDisplay* displayAtom in self.subDisplays) {
-        displayAtom.textColor = textColor;
+        displayAtom.textColor = self.textColor;
+    }
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    
+    for (MTDisplay* displayAtom in self.subDisplays) {
+        displayAtom.placeholderColor = placeholderColor;
     }
 }
 
@@ -301,8 +366,15 @@ static BOOL isIos6Supported() {
 - (void)setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
-    _numerator.textColor = textColor;
-    _denominator.textColor = textColor;
+    _numerator.textColor = self.textColor;
+    _denominator.textColor = self.textColor;
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    _numerator.placeholderColor = placeholderColor;
+    _denominator.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context
@@ -393,8 +465,15 @@ static BOOL isIos6Supported() {
 - (void)setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
-    self.radicand.textColor = textColor;
-    self.degree.textColor = textColor;
+    self.radicand.textColor = self.textColor;
+    self.degree.textColor = self.textColor;
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    self.radicand.placeholderColor = placeholderColor;
+    self.degree.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context
@@ -647,9 +726,17 @@ static BOOL isIos6Supported() {
 - (void)setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
-    self.upperLimit.textColor = textColor;
-    self.lowerLimit.textColor = textColor;
-    _nucleus.textColor = textColor;
+    self.upperLimit.textColor = self.textColor;
+    self.lowerLimit.textColor = self.textColor;
+    _nucleus.textColor = self.textColor;
+}
+
+- (void)setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    self.upperLimit.placeholderColor = placeholderColor;
+    self.lowerLimit.placeholderColor = placeholderColor;
+    _nucleus.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context
@@ -681,7 +768,13 @@ static BOOL isIos6Supported() {
 - (void)setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
-    _inner.textColor = textColor;
+    _inner.textColor = self.textColor;
+}
+
+- (void) setPlaceholderColor:(UIColor *)placeholderColor
+{
+    [super setPlaceholderColor:placeholderColor];
+    _inner.placeholderColor = placeholderColor;
 }
 
 - (void)draw:(CGContextRef)context
@@ -736,8 +829,8 @@ static BOOL isIos6Supported() {
 - (void)setTextColor:(UIColor *)textColor
 {
     [super setTextColor:textColor];
-    _accentee.textColor = textColor;
-    _accent.textColor = textColor;
+    _accentee.textColor = self.textColor;
+    _accent.textColor = self.textColor;
 }
 
 - (void) setPosition:(CGPoint)position

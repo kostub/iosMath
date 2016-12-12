@@ -30,15 +30,16 @@ NSArray* getInterElementSpaces() {
     if (!interElementSpaceArray) {
         interElementSpaceArray =
         //   ordinary             operator             binary               relation            open                 close               punct               // fraction
-        @[ @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // ordinary
-           @[@(kMTSpaceThin),     @(kMTSpaceThin),     @(kMTSpaceInvalid),  @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // operator
-           @[@(kMTSpaceNSMedium), @(kMTSpaceNSMedium), @(kMTSpaceInvalid),  @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceInvalid), @(kMTSpaceInvalid), @(kMTSpaceNSMedium)],  // binary
-           @[@(kMTSpaceNSThick),  @(kMTSpaceNSThick),  @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNSThick),  @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThick)],   // relation
-           @[@(kMTSpaceNone),     @(kMTSpaceNone),     @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNone)],      // open
-           @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)],    // close
-           @[@(kMTSpaceNSThin),   @(kMTSpaceNSThin),   @(kMTSpaceInvalid),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin),   @(kMTSpaceNSThin),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin)],    // punct
-           @[@(kMTSpaceNSThin),   @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNSThin),   @(kMTSpaceNone),    @(kMTSpaceNSThin),  @(kMTSpaceNSThin)],    // fraction
-           @[@(kMTSpaceNSMedium), @(kMTSpaceNSThin),   @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin)]];   // radical
+        @[ @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // ordinary
+           @[@(kMTSpaceThin),     @(kMTSpaceThin),     @(kMTSpaceInvalid),  @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // operator
+           @[@(kMTSpaceNSMedium), @(kMTSpaceNSMedium), @(kMTSpaceInvalid),  @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceInvalid), @(kMTSpaceInvalid), @(kMTSpaceNSMedium), @(kMTSpaceNSThick)],  // binary
+           @[@(kMTSpaceNSThick),  @(kMTSpaceNSThick),  @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNSThick),  @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThick), @(kMTSpaceNSThick)],   // relation
+           @[@(kMTSpaceNone),     @(kMTSpaceNone),     @(kMTSpaceInvalid),  @(kMTSpaceNone),    @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNone), @(kMTSpaceNSThick)],      // open
+           @[@(kMTSpaceNone),     @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // close
+           @[@(kMTSpaceNSThin),   @(kMTSpaceNSThin),   @(kMTSpaceInvalid),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin),   @(kMTSpaceNSThin),  @(kMTSpaceNSThin),  @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // punct
+           @[@(kMTSpaceNSThin),   @(kMTSpaceThin),     @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNSThin),   @(kMTSpaceNone),    @(kMTSpaceNSThin),  @(kMTSpaceNSThin), @(kMTSpaceNSThick)],    // fraction
+           @[@(kMTSpaceNSMedium), @(kMTSpaceNSThin),   @(kMTSpaceNSMedium), @(kMTSpaceNSThick), @(kMTSpaceNone),     @(kMTSpaceNone),    @(kMTSpaceNone),    @(kMTSpaceNSThin), @(kMTSpaceNSThick)], // radical
+           @[@(kMTSpaceNSThick), @(kMTSpaceNSThick),   @(kMTSpaceNSThick), @(kMTSpaceNSThick), @(kMTSpaceNSThick),     @(kMTSpaceNSThick),    @(kMTSpaceNSThick),    @(kMTSpaceNSThick), @(kMTSpaceNSThick)]];
     }
     return interElementSpaceArray;
 }
@@ -48,7 +49,9 @@ NSArray* getInterElementSpaces() {
 NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) {
     switch (type) {
         case kMTMathAtomOrdinary:
-        case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
+        case kMTMathAtomColor:
+        case kMTMathAtomPlaceholder:
+            // A placeholder is treated as ordinary
             return 0;
         case kMTMathAtomLargeOperator:
             return 1;
@@ -74,6 +77,13 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
             } else {
                 NSCAssert(false, @"Interelement space undefined for radical on the right. Treat radical as ordinary.");
                 return -1;
+            }
+        }
+        case kMTMathAtomText: {
+            if (row) {
+                return 9;
+            } else {
+                return 8;
             }
         }
             
@@ -138,6 +148,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 @implementation MTTypesetter {
     MTFont* _font;
+    UIFont* _textFont;
     NSMutableArray<MTDisplay *>* _displayAtoms;
     CGPoint _currentPosition;
     NSMutableAttributedString* _currentLine;
@@ -149,25 +160,26 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     BOOL _spaced;
 }
 
-+ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font style:(MTLineStyle)style
++ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font textFont:(nonnull UIFont *)textFont style:(MTLineStyle)style
 {
     MTMathList* finalizedList = mathList.finalized;
     // default is not cramped
-    return [self createLineForMathList:finalizedList font:font style:style cramped:false];
+    return [self createLineForMathList:finalizedList font:font textFont:textFont style:style cramped:false];
 }
 
 // Internal
-+ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font style:(MTLineStyle)style cramped:(BOOL) cramped
++ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font textFont:(nonnull UIFont *)textFont style:(MTLineStyle)style cramped:(BOOL) cramped
 {
-    return [self createLineForMathList:mathList font:font style:style cramped:cramped spaced:false];
+    return [self createLineForMathList:mathList font:font textFont:textFont style:style cramped:cramped spaced:false];
 }
 
 // Internal
-+ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font style:(MTLineStyle)style cramped:(BOOL) cramped spaced:(BOOL) spaced
++ (MTMathListDisplay *)createLineForMathList:(MTMathList *)mathList font:(MTFont*)font textFont:(nonnull UIFont *)textFont style:(MTLineStyle)style cramped:(BOOL) cramped spaced:(BOOL) spaced
 {
     NSParameterAssert(font);
+    NSParameterAssert(textFont);
     NSArray* preprocessedAtoms = [self preprocessMathList:mathList];
-    MTTypesetter *typesetter = [[MTTypesetter alloc] initWithFont:font style:style cramped:cramped spaced:spaced];
+    MTTypesetter *typesetter = [[MTTypesetter alloc] initWithFont:font textFont:textFont style:style cramped:cramped spaced:spaced];
     [typesetter createDisplayAtoms:preprocessedAtoms];
     MTMathAtom* lastAtom = mathList.atoms.lastObject;
     MTMathListDisplay* line = [[MTMathListDisplay alloc] initWithDisplays:typesetter->_displayAtoms range:NSMakeRange(0, NSMaxRange(lastAtom.indexRange))];
@@ -179,11 +191,12 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     return [UIColor blueColor];
 }
 
-- (instancetype)initWithFont:(MTFont*) font style:(MTLineStyle) style cramped:(BOOL) cramped spaced:(BOOL) spaced
+- (instancetype)initWithFont:(MTFont*) font textFont:(UIFont *)textFont style:(MTLineStyle) style cramped:(BOOL) cramped spaced:(BOOL) spaced
 {
     self = [super init];
     if (self) {
         _font = font;
+        _textFont = textFont;
         _displayAtoms = [NSMutableArray array];
         _currentPosition = CGPointZero;
         _cramped = cramped;
@@ -301,6 +314,48 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 continue;
             }
                 
+            case kMTMathAtomText: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomText];
+                MTMathText* text = (MTMathText*) atom;
+                UIFont *font = _textFont;
+                CTFontRef fontRef = CTFontCreateWithName((CFStringRef)font.fontName, font.pointSize, NULL);
+                NSDictionary *attrsDictionary = [NSDictionary dictionaryWithObject:(__bridge id)fontRef
+                                                                            forKey:(NSString*)kCTFontAttributeName];
+                NSAttributedString *attrString = [[NSAttributedString alloc] initWithString:text.text attributes:attrsDictionary];
+                [_currentLine setAttributedString:attrString];
+                break;
+            }
+                
+            case kMTMathAtomColor: {
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                
+                MTMathColor *colorAtom = (MTMathColor*) atom;
+                NSArray* preprocessedAtoms = [MTTypesetter preprocessMathList:colorAtom.innerList.finalized];
+//                if (colorAtom.innerList.finalized != nil && colorAtom.innerList.finalized.atoms.count > 0) {
+//
+//                    [self addInterElementSpace:prevNode currentType:colorAtom.innerList.finalized.atoms[0].type];
+//                }
+                if (preprocessedAtoms.count > 0) {
+                    [self addInterElementSpace:prevNode currentType:((MTMathAtom*)preprocessedAtoms[0]).type];
+                 }
+////
+                MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font textFont:_textFont style:_style];
+//                colorAtom.innerList.fina
+                display.textColor = colorAtom.color;
+                display.position = _currentPosition;
+                display.canOverwriteTextColor = NO;
+                _currentPosition.x += display.width;
+                [_displayAtoms addObject:display];
+                break;
+            }
+                
             case kMTMathAtomStyle: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -324,7 +379,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 MTRadicalDisplay* displayRad = [self makeRadical:rad.radicand range:rad.indexRange];
                 if (rad.degree) {
                     // add the degree to the radical
-                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_font style:kMTLineStyleScriptScript];
+                    MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_font textFont:_textFont style:kMTLineStyleScriptScript];
                     [displayRad setDegree:degree fontMetrics:_styleFont.mathTable];
                 }
                 [_displayAtoms addObject:displayRad];
@@ -379,7 +434,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (inner.leftBoundary || inner.rightBoundary) {
                     display = [self makeLeftRight:inner];
                 } else {
-                    display = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped];
+                    display = [MTTypesetter createLineForMathList:inner.innerList font:_font textFont:_textFont style:_style cramped:_cramped];
                 }
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
@@ -551,7 +606,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (MTCTLineDisplay*) addDisplayLine
 {
     // add the font
-    [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, _currentLine.length)];
+    CTFontRef font = (__bridge CTFontRef)([_currentLine attribute:(NSString *)kCTFontAttributeName atIndex:0 effectiveRange:nil]);
+    if (font == nil) {
+        [_currentLine addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)(_styleFont.ctFont) range:NSMakeRange(0, _currentLine.length)];
+    }
+    
     /*NSAssert(_currentLineIndexRange.length == numCodePoints(_currentLine.string),
      @"The length of the current line: %@ does not match the length of the range (%d, %d)",
      _currentLine, _currentLineIndexRange.location, _currentLineIndexRange.length);*/
@@ -667,7 +726,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     
     if (!atom.superScript) {
         assert(atom.subScript);
-        MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
+        MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font textFont:_textFont style:self.scriptStyle cramped:self.subscriptCramped];
         subscript.type = kMTLinePositionSubscript;
         subscript.index = index;
         
@@ -681,7 +740,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         return;
     }
     
-    MTMathListDisplay* superScript = [MTTypesetter createLineForMathList:atom.superScript font:_font style:self.scriptStyle cramped:self.superScriptCramped];
+    MTMathListDisplay* superScript = [MTTypesetter createLineForMathList:atom.superScript font:_font textFont:_textFont style:self.scriptStyle cramped:self.superScriptCramped];
     superScript.type = kMTLinePositionSuperscript;
     superScript.index = index;
     superScriptShiftUp = fmax(superScriptShiftUp, self.superScriptShiftUp);
@@ -694,7 +753,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         _currentPosition.x += superScript.width + _styleFont.mathTable.spaceAfterScript;
         return;
     }
-    MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
+    MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font textFont:_textFont style:self.scriptStyle cramped:self.subscriptCramped];
     subscript.type = kMTLinePositionSubscript;
     subscript.index = index;
     subscriptShiftDown = fmax(subscriptShiftDown, _styleFont.mathTable.subscriptShiftDown);
@@ -797,8 +856,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 {
     // lay out the parts of the fraction
     MTLineStyle fractionStyle = self.fractionStyle;
-    MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
-    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
+    MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font textFont:_textFont style:fractionStyle cramped:false];
+    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font textFont:_textFont style:fractionStyle cramped:true];
     
     // determine the location of the numerator
     CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
@@ -917,7 +976,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 - (MTRadicalDisplay*) makeRadical:(MTMathList*) radicand range:(NSRange) range
 {
-    MTMathListDisplay* innerDisplay = [MTTypesetter createLineForMathList:radicand font:_font style:_style cramped:YES];
+    MTMathListDisplay* innerDisplay = [MTTypesetter createLineForMathList:radicand font:_font textFont:_textFont style:_style cramped:YES];
     CGFloat clearance = self.radicalVerticalGap;
     CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
@@ -1147,10 +1206,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         // make limits
         MTMathListDisplay *superScript = nil, *subScript = nil;
         if (op.superScript) {
-            superScript = [MTTypesetter createLineForMathList:op.superScript font:_font style:self.scriptStyle cramped:self.superScriptCramped];
+            superScript = [MTTypesetter createLineForMathList:op.superScript font:_font textFont:_textFont style:self.scriptStyle cramped:self.superScriptCramped];
         }
         if (op.subScript) {
-            subScript = [MTTypesetter createLineForMathList:op.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
+            subScript = [MTTypesetter createLineForMathList:op.subScript font:_font textFont:_textFont style:self.scriptStyle cramped:self.subscriptCramped];
         }
         NSAssert(superScript || subScript, @"Atleast one of superscript or subscript should have been present.");
         MTLargeOpLimitsDisplay* opsDisplay = [[MTLargeOpLimitsDisplay alloc] initWithNucleus:display upperLimit:superScript lowerLimit:subScript limitShift:delta/2 extraPadding:0];
@@ -1183,7 +1242,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 {
     NSAssert(inner.leftBoundary || inner.rightBoundary, @"Inner should have a boundary to call this function");
     
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped spaced:YES];
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font textFont:_textFont style:_style cramped:_cramped spaced:YES];
     CGFloat axisHeight = _styleFont.mathTable.axisHeight;
     // delta is the max distance from the axis
     CGFloat delta = MAX(innerListDisplay.ascent - axisHeight, innerListDisplay.descent + axisHeight);
@@ -1245,7 +1304,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 - (MTDisplay*) makeUnderline:(MTUnderLine*) under
 {
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:under.innerList font:_font style:_style cramped:_cramped];
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:under.innerList font:_font textFont:_textFont style:_style cramped:_cramped];
     MTLineDisplay* underDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:under.indexRange];
     // Move the line down by the vertical gap.
     underDisplay.lineShiftUp = -(innerListDisplay.descent + _styleFont.mathTable.underbarVerticalGap);
@@ -1258,7 +1317,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 - (MTDisplay*) makeOverline:(MTOverLine*) over
 {
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:over.innerList font:_font style:_style cramped:YES];
+    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:over.innerList font:_font textFont:_textFont style:_style cramped:YES];
     MTLineDisplay* overDisplay = [[MTLineDisplay alloc] initWithInner:innerListDisplay position:_currentPosition range:over.indexRange];
     overDisplay.lineShiftUp = innerListDisplay.ascent + _styleFont.mathTable.overbarVerticalGap;
     overDisplay.lineThickness = _styleFont.mathTable.underbarRuleThickness;
@@ -1353,7 +1412,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 - (MTDisplay*) makeAccent:(MTAccent*) accent
 {
-    MTMathListDisplay* accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:YES];
+    MTMathListDisplay* accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font textFont:_textFont style:_style cramped:YES];
     if (accent.nucleus.length == 0) {
         // no accent!
         return accentee;
@@ -1383,7 +1442,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         // Remake the accentee (now with sub/superscripts)
         // Note: Latex adjusts the heights in case the height of the char is different in non-cramped mode. However this shouldn't be the case since cramping
         // only affects fractions and superscripts. We skip adjusting the heights.
-        accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:_cramped];
+        accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font textFont:_textFont style:_style cramped:_cramped];
     }
 
     MTAccentDisplay* display = [[MTAccentDisplay alloc] initWithAccent:accentGlyphDisplay accentee:accentee range:accent.indexRange];
@@ -1440,7 +1499,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
         for (int i = 0; i < row.count; i++) {
-            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style];
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font textFont:_textFont style:_style];
             columnWidths[i] = MAX(disp.width, columnWidths[i]);
             [colDisplays addObject:disp];
         };

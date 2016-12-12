@@ -11,6 +11,7 @@
 
 @import Foundation;
 @import CoreGraphics;
+@import UIKit;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,19 +28,19 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// A number or text in ordinary format - Ord in TeX
     kMTMathAtomOrdinary = 1,
     /// A number - Does not exist in TeX
-    kMTMathAtomNumber,
+    kMTMathAtomNumber, // 2
     /// A variable (i.e. text in italic format) - Does not exist in TeX
-    kMTMathAtomVariable,
+    kMTMathAtomVariable, // 3
     /// A large operator such as (sin/cos, integral etc.) - Op in TeX
-    kMTMathAtomLargeOperator,
+    kMTMathAtomLargeOperator, // 4
     /// A binary operator - Bin in TeX
-    kMTMathAtomBinaryOperator,
+    kMTMathAtomBinaryOperator, // 5
     /// A unary operator - Does not exist in TeX.
-    kMTMathAtomUnaryOperator,
+    kMTMathAtomUnaryOperator, // 6
     /// A relation, e.g. = > < etc. - Rel in TeX
-    kMTMathAtomRelation,
+    kMTMathAtomRelation, // 7
     /// Open brackets - Open in TeX
-    kMTMathAtomOpen,
+    kMTMathAtomOpen, // 8
     /// Close brackets - Close in TeX
     kMTMathAtomClose,
     /// An fraction e.g 1/2 - generalized fraction noad in TeX
@@ -58,6 +59,10 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     kMTMathAtomOverline,
     /// An accented atom - Accent in TeX
     kMTMathAtomAccent,
+    /// A text atom
+    kMTMathAtomText,
+    /// A color atom,
+    kMTMathAtomColor,
     
     // Atoms after this point do not support subscripts or superscripts
     
@@ -242,6 +247,19 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 
 @end
 
+/** A differently colored atom. */
+@interface MTMathColor: MTMathAtom
+
+/** Creates a new `MTColor` with the given value as the accent.
+ */
+- (instancetype)initWithColor:(UIColor*) color NS_DESIGNATED_INITIALIZER;
+
+/// The mathlist under the accent.
+@property (nonatomic, nullable) MTMathList* innerList;
+@property (nonatomic) UIColor* color;
+
+@end
+
 /** An atom representing space.
  @note None of the usual fields of the `MTMathAtom` apply even though this
  class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
@@ -257,6 +275,23 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
 @property (nonatomic, readonly) CGFloat space;
 
 @end
+
+/** An atom representing text.
+ @note None of the usual fields of the `MTMathAtom` apply even though this
+ class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
+ in the nucleus, subscript or superscript fields. */
+@interface MTMathText : MTMathAtom
+
+/** Creates a new `MTMathText` with the given text.
+ @param text The text.
+ */
+- (instancetype) initWithText:(NSString *) text NS_DESIGNATED_INITIALIZER;
+
+/** The text represented by this atom. */
+@property (nonatomic, readonly) NSString *text;
+
+@end
+
 
 /**
  @typedef MTLineStyle
