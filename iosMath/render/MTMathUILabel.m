@@ -98,7 +98,6 @@
     if (error) {
         _mathList = nil;
         _error = error;
-        NSLog(@"Error parsing latex: %@", error.localizedDescription);
         _errorLabel.text = error.localizedDescription;
         _errorLabel.frame = self.bounds;
         _errorLabel.hidden = !self.displayErrorInline;
