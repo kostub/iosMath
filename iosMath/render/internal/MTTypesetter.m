@@ -1460,10 +1460,10 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 
 #pragma mark - Table
 
-static const CGFloat kBaseLineSkipMultiplier = 1.2;  // default base line stretch is 12 pt for 10pt font.
+static const CGFloat kBaseLineSkipMultiplier = 0.1;  // default base line stretch is 1 pt for 10pt font.
 static const CGFloat kLineSkipMultiplier = 0.1;  // default is 1pt for 10pt font.
 static const CGFloat kLineSkipLimitMultiplier = 0;
-static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
+static const CGFloat kJotMultiplier = 0.1; // A jot is 1pt for a 10pt font.
 
 - (MTDisplay*) makeTable:(MTMathTable*) table
 {
