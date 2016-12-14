@@ -551,11 +551,14 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (atom.type == kMTMathAtomPlaceholder) {
                     UIColor* color = [MTTypesetter placeholderColor];
                     current = [[NSAttributedString alloc] initWithString:atom.nucleus
-                                                              attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) color.CGColor }];
+                                                              attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) color.CGColor,
+                                                                            (NSString *) kCTFontAttributeName: (__bridge id) _styleFont.ctFont}];
                 } else {
-                    current = [[NSAttributedString alloc] initWithString:atom.nucleus];
+                    current = [[NSAttributedString alloc] initWithString:atom.nucleus
+                                                              attributes:@{ (NSString*) kCTFontAttributeName: (__bridge id) _styleFont.ctFont}];
                 }
                 [_currentLine appendAttributedString:current];
+                
                 // add the atom to the current range
                 if (_currentLineIndexRange.location == NSNotFound) {
                     _currentLineIndexRange = atom.indexRange;

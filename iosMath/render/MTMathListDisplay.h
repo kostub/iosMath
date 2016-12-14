@@ -179,4 +179,12 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+@interface MTTextDisplay: MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+@property (nonatomic) NSAttributedString* attributedString;
+
+@end
+
 NS_ASSUME_NONNULL_END
