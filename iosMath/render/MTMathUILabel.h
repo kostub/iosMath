@@ -105,6 +105,6 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 @property (nonatomic) MTTextAlignment textAlignment;
 
 /** The internal display of the MTMathUILabel. This is for advanced use only. */
-@property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
+@property (nonatomic, nullable) MTMathListDisplay* displayList;
 
 @end

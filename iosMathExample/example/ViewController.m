@@ -311,6 +311,12 @@
     self.labels[45] = [self createMathLabel:@"\\frac12x\\color{00FF00}{\\text{FOO}}\\frac12x" withHeight:50];
     self.labels[46] = [self createMathLabel:@"\\color{0000FF}{5x} + \\left(\\color{00FF00}{-4y + 2y}\\right) + 4" withHeight:40.0];
     self.labels[47] = [self createMathLabel:@"\\text{Replace}\\frac{x}{2}\\text{as}x" withHeight:40.0];
+    // Test to see if we can set the display list on a label
+    MTMathUILabel* displayListLabel = [[MTMathUILabel alloc] init];
+    self.labels[48] = displayListLabel;
+    [self setHeight:40.0 forView:displayListLabel];
+    displayListLabel.displayList = self.labels[47].displayList;
+    
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }

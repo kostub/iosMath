@@ -96,6 +96,17 @@
     _mathList = mathList;
     _error = nil;
     _latex = [MTMathListBuilder mathListToString:mathList];
+    _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
+    [self invalidateIntrinsicContentSize];
+    [self setNeedsLayout];
+}
+
+- (void) setDisplayList:(MTMathListDisplay *)displayList
+{
+    _displayList = displayList;
+    _mathList = nil;
+    _latex = nil;
+    _error = nil;
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
@@ -115,6 +126,7 @@
         _errorLabel.hidden = !self.displayErrorInline;
     } else {
         _errorLabel.hidden = YES;
+        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
     }
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
@@ -166,7 +178,7 @@
 {
     [super drawRect:rect];
 
-    if (!_mathList) {
+    if (!_displayList) {
         return;
     }
     
@@ -181,8 +193,11 @@
 
 - (void) layoutSubviews
 {
-    if (_mathList) {
+    if (_displayList == nil && _mathList) {
         _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
+    }
+    
+    if (_displayList) {
         _displayList.textColor = _textColor;
         _displayList.placeholderColor = _placeholderColor;
 //        for (int i = 0; i < _displayList.subDisplays.count; i++) {
@@ -222,8 +237,8 @@
 
 - (CGSize) sizeThatFits:(CGSize)size
 {
-    MTMathListDisplay* displayList = nil;
-    if (_mathList) {
+    MTMathListDisplay* displayList = _displayList;
+    if (_mathList && displayList == nil) {
         displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
     }
 
