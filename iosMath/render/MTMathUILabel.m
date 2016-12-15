@@ -65,6 +65,9 @@
 {
     NSParameterAssert(font);
     _font = font;
+    if (_mathList) {
+        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
+    }
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
@@ -73,6 +76,9 @@
 {
     NSParameterAssert(textFont);
     _textFont = textFont;
+    if (_mathList) {
+        _displayList = [MTTypesetter createLineForMathList:_mathList font:_font textFont:_textFont style:self.currentStyle];
+    }
     [self invalidateIntrinsicContentSize];
     [self setNeedsLayout];
 }
