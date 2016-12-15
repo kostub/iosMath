@@ -41,6 +41,8 @@ static BOOL isIos6Supported() {
     
     if (self) {
         self.canOverwriteTextColor = YES;
+        self.textColor = [UIColor blackColor];
+        self.placeholderColor = [UIColor blackColor];
     }
     
     return self;
