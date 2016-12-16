@@ -101,4 +101,7 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 /** The internal display of the MTMathUILabel. This is for advanced use only. */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
 
+//modified by wp
++(CGSize)calculateSize:(nonnull NSString *)latex;
+
 @end

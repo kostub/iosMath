@@ -212,4 +212,34 @@
     return [self sizeThatFits:CGSizeZero];
 }
 
+//modified by wp
++(CGSize)calculateSize:(NSString *)latex{
+    
+    CGSize size = CGSizeZero;
+    
+    MTFont* font = [MTFontManager fontManager].defaultFont;
+    
+    MTLineStyle currentStyle = kMTLineStyleDisplay;
+    
+    MTMathList * mathList = [MTMathListBuilder buildFromString:latex
+                                                         error:NULL];
+    
+    MTMathListDisplay* displayList = nil;
+    if (mathList) {
+        displayList = [MTTypesetter createLineForMathList:mathList
+                                                     font:font
+                                                    style:currentStyle];
+    }
+    
+    CGFloat paddingLeft = 0;
+    CGFloat paddingRight = 20;
+    CGFloat paddingTop = 8;
+    CGFloat paddingBottom = 8;
+    
+    size.width = displayList.width+paddingLeft+paddingRight;
+    size.height = displayList.ascent + displayList.descent+paddingTop+paddingBottom;
+    
+    return size;
+}
+
 @end
