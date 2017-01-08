@@ -199,6 +199,17 @@ prefer not to display anything then set:
 label.displayErrorInline = NO;
 ```
 
+##### Chinese support
+
+The `MTMathUILabel` has Chinese support builtin. You need to configure 
+font as xits-math-cn, and then set latex with a string contains Chinese
+ Characters:
+
+```objective-c
+label.font = [[MTFontManager fontManager] xitsMathAndChineseExtensionWithSize:20];
+label.latex = @"中文";
+```
+
 ## Future Enhancements
 
 Note this is not a complete implementation of LaTeX math mode. There are
