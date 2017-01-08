@@ -53,6 +53,8 @@
 		49EEFD7C1D19B664002D15C4 /* MTTypesetter.h in Headers */ = {isa = PBXBuildFile; fileRef = 49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		49EEFD7D1D19B664002D15C4 /* MTTypesetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */; };
 		5CA7D6C1A46D34A00133B0C2 /* libPods-iosMathExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 11BDFD1AB91580A33D83C75E /* libPods-iosMathExample.a */; };
+		A89C9BF91E22638E007E8E23 /* xits-math-cn.plist in Resources */ = {isa = PBXBuildFile; fileRef = A89C9BF81E22638E007E8E23 /* xits-math-cn.plist */; };
+		A89C9BFB1E22639F007E8E23 /* xits-math-cn.otf in Resources */ = {isa = PBXBuildFile; fileRef = A89C9BFA1E22639F007E8E23 /* xits-math-cn.otf */; };
 		D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF417DAED9000939107 /* MTMathUILabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D94FE3541B90DE46002D11E2 /* MTMathListDisplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF317DAED9000939107 /* MTMathListDisplay.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D94FE3551B90DE5B002D11E2 /* MTMathList.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EED0217DAEDB500939107 /* MTMathList.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -133,6 +135,8 @@
 		49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetter.m; sourceTree = "<group>"; };
 		49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplayInternal.h; sourceTree = "<group>"; };
 		964660A84E6FEDD150C994C8 /* Pods-iosMathTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.release.xcconfig"; sourceTree = "<group>"; };
+		A89C9BF81E22638E007E8E23 /* xits-math-cn.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "xits-math-cn.plist"; sourceTree = "<group>"; };
+		A89C9BFA1E22639F007E8E23 /* xits-math-cn.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "xits-math-cn.otf"; sourceTree = "<group>"; };
 		B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.release.xcconfig"; sourceTree = "<group>"; };
 		BB4250423755E0D3CD2BA614 /* Pods-iosMathTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests.debug.xcconfig"; sourceTree = "<group>"; };
 		D93290960585498BBAEE4535 /* Pods-iosMathExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosMathExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iosMathExample/Pods-iosMathExample.debug.xcconfig"; sourceTree = "<group>"; };
@@ -323,6 +327,8 @@
 				49DEC8121CF3C69E000053CD /* texgyretermes-math.otf */,
 				49DEC8131CF3C69E000053CD /* latinmodern-math.plist */,
 				49DEC8141CF3C69E000053CD /* latinmodern-math.otf */,
+				A89C9BF81E22638E007E8E23 /* xits-math-cn.plist */,
+				A89C9BFA1E22639F007E8E23 /* xits-math-cn.otf */,
 				49A27B0518EBF5B30030B7EF /* Supporting Files */,
 			);
 			path = MathFontBundle;
@@ -541,12 +547,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				49DEC81A1CF3C69E000053CD /* latinmodern-math.otf in Resources */,
+				A89C9BF91E22638E007E8E23 /* xits-math-cn.plist in Resources */,
 				49DEC8181CF3C69E000053CD /* texgyretermes-math.otf in Resources */,
 				49DEC8161CF3C69E000053CD /* xits-math.otf in Resources */,
 				49DEC8191CF3C69E000053CD /* latinmodern-math.plist in Resources */,
 				49DEC8171CF3C69E000053CD /* texgyretermes-math.plist in Resources */,
 				49DEC8151CF3C69E000053CD /* xits-math.plist in Resources */,
 				49A27B0918EBF5B30030B7EF /* InfoPlist.strings in Resources */,
+				A89C9BFB1E22639F007E8E23 /* xits-math-cn.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -565,7 +573,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		3442884B289896C8F015C1E5 /* [CP] Embed Pods Frameworks */ = {
@@ -640,7 +648,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
