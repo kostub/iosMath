@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		260D79811E241910006C1F7B /* NSBezierPath+addLineToPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 260D79801E241910006C1F7B /* NSBezierPath+addLineToPoint.m */; };
+		260D79841E241E0A006C1F7B /* MTLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 260D79831E241E0A006C1F7B /* MTLabel.m */; };
+		260D79881E24215E006C1F7B /* NSView+backgroundColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 260D79871E24215E006C1F7B /* NSView+backgroundColor.m */; };
 		26123D5D1E230E2F007A742A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 26123D421E230D1F007A742A /* MainMenu.xib */; };
 		26123D5E1E230E3E007A742A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 26123D401E230D10007A742A /* AppDelegate.m */; };
 		26123D5F1E230E3E007A742A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 26123D451E230D44007A742A /* main.m */; };
@@ -39,6 +42,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		260D797E1E241731006C1F7B /* MTConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MTConfig.h; sourceTree = "<group>"; };
+		260D797F1E241910006C1F7B /* NSBezierPath+addLineToPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSBezierPath+addLineToPoint.h"; sourceTree = "<group>"; };
+		260D79801E241910006C1F7B /* NSBezierPath+addLineToPoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBezierPath+addLineToPoint.m"; sourceTree = "<group>"; };
+		260D79831E241E0A006C1F7B /* MTLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTLabel.m; sourceTree = "<group>"; };
+		260D79851E241E27006C1F7B /* MTLabel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MTLabel.h; sourceTree = "<group>"; };
+		260D79861E24215E006C1F7B /* NSView+backgroundColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSView+backgroundColor.h"; sourceTree = "<group>"; };
+		260D79871E24215E006C1F7B /* NSView+backgroundColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSView+backgroundColor.m"; sourceTree = "<group>"; };
 		26123D3F1E230D10007A742A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = MacOSMathExample/AppDelegate.h; sourceTree = "<group>"; };
 		26123D401E230D10007A742A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = MacOSMathExample/AppDelegate.m; sourceTree = "<group>"; };
 		26123D411E230D10007A742A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = MacOSMathExample/Assets.xcassets; sourceTree = "<group>"; };
@@ -163,12 +173,19 @@
 		26317BD71E231B17002EF44B /* render */ = {
 			isa = PBXGroup;
 			children = (
-				26317BD81E231B17002EF44B /* internal */,
 				26317C0A1E231C68002EF44B /* fonts */,
+				26317BD81E231B17002EF44B /* internal */,
+				260D797E1E241731006C1F7B /* MTConfig.h */,
+				260D79851E241E27006C1F7B /* MTLabel.h */,
+				260D79831E241E0A006C1F7B /* MTLabel.m */,
 				26317BE31E231B17002EF44B /* MTMathListDisplay.h */,
 				26317BE41E231B17002EF44B /* MTMathListDisplay.m */,
 				26317BE51E231B17002EF44B /* MTMathUILabel.h */,
 				26317BE61E231B17002EF44B /* MTMathUILabel.m */,
+				260D797F1E241910006C1F7B /* NSBezierPath+addLineToPoint.h */,
+				260D79801E241910006C1F7B /* NSBezierPath+addLineToPoint.m */,
+				260D79861E24215E006C1F7B /* NSView+backgroundColor.h */,
+				260D79871E24215E006C1F7B /* NSView+backgroundColor.m */,
 			);
 			path = render;
 			sourceTree = "<group>";
@@ -308,6 +325,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				26317BEB1E231B17002EF44B /* MTUnicode.m in Sources */,
+				260D79841E241E0A006C1F7B /* MTLabel.m in Sources */,
 				26317BE71E231B17002EF44B /* MTMathAtomFactory.m in Sources */,
 				26123D5E1E230E3E007A742A /* AppDelegate.m in Sources */,
 				26317BF01E231B17002EF44B /* MTMathListDisplay.m in Sources */,
@@ -315,9 +333,11 @@
 				26317BEF1E231B17002EF44B /* MTFontManager.m in Sources */,
 				26317BE81E231B17002EF44B /* MTMathList.m in Sources */,
 				26123D5F1E230E3E007A742A /* main.m in Sources */,
+				260D79881E24215E006C1F7B /* NSView+backgroundColor.m in Sources */,
 				26317BEC1E231B17002EF44B /* MTFontMathTable.m in Sources */,
 				26317BED1E231B17002EF44B /* MTTypesetter.m in Sources */,
 				26317BEA1E231B17002EF44B /* MTMathListIndex.m in Sources */,
+				260D79811E241910006C1F7B /* NSBezierPath+addLineToPoint.m in Sources */,
 				26317BEE1E231B17002EF44B /* MTFont.m in Sources */,
 				26317BF11E231B17002EF44B /* MTMathUILabel.m in Sources */,
 			);
@@ -439,6 +459,24 @@
 		267EC2721E230CB400E34886 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -448,6 +486,23 @@
 		267EC2731E230CB400E34886 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 			};

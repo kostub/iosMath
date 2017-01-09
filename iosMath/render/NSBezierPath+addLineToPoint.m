@@ -1,5 +1,5 @@
 //
-//  NSBezierPath+NSBezierPath_addLineToPoint.m
+//  NSBezierPath+addLineToPoint.m
 //  MacOSMath
 //
 //  Created by 安志钢 on 17-01-09.
@@ -8,9 +8,10 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import "NSBezierPath+NSBezierPath_addLineToPoint.h"
+#import "NSBezierPath+addLineToPoint.h"
 
-@implementation NSBezierPath (NSBezierPath_addLineToPoint)
+#if !TARGET_OS_IPHONE
+@implementation NSBezierPath (addLineToPoint)
 
 - (void)addLineToPoint:(CGPoint)point
 {
@@ -18,3 +19,4 @@
 }
 
 @end
+#endif

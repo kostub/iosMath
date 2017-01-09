@@ -8,6 +8,8 @@
 //  MIT license. See the LICENSE file for details.
 //
 
+#include <TargetConditionals.h>
+
 #import "MTFont.h"
 #import "MTFont+Internal.h"
 

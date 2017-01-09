@@ -11,11 +11,11 @@
 
 @import Foundation;
 @import QuartzCore;
-#if TARGET_OS_IPHONE
-@import UIKit;
-#else
-@import AppKit;
-#endif
+
+// This header file is imported by Foudation.
+//#include <TargetConditionals.h>
+
+#import "MTConfig.h"
 
 #import "MTFont.h"
 #import "MTMathList.h"
@@ -48,11 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the display has a subscript/superscript following it.
 @property (nonatomic, readonly) BOOL hasScript;
 /// The text color for this display
-#if TARGET_OS_IPHONE
-@property (nonatomic, nullable) UIColor* textColor;
-#else
-@property (nonatomic, nullable) NSColor *textColor;
-#endif
+@property (nonatomic, nullable) MTColor *textColor;
 
 @end
 

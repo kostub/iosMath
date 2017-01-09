@@ -472,17 +472,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     return line;
 }
 
-#if TARGET_OS_IPHONE
-+ (UIColor*) placeholderColor
-#else
-+ (NSColor *)placeholderColor
-#endif
++ (MTColor*) placeholderColor
 {
-#if TARGET_OS_IPHONE
-    return [UIColor blueColor];
-#else
-    return [NSColor blueColor];
-#endif
+    return [MTColor blueColor];
 }
 
 - (instancetype)initWithFont:(MTFont*) font style:(MTLineStyle) style cramped:(BOOL) cramped spaced:(BOOL) spaced
@@ -800,11 +792,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 NSAttributedString* current = nil;
                 if (atom.type == kMTMathAtomPlaceholder) {
-#if TARGET_OS_IPHONE
-                    UIColor* color = [MTTypesetter placeholderColor];
-#else
-                    NSColor *color = [MTTypesetter placeholderColor];
-#endif
+                    MTColor* color = [MTTypesetter placeholderColor];
                     current = [[NSAttributedString alloc] initWithString:atom.nucleus
                                                               attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) color.CGColor }];
                 } else {
