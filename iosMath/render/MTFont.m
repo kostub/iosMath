@@ -50,8 +50,13 @@
 
 + (NSBundle*) fontBundle
 {
+#if TARGET_OS_IPHONE
     // Uses bundle for class so that this can be access by the unit tests.
     return [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"iosMathFonts" withExtension:@"bundle"]];
+#else
+    // TODO: Font bundle for Mac OS.
+    return [NSBundle mainBundle];
+#endif
 }
 
 - (MTFont *)copyFontWithSize:(CGFloat)size

@@ -4,12 +4,14 @@
 //
 //  Created by Kostub Deshmukh on 8/27/13.
 //  Copyright (C) 2013 MathChat
-//   
+//
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
 
 #import <CoreText/CoreText.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
 
 #import "MTMathListDisplay.h"
 #import "MTFontMathTable.h"
@@ -21,11 +23,17 @@ static BOOL isIos6Supported() {
     static BOOL initialized = false;
     static BOOL supported = false;
     if (!initialized) {
+#if TARGET_OS_IPHONE
         NSString *reqSysVer = @"6.0";
         NSString *currSysVer = [UIDevice currentDevice].systemVersion;
+        
         if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) {
             supported = true;
         }
+#else
+        supported = true;
+#endif
+        
         initialized = true;
     }
     return supported;
@@ -44,6 +52,8 @@ static BOOL isIos6Supported() {
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
 }
 
+// Debug method skipped for MAC.
+#if TARGET_OS_IPHONE
 - (id)debugQuickLookObject
 {
     CGSize size = CGSizeMake(self.width, self.ascent + self.descent);
@@ -66,6 +76,7 @@ static BOOL isIos6Supported() {
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     return img;
 }
+#endif
 
 @end
 
@@ -106,7 +117,7 @@ static BOOL isIos6Supported() {
     _line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)(_attributedString));
 }
 
-- (void) setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
@@ -184,7 +195,7 @@ static BOOL isIos6Supported() {
     _index = index;
 }
 
-- (void) setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     // Set the color on all subdisplays
     [super setTextColor:textColor];
@@ -200,7 +211,7 @@ static BOOL isIos6Supported() {
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
     CGContextTranslateCTM(context, self.position.x, self.position.y);
     CGContextSetTextPosition(context, 0, 0);
-  
+    
     // draw each atom separately
     for (MTDisplay* displayAtom in self.subDisplays) {
         [displayAtom draw:context];
@@ -298,7 +309,7 @@ static BOOL isIos6Supported() {
     [self updateNumeratorPosition];
 }
 
-- (void)setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     _numerator.textColor = textColor;
@@ -309,13 +320,13 @@ static BOOL isIos6Supported() {
 {
     [_numerator draw:context];
     [_denominator draw:context];
-
+    
     CGContextSaveGState(context);
     
     [self.textColor setStroke];
     
     // draw the horizontal line
-    UIBezierPath* path = [UIBezierPath bezierPath];
+    MTBezierPath* path = [MTBezierPath bezierPath];
     [path moveToPoint:CGPointMake(self.position.x, self.position.y + self.linePosition)];
     [path addLineToPoint:CGPointMake(self.position.x + self.width, self.position.y + self.linePosition)];
     path.lineWidth = self.lineThickness;
@@ -340,7 +351,7 @@ static BOOL isIos6Supported() {
         _radicand = radicand;
         _radicalGlyph = glyph;
         _radicalShift = 0;
-
+        
         self.position = position;
         self.range = range;
     }
@@ -353,11 +364,11 @@ static BOOL isIos6Supported() {
     CGFloat kernBefore = fontMetrics.radicalKernBeforeDegree;
     CGFloat kernAfter = fontMetrics.radicalKernAfterDegree;
     CGFloat raise = fontMetrics.radicalDegreeBottomRaisePercent * (self.ascent - self.descent);
-
+    
     // The layout is:
     // kernBefore, raise, degree, kernAfter, radical
     _degree = degree;
-
+    
     // the radical is now shifted by kernBefore + degree.width + kernAfter
     _radicalShift = kernBefore + degree.width + kernAfter;
     if (_radicalShift < 0) {
@@ -390,7 +401,7 @@ static BOOL isIos6Supported() {
     self.radicand.position = CGPointMake(self.position.x + _radicalShift + _radicalGlyph.width, self.position.y);
 }
 
-- (void)setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     self.radicand.textColor = textColor;
@@ -402,24 +413,24 @@ static BOOL isIos6Supported() {
     // draw the radicand & degree at its position
     [self.radicand draw:context];
     [self.degree draw:context];
-
+    
     CGContextSaveGState(context);
     [self.textColor setStroke];
     [self.textColor setFill];
-
+    
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
     CGContextTranslateCTM(context, self.position.x + _radicalShift, self.position.y);
     CGContextSetTextPosition(context, 0, 0);
-
+    
     // Draw the glyph.
     [_radicalGlyph draw:context];
-
+    
     // Draw the VBOX
     // for the kern of, we don't need to draw anything.
     CGFloat heightFromTop = _topKern;
-
+    
     // draw the horizontal line with the given thickness
-    UIBezierPath* path = [UIBezierPath bezierPath];
+    MTBezierPath* path = [MTBezierPath bezierPath];
     CGPoint lineStart = CGPointMake(_radicalGlyph.width, self.ascent - heightFromTop - self.lineThickness / 2); // subtract half the line thickness to center the line
     CGPoint lineEnd = CGPointMake(lineStart.x + self.radicand.width, lineStart.y);
     [path moveToPoint:lineStart];
@@ -427,7 +438,7 @@ static BOOL isIos6Supported() {
     path.lineWidth = _lineThickness;
     path.lineCapStyle = kCGLineCapRound;
     [path stroke];
-
+    
     CGContextRestoreGState(context);
 }
 
@@ -448,7 +459,7 @@ static BOOL isIos6Supported() {
     if (self) {
         _font = font;
         _glyph = glyph;
-
+        
         self.position = CGPointZero;
         self.range = range;
     }
@@ -458,15 +469,15 @@ static BOOL isIos6Supported() {
 - (void)draw:(CGContextRef)context
 {
     CGContextSaveGState(context);
-
+    
     [self.textColor setFill];
     
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
     CGContextTranslateCTM(context, self.position.x, self.position.y - self.shiftDown);
     CGContextSetTextPosition(context, 0, 0);
-
+    
     CTFontDrawGlyphs(_font.ctFont, &_glyph, &CGPointZero, 1, context);
-
+    
     CGContextRestoreGState(context);
 }
 
@@ -552,7 +563,7 @@ static BOOL isIos6Supported() {
     CGFloat _upperLimitGap;
     CGFloat _lowerLimitGap;
     CGFloat _extraPadding;
-
+    
     MTDisplay *_nucleus;
 }
 
@@ -563,10 +574,10 @@ static BOOL isIos6Supported() {
         _upperLimit = upperLimit;
         _lowerLimit = lowerLimit;
         _nucleus = nucleus;
-
+        
         CGFloat maxWidth = MAX(nucleus.width, upperLimit.width);
         maxWidth = MAX(maxWidth, lowerLimit.width);
-
+        
         _limitShift = limitShift;
         _upperLimitGap = 0;
         _lowerLimitGap = 0;
@@ -644,7 +655,7 @@ static BOOL isIos6Supported() {
     _nucleus.position = CGPointMake(self.position.x + (self.width - _nucleus.width)/2, self.position.y);
 }
 
-- (void)setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     self.upperLimit.textColor = textColor;
@@ -678,7 +689,7 @@ static BOOL isIos6Supported() {
     return self;
 }
 
-- (void)setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     _inner.textColor = textColor;
@@ -693,7 +704,7 @@ static BOOL isIos6Supported() {
     [self.textColor setStroke];
     
     // draw the horizontal line
-    UIBezierPath* path = [UIBezierPath bezierPath];
+    MTBezierPath* path = [MTBezierPath bezierPath];
     CGPoint lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp);
     CGPoint lineEnd = CGPointMake(lineStart.x + self.inner.width, lineStart.y);
     [path moveToPoint:lineStart];
@@ -733,7 +744,7 @@ static BOOL isIos6Supported() {
     return self;
 }
 
-- (void)setTextColor:(UIColor *)textColor
+- (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
     _accentee.textColor = textColor;
@@ -754,13 +765,13 @@ static BOOL isIos6Supported() {
 - (void)draw:(CGContextRef)context
 {
     [self.accentee draw:context];
-
+    
     CGContextSaveGState(context);
     CGContextTranslateCTM(context, self.position.x, self.position.y);
     CGContextSetTextPosition(context, 0, 0);
-
+    
     [self.accent draw:context];
-
+    
     CGContextRestoreGState(context);
 }
 @end

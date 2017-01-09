@@ -124,7 +124,7 @@ UTF32Char getItalicized(unichar ch) {
         case 'h':
             return kMTUnicodePlanksConstant;   // italic h (plank's constant)
     }
-
+    
     if (IS_UPPER_EN(ch)) {
         unicode = kMTUnicodeMathCapitalItalicStart + (ch - 'A');
     } else if (IS_LOWER_EN(ch)) {
@@ -370,34 +370,34 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
     switch (fontStyle) {
         case kMTFontStyleDefault:
             return getDefaultStyle(ch);
-
+            
         case kMTFontStyleRoman:
             return ch;
-
+            
         case kMTFontStyleBold:
             return getBold(ch);
-
+            
         case kMTFontStyleItalic:
             return getItalicized(ch);
-
+            
         case kMTFontStyleBoldItalic:
             return getBoldItalic(ch);
-
+            
         case kMTFontStyleCaligraphic:
             return getCaligraphic(ch);
-
+            
         case kMTFontStyleTypewriter:
             return getTypewriter(ch);
-
+            
         case kMTFontStyleSansSerif:
             return getSansSerif(ch);
-
+            
         case kMTFontStyleFraktur:
             return getFraktur(ch);
-
+            
         case kMTFontStyleBlackboard:
             return getBlackboard(ch);
-
+            
         default:
             @throw [NSException exceptionWithName:@"Invalid style"
                                            reason:[NSString stringWithFormat:@"Unknown style %lu for font.", (unsigned long)fontStyle]
@@ -472,9 +472,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     return line;
 }
 
-+ (UIColor*) placeholderColor
++ (MTColor*) placeholderColor
 {
-    return [UIColor blueColor];
+    return [MTColor blueColor];
 }
 
 - (instancetype)initWithFont:(MTFont*) font style:(MTLineStyle) style cramped:(BOOL) cramped spaced:(BOOL) spaced
@@ -728,7 +728,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 break;
             }
-
+                
             case kMTMathAtomAccent: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -737,12 +737,12 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // Accent is considered as Ord in rule 16.
                 [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
                 atom.type = kMTMathAtomOrdinary;
-
+                
                 MTAccent* accent = (MTAccent*) atom;
                 MTDisplay* display = [self makeAccent:accent];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
-
+                
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
@@ -792,7 +792,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 NSAttributedString* current = nil;
                 if (atom.type == kMTMathAtomPlaceholder) {
-                    UIColor* color = [MTTypesetter placeholderColor];
+                    MTColor* color = [MTTypesetter placeholderColor];
                     current = [[NSAttributedString alloc] initWithString:atom.nucleus
                                                               attributes:@{ (NSString*) kCTForegroundColorAttributeName : (id) color.CGColor }];
                 } else {
@@ -1219,9 +1219,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGFloat clearance = self.radicalVerticalGap;
     CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
-
+    
     MTDisplay<DownShift>* glyph = [self getRadicalGlyphWithHeight:radicalHeight];
-
+    
     
     // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
     // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
@@ -1309,7 +1309,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 {
     NSParameterAssert(glyphs);
     NSParameterAssert(offsets);
-
+    
     for (int numExtenders = 0; true; numExtenders++) {
         NSMutableArray<NSNumber*>* glyphsRv = [NSMutableArray array];
         NSMutableArray<NSNumber*>* offsetsRv = [NSMutableArray array];
@@ -1519,7 +1519,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:delimiter];
     CGGlyph glyph = [self findGlyph:leftGlyph withHeight:glyphHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
- 
+    
     MTDisplay<DownShift>* glyphDisplay;
     if (glyphAscent + glyphDescent < glyphHeight) {
         // we didn't find a pre-built glyph that is large enough
@@ -1617,7 +1617,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         CGGlyph glyph = [variants[i] shortValue];
         glyphs[i] = glyph;
     }
-
+    
     CGGlyph curGlyph = glyphs[0];  // if no other glyph is found, we'll return the first one.
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
@@ -1629,7 +1629,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         CGFloat ascent, descent;
         CGFloat width = CGRectGetMaxX(bounds);
         getBboxDetails(bounds, &ascent, &descent);
-
+        
         if (width > maxWidth) {
             if (i == 0) {
                 // glyph dimensions are not yet set
@@ -1661,7 +1661,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     accentGlyph = [self findVariantGlyph:accentGlyph withMaxWidth:accenteeWidth glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     CGFloat delta = MIN(accentee.ascent, _styleFont.mathTable.accentBaseHeight);
-
+    
     CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(skew, height);
@@ -1670,7 +1670,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     accentGlyphDisplay.descent = glyphDescent;
     accentGlyphDisplay.width = glyphWidth;
     accentGlyphDisplay.position = accentPosition;
-
+    
     if ([self isSingleCharAccentee:accent] && (accent.subScript || accent.superScript)) {
         // Attach the super/subscripts to the accentee instead of the accent.
         MTMathAtom* innerAtom = accent.innerList.atoms[0];
@@ -1683,14 +1683,14 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         // only affects fractions and superscripts. We skip adjusting the heights.
         accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:_cramped];
     }
-
+    
     MTAccentDisplay* display = [[MTAccentDisplay alloc] initWithAccent:accentGlyphDisplay accentee:accentee range:accent.indexRange];
     display.width = accentee.width;
     display.descent = accentee.descent;
     CGFloat ascent = accentee.ascent - delta + glyphAscent;
     display.ascent = MAX(accentee.ascent, ascent);
     display.position = _currentPosition;
-
+    
     return display;
 }
 
