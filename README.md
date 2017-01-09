@@ -27,6 +27,18 @@ library:
 
 ![Ramanujan Identity](img/ramanujan.png)
 
+This project has some Chinese characters support. xits-math-cn.otf is the only bundled font which has Chinese characters
+support. Here are some examples Chinese rendered by iosMath:
+
+![Quadratic Formula CN](img/cn_1.png) 
+
+The following two examples do not have any meaning or is not compliant to writing standard. They are used here only to
+illustrate the functionality of this project:
+
+![Formula 1](img/cn_2.png)
+
+![Formula 2](img/cn_3.png)
+
 The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
  
 ## Requirements
@@ -185,6 +197,17 @@ prefer not to display anything then set:
 
 ```objective-c
 label.displayErrorInline = NO;
+```
+
+##### Chinese support
+
+The `MTMathUILabel` has Chinese support builtin. You need to configure 
+font as xits-math-cn, and then set latex with a string contains Chinese
+ Characters:
+
+```objective-c
+label.font = [[MTFontManager fontManager] xitsMathAndChineseExtensionWithSize:20];
+label.latex = @"中文";
 ```
 
 ## Future Enhancements
