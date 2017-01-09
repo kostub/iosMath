@@ -83,38 +83,336 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
     }
 }
 
-#pragma mark - Italics
+#pragma mark - Font styles
 
+static const unichar kMTUnicodeGreekLowerStart = 0x03B1;
+static const unichar kMTUnicodeGreekLowerEnd = 0x03C9;
+static const unichar kMTUnicodeGreekCapitalStart = 0x0391;
+static const unichar kMTUnicodeGreekCapitalEnd = 0x03A9;
+
+#define IS_LOWER_EN(ch) ((ch) >= 'a' && (ch) <= 'z')
+#define IS_UPPER_EN(ch) ((ch) >= 'A' && (ch) <= 'Z')
+#define IS_NUMBER(ch) ((ch) >= '0' && (ch) <= '9')
+#define IS_LOWER_GREEK(ch) ((ch) >= kMTUnicodeGreekLowerStart && (ch) <= kMTUnicodeGreekLowerEnd)
+#define IS_CAPITAL_GREEK(ch) ((ch) >= kMTUnicodeGreekCapitalStart && (ch) <= kMTUnicodeGreekCapitalEnd)
+
+
+NSUInteger greekSymbolOrder(unichar ch) {
+    // These greek symbols that always appear in unicode in this particular order after the alphabet
+    // The symbols are epsilon, vartheta, varkappa, phi, varrho, varpi.
+    static NSArray* greekSymbols;
+    if (!greekSymbols) {
+        greekSymbols = @[@0x03F5, @0x03D1, @0x03F0, @0x03D5, @0x03F1, @0x03D6];
+    }
+    return [greekSymbols indexOfObject:@(ch)];
+}
+
+#define IS_GREEK_SYMBOL(ch) (greekSymbolOrder(ch) != NSNotFound)
+
+static const unichar kMTUnicodePlanksConstant = 0x210e;
+static const UTF32Char kMTUnicodeMathCapitalItalicStart = 0x1D434;
+static const UTF32Char kMTUnicodeMathLowerItalicStart = 0x1D44E;
+static const UTF32Char kMTUnicodeGreekCapitalItalicStart = 0x1D6E2;
+static const UTF32Char kMTUnicodeGreekLowerItalicStart = 0x1D6FC;
+static const UTF32Char kMTUnicodeGreekSymbolItalicStart = 0x1D716;
+
+// mathit
 UTF32Char getItalicized(unichar ch) {
-    UTF32Char unicode;
-    if (ch == 'h') {
-        // special code for h - planks constant
-        unicode = kMTUnicodePlanksConstant;
-    } else if (ch >= 'a' && ch <= 'z') {
-        unicode = kMTUnicodeMathItalicStart + (ch - 'a');
-    } else if (ch >= 'A' && ch <= 'Z') {
+    UTF32Char unicode = ch;
+    // Special cases for italics
+    switch(ch) {
+        case 'h':
+            return kMTUnicodePlanksConstant;   // italic h (plank's constant)
+    }
+
+    if (IS_UPPER_EN(ch)) {
         unicode = kMTUnicodeMathCapitalItalicStart + (ch - 'A');
-    } else if (ch >= kMTUnicodeGreekStart && ch <= kMTUnicodeGreekEnd) {
-        // Greek characters
-        unicode = kMTUnicodeGreekMathItalicStart + (ch - kMTUnicodeGreekStart);
-    } else if (ch >= kMTUnicodeCapitalGreekStart && ch <= kMTUnicodeCapitalGreekEnd) {
+    } else if (IS_LOWER_EN(ch)) {
+        unicode = kMTUnicodeMathLowerItalicStart + (ch - 'a');
+    } else if (IS_CAPITAL_GREEK(ch)) {
         // Capital Greek characters
-        unicode = kMTUnicodeGreekMathCapitalItalicStart + (ch - kMTUnicodeCapitalGreekStart);
-    } else {
-        @throw [NSException exceptionWithName:@"IllegalCharacter"
-                                       reason:[NSString stringWithFormat:@"Unknown character %d used as variable.", ch]
-                                     userInfo:nil];
+        unicode = kMTUnicodeGreekCapitalItalicStart + (ch - kMTUnicodeGreekCapitalStart);
+    } else if (IS_LOWER_GREEK(ch)) {
+        // Greek characters
+        unicode = kMTUnicodeGreekLowerItalicStart + (ch - kMTUnicodeGreekLowerStart);
+    } else if (IS_GREEK_SYMBOL(ch)) {
+        return kMTUnicodeGreekSymbolItalicStart + (int)greekSymbolOrder(ch);
+    }
+    // Note there are no italicized numbers in unicode so we don't support italicizing numbers.
+    return unicode;
+}
+
+static const UTF32Char kMTUnicodeMathCapitalBoldStart = 0x1D400;
+static const UTF32Char kMTUnicodeMathLowerBoldStart = 0x1D41A;
+static const UTF32Char kMTUnicodeGreekCapitalBoldStart = 0x1D6A8;
+static const UTF32Char kMTUnicodeGreekLowerBoldStart = 0x1D6C2;
+static const UTF32Char kMTUnicodeGreekSymbolBoldStart = 0x1D6DC;
+static const UTF32Char kMTUnicodeNumberBoldStart = 0x1D7CE;
+
+// mathbf
+UTF32Char getBold(unichar ch) {
+    UTF32Char unicode = ch;
+    if (IS_UPPER_EN(ch)) {
+        unicode = kMTUnicodeMathCapitalBoldStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        unicode = kMTUnicodeMathLowerBoldStart + (ch - 'a');
+    } else if (IS_CAPITAL_GREEK(ch)) {
+        // Capital Greek characters
+        unicode = kMTUnicodeGreekCapitalBoldStart + (ch - kMTUnicodeGreekCapitalStart);
+    } else if (IS_LOWER_GREEK(ch)) {
+        // Greek characters
+        unicode = kMTUnicodeGreekLowerBoldStart + (ch - kMTUnicodeGreekLowerStart);
+    } else if (IS_GREEK_SYMBOL(ch)) {
+        return kMTUnicodeGreekSymbolBoldStart + (int)greekSymbolOrder(ch);
+    } else if (IS_NUMBER(ch)) {
+        unicode = kMTUnicodeNumberBoldStart + (ch - '0');
     }
     return unicode;
 }
 
-static NSString* mathItalicize(NSString* str) {
+static const UTF32Char kMTUnicodeMathCapitalBoldItalicStart = 0x1D468;
+static const UTF32Char kMTUnicodeMathLowerBoldItalicStart = 0x1D482;
+static const UTF32Char kMTUnicodeGreekCapitalBoldItalicStart = 0x1D71C;
+static const UTF32Char kMTUnicodeGreekLowerBoldItalicStart = 0x1D736;
+static const UTF32Char kMTUnicodeGreekSymbolBoldItalicStart = 0x1D750;
+
+// mathbfit
+UTF32Char getBoldItalic(unichar ch) {
+    UTF32Char unicode = ch;
+    if (IS_UPPER_EN(ch)) {
+        unicode = kMTUnicodeMathCapitalBoldItalicStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        unicode = kMTUnicodeMathLowerBoldItalicStart + (ch - 'a');
+    } else if (IS_CAPITAL_GREEK(ch)) {
+        // Capital Greek characters
+        unicode = kMTUnicodeGreekCapitalBoldItalicStart + (ch - kMTUnicodeGreekCapitalStart);
+    } else if (IS_LOWER_GREEK(ch)) {
+        // Greek characters
+        unicode = kMTUnicodeGreekLowerBoldItalicStart + (ch - kMTUnicodeGreekLowerStart);
+    } else if (IS_GREEK_SYMBOL(ch)) {
+        return kMTUnicodeGreekSymbolBoldItalicStart + (int)greekSymbolOrder(ch);
+    } else if (IS_NUMBER(ch)) {
+        // No bold italic for numbers so we just bold them.
+        unicode = getBold(ch);
+    }
+    return unicode;
+}
+
+// LaTeX default
+UTF32Char getDefaultStyle(unichar ch) {
+    if (IS_LOWER_EN(ch) || IS_UPPER_EN(ch) || IS_LOWER_GREEK(ch) || IS_GREEK_SYMBOL(ch)) {
+        return getItalicized(ch);
+    } else if (IS_NUMBER(ch) || IS_CAPITAL_GREEK(ch)) {
+        // In the default style numbers and capital greek is roman
+        return ch;
+    } else if (ch == '.') {
+        // . is treated as a number in our code, but it doesn't change fonts.
+        return ch;
+    } else {
+        @throw [NSException exceptionWithName:@"IllegalCharacter"
+                                       reason:[NSString stringWithFormat:@"Unknown character %d for default style.", ch]
+                                     userInfo:nil];
+    }
+    return ch;
+}
+
+static const UTF32Char kMTUnicodeMathCapitalScriptStart = 0x1D49C;
+static const UTF32Char kMTUnicodeMathLowerScriptStart = 0x1D4B6;
+
+// mathcal/mathscr (caligraphic or script)
+UTF32Char getCaligraphic(unichar ch) {
+    // Caligraphic has lots of exceptions:
+    switch(ch) {
+        case 'B':
+            return 0x212C;   // Script B (bernoulli)
+        case 'E':
+            return 0x2130;   // Script E (emf)
+        case 'F':
+            return 0x2131;   // Script F (fourier)
+        case 'H':
+            return 0x210B;   // Script H (hamiltonian)
+        case 'I':
+            return 0x2110;   // Script I
+        case 'L':
+            return 0x2112;   // Script L (laplace)
+        case 'M':
+            return 0x2133;   // Script M (M-matrix)
+        case 'R':
+            return 0x211B;   // Script R (Riemann integral)
+        case 'e':
+            return 0x212F;   // Script e (Natural exponent)
+        case 'g':
+            return 0x210A;   // Script g (real number)
+        case 'o':
+            return 0x2134;   // Script o (order)
+        default:
+            break;
+    }
+    UTF32Char unicode;
+    if (IS_UPPER_EN(ch)) {
+        unicode = kMTUnicodeMathCapitalScriptStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        // TODO:(kostub) Latin Modern Math does not have lower case caligraphic characters.
+        unicode = kMTUnicodeMathLowerScriptStart + (ch - 'a');
+    } else {
+        // Caligraphic characters don't exist for greek or numbers, we give them the
+        // default treatment.
+        unicode = getDefaultStyle(ch);
+    }
+    return unicode;
+}
+
+static const UTF32Char kMTUnicodeMathCapitalTTStart = 0x1D670;
+static const UTF32Char kMTUnicodeMathLowerTTStart = 0x1D68A;
+static const UTF32Char kMTUnicodeNumberTTStart = 0x1D7F6;
+
+// mathtt (monospace)
+UTF32Char getTypewriter(unichar ch) {
+    if (IS_UPPER_EN(ch)) {
+        return kMTUnicodeMathCapitalTTStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        return kMTUnicodeMathLowerTTStart + (ch - 'a');
+    } else if (IS_NUMBER(ch)) {
+        return kMTUnicodeNumberTTStart + (ch - '0');
+    }
+    // Monospace characters don't exist for greek, we give them the
+    // default treatment.
+    return getDefaultStyle(ch);
+}
+
+static const UTF32Char kMTUnicodeMathCapitalSansSerifStart = 0x1D5A0;
+static const UTF32Char kMTUnicodeMathLowerSansSerifStart = 0x1D5BA;
+static const UTF32Char kMTUnicodeNumberSansSerifStart = 0x1D7E2;
+
+// mathsf
+UTF32Char getSansSerif(unichar ch) {
+    if (IS_UPPER_EN(ch)) {
+        return kMTUnicodeMathCapitalSansSerifStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        return kMTUnicodeMathLowerSansSerifStart + (ch - 'a');
+    } else if (IS_NUMBER(ch)) {
+        return kMTUnicodeNumberSansSerifStart + (ch - '0');
+    }
+    // Sans-serif characters don't exist for greek, we give them the
+    // default treatment.
+    return getDefaultStyle(ch);
+}
+
+static const UTF32Char kMTUnicodeMathCapitalFrakturStart = 0x1D504;
+static const UTF32Char kMTUnicodeMathLowerFrakturStart = 0x1D51E;
+
+// mathfrak
+UTF32Char getFraktur(unichar ch) {
+    // Fraktur has exceptions:
+    switch(ch) {
+        case 'C':
+            return 0x212D;   // C Fraktur
+        case 'H':
+            return 0x210C;   // Hilbert space
+        case 'I':
+            return 0x2111;   // Imaginary
+        case 'R':
+            return 0x211C;   // Real
+        case 'Z':
+            return 0x2128;   // Z Fraktur
+        default:
+            break;
+    }
+    if (IS_UPPER_EN(ch)) {
+        return kMTUnicodeMathCapitalFrakturStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        return kMTUnicodeMathLowerFrakturStart + (ch - 'a');
+    }
+    // Fraktur characters don't exist for greek & numbers, we give them the
+    // default treatment.
+    return getDefaultStyle(ch);
+}
+
+static const UTF32Char kMTUnicodeMathCapitalBlackboardStart = 0x1D538;
+static const UTF32Char kMTUnicodeMathLowerBlackboardStart = 0x1D552;
+static const UTF32Char kMTUnicodeNumberBlackboardStart = 0x1D7D8;
+
+// mathbb (double struck)
+UTF32Char getBlackboard(unichar ch) {
+    // Blackboard has lots of exceptions:
+    switch(ch) {
+        case 'C':
+            return 0x2102;   // Complex numbers
+        case 'H':
+            return 0x210D;   // Quarternions
+        case 'N':
+            return 0x2115;   // Natural numbers
+        case 'P':
+            return 0x2119;   // Primes
+        case 'Q':
+            return 0x211A;   // Rationals
+        case 'R':
+            return 0x211D;   // Reals
+        case 'Z':
+            return 0x2124;   // Integers
+        default:
+            break;
+    }
+    if (IS_UPPER_EN(ch)) {
+        return kMTUnicodeMathCapitalBlackboardStart + (ch - 'A');
+    } else if (IS_LOWER_EN(ch)) {
+        return kMTUnicodeMathLowerBlackboardStart + (ch - 'a');
+    } else if (IS_NUMBER(ch)) {
+        return kMTUnicodeNumberBlackboardStart + (ch - '0');
+    }
+    // Blackboard characters don't exist for greek, we give them the
+    // default treatment.
+    return getDefaultStyle(ch);
+}
+
+static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
+{
+    switch (fontStyle) {
+        case kMTFontStyleDefault:
+            return getDefaultStyle(ch);
+
+        case kMTFontStyleRoman:
+            return ch;
+
+        case kMTFontStyleBold:
+            return getBold(ch);
+
+        case kMTFontStyleItalic:
+            return getItalicized(ch);
+
+        case kMTFontStyleBoldItalic:
+            return getBoldItalic(ch);
+
+        case kMTFontStyleCaligraphic:
+            return getCaligraphic(ch);
+
+        case kMTFontStyleTypewriter:
+            return getTypewriter(ch);
+
+        case kMTFontStyleSansSerif:
+            return getSansSerif(ch);
+
+        case kMTFontStyleFraktur:
+            return getFraktur(ch);
+
+        case kMTFontStyleBlackboard:
+            return getBlackboard(ch);
+
+        default:
+            @throw [NSException exceptionWithName:@"Invalid style"
+                                           reason:[NSString stringWithFormat:@"Unknown style %lu for font.", (unsigned long)fontStyle]
+                                         userInfo:nil];
+    }
+    return ch;
+}
+
+static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
     NSMutableString* retval = [NSMutableString stringWithCapacity:str.length];
     unichar charBuffer[str.length];
     [str getCharacters:charBuffer range:NSMakeRange(0, str.length)];
     for (int i = 0; i < str.length; ++i) {
         unichar ch = charBuffer[i];
-        UTF32Char unicode = getItalicized(ch);
+        UTF32Char unicode = styleCharacter(ch, fontStyle);
         unicode = NSSwapHostIntToLittle(unicode);
         NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
         [retval appendString:charStr];
@@ -213,15 +511,15 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     NSMutableArray* preprocessed = [NSMutableArray arrayWithCapacity:ml.atoms.count];
     MTMathAtom* prevNode = nil;
     for (MTMathAtom *atom in ml.atoms) {
-        if (atom.type == kMTMathAtomVariable) {
-            // This is not a TeX type node. TeX does this during parsing the input.
-            // switch to using the italic math font
+        if (atom.type == kMTMathAtomVariable || atom.type == kMTMathAtomNumber) {
+            // These are not a TeX type nodes. TeX does this during parsing the input.
+            // switch to using the font specified in the atom
+            NSString* newFont = changeFont(atom.nucleus, atom.fontStyle);
             // We convert it to ordinary
-            NSString* italics = mathItalicize(atom.nucleus);
             atom.type = kMTMathAtomOrdinary;
-            atom.nucleus = italics;
-        } else if (atom.type == kMTMathAtomNumber || atom.type == kMTMathAtomUnaryOperator) {
-            // Neither of these are TeX nodes. TeX treats these as Ordinary. So will we.
+            atom.nucleus = newFont;
+        } else if (atom.type == kMTMathAtomUnaryOperator) {
+            // TeX treats these as Ordinary. So will we.
             atom.type = kMTMathAtomOrdinary;
         }
         
