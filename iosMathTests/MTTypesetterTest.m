@@ -1340,6 +1340,76 @@
     }
 }
 
+- (void) testAtomWithAllFontStyles:(MTMathAtom*) atom
+{
+    NSArray* fontStyles = @[
+                            @(kMTFontStyleDefault),
+                            @(kMTFontStyleRoman),
+                            @(kMTFontStyleBold),
+                            @(kMTFontStyleCaligraphic),
+                            @(kMTFontStyleTypewriter),
+                            @(kMTFontStyleItalic),
+                            @(kMTFontStyleSansSerif),
+                            @(kMTFontStyleFraktur),
+                            @(kMTFontStyleBlackboard),
+                            @(kMTFontStyleBoldItalic),
+                            ];
+    for (NSNumber* fontStyle in fontStyles) {
+        NSInteger style = fontStyle.integerValue;
+        MTMathAtom* copy = [atom copy];
+        copy.fontStyle = style;
+        MTMathList* list = [MTMathList mathListWithAtoms:copy, nil];
+
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"Symbol %@", atom.nucleus);
+
+        XCTAssertEqual(display.type, kMTLinePositionRegular);
+        XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+        XCTAssertEqualNSRange(display.range, NSMakeRange(0, 1));
+        XCTAssertFalse(display.hasScript);
+        XCTAssertEqual(display.index, NSNotFound);
+        XCTAssertEqual(display.subDisplays.count, 1, @"Symbol %@", atom.nucleus);
+
+        MTDisplay* sub0 = display.subDisplays[0];
+        XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]], @"Symbol %@", atom.nucleus);
+        MTCTLineDisplay* line = (MTCTLineDisplay*) sub0;
+        XCTAssertEqual(line.atoms.count, 1);
+        XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
+        XCTAssertEqualNSRange(line.range, NSMakeRange(0, 1));
+        XCTAssertFalse(line.hasScript);
+
+        // dimensions
+        XCTAssertEqual(display.ascent, sub0.ascent);
+        XCTAssertEqual(display.descent, sub0.descent);
+        XCTAssertEqual(display.width, sub0.width);
+
+        // All chars will occupy some space.
+        XCTAssertGreaterThan(display.ascent + display.descent, 0, @"Symbol %@", atom.nucleus);
+        // all chars have a width.
+        XCTAssertGreaterThan(display.width, 0);
+    }
+}
+
+- (void) testVariables
+{
+    // Test all variables
+    NSArray<NSString*>* allSymbols = [MTMathAtomFactory supportedLatexSymbolNames];
+    for (NSString* symName in allSymbols) {
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:symName];
+        XCTAssertNotNil(atom);
+        if (atom.type != kMTMathAtomVariable) {
+            // Skip these types as we are only interested in variables.
+            continue;
+        }
+        [self testAtomWithAllFontStyles:atom];
+    }
+    NSString* alphaNum = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.";
+    MTMathList* mathList = [MTMathAtomFactory mathListForCharacters:alphaNum];
+    for (MTMathAtom* atom in mathList.atoms) {
+        [self testAtomWithAllFontStyles:atom];
+    }
+}
+
 - (void) testStyleChanges
 {
     MTFraction* frac = [MTMathAtomFactory fractionWithNumeratorStr:@"1" denominatorStr:@"2"];

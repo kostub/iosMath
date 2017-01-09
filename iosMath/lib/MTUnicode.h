@@ -12,18 +12,6 @@
 #import <Foundation/Foundation.h>
 
 
-FOUNDATION_EXPORT const unichar kMTUnicodeCapitalGreekStart;
-FOUNDATION_EXPORT const unichar kMTUnicodeCapitalGreekEnd;
-FOUNDATION_EXPORT const unichar kMTUnicodeGreekStart;
-FOUNDATION_EXPORT const unichar kMTUnicodeGreekEnd;
-FOUNDATION_EXPORT const unichar kMTUnicodePlanksConstant;
-
-FOUNDATION_EXPORT const UTF32Char kMTUnicodeMathItalicStart;
-FOUNDATION_EXPORT const UTF32Char kMTUnicodeGreekMathItalicStart;
-FOUNDATION_EXPORT const UTF32Char kMTUnicodeMathCapitalItalicStart;
-FOUNDATION_EXPORT const UTF32Char kMTUnicodeGreekMathCapitalItalicStart;
-
-
 @interface NSString (Unicode)
 
 - (NSUInteger) unicodeLength;

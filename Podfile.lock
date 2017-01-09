@@ -6,7 +6,7 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   iosMath:
-    :path: "./"
+    :path: ./
 
 SPEC CHECKSUMS:
   iosMath: 1e313c5a75939b95863bd64c196c605e73ea5a63
