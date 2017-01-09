@@ -69,11 +69,6 @@ const int kDefaultFontSize = 20;
     return [self fontWithName:@"texgyretermes-math" size:size];
 }
 
-- (MTFont *)xitsFontAndChineseExtensionWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"xits-math-cn" size:size];
-}
-
 - (MTFont *)defaultFont
 {
     return [self latinModernFontWithSize:kDefaultFontSize];
