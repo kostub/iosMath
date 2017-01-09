@@ -10,6 +10,8 @@
 //
 
 #import <CoreText/CoreText.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
 
 #import "MTMathListDisplay.h"
 #import "MTFontMathTable.h"
@@ -21,8 +23,28 @@ static BOOL isIos6Supported() {
     static BOOL initialized = false;
     static BOOL supported = false;
     if (!initialized) {
+#if TARGET_OS_IPHONE
         NSString *reqSysVer = @"6.0";
         NSString *currSysVer = [UIDevice currentDevice].systemVersion;
+#else
+        // This is Darwin version of 10.8.x.
+        NSString *reqSysVer = @"12.0";
+        
+        // Definitions:
+        int mib[2];
+        size_t len;
+        char *kernelVersionS;
+        
+        // Get the kernel's version as a string called "kernelVersion":
+        mib[0] = CTL_KERN;
+        mib[1] = KERN_OSRELEASE;
+        sysctl(mib, 2, NULL, &len, NULL, 0);
+        kernelVersionS = malloc(len * sizeof(char));
+        sysctl(mib, 2, kernelVersionS, &len, NULL, 0);
+        
+        NSString *currSysVer = [NSString stringWithUTF8String:kernelVersionS];
+        free(kernelVersionS);
+#endif
         if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) {
             supported = true;
         }
@@ -44,6 +66,8 @@ static BOOL isIos6Supported() {
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
 }
 
+// Debug method skipped for MAC.
+#if TARGET_OS_IPHONE
 - (id)debugQuickLookObject
 {
     CGSize size = CGSizeMake(self.width, self.ascent + self.descent);
@@ -66,6 +90,7 @@ static BOOL isIos6Supported() {
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     return img;
 }
+#endif
 
 @end
 
@@ -106,7 +131,11 @@ static BOOL isIos6Supported() {
     _line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)(_attributedString));
 }
 
-- (void) setTextColor:(UIColor *)textColor
+#if TARGET_OS_IPHONE
+- (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
@@ -184,7 +213,11 @@ static BOOL isIos6Supported() {
     _index = index;
 }
 
-- (void) setTextColor:(UIColor *)textColor
+#if TARGET_OS_IPHONE
+- (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     // Set the color on all subdisplays
     [super setTextColor:textColor];
@@ -298,7 +331,11 @@ static BOOL isIos6Supported() {
     [self updateNumeratorPosition];
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     _numerator.textColor = textColor;
@@ -315,9 +352,17 @@ static BOOL isIos6Supported() {
     [self.textColor setStroke];
     
     // draw the horizontal line
+#if TARGET_OS_IPHONE
     UIBezierPath* path = [UIBezierPath bezierPath];
+#else
+    NSBezierPath *path = [NSBezierPath bezierPath];
+#endif
     [path moveToPoint:CGPointMake(self.position.x, self.position.y + self.linePosition)];
+#if TARGET_OS_IPHONE
     [path addLineToPoint:CGPointMake(self.position.x + self.width, self.position.y + self.linePosition)];
+#else
+    [path lineToPoint:CGPointMake(self.position.x + self.width, self.position.y + self.linePosition)];
+#endif
     path.lineWidth = self.lineThickness;
     [path stroke];
     
@@ -390,7 +435,11 @@ static BOOL isIos6Supported() {
     self.radicand.position = CGPointMake(self.position.x + _radicalShift + _radicalGlyph.width, self.position.y);
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     self.radicand.textColor = textColor;
@@ -419,11 +468,19 @@ static BOOL isIos6Supported() {
     CGFloat heightFromTop = _topKern;
 
     // draw the horizontal line with the given thickness
+#if TARGET_OS_IPHONE
     UIBezierPath* path = [UIBezierPath bezierPath];
+#else
+    NSBezierPath* path = [NSBezierPath bezierPath];
+#endif
     CGPoint lineStart = CGPointMake(_radicalGlyph.width, self.ascent - heightFromTop - self.lineThickness / 2); // subtract half the line thickness to center the line
     CGPoint lineEnd = CGPointMake(lineStart.x + self.radicand.width, lineStart.y);
     [path moveToPoint:lineStart];
+#if TARGET_OS_IPHONE
     [path addLineToPoint:lineEnd];
+#else
+    [path lineToPoint:lineEnd];
+#endif
     path.lineWidth = _lineThickness;
     path.lineCapStyle = kCGLineCapRound;
     [path stroke];
@@ -644,7 +701,11 @@ static BOOL isIos6Supported() {
     _nucleus.position = CGPointMake(self.position.x + (self.width - _nucleus.width)/2, self.position.y);
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     self.upperLimit.textColor = textColor;
@@ -678,7 +739,11 @@ static BOOL isIos6Supported() {
     return self;
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     _inner.textColor = textColor;
@@ -693,11 +758,19 @@ static BOOL isIos6Supported() {
     [self.textColor setStroke];
     
     // draw the horizontal line
+#if TARGET_OS_IPHONE
     UIBezierPath* path = [UIBezierPath bezierPath];
+#else
+    NSBezierPath* path = [NSBezierPath bezierPath];
+#endif
     CGPoint lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp);
     CGPoint lineEnd = CGPointMake(lineStart.x + self.inner.width, lineStart.y);
     [path moveToPoint:lineStart];
+#if TARGET_OS_IPHONE
     [path addLineToPoint:lineEnd];
+#else
+    [path lineToPoint:lineEnd];
+#endif
     path.lineWidth = self.lineThickness;
     [path stroke];
     
@@ -733,7 +806,11 @@ static BOOL isIos6Supported() {
     return self;
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     [super setTextColor:textColor];
     _accentee.textColor = textColor;

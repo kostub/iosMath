@@ -11,7 +11,11 @@
 
 @import Foundation;
 @import QuartzCore;
+#if TARGET_OS_IPHONE
 @import UIKit;
+#else
+@import AppKit;
+#endif
 
 #import "MTFont.h"
 #import "MTMathList.h"
@@ -27,7 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGRect) displayBounds;
 
 /// For debugging. Shows the object in quick look in Xcode.
+#if TARGET_OS_IPHONE
 - (id) debugQuickLookObject;
+#endif
 
 /// The distance from the axis to the top of the display
 @property (nonatomic, readonly) CGFloat ascent;
@@ -42,7 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the display has a subscript/superscript following it.
 @property (nonatomic, readonly) BOOL hasScript;
 /// The text color for this display
+#if TARGET_OS_IPHONE
 @property (nonatomic, nullable) UIColor* textColor;
+#else
+@property (nonatomic, nullable) NSColor *textColor;
+#endif
 
 @end
 

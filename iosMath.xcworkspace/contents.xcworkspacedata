@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:MacOSMath.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:iosMath.xcodeproj">
    </FileRef>
    <FileRef

@@ -8,7 +8,13 @@
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
+#if TARGET_OS_IPHONE
+// TARGET_OS_MAC is defined as 1 for both Mac OS and iOS,
+// so TARGET_OS_IPHONE is reliable.
 @import UIKit;
+#else
+@import AppKit;
+#endif
 @import CoreText;
 
 #import "MTFont.h"
@@ -55,7 +61,11 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  When created it uses `[MTFontManager defaultFont]` as its font. This can be changed using
  the `font` parameter.
  */
+#if TARGET_OS_IPHONE
 IB_DESIGNABLE @interface MTMathUILabel : UIView
+#else
+IB_DESIGNABLE @interface MTMathUILabel : NSView
+#endif
 
 /** The `MTMathList` to render. Setting this will remove any 
  `latex` that has already been set. If `latex` has been set, this will
@@ -84,13 +94,21 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 @property (nonatomic) IBInspectable CGFloat fontSize;
 
 /** This sets the text color of the rendered math formula. The default color is black. */
+#if TARGET_OS_IPHONE
 @property (nonatomic, nonnull) IBInspectable UIColor* textColor;
+#else
+@property (nonatomic, nonnull) IBInspectable NSColor *textColor;
+#endif
 
 /** The minimum distance from the margin of the view to the rendered math. This value is 
  `UIEdgeInsetsZero` by default. This is useful if you need some padding between the math and 
  the border/background color. sizeThatFits: will have its returned size increased by these insets.
  */
+#if TARGET_OS_IPHONE
 @property (nonatomic) IBInspectable UIEdgeInsets contentInsets;
+#else
+@property (nonatomic) IBInspectable NSEdgeInsets contentInsets;
+#endif
 
 /** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;

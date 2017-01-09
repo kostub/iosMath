@@ -16,7 +16,11 @@
 #import "MTTypesetter.h"
 
 @implementation MTMathUILabel {
+#if TARGET_OS_IPHONE
     UILabel* _errorLabel;
+#else
+    NSTextField *_errorLabel;
+#endif
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -42,19 +46,41 @@
     self.layer.geometryFlipped = YES;  // For ease of interaction with the CoreText coordinate system.
     // default font size
     _fontSize = 20;
-    _contentInsets = UIEdgeInsetsZero;
+    _contentInsets =
+#if TARGET_OS_IPHONE
+    UIEdgeInsetsZero
+#else
+    // For backward compatibility, DO NOT use NSEdgeInsetsZero (Available from OS X 10.10).
+    NSEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f);
+#endif
     _labelMode = kMTMathUILabelModeDisplay;
     MTFont* font = [MTFontManager fontManager].defaultFont;
     self.font = font;
     _textAlignment = kMTTextAlignmentLeft;
     _displayList = nil;
     _displayErrorInline = true;
+    
+#if TARGET_OS_IPHONE
     self.backgroundColor = [UIColor clearColor];
     _textColor = [UIColor blackColor];
     _errorLabel = [[UILabel alloc] init];
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;
     _errorLabel.textColor = [UIColor redColor];
+#else
+    self.layer.backgroundColor = [NSColor clearColor].CGColor;
+    [self setWantsLayer:YES];
+    _textColor = [NSColor blackColor];
+    _errorLabel = [[NSTextField alloc] init];
+    _errorLabel.bezeled = NO;
+    _errorLabel.drawsBackground = NO;
+    _errorLabel.editable = NO;
+    _errorLabel.selectable = NO;
+    _errorLabel.hidden = YES;
+    _errorLabel.layer.geometryFlipped = YES;
+    _errorLabel.textColor = [NSColor redColor];
+#endif
+    
     [self addSubview:_errorLabel];
 }
 
@@ -63,7 +89,11 @@
     NSParameterAssert(font);
     _font = font;
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
 
 - (void)setFontSize:(CGFloat)fontSize
@@ -73,11 +103,19 @@
     self.font = font;
 }
 
+#if TARGET_OS_IPHONE
 - (void)setContentInsets:(UIEdgeInsets)contentInsets
+#else
+- (void)setContentInsets:(NSEdgeInsets)contentInsets
+#endif
 {
     _contentInsets = contentInsets;
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
 
 - (void) setMathList:(MTMathList *)mathList
@@ -86,7 +124,11 @@
     _error = nil;
     _latex = [MTMathListBuilder mathListToString:mathList];
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
 
 - (void)setLatex:(NSString *)latex
@@ -98,37 +140,72 @@
     if (error) {
         _mathList = nil;
         _error = error;
-        _errorLabel.text = error.localizedDescription;
+        
+        _errorLabel.
+#if TARGET_OS_IPHONE
+        text
+#else
+        stringValue
+#endif
+        = error.localizedDescription;
+        
         _errorLabel.frame = self.bounds;
         _errorLabel.hidden = !self.displayErrorInline;
     } else {
         _errorLabel.hidden = YES;
     }
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
 
 - (void)setLabelMode:(MTMathUILabelMode)labelMode
 {
     _labelMode = labelMode;
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
 
+#if TARGET_OS_IPHONE
 - (void)setTextColor:(UIColor *)textColor
+#else
+- (void)setTextColor:(NSColor *)textColor
+#endif
 {
     NSParameterAssert(textColor);
     _textColor = textColor;
     _displayList.textColor = textColor;
+#if TARGET_OS_IPHONE
     [self setNeedsDisplay];
+#else
+    [self setNeedsDisplay:YES];
+#endif
 }
 
 - (void)setTextAlignment:(MTTextAlignment)textAlignment
 {
     _textAlignment = textAlignment;
     [self invalidateIntrinsicContentSize];
+#if TARGET_OS_IPHONE
     [self setNeedsLayout];
+#else
+    [self setNeedsLayout:YES];
+#endif
 }
+
+#if !TARGET_OS_IPHONE
+- (BOOL)isFlipped
+{
+    return NO;
+}
+#endif
 
 - (MTLineStyle) currentStyle
 {
@@ -142,16 +219,30 @@
 
 // Only override drawRect: if you perform custom drawing.
 // An empty implementation adversely affects performance during animation.
+#if TARGET_OS_IPHONE
 - (void)drawRect:(CGRect)rect
+#else
+- (void)drawRect:(NSRect)dirtyRect
+#endif
 {
-    [super drawRect:rect];
+    [super drawRect:
+#if TARGET_OS_IPHONE
+     rect
+#else
+     dirtyRect
+#endif
+     ];
 
     if (!_mathList) {
         return;
     }
     
     // Drawing code
+#if TARGET_OS_IPHONE
     CGContextRef context = UIGraphicsGetCurrentContext();
+#else
+    CGContextRef context = [[NSGraphicsContext currentContext] graphicsPort];
+#endif
     CGContextSaveGState(context);
     
     [_displayList draw:context];
@@ -159,7 +250,11 @@
     CGContextRestoreGState(context);
 }
 
+#if TARGET_OS_IPHONE
 - (void) layoutSubviews
+#else
+- (void)layout
+#endif
 {
     if (_mathList) {
         _displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
@@ -192,7 +287,13 @@
         _displayList = nil;
     }
     _errorLabel.frame = self.bounds;
+#if TARGET_OS_IPHONE
     [self setNeedsDisplay];
+#else
+    [self setNeedsDisplay:YES];
+    
+    [super layout];
+#endif
 }
 
 - (CGSize) sizeThatFits:(CGSize)size
