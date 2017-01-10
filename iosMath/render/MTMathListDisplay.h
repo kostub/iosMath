@@ -4,14 +4,18 @@
 //
 //  Created by Kostub Deshmukh on 8/27/13.
 //  Copyright (C) 2013 MathChat
-//   
+//
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
 
 @import Foundation;
 @import QuartzCore;
-@import UIKit;
+
+// This header file is imported by Foudation.
+//#include <TargetConditionals.h>
+
+#import "MTConfig.h"
 
 #import "MTFont.h"
 #import "MTMathList.h"
@@ -27,7 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGRect) displayBounds;
 
 /// For debugging. Shows the object in quick look in Xcode.
+#if TARGET_OS_IPHONE
 - (id) debugQuickLookObject;
+#endif
 
 /// The distance from the axis to the top of the display
 @property (nonatomic, readonly) CGFloat ascent;
@@ -42,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the display has a subscript/superscript following it.
 @property (nonatomic, readonly) BOOL hasScript;
 /// The text color for this display
-@property (nonatomic, nullable) UIColor* textColor;
+@property (nonatomic, nullable) MTColor *textColor;
 
 @end
 
@@ -97,7 +103,7 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 - (instancetype)init NS_UNAVAILABLE;
 
-/** A display representing the numerator of the fraction. It's position is relative 
+/** A display representing the numerator of the fraction. It's position is relative
  to the parent and is not treated as a sub-display.
  */
 @property (nonatomic, readonly) MTMathListDisplay* numerator;

@@ -4,12 +4,15 @@
 //
 //  Created by Kostub Deshmukh on 8/26/13.
 //  Copyright (C) 2013 MathChat
-//   
+//
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
-@import UIKit;
+
 @import CoreText;
+
+// Compatibility of iOS and Mac OS.
+#import "MTConfig.h"
 
 #import "MTFont.h"
 #import "MTMathList.h"
@@ -44,7 +47,7 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
 
 /** The main view for rendering math.
  
- `MTMathLabel` accepts either a string in LaTeX or an `MTMathList` to display. Use 
+ `MTMathLabel` accepts either a string in LaTeX or an `MTMathList` to display. Use
  `MTMathList` directly only if you are building it programmatically (e.g. using an
  editor), otherwise using LaTeX is the preferable method.
  
@@ -55,9 +58,9 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
  When created it uses `[MTFontManager defaultFont]` as its font. This can be changed using
  the `font` parameter.
  */
-IB_DESIGNABLE @interface MTMathUILabel : UIView
+IB_DESIGNABLE @interface MTMathUILabel : MTView
 
-/** The `MTMathList` to render. Setting this will remove any 
+/** The `MTMathList` to render. Setting this will remove any
  `latex` that has already been set. If `latex` has been set, this will
  return the parsed `MTMathList` if the `latex` parses successfully. Use this
  setting if the `MTMathList` has been programmatically constructed, otherwise it
@@ -84,13 +87,13 @@ IB_DESIGNABLE @interface MTMathUILabel : UIView
 @property (nonatomic) IBInspectable CGFloat fontSize;
 
 /** This sets the text color of the rendered math formula. The default color is black. */
-@property (nonatomic, nonnull) IBInspectable UIColor* textColor;
+@property (nonatomic, nonnull) IBInspectable MTColor* textColor;
 
-/** The minimum distance from the margin of the view to the rendered math. This value is 
- `UIEdgeInsetsZero` by default. This is useful if you need some padding between the math and 
+/** The minimum distance from the margin of the view to the rendered math. This value is
+ `UIEdgeInsetsZero` by default. This is useful if you need some padding between the math and
  the border/background color. sizeThatFits: will have its returned size increased by these insets.
  */
-@property (nonatomic) IBInspectable UIEdgeInsets contentInsets;
+@property (nonatomic) IBInspectable MTEdgeInsets contentInsets;
 
 /** The Label mode for the label. The default mode is Display */
 @property (nonatomic) MTMathUILabelMode labelMode;
