@@ -6,12 +6,12 @@
 [![Platform](https://img.shields.io/cocoapods/p/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
 
 `iosMath` is a library for displaying beautifully rendered math equations
-in iOS applications. It typesets formulae written using the LaTeX in a
-`UILabel` equivalent class. It uses the same typesetting rules as LaTeX
-and so the equations are rendered exactly as LaTeX would render them.
+in iOS and MacOS applications. It typesets formulae written using the LaTeX in
+a `UILabel` equivalent class. It uses the same typesetting rules as LaTeX and
+so the equations are rendered exactly as LaTeX would render them.
 
 It is similar to [MathJax](https://www.mathjax.org) or
-[KaTeX](https://github.com/Khan/KaTeX) for the web but for native iOS
+[KaTeX](https://github.com/Khan/KaTeX) for the web but for native iOS or MacOS
 applications without having to use a `UIWebView` and Javascript. More
 importantly, it is significantly faster than using a `UIWebView`.
 
@@ -30,14 +30,19 @@ library:
 The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
  
 ## Requirements
-`iosMath` works on iOS 6+ and requires ARC to build. It depends on
-the following Apple frameworks:
+`iosMath` works on iOS 6+ or MacOS 10.8+ and requires ARC to build. It depends
+on the following Apple frameworks:
 
 * Foundation.framework
-* UIKit.framework
 * CoreGraphics.framework
 * QuartzCore.framework
 * CoreText.framework
+
+Additionally for iOS it requires:
+* UIKit.framework
+
+Additionally for MacOS it requires:
+* AppKit.framework
 
 ## Installation
 
@@ -108,8 +113,8 @@ This is a list of formula types that the library currently supports:
 
 There is a sample app included in this project that shows how to use the
 app and the different equations that you can render. To run the sample
-app, clone the repository, and run `pod install` first. Then run the
-__iosMathExample__ app.
+app, clone the repository, and run `pod install` first. Then on iOS run the
+__iosMathExample__ app. For MacOS run the __MacOSMath__ app.
 
 ### Advanced configuration
 
@@ -162,16 +167,25 @@ It is also possible to set different colors for different parts of the
 equation. Just access the `displayList` field and set the `textColor`
 on the underlying displays that you want to change the color of. 
 
-##### Padding
-The `MTMathUILabel` has top, bottom, left and right padding for finer
-control of placement of the equation in relation to the view. However,
-if you use auto-layout it is preferable to use constraints instead.
+##### Custom Commands
+You can define your own commands that are not already predefined. This is
+similar to macros is LaTeX. To define your own command use:
+
+```objective-c
+[MTMathAtomFactory addLatexSymbol:@"lcm"
+                            value:[MTMathAtomFactory operatorWithName:@"lcm" limits:NO]];
+```
+
+This creates a `\lcm` command that can be used in the LaTeX.
+
+##### Content Insets
+The `MTMathUILabel` has `contentInsets` for finer control of placement of the
+equation in relation to the view.
 
 If you need to set it you can do as follows:
 
 ```objective-c
-label.paddingRight = 20;
-label.paddingTop = 10;
+label.contentInsets = UIEdgeInsetsMake(0, 10, 0, 20);
 ```
 
 ##### Error handling
