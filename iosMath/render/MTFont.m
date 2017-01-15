@@ -30,13 +30,13 @@
         // In particular it does not have the math italic characters which breaks our variable rendering.
         // So we first load a CGFont from the file and then convert it to a CTFont.
 
-        NSLog(@"Loading font %@", name);
+//        NSLog(@"Loading font %@", name);
         NSBundle* bundle = [MTFont fontBundle];
         NSString* fontPath = [bundle pathForResource:name ofType:@"otf"];
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename(fontPath.UTF8String);
         self.defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
         CFRelease(fontDataProvider);
-        NSLog(@"Num glyphs: %zd", CGFontGetNumberOfGlyphs(self.defaultCGFont));
+//        NSLog(@"Num glyphs: %zd", CGFontGetNumberOfGlyphs(self.defaultCGFont));
 
         self.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
 

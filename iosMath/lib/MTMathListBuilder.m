@@ -105,12 +105,14 @@ NSString *const MTParseError = @"ParseError";
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
     MTMathAtom* prevAtom = nil;
+    NSMutableArray *textCharArray = [NSMutableArray array];
     while([self hasCharacters]) {
         if (_error) {
             // If there is an error thus far then bail out.
             return nil;
         }
         MTMathAtom* atom = nil;
+        [textCharArray removeAllObjects];
         unichar ch = [self getNextCharacter];
         if (oneCharOnly) {
             if (ch == '^' || ch == '}' || ch == '_' || ch == '&') {
@@ -177,15 +179,45 @@ NSString *const MTParseError = @"ParseError";
             } else if (_error) {
                 return nil;
             }
-            atom = [self atomForCommand:command];
-            if (atom == nil) {
-                // this was an unknown command,
-                // we flag an error and return
-                // (note setError will not set the error if there is already one, so we flag internal error
-                // in the odd case that an _error is not set.
-                [self setError:MTParseErrorInternalError message:@"Internal error"];
-                return nil;
+            
+            if([command isEqualToString:@"text"]) {
+                
+                bool isLeftParentless = false;
+                while([self hasCharacters]){
+                    unichar textch = [self getNextCharacter];
+                    if(isLeftParentless){
+                        if(textch == '\\'){
+                            [textCharArray addObject:[NSString stringWithFormat:@"%c",[self getNextCharacter]]];
+                        }else if(textch == '}'){
+                            break;
+                        }else{
+                            [textCharArray addObject:[NSString stringWithFormat:@"%c",textch]];
+                        }
+                    }else{
+                        if(textch == '{'){
+                            isLeftParentless = true;
+                        }
+                        continue;
+                    }
+                }
+                if([textCharArray count] == 0){
+                    continue;
+                }
+                
+            }else{
+                
+                atom = [self atomForCommand:command];
+                if (atom == nil) {
+                    // this was an unknown command,
+                    // we flag an error and return
+                    // (note setError will not set the error if there is already one, so we flag internal error
+                    // in the odd case that an _error is not set.
+                    [self setError:MTParseErrorInternalError message:@"Internal error"];
+                    return nil;
+                }
+                
             }
+            
         } else if (ch == '&') {
             // used for column separation in tables
             NSAssert(!oneCharOnly, @"This should have been handled before");
@@ -203,9 +235,19 @@ NSString *const MTParseError = @"ParseError";
                 continue;
             }
         }
-        NSAssert(atom != nil, @"Atom shouldn't be nil");
-        [list addAtom:atom];
-        prevAtom = atom;
+        
+        if([textCharArray count]){
+            for(int i=0; i<[textCharArray count];i++){
+                unichar textch = [[textCharArray objectAtIndex:i] characterAtIndex:0];
+                atom = [MTMathAtomFactory atomForAnyCharacter:textch];
+                [list addAtom:atom];
+                prevAtom = atom;
+            }
+        }else{
+            NSAssert(atom != nil, @"Atom shouldn't be nil");
+            [list addAtom:atom];
+            prevAtom = atom;
+        }
         
         if (oneCharOnly) {
             // we consumed our onechar
