@@ -187,11 +187,14 @@ NSString *const MTParseError = @"ParseError";
                     unichar textch = [self getNextCharacter];
                     if(isLeftParentless){
                         if(textch == '\\'){
-                            [textCharArray addObject:[NSString stringWithFormat:@"%c",[self getNextCharacter]]];
+                            textch = [self getNextCharacter];
+                            NSString *chStr = [NSString stringWithCharacters:&textch length:1];
+                            [textCharArray addObject:chStr];
                         }else if(textch == '}'){
                             break;
                         }else{
-                            [textCharArray addObject:[NSString stringWithFormat:@"%c",textch]];
+                            NSString *chStr = [NSString stringWithCharacters:&textch length:1];
+                            [textCharArray addObject:chStr];
                         }
                     }else{
                         if(textch == '{'){
