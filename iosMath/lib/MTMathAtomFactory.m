@@ -608,7 +608,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Latex command characters
                      @"{" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"{"],
                      @"}" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"}"],
-                     @"$" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"{"],
+                     @"$" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"$"],
                      @"&" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"&"],
                      @"#" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"#"],
                      @"%" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"%"],
