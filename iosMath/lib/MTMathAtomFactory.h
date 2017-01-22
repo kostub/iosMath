@@ -124,6 +124,12 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  */
 + (NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary;
 
+/** Returns a font style associated with the name. If none is found returns NSNotFound. */
++ (MTFontStyle) fontStyleWithName:(NSString*) fontName;
+
+/** Returns the latex font name for a given style. */
++ (NSString*) fontNameForStyle:(MTFontStyle) fontStyle;
+
 /** Returns a fraction with the given numerator and denominator. */
 + (MTFraction*) fractionWithNumerator:(MTMathList*) num denominator:(MTMathList*) denom;
 

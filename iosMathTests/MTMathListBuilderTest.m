@@ -1197,4 +1197,96 @@ static NSArray* getTestDataParseErrors() {
     XCTAssertEqualObjects(latex, @"\\lcm (a,b)");
 }
 
+- (void) testFontSingle
+{
+    NSString *str = @"\\mathbf x";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"x", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleBold);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\mathbf{x}", @"%@", desc);
+}
+
+- (void) testFontOneChar
+{
+    NSString *str = @"\\cal xy";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @2, @"%@", desc);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"x", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleCaligraphic);
+
+    atom = list.atoms[1];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"y", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleDefault);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\mathcal{x}y", @"%@", desc);
+}
+
+- (void) testFontMultipleChars
+{
+    NSString *str = @"\\frak{AB}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @2, @"%@", desc);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"A", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleFraktur);
+
+    atom = list.atoms[1];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"B", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleFraktur);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\mathfrak{AB}", @"%@", desc);
+}
+
+- (void) testFontOneCharInside
+{
+    NSString *str = @"\\sqrt \\mathrm x y";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @2, @"%@", desc);
+
+    MTRadical* rad = list.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
+    XCTAssertEqualObjects(rad.nucleus, @"", @"%@", desc);
+
+    MTMathList *subList = rad.radicand;
+    MTMathAtom* atom = subList.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"x", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleRoman);
+
+    atom = list.atoms[1];
+    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
+    XCTAssertEqualObjects(atom.nucleus, @"y", @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleDefault);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sqrt{\\mathrm{x}}y", @"%@", desc);
+}
 @end

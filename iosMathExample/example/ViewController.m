@@ -124,7 +124,9 @@
 
     self.demoLabels[10] = [self createMathLabel:@"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}\\,dz" withHeight:40];
 
-    self.demoLabels[11] = [self createMathLabel:@"i\\hbar\\frac{\\partial}{\\partial t}\\Psi(x,t) = -\\frac{\\hbar}{2m}\\nabla^2\\Psi(x,t) + V(x)\\Psi(x,t)" withHeight:40];
+    self.demoLabels[11] = [self createMathLabel:@"i\\hbar\\frac{\\partial}{\\partial t}\\mathbf{\\Psi}(\\mathbf{x},t) = "
+                           "-\\frac{\\hbar}{2m}\\nabla^2\\mathbf{\\Psi}(\\mathbf{x},t) + "
+                           "V(\\mathbf{x})\\mathbf{\\Psi}(\\mathbf{x},t)" withHeight:40];
     
     self.demoLabels[12] = [self createMathLabel:@"\\left(\\sum_{k=1}^n a_k b_k \\right)^2 \\le \\left(\\sum_{k=1}^n a_k^2\\right)\\left(\\sum_{k=1}^n b_k^2\\right)" withHeight:60];
     
@@ -138,17 +140,17 @@
                            "\\dot{z} = -\\beta z + xy"
                            "\\end{gather}" withHeight:70];
 
-    self.demoLabels[16] = [self createMathLabel:@"\\vec V_1 \\times \\vec V_2 =  \\begin{vmatrix}"
+    self.demoLabels[16] = [self createMathLabel:@"\\vec \\bf V_1 \\times \\vec \\bf V_2 =  \\begin{vmatrix}"
                            "\\hat \\imath &\\hat \\jmath &\\hat k \\\\"
                            "\\frac{\\partial X}{\\partial u} &  \\frac{\\partial Y}{\\partial u} & 0 \\\\"
                            "\\frac{\\partial X}{\\partial v} &  \\frac{\\partial Y}{\\partial v} & 0"
                            "\\end{vmatrix}" withHeight:70];
 
     self.demoLabels[17] = [self createMathLabel:@"\\begin{eqalign}"
-                           "\\nabla \\cdot \\vec{E} & = \\frac {\\rho} {\\varepsilon_0} \\\\"
-                           "\\nabla \\cdot \\vec{B} & = 0 \\\\"
-                           "\\nabla \\times \\vec{E} &= - \\frac{\\partial\\vec{B}}{\\partial t} \\\\"
-                           "\\nabla \\times \\vec{B} & = \\mu_0\\vec{J} + \\mu_0\\varepsilon_0 \\frac{\\partial\\vec{E}}{\\partial t}"
+                           "\\nabla \\cdot \\vec{\\bf{E}} & = \\frac {\\rho} {\\varepsilon_0} \\\\"
+                           "\\nabla \\cdot \\vec{\\bf{B}} & = 0 \\\\"
+                           "\\nabla \\times \\vec{\\bf{E}} &= - \\frac{\\partial\\vec{\\bf{B}}}{\\partial t} \\\\"
+                           "\\nabla \\times \\vec{\\bf{B}} & = \\mu_0\\vec{\\bf{J}} + \\mu_0\\varepsilon_0 \\frac{\\partial\\vec{\\bf{E}}}{\\partial t}"
                            "\\end{eqalign}" withHeight:140];
 
     self.demoLabels[18] = [self createMathLabel:@"\\begin{pmatrix}"
@@ -163,10 +165,10 @@
                            "\\end{pmatrix}"
                                      withHeight:60];
 
-    self.demoLabels[19] = [self createMathLabel:@"Q(\\lambda,\\hat{\\lambda}) = "
-                           "-\\frac{1}{2} P(O \\mid \\lambda ) \\sum_s \\sum_m \\sum_t \\gamma_m^{(s)} (t) +\\\\ "
-                           "\\quad \\left( \\log(2 \\pi ) + \\log \\left| C_m^{(s)} \\right| + "
-                           "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T C_m^{(s)-1} \\right) "
+    self.demoLabels[19] = [self createMathLabel:@"\\frak Q(\\lambda,\\hat{\\lambda}) = "
+                           "-\\frac{1}{2} \\mathbb P(O \\mid \\lambda ) \\sum_s \\sum_m \\sum_t \\gamma_m^{(s)} (t) +\\\\ "
+                           "\\quad \\left( \\log(2 \\pi ) + \\log \\left| \\cal C_m^{(s)} \\right| + "
+                           "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T \\cal C_m^{(s)-1} \\right) "
                            "" withHeight:90];
 
     self.demoLabels[20] = [self createMathLabel:@"f(x) = \\begin{cases}"
@@ -306,6 +308,9 @@
                            "\\end{bmatrix}"
                                      withHeight:120];
     self.labels[42] = [self createMathLabel:@"x{\\scriptstyle y}z" withHeight:30];
+    self.labels[43] = [self createMathLabel:@"x \\mathrm x \\mathbf x \\mathcal X \\mathfrak x \\mathsf x \\bm x \\mathtt x \\mathit \\Lambda" withHeight:30];
+    self.labels[44] = [self createMathLabel:@"\\mathrm{different\\ text}" withHeight:30];
+
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
     }

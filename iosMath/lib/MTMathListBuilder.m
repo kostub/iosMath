@@ -43,6 +43,7 @@ NSString *const MTParseError = @"ParseError";
     NSUInteger _length;
     MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
+    MTFontStyle _currentFontStyle;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -54,6 +55,7 @@ NSString *const MTParseError = @"ParseError";
         _length = str.length;
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
+        _currentFontStyle = kMTFontStyleDefault;
     }
     return self;
 }
@@ -177,6 +179,20 @@ NSString *const MTParseError = @"ParseError";
             } else if (_error) {
                 return nil;
             }
+            MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
+            if (fontStyle != NSNotFound) {
+                MTFontStyle oldFontStyle = _currentFontStyle;
+                _currentFontStyle = fontStyle;
+                MTMathList* sublist = [self buildInternal:true];
+                prevAtom = [sublist.atoms lastObject];
+                [list append:sublist];
+                // Restore the font style.
+                _currentFontStyle = oldFontStyle;
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
             atom = [self atomForCommand:command];
             if (atom == nil) {
                 // this was an unknown command,
@@ -204,6 +220,7 @@ NSString *const MTParseError = @"ParseError";
             }
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");
+        atom.fontStyle = _currentFontStyle;
         [list addAtom:atom];
         prevAtom = atom;
         
@@ -639,7 +656,20 @@ NSString *const MTParseError = @"ParseError";
 + (NSString *)mathListToString:(MTMathList *)ml
 {
     NSMutableString* str = [NSMutableString string];
+    MTFontStyle currentfontStyle = kMTFontStyleDefault;
     for (MTMathAtom* atom in ml.atoms) {
+        if (currentfontStyle != atom.fontStyle) {
+            if (currentfontStyle != kMTFontStyleDefault) {
+                // close the previous font style.
+                [str appendString:@"}"];
+            }
+            if (atom.fontStyle != kMTFontStyleDefault) {
+                // open new font style
+                NSString* fontStyleName = [MTMathAtomFactory fontNameForStyle:atom.fontStyle];
+                [str appendFormat:@"\\%@{", fontStyleName];
+            }
+            currentfontStyle = atom.fontStyle;
+        }
         if (atom.type == kMTMathAtomFraction) {
             MTFraction* frac = (MTFraction*) atom;
             if (frac.hasRule) {
@@ -759,7 +789,7 @@ NSString *const MTParseError = @"ParseError";
                 [str appendString:atom.nucleus];
             }
         }
-        
+
         if (atom.superScript) {
             [str appendFormat:@"^{%@}", [self mathListToString:atom.superScript]];
         }
@@ -767,6 +797,9 @@ NSString *const MTParseError = @"ParseError";
         if (atom.subScript) {
             [str appendFormat:@"_{%@}", [self mathListToString:atom.subScript]];
         }
+    }
+    if (currentfontStyle != kMTFontStyleDefault) {
+        [str appendString:@"}"];
     }
     return [str copy];
 }

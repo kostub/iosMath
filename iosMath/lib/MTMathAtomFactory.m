@@ -217,6 +217,50 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return dict[boundary.nucleus];
 }
 
++ (MTFontStyle)fontStyleWithName:(NSString *)fontName {
+    NSDictionary<NSString*, NSNumber*>* fontStyles = [self fontStyles];
+    NSNumber* style = fontStyles[fontName];
+    if (!style) {
+        return NSNotFound;
+    }
+    return style.integerValue;
+}
+
++ (NSString *)fontNameForStyle:(MTFontStyle)fontStyle
+{
+    switch (fontStyle) {
+        case kMTFontStyleDefault:
+            return @"mathnormal";
+
+        case kMTFontStyleRoman:
+            return @"mathrm";
+
+        case kMTFontStyleBold:
+            return @"mathbf";
+
+        case kMTFontStyleFraktur:
+            return @"mathfrak";
+
+        case kMTFontStyleCaligraphic:
+            return @"mathcal";
+
+        case kMTFontStyleItalic:
+            return @"mathit";
+
+        case kMTFontStyleSansSerif:
+            return @"mathsf";
+
+        case kMTFontStyleBlackboard:
+            return @"mathbb";
+
+        case kMTFontStyleTypewriter:
+            return @"mathtt";
+
+        case kMTFontStyleBoldItalic:
+            return @"bm";
+    }
+}
+
 + (MTFraction *)fractionWithNumerator:(MTMathList *)num denominator:(MTMathList *)denom
 {
     MTFraction *frac = [[MTFraction alloc] init];
@@ -800,6 +844,33 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         delimToCommands = [mutableDict copy];
     }
     return delimToCommands;
+}
+
+
++(NSDictionary<NSString*, NSNumber*> *) fontStyles
+{
+    static NSDictionary<NSString*, NSNumber*>* fontStyles = nil;
+    if (!fontStyles) {
+        fontStyles = @{
+                       @"mathnormal" : @(kMTFontStyleDefault),
+                       @"mathrm": @(kMTFontStyleRoman),
+                       @"rm": @(kMTFontStyleRoman),
+                       @"mathbf": @(kMTFontStyleBold),
+                       @"bf": @(kMTFontStyleBold),
+                       @"mathcal": @(kMTFontStyleCaligraphic),
+                       @"cal": @(kMTFontStyleCaligraphic),
+                       @"mathtt": @(kMTFontStyleTypewriter),
+                       @"mathit": @(kMTFontStyleItalic),
+                       @"mit": @(kMTFontStyleItalic),
+                       @"mathsf": @(kMTFontStyleSansSerif),
+                       @"mathfrak": @(kMTFontStyleFraktur),
+                       @"frak": @(kMTFontStyleFraktur),
+                       @"mathbb": @(kMTFontStyleBlackboard),
+                       @"mathbfit": @(kMTFontStyleBoldItalic),
+                       @"bm": @(kMTFontStyleBoldItalic),
+                   };
+    }
+    return fontStyles;
 }
 
 @end
