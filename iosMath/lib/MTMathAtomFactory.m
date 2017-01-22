@@ -868,6 +868,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                        @"mathbb": @(kMTFontStyleBlackboard),
                        @"mathbfit": @(kMTFontStyleBoldItalic),
                        @"bm": @(kMTFontStyleBoldItalic),
+                       @"text": @(kMTFontStyleRoman),
                    };
     }
     return fontStyles;

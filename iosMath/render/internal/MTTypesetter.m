@@ -217,7 +217,9 @@ UTF32Char getDefaultStyle(unichar ch) {
 }
 
 static const UTF32Char kMTUnicodeMathCapitalScriptStart = 0x1D49C;
-static const UTF32Char kMTUnicodeMathLowerScriptStart = 0x1D4B6;
+// TODO(kostub): Unused in Latin Modern Math - if another font is used determine if
+// this should be applicable.
+// static const UTF32Char kMTUnicodeMathLowerScriptStart = 0x1D4B6;
 
 // mathcal/mathscr (caligraphic or script)
 UTF32Char getCaligraphic(unichar ch) {
@@ -252,8 +254,9 @@ UTF32Char getCaligraphic(unichar ch) {
     if (IS_UPPER_EN(ch)) {
         unicode = kMTUnicodeMathCapitalScriptStart + (ch - 'A');
     } else if (IS_LOWER_EN(ch)) {
-        // TODO:(kostub) Latin Modern Math does not have lower case caligraphic characters.
-        unicode = kMTUnicodeMathLowerScriptStart + (ch - 'a');
+        // Latin Modern Math does not have lower case caligraphic characters, so we use
+        // the default style instead of showing a ?
+        unicode = getDefaultStyle(ch);
     } else {
         // Caligraphic characters don't exist for greek or numbers, we give them the
         // default treatment.

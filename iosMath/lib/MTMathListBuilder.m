@@ -44,6 +44,7 @@ NSString *const MTParseError = @"ParseError";
     MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
+    BOOL _spacesAllowed;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -181,13 +182,18 @@ NSString *const MTParseError = @"ParseError";
             }
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
+                BOOL oldSpacesAllowed = _spacesAllowed;
+                // Text has special consideration where it allows spaces without escaping.
+                _spacesAllowed = [command isEqualToString:@"text"];
                 MTFontStyle oldFontStyle = _currentFontStyle;
                 _currentFontStyle = fontStyle;
                 MTMathList* sublist = [self buildInternal:true];
-                prevAtom = [sublist.atoms lastObject];
-                [list append:sublist];
                 // Restore the font style.
                 _currentFontStyle = oldFontStyle;
+                _spacesAllowed = oldSpacesAllowed;
+
+                prevAtom = [sublist.atoms lastObject];
+                [list append:sublist];
                 if (oneCharOnly) {
                     return list;
                 }
@@ -212,6 +218,9 @@ NSString *const MTParseError = @"ParseError";
                 MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
                 return [MTMathList mathListWithAtoms:table, nil];
             }
+        } else if (_spacesAllowed && ch == ' ') {
+            // If spaces are allowed then spaces do not need escaping with a \ before being used.
+            atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
