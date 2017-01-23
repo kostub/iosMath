@@ -311,6 +311,7 @@
     self.labels[43] = [self createMathLabel:@"x \\mathrm x \\mathbf x \\mathcal X \\mathfrak x \\mathsf x \\bm x \\mathtt x \\mathit \\Lambda \\cal g" withHeight:30];
     self.labels[44] = [self createMathLabel:@"\\mathrm{using\\ mathrm}" withHeight:30];
     self.labels[45] = [self createMathLabel:@"\\text{using text}" withHeight:30];
+    self.labels[46] = [self createMathLabel:@"\\text{Mary has }\\$500 + \\$200." withHeight:30];
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
