@@ -107,6 +107,7 @@ This is a list of formula types that the library currently supports:
 * Math accents
 * Matrices
 * Equation alignment
+* Change bold, roman, caligraphic and other font styles (\\bf, \\text, etc.)
 * Most commonly used math symbols
 
 ### Example
@@ -208,7 +209,6 @@ some important pieces that are missing and will be included in future
 updates. This includes:
 
 * Support for explicit big delimiters (bigl, bigr etc.)
-* Support for specifing fonts such as `\cal` or `\rm`
 * Addition of missing plain TeX commands 
 
 ## Related Projects

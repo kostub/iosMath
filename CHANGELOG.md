@@ -1,5 +1,11 @@
 ## Changelog
 
+### v0.9.3 (2017-01-22)
+* Support for changing font styles: (\\mathrm, \\mathcal, \\mathbf etc.)
+* Support for the \\text command.
+* Fix issue with \\$ not being rendered correctly.
+* Support for \\limits and \\nolimits
+
 ### v0.9.2 (2017-01-11)
 * Support for MacOS (Thanks to AnZhg)
 * Better AutoLayout support (Thanks to zhubofei)
