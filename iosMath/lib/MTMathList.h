@@ -220,7 +220,7 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
  above and below the operator in display mode.  If limits is false
  then the limits (if present) and displayed like a regular subscript/superscript.
  */
-@property (nonatomic, readonly) BOOL limits;
+@property (nonatomic) BOOL limits;
 
 @end
 

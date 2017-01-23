@@ -180,6 +180,9 @@ NSString *const MTParseError = @"ParseError";
             } else if (_error) {
                 return nil;
             }
+            if ([self applyModifier:command atom:prevAtom]) {
+                continue;
+            }
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
                 BOOL oldSpacesAllowed = _spacesAllowed;
@@ -541,6 +544,32 @@ NSString *const MTParseError = @"ParseError";
     return nil;
 }
 
+// Applies the modifier to the atom. Returns true if modifier applied.
+- (BOOL) applyModifier:(NSString*) modifier atom:(MTMathAtom*) atom
+{
+    if ([modifier isEqualToString:@"limits"]) {
+        if (atom.type != kMTMathAtomLargeOperator) {
+            NSString* errorMessage = [NSString stringWithFormat:@"limits can only be applied to an operator."];
+            [self setError:MTParseErrorInvalidLimits message:errorMessage];
+        } else {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            op.limits = YES;
+        }
+        return true;
+    } else if ([modifier isEqualToString:@"nolimits"]) {
+        if (atom.type != kMTMathAtomLargeOperator) {
+            NSString* errorMessage = [NSString stringWithFormat:@"nolimits can only be applied to an operator."];
+            [self setError:MTParseErrorInvalidLimits message:errorMessage];
+            return YES;
+        } else {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            op.limits = NO;
+        }
+        return true;
+    }
+    return false;
+}
+
 - (void) setError:(MTParseErrors) code message:(NSString*) message
 {
     // Only record the first error.
@@ -768,6 +797,18 @@ NSString *const MTParseError = @"ParseError";
         } else if (atom.type == kMTMathAtomAccent) {
             MTAccent* accent = (MTAccent*) atom;
             [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:accent], [self mathListToString:accent.innerList]];
+        } else if (atom.type == kMTMathAtomLargeOperator) {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:atom];
+            MTLargeOperator* originalOp = (MTLargeOperator*) [MTMathAtomFactory atomForLatexSymbolName:command];
+            [str appendFormat:@"\\%@ ", command];
+            if (originalOp.limits != op.limits) {
+                if (op.limits) {
+                    [str appendString:@"\\limits "];
+                } else {
+                    [str appendString:@"\\nolimits "];
+                }
+            }
         } else if (atom.type == kMTMathAtomSpace) {
             MTMathSpace* space = (MTMathSpace*) atom;
             NSDictionary* spaceToCommands = [MTMathListBuilder spaceToCommands];

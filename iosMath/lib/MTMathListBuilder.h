@@ -82,6 +82,8 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorInvalidNumColumns,
     /// Internal error, due to a programming mistake.
     MTParseErrorInternalError,
+    /// Limit control applied incorrectly
+    MTParseErrorInvalidLimits,
 };
 
 @end

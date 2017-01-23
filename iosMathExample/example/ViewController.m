@@ -118,7 +118,7 @@
 
     self.demoLabels[7] = [self createMathLabel:@"\\lim_{x\\to\\infty}\\left(1 + \\frac{k}{x}\\right)^x = e^k" withHeight:40];
 
-    self.demoLabels[8] = [self createMathLabel:@"\\int_{-\\infty}^\\infty e^{-x^2} dx = \\sqrt{\\pi}" withHeight:40];
+    self.demoLabels[8] = [self createMathLabel:@"\\int_{-\\infty}^\\infty \\! e^{-x^2} dx = \\sqrt{\\pi}" withHeight:40];
 
     self.demoLabels[9] = [self createMathLabel:@"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i}" withHeight:60];
 
@@ -132,7 +132,7 @@
     
     self.demoLabels[13] = [self createMathLabel:@"{n \\brace k} = \\frac{1}{k!}\\sum_{j=0}^k (-1)^{k-j}\\binom{k}{j}(k-j)^n" withHeight:60];
 
-    self.demoLabels[14] = [self createMathLabel:@"f(x) = \\int_{-\\infty}^\\infty\\hat f(\\xi)\\,e^{2 \\pi i \\xi x}\\,d\\xi" withHeight:40];
+    self.demoLabels[14] = [self createMathLabel:@"f(x) = \\int\\limits_{-\\infty}^\\infty\\!\\hat f(\\xi)\\,e^{2 \\pi i \\xi x}\\,\\mathrm{d}\\xi" withHeight:60];
 
     self.demoLabels[15] = [self createMathLabel:@"\\begin{gather}"
                            "\\dot{x} = \\sigma(y-x) \\\\"

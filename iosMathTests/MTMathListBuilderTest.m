@@ -1158,6 +1158,8 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               @[@"\\begin{displaylines} x & y \\end{displaylines}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
+              @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
               ];
 };
 
@@ -1316,5 +1318,71 @@ static NSArray* getTestDataParseErrors() {
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"\\mathrm{x\\  y}", @"%@", desc);
+}
+
+- (void) testLimits
+{
+    // Int with no limits (default)
+    NSString *str = @"\\int";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTLargeOperator* op = list.atoms[0];
+    XCTAssertEqual(op.type, kMTMathAtomLargeOperator, @"%@", desc);
+    XCTAssertFalse(op.limits);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\int ", @"%@", desc);
+
+    // Int with limits
+    str = @"\\int\\limits";
+    list = [MTMathListBuilder buildFromString:str];
+    desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    op = list.atoms[0];
+    XCTAssertEqual(op.type, kMTMathAtomLargeOperator, @"%@", desc);
+    XCTAssertTrue(op.limits);
+
+    // convert it back to latex
+    latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\int \\limits ", @"%@", desc);
+}
+
+- (void) testNoLimits
+{
+    // Sum with limits (default)
+    NSString *str = @"\\sum";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTLargeOperator* op = list.atoms[0];
+    XCTAssertEqual(op.type, kMTMathAtomLargeOperator, @"%@", desc);
+    XCTAssertTrue(op.limits);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sum ", @"%@", desc);
+
+    // Int with limits
+    str = @"\\sum\\nolimits";
+    list = [MTMathListBuilder buildFromString:str];
+    desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    op = list.atoms[0];
+    XCTAssertEqual(op.type, kMTMathAtomLargeOperator, @"%@", desc);
+    XCTAssertFalse(op.limits);
+
+    // convert it back to latex
+    latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sum \\nolimits ", @"%@", desc);
 }
 @end
