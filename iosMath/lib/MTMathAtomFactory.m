@@ -574,7 +574,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Latex command characters
                      @"{" : [MTMathAtom atomWithType:kMTMathAtomOpen value:@"{"],
                      @"}" : [MTMathAtom atomWithType:kMTMathAtomClose value:@"}"],
-                     @"$" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"{"],
+                     @"$" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"$"],
                      @"&" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"&"],
                      @"#" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"#"],
                      @"%" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"%"],
@@ -631,6 +631,11 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"textstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleText],
                      @"scriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript],
                      @"scriptscriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript],
+                     
+                     // Custom
+                     @"bigtriangleup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25B3"],
+                     @"bigtriangledown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25BD"],
+                     
                      }];
         
     }
