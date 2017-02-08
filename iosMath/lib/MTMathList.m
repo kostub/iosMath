@@ -835,6 +835,14 @@ static NSString* typeToText(MTMathAtomType type) {
     [_atoms insertObject:atom atIndex:index];
 }
 
+- (void)insertAtoms:(NSArray<MTMathAtom *> *)atoms atIndex:(NSUInteger)index
+{
+    // TODO: Make efficient
+    for (int i = 0; i < atoms.count; i += 1) {
+        [self insertAtom:atoms[i] atIndex:index + i];
+    }
+}
+
 - (void)append:(MTMathList *)list
 {
     [_atoms addObjectsFromArray:list.atoms];

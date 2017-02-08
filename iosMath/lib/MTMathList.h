@@ -428,6 +428,8 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
  @throws NSRangeException if the index is greater than the number of atoms in the math list. */
 - (void) insertAtom:(MTMathAtom *)atom atIndex:(NSUInteger) index;
 
+- (void) insertAtoms:(NSArray<MTMathAtom *> *)atoms atIndex:(NSUInteger) index;
+
 /** Append the given list to the end of the current list.
  @param list The list to append.
  */

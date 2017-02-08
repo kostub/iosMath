@@ -181,4 +181,14 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+@interface MTInnerDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+@property (nonatomic, readonly, nullable) MTDisplay* left;
+@property (nonatomic, readonly, nullable) MTDisplay* right;
+@property (nonatomic, readonly, nullable) MTMathListDisplay* body;
+
+@end
+
 NS_ASSUME_NONNULL_END

@@ -3,7 +3,7 @@
 //
 //  Created by Kostub Deshmukh on 9/6/13.
 //  Copyright (C) 2013 MathChat
-//   
+//
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 //
@@ -15,7 +15,7 @@
 @interface MTMathListIndex ()
 
 @property (nonatomic, readwrite) NSUInteger atomIndex;
-@property (nonatomic, readwrite) MTMathListSubIndexType subIndexType;
+@property (nonatomic, readwrite) MTSubIndexType subIndexType;
 @property (nonatomic, readwrite, nullable) MTMathListIndex* subIndex;
 
 @end
@@ -29,7 +29,7 @@
     return mlIndex;
 }
 
-+ (instancetype)indexAtLocation:(NSUInteger)location withSubIndex:(MTMathListIndex *)subIndex type:(MTMathListSubIndexType)type
++ (instancetype)indexAtLocation:(NSUInteger)location withSubIndex:(MTMathListIndex *)subIndex type:(MTSubIndexType)type
 {
     MTMathListIndex* index = [self level0Index:location];
     index.subIndexType = type;
@@ -37,7 +37,7 @@
     return index;
 }
 
-- (MTMathListIndex *)levelUpWithSubIndex:(MTMathListIndex *)subIndex type:(MTMathListSubIndexType)type
+- (MTMathListIndex *)levelUpWithSubIndex:(MTMathListIndex *)subIndex type:(MTSubIndexType)type
 {
     if (self.subIndexType == kMTSubIndexTypeNone) {
         return [MTMathListIndex indexAtLocation:self.atomIndex withSubIndex:subIndex type:type];
@@ -63,30 +63,51 @@
 - (MTMathListIndex *)previous
 {
     if (self.subIndexType == kMTSubIndexTypeNone) {
-        if (self.atomIndex > 0) {
-            return [MTMathListIndex level0Index:self.atomIndex - 1];
-        }
+        return [MTMathListIndex level0Index:MAX(self.atomIndex - 1, 0)];
     } else {
         MTMathListIndex* prevSubIndex = self.subIndex.previous;
-        if (prevSubIndex) {
-            return [MTMathListIndex indexAtLocation:self.atomIndex withSubIndex:prevSubIndex type:self.subIndexType];
-        }
+        return [MTMathListIndex indexAtLocation:self.atomIndex withSubIndex:prevSubIndex type:self.subIndexType];
     }
-    return nil;
 }
 
 - (MTMathListIndex *)next
 {
     if (self.subIndexType == kMTSubIndexTypeNone) {
         return [MTMathListIndex level0Index:self.atomIndex + 1];
-    } else if (self.subIndexType == kMTSubIndexTypeNucleus) {
-        return [MTMathListIndex indexAtLocation:self.atomIndex + 1 withSubIndex:self.subIndex type:self.subIndexType];
     } else {
         return [MTMathListIndex indexAtLocation:self.atomIndex withSubIndex:self.subIndex.next type:self.subIndexType];
     }
 }
 
-- (BOOL)hasSubIndexOfType:(MTMathListSubIndexType)subIndexType
+- (BOOL) isAffectedByChangesIn:(MTMathListIndex *)other
+{
+    if (self.subIndexType != other.subIndexType) return false;
+    if (self.subIndex) [self.subIndex isAffectedByChangesIn:other.subIndex];
+    return self.atomIndex >= other.atomIndex;
+}
+
+- (nullable MTMathListIndex *) relativeFrom:(nonnull MTMathListIndex *)index
+{
+    MTMathListIndex* selfCurrentIndex = self;
+    MTMathListIndex* otherCurrentIndex = index;
+
+    while ([selfCurrentIndex subIndexType] != kMTSubIndexTypeNone) {
+        if ([selfCurrentIndex atomIndex] != [otherCurrentIndex atomIndex]) return nil;
+        if ([selfCurrentIndex subIndexType] != [otherCurrentIndex subIndexType]) return nil;
+        selfCurrentIndex = [selfCurrentIndex subIndex];
+        otherCurrentIndex = [otherCurrentIndex subIndex];
+    }
+
+    NSInteger nextAtomIndex = selfCurrentIndex.atomIndex - otherCurrentIndex.atomIndex;
+
+    if (nextAtomIndex < 0) return nil;
+
+    return [MTMathListIndex indexAtLocation:nextAtomIndex
+                               withSubIndex:otherCurrentIndex.subIndex
+                                       type:otherCurrentIndex.subIndexType];
+}
+
+- (BOOL)hasSubIndexOfType:(MTSubIndexType)subIndexType
 {
     if (self.subIndexType == subIndexType) {
         return true;
@@ -125,7 +146,7 @@
     }
 }
 
-- (MTMathListSubIndexType) finalSubIndexType
+- (MTSubIndexType) finalSubIndexType
 {
     if (self.subIndex.subIndex) {
         return [self.subIndex finalSubIndexType];
@@ -134,10 +155,22 @@
     }
 }
 
+- (MTMathListIndex *) addingFinalIndex:(NSInteger) index
+{
+    if (self.subIndexType == kMTSubIndexTypeNone) {
+        return [MTMathListIndex level0Index:self.atomIndex + index];
+    } else {
+        // Recurse
+        return [MTMathListIndex indexAtLocation:self.atomIndex
+                                   withSubIndex:[self.subIndex addingFinalIndex:index]
+                                           type:self.subIndexType];
+    }
+}
+
 - (NSString *)description
 {
     if (self.subIndex) {
-        return [NSString stringWithFormat:@"[%lu, %d:%@]", (unsigned long)self.atomIndex, self.subIndexType, self.subIndex];
+        return [NSString stringWithFormat:@"[%lu, %d:%@]", (unsigned long)self.atomIndex, self.subIndexType, [self.subIndex description]];
     }
     return [NSString stringWithFormat:@"[%lu]", (unsigned long)self.atomIndex];
 }
@@ -238,7 +271,7 @@
         NSAssert(false, @"Cannot union ranges at different levels: %@, %@", self, range);
         return nil;
     }
-    
+
     NSRange r1 = self.finalRange;
     NSRange r2 = range.finalRange;
     NSRange unionRange = NSUnionRange(r1, r2);
@@ -255,7 +288,7 @@
 + (MTMathListRange *)unionRanges:(NSArray *)ranges
 {
     NSAssert((ranges.count > 0), @"Need to union at least one range");
-    
+
     MTMathListRange* unioned = ranges[0];
     for (int i = 1; i < ranges.count; i++) {
         MTMathListRange* next = ranges[i];

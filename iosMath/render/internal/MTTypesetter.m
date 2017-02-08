@@ -676,13 +676,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 [self addInterElementSpace:prevNode currentType:atom.type];
                 MTInner* inner = (MTInner*) atom;
-                MTDisplay* display = nil;
-                if (inner.leftBoundary || inner.rightBoundary) {
-                    display = [self makeLeftRight:inner];
-                } else {
-                    display = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped];
-                }
+                MTInnerDisplay* display = [self makeLeftRight:inner];
                 display.position = _currentPosition;
+                display.range = atom.indexRange;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
                 // add super scripts || subscripts
@@ -1480,40 +1476,45 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 static const NSInteger kDelimiterFactor = 901;
 static const NSInteger kDelimiterShortfallPoints = 5;
 
-- (MTDisplay*) makeLeftRight:(MTInner*) inner
+- (MTInnerDisplay*) makeLeftRight:(MTInner*) inner
 {
     NSAssert(inner.leftBoundary || inner.rightBoundary, @"Inner should have a boundary to call this function");
     
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped spaced:YES];
+    MTMathListDisplay* body = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped spaced:YES];
     CGFloat axisHeight = _styleFont.mathTable.axisHeight;
     // delta is the max distance from the axis
-    CGFloat delta = MAX(innerListDisplay.ascent - axisHeight, innerListDisplay.descent + axisHeight);
+    CGFloat delta = MAX(body.ascent - axisHeight, body.descent + axisHeight);
     CGFloat d1 = (delta / 500) * kDelimiterFactor;  // This represents atleast 90% of the formula
     CGFloat d2 = 2 * delta - kDelimiterShortfallPoints;  // This represents a shortfall of 5pt
     // The size of the delimiter glyph should cover at least 90% of the formula or
     // be at most 5pt short.
     CGFloat glyphHeight = MAX(d1, d2);
-    
-    NSMutableArray* innerElements = [[NSMutableArray alloc] init];
-    CGPoint position = CGPointZero;
+
+    CGPoint position = CGPointMake(_currentPosition.x, _currentPosition.y);
+
+    MTDisplay* left = nil;
+    MTDisplay* right = nil;
+
     if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
-        MTDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
-        leftGlyph.position = position;
-        position.x += leftGlyph.width;
-        [innerElements addObject:leftGlyph];
+        left = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
+        left.position = position;
+        position.x += left.width;
     }
     
-    innerListDisplay.position = position;
-    position.x += innerListDisplay.width;
-    [innerElements addObject:innerListDisplay];
+    body.position = position;
+    position.x += body.width;
     
     if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
-        MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
-        rightGlyph.position = position;
-        position.x += rightGlyph.width;
-        [innerElements addObject:rightGlyph];
+        right = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
+        right.position = position;
+        position.x += right.width;
     }
-    MTMathListDisplay* innerDisplay = [[MTMathListDisplay alloc] initWithDisplays:innerElements range:inner.indexRange];
+
+    MTInnerDisplay* innerDisplay = [[MTInnerDisplay alloc] initWithBodyLeftRight:body left:left right:right];
+    innerDisplay.width = position.x - _currentPosition.x;
+    innerDisplay.ascent = glyphHeight / 2;
+    innerDisplay.descent = glyphHeight / 2;
+
     return innerDisplay;
 }
 

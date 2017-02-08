@@ -775,3 +775,31 @@ static BOOL isIos6Supported() {
     CGContextRestoreGState(context);
 }
 @end
+
+#pragma mark - MTInnerDisplay
+
+@implementation MTInnerDisplay
+
+- (instancetype)initWithBodyLeftRight:(MTMathListDisplay *)body left:(MTDisplay *)left right:(MTDisplay *)right
+{
+    self = [super init];
+    if (self) {
+        _left = left;
+        _right = right;
+        _body = body;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    CGContextSaveGState(context);
+
+    if (self.left != nil) [self.left draw:context];
+    if (self.right != nil) [self.right draw:context];
+    [self.body draw:context];
+
+    CGContextRestoreGState(context);
+}
+
+@end

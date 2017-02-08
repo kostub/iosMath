@@ -111,3 +111,9 @@
 - (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @end
+
+@interface MTInnerDisplay ()
+
+- (instancetype)initWithBodyLeftRight:(MTMathListDisplay *)body left:(MTDisplay *)left right:(MTDisplay *)right;
+
+@end
