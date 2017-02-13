@@ -80,7 +80,7 @@ an `MTMathUILabel` as follows:
 ```objective-c
 #import "MTMathUILabel.h"
 
-MTMathULabel* label = [[MTMathUILabel alloc] init];
+MTMathUILabel* label = [[MTMathUILabel alloc] init];
 label.latex = @"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
 
 ```
