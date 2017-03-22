@@ -11,11 +11,13 @@
 // Make TARGET_OS_IPHONE macro visible.
 #include <TargetConditionals.h>
 
+
 // Type definitions.
 #if TARGET_OS_IPHONE
 // TARGET_OS_MAC is defined as 1 for both Mac OS and iOS,
 // so TARGET_OS_IPHONE is reliable.
 @import UIKit;
+#import "UIColor+HexString.h"
 
 typedef UIView          MTView;
 typedef UIColor         MTColor;
@@ -31,6 +33,7 @@ typedef CGRect          MTRect;
 @import AppKit;
 #import "NSBezierPath+addLineToPoint.h"
 #import "NSView+backgroundColor.h"
+#import "NSColor+HexString.h"
 #import "MTLabel.h"
 
 typedef NSView          MTView;

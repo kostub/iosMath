@@ -47,6 +47,14 @@ static BOOL isIos6Supported() {
 {
 }
 
+- (void) addColor:(NSString*) colorString
+{
+    MTColor* nativeColor = [MTColor colorFromHexString:colorString];
+    if(nativeColor != nil) {
+        self.textColor = nativeColor;
+    }
+}
+
 - (CGRect) displayBounds
 {
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
@@ -200,7 +208,9 @@ static BOOL isIos6Supported() {
     // Set the color on all subdisplays
     [super setTextColor:textColor];
     for (MTDisplay* displayAtom in self.subDisplays) {
-        displayAtom.textColor = textColor;
+        if (displayAtom == nil) {
+            displayAtom.textColor = textColor;
+        }
     }
 }
 

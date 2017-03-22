@@ -44,6 +44,7 @@ NSString *const MTParseError = @"ParseError";
     MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
+    NSString* _currentColorString;
     BOOL _spacesAllowed;
 }
 
@@ -57,6 +58,7 @@ NSString *const MTParseError = @"ParseError";
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
         _currentFontStyle = kMTFontStyleDefault;
+        _currentColorString = @"";
     }
     return self;
 }
@@ -183,6 +185,23 @@ NSString *const MTParseError = @"ParseError";
             if ([self applyModifier:command atom:prevAtom]) {
                 continue;
             }
+            
+            if([command isEqual: @"color"]) {
+                NSString* oldColorString = _currentColorString;
+                NSString* color = [self readColor];
+                _currentColorString = color;
+                
+                MTMathList* sublist = [self buildInternal:true];
+                
+                _currentColorString = oldColorString;
+                
+                [list append:sublist];
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
+            
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
                 BOOL oldSpacesAllowed = _spacesAllowed;
@@ -233,6 +252,7 @@ NSString *const MTParseError = @"ParseError";
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");
         atom.fontStyle = _currentFontStyle;
+        atom.colorString = _currentColorString;
         [list addAtom:atom];
         prevAtom = atom;
         
@@ -267,6 +287,38 @@ NSString *const MTParseError = @"ParseError";
             [self unlookCharacter];
             break;
         }
+    }
+    return mutable;
+}
+
+- (NSString*) readColor
+{
+    if (![self expectCharacter:'{']) {
+        // We didn't find an opening brace, so no env found.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
+        return nil;
+    }
+    
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+
+    // a string of all upper and lower case characters.
+    NSMutableString* mutable = [NSMutableString string];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
+            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
+        } else {
+            // we went too far
+            [self unlookCharacter];
+            break;
+        }
+    }
+
+    if (![self expectCharacter:'}']) {
+        // We didn't find an closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
     }
     return mutable;
 }

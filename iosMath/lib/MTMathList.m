@@ -161,6 +161,7 @@ static NSString* typeToText(MTMathAtomType type) {
     atom.superScript = [self.superScript copyWithZone:zone];
     atom.indexRange = self.indexRange;
     atom.fontStyle = self.fontStyle;
+    atom.colorString = self.colorString;
     return atom;
 }
 

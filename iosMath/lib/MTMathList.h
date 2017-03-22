@@ -145,6 +145,7 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
 @property (nonatomic, nullable) MTMathList* subScript;
 /** The font style to be used for the atom. */
 @property (nonatomic) MTFontStyle fontStyle;
+@property (nonatomic) NSString* colorString;
 
 /** Returns true if this atom allows scripts (sub or super). */
 - (bool) scriptsAllowed;
