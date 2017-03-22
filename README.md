@@ -109,6 +109,7 @@ This is a list of formula types that the library currently supports:
 * Equation alignment
 * Change bold, roman, caligraphic and other font styles (\\bf, \\text, etc.)
 * Most commonly used math symbols
+* Colors
 
 ### Example
 

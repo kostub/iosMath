@@ -99,7 +99,7 @@
                                                                                       views:views]];
 
 
-    self.demoLabels[1] = [self createMathLabel:@"(a_1+a_2)^2=a_1^2+2a_1a_2+a_2^2" withHeight:40];
+    self.demoLabels[1] = [self createMathLabel:@"\\color{#ff3399}{(a_1+a_2)^2}=a_1^2+2a_1a_2+a_2^2" withHeight:40];
 
     self.demoLabels[2] = [self createMathLabel:@"\\cos(\\theta + \\varphi) = \
                                  \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)"
@@ -175,6 +175,8 @@
                            "\\frac{e^x}{2} & x \\geq 0 \\\\"
                            "1 & x < 0"
                            "\\end{cases}" withHeight:60];
+    
+    self.demoLabels[21] = [self createMathLabel:@"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}+\\color{#99ff33}{\\frac{\\color{#33ff33}{o}}{\\color{#33ff99}{r}}}-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}" withHeight:60];
 
 
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
