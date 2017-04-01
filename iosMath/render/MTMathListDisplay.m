@@ -51,7 +51,7 @@ static BOOL isIos6Supported() {
 {
     MTColor* nativeColor = [MTColor colorFromHexString:colorString];
     if(nativeColor != nil) {
-        self.textColor = nativeColor;
+        self.localTextColor = nativeColor;
     }
 }
 
@@ -129,8 +129,22 @@ static BOOL isIos6Supported() {
 {
     [super setTextColor:textColor];
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
+    
+    // (1) set the color for the complete string
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
+    
+    // (2) overwrite (1), if there was a (local)color before
+    [self.attributedString enumerateAttributesInRange: NSMakeRange(0, self.attributedString.string.length)
+                                              options:NSAttributedStringEnumerationReverse usingBlock:
+     ^(NSDictionary *attributes, NSRange range, BOOL *stop) {
+         if(attributes[NSForegroundColorAttributeName] != nil) {
+             UIColor* col = attributes[NSForegroundColorAttributeName];
+             [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)col.CGColor
+                             range:range];
+         }
+     }];
+    
     self.attributedString = attrStr;
 }
 
@@ -208,9 +222,13 @@ static BOOL isIos6Supported() {
     // Set the color on all subdisplays
     [super setTextColor:textColor];
     for (MTDisplay* displayAtom in self.subDisplays) {
-        if (displayAtom == nil) {
+        // set the global color, if there is no local color
+        if(displayAtom.localTextColor == nil) {
             displayAtom.textColor = textColor;
+        } else {
+            displayAtom.textColor = displayAtom.localTextColor;
         }
+        
     }
 }
 

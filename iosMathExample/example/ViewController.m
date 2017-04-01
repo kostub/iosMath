@@ -176,7 +176,7 @@
                            "1 & x < 0"
                            "\\end{cases}" withHeight:60];
     
-    self.demoLabels[21] = [self createMathLabel:@"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}+\\color{#99ff33}{\\frac{\\color{#33ff33}{o}}{\\color{#33ff99}{r}}}-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}" withHeight:60];
+    self.demoLabels[21] = [self createMathLabel:@"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}+\\color{#99ff33}{\\frac{\\color{#ff99ff}{o}}{\\color{#990099}{r}}}-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}" withHeight:60];
 
 
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
