@@ -25,8 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// The base class for rendering a math equation.
 @interface MTDisplay : NSObject
 
-- (void) addColor:(NSString*) colorString;
-
 /// Draws itself in the given graphics context.
 - (void) draw:(CGContextRef) context;
 /// Gets the bounding rectangle for the MTDisplay

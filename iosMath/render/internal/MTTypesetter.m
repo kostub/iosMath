@@ -47,6 +47,7 @@ NSArray* getInterElementSpaces() {
 // Get's the index for the given type. If row is true, the index is for the row (i.e. left element) otherwise it is for the column (right element)
 NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) {
     switch (type) {
+        case kMTMathAtomColor:
         case kMTMathAtomOrdinary:
         case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
             return 0;
@@ -614,6 +615,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 continue;
             }
                 
+            case kMTMathAtomColor: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                MTMathColor* colorAtom = (MTMathColor*) atom;
+                MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
+                display.localTextColor = [UIColor colorFromHexString:colorAtom.colorString];
+                display.position = _currentPosition;
+                _currentPosition.x += display.width;
+                [_displayAtoms addObject:display];
+                break;
+            }
+                
             case kMTMathAtomRadical: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -628,7 +643,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                     MTMathListDisplay* degree = [MTTypesetter createLineForMathList:rad.degree font:_font style:kMTLineStyleScriptScript];
                     [displayRad setDegree:degree fontMetrics:_styleFont.mathTable];
                 }
-                [displayRad addColor: atom.colorString];
                 [_displayAtoms addObject:displayRad];
                 _currentPosition.x += displayRad.width;
                 
@@ -649,7 +663,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 MTFraction* frac = (MTFraction*) atom;
                 [self addInterElementSpace:prevNode currentType:atom.type];
                 MTDisplay* display = [self makeFraction:frac];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
                 // add super scripts || subscripts
@@ -667,7 +680,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 [self addInterElementSpace:prevNode currentType:atom.type];
                 MTLargeOperator* op = (MTLargeOperator*) atom;
                 MTDisplay* display = [self makeLargeOp:op];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 break;
             }
@@ -687,7 +699,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
@@ -707,7 +718,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 
                 MTUnderLine* under = (MTUnderLine*) atom;
                 MTDisplay* display = [self makeUnderline:under];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
                 // add super scripts || subscripts
@@ -728,7 +738,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 
                 MTOverLine* over = (MTOverLine*) atom;
                 MTDisplay* display = [self makeOverline:over];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
                 // add super scripts || subscripts
@@ -749,7 +758,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 
                 MTAccent* accent = (MTAccent*) atom;
                 MTDisplay* display = [self makeAccent:accent];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
                 
@@ -771,7 +779,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 
                 MTMathTable* table = (MTMathTable*) atom;
                 MTDisplay* display = [self makeTable:table];
-                [display addColor: atom.colorString];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
                 // A table doesn't have subscripts or superscripts
@@ -857,7 +864,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     }
 }
 
-
 - (MTCTLineDisplay*) addDisplayLine
 {
     // add the font
@@ -865,28 +871,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     /*NSAssert(_currentLineIndexRange.length == numCodePoints(_currentLine.string),
      @"The length of the current line: %@ does not match the length of the range (%d, %d)",
      _currentLine, _currentLineIndexRange.location, _currentLineIndexRange.length);*/
-
-    // add the color
-    NSString *immutLine = [_currentLine string];
-    NSUInteger realLength = [immutLine lengthOfBytesUsingEncoding:NSUTF32StringEncoding] / 4;
-    if(_currentAtoms.count == realLength) {
-        __block int i = 0;
-        NSRange fullRange = NSMakeRange(0, [immutLine length]);
-        [immutLine enumerateSubstringsInRange:fullRange
-                              options:NSStringEnumerationByComposedCharacterSequences
-                           usingBlock:^(NSString *substring, NSRange substringRange,
-                                        NSRange enclosingRange, BOOL *stop)
-        {
-            MTMathAtom* item = (MTMathAtom *)_currentAtoms[i];
-            MTColor* nativeColor = [MTColor colorFromHexString:item.colorString];
-            if(nativeColor != nil) {
-                NSDictionary *attrDict = @{ NSForegroundColorAttributeName : nativeColor };
-                [_currentLine addAttributes:attrDict range: substringRange];
-            }
-            i++;
-        }];
-    }
-
+    
     MTCTLineDisplay* displayAtom = [[MTCTLineDisplay alloc] initWithString:_currentLine position:_currentPosition range:_currentLineIndexRange font:_styleFont atoms:_currentAtoms];
     [_displayAtoms addObject:displayAtom];
     // update the position
@@ -1530,7 +1515,6 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         MTDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
         leftGlyph.position = position;
         position.x += leftGlyph.width;
-        [leftGlyph addColor: inner.colorString];
         [innerElements addObject:leftGlyph];
     }
     
@@ -1542,7 +1526,6 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
         rightGlyph.position = position;
         position.x += rightGlyph.width;
-        [rightGlyph addColor: inner.colorString];
         [innerElements addObject:rightGlyph];
     }
     MTMathListDisplay* innerDisplay = [[MTMathListDisplay alloc] initWithDisplays:innerElements range:inner.indexRange];

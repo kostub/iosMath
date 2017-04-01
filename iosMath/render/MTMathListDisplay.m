@@ -47,14 +47,6 @@ static BOOL isIos6Supported() {
 {
 }
 
-- (void) addColor:(NSString*) colorString
-{
-    MTColor* nativeColor = [MTColor colorFromHexString:colorString];
-    if(nativeColor != nil) {
-        self.localTextColor = nativeColor;
-    }
-}
-
 - (CGRect) displayBounds
 {
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
@@ -129,22 +121,8 @@ static BOOL isIos6Supported() {
 {
     [super setTextColor:textColor];
     NSMutableAttributedString* attrStr = self.attributedString.mutableCopy;
-    
-    // (1) set the color for the complete string
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
-    
-    // (2) overwrite (1), if there was a (local)color before
-    [self.attributedString enumerateAttributesInRange: NSMakeRange(0, self.attributedString.string.length)
-                                              options:NSAttributedStringEnumerationReverse usingBlock:
-     ^(NSDictionary *attributes, NSRange range, BOOL *stop) {
-         if(attributes[NSForegroundColorAttributeName] != nil) {
-             UIColor* col = attributes[NSForegroundColorAttributeName];
-             [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)col.CGColor
-                             range:range];
-         }
-     }];
-    
     self.attributedString = attrStr;
 }
 

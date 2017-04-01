@@ -44,7 +44,6 @@ NSString *const MTParseError = @"ParseError";
     MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
-    NSString* _currentColorString;
     BOOL _spacesAllowed;
 }
 
@@ -58,7 +57,6 @@ NSString *const MTParseError = @"ParseError";
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
         _currentFontStyle = kMTFontStyleDefault;
-        _currentColorString = @"";
     }
     return self;
 }
@@ -185,23 +183,6 @@ NSString *const MTParseError = @"ParseError";
             if ([self applyModifier:command atom:prevAtom]) {
                 continue;
             }
-            
-            if([command isEqual: @"color"]) {
-                NSString* oldColorString = _currentColorString;
-                NSString* color = [self readColor];
-                _currentColorString = color;
-                
-                MTMathList* sublist = [self buildInternal:true];
-                
-                _currentColorString = oldColorString;
-                
-                [list append:sublist];
-                if (oneCharOnly) {
-                    return list;
-                }
-                continue;
-            }
-            
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
                 BOOL oldSpacesAllowed = _spacesAllowed;
@@ -252,7 +233,6 @@ NSString *const MTParseError = @"ParseError";
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");
         atom.fontStyle = _currentFontStyle;
-        atom.colorString = _currentColorString;
         [list addAtom:atom];
         prevAtom = atom;
         
@@ -514,6 +494,12 @@ NSString *const MTParseError = @"ParseError";
         }
         MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
         return table;
+    } else if ([command isEqualToString:@"color"]) {
+        // A color command has 2 arguments
+        MTMathColor* mathColor = [[MTMathColor alloc] init];
+        mathColor.colorString = [self readColor];
+        mathColor.innerList = [self buildInternal:true];
+        return mathColor;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];

@@ -11,7 +11,6 @@
 // Make TARGET_OS_IPHONE macro visible.
 #include <TargetConditionals.h>
 
-
 // Type definitions.
 #if TARGET_OS_IPHONE
 // TARGET_OS_MAC is defined as 1 for both Mac OS and iOS,
