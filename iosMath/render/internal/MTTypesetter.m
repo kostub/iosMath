@@ -622,7 +622,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 MTMathColor* colorAtom = (MTMathColor*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
-                display.localTextColor = [UIColor colorFromHexString:colorAtom.colorString];
+                display.localTextColor = [MTColor colorFromHexString:colorAtom.colorString];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
