@@ -49,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL hasScript;
 /// The text color for this display
 @property (nonatomic, nullable) MTColor *textColor;
+// The local color, if the color was mutated local with the color
+// command
+@property (nonatomic, nullable) MTColor *localTextColor;
 
 @end
 

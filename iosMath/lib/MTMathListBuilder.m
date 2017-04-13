@@ -271,6 +271,38 @@ NSString *const MTParseError = @"ParseError";
     return mutable;
 }
 
+- (NSString*) readColor
+{
+    if (![self expectCharacter:'{']) {
+        // We didn't find an opening brace, so no env found.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
+        return nil;
+    }
+    
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+
+    // a string of all upper and lower case characters.
+    NSMutableString* mutable = [NSMutableString string];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
+            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
+        } else {
+            // we went too far
+            [self unlookCharacter];
+            break;
+        }
+    }
+
+    if (![self expectCharacter:'}']) {
+        // We didn't find an closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
+    }
+    return mutable;
+}
+
 - (void) skipSpaces
 {
     while ([self hasCharacters]) {
@@ -462,6 +494,12 @@ NSString *const MTParseError = @"ParseError";
         }
         MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
         return table;
+    } else if ([command isEqualToString:@"color"]) {
+        // A color command has 2 arguments
+        MTMathColor* mathColor = [[MTMathColor alloc] init];
+        mathColor.colorString = [self readColor];
+        mathColor.innerList = [self buildInternal:true];
+        return mathColor;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
