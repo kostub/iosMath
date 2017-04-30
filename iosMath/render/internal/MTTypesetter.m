@@ -1756,7 +1756,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
         for (int i = 0; i < row.count; i++) {
-            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style];
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style cramped:NO];
             columnWidths[i] = MAX(disp.width, columnWidths[i]);
             [colDisplays addObject:disp];
         };
