@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.9.4 (2017-05-07)
+* Support for color (\\textcolor) (Thanks to Markus)
+* Fix issue with cramped style in tables (Thanks to Jacob)
+
 ### v0.9.3 (2017-01-22)
 * Support for changing font styles: (\\mathrm, \\mathcal, \\mathbf etc.)
 * Support for the \\text command.
