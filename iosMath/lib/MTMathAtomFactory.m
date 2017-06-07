@@ -854,6 +854,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         fontStyles = @{
                        @"mathnormal" : @(kMTFontStyleDefault),
                        @"mathrm": @(kMTFontStyleRoman),
+                       @"textrm": @(kMTFontStyleRoman),
                        @"rm": @(kMTFontStyleRoman),
                        @"mathbf": @(kMTFontStyleBold),
                        @"bf": @(kMTFontStyleBold),
