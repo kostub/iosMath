@@ -103,6 +103,11 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         // Use the math minus sign
         return [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2212"];
     } else if (ch == '+' || ch == '*') {
+        
+        //modified by wp
+        if (ch == '*') {
+            chStr = @"×";
+        }
         return [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:chStr];
     } else if (ch == '.' || (ch >= '0' && ch <= '9')) {
         return [MTMathAtom atomWithType:kMTMathAtomNumber value:chStr];
@@ -111,6 +116,11 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     } else if (ch == '"' || ch == '/' || ch == '@' || ch == '`' || ch == '|') {
         // just an ordinary character. The following are allowed ordinary chars
         // | / ` @ "
+      
+        //modified by wp
+        if(ch == '/'){
+            chStr = @"÷";
+        }
         return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
     } else {
         NSAssert(false, @"Unknown ascii character %@. Should have been accounted for.", @(ch));
@@ -588,7 +598,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"det" : [MTMathAtomFactory operatorWithName:@"det" limits:YES],
                      @"Pr" : [MTMathAtomFactory operatorWithName:@"Pr" limits:YES],
                      @"gcd" : [MTMathAtomFactory operatorWithName:@"gcd" limits:YES],
-                     
+                     @"lcm" : [MTMathAtomFactory operatorWithName:@"lcm" limits:YES],//modified by wp
+
                      // Large operators
                      @"prod" : [MTMathAtomFactory operatorWithName:@"\u220F" limits:YES],
                      @"coprod" : [MTMathAtomFactory operatorWithName:@"\u2210" limits:YES],
@@ -629,6 +640,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"vert" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"|"],
                      @"ldots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2026"],
                      @"prime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2032"],
+                     @"pprime" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2033"],//modified by wp
                      @"hbar" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u210F"],
                      @"Im" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2111"],
                      @"ell" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2113"],

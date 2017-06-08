@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1CC48E8D526E9958A3D45383 /* libPods-iosMathTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 33459E3F7CC9ECC36CCA7414 /* libPods-iosMathTests.a */; };
+		2783412D1E03D6A3007E606E /* MYCHANGELOG.md in Sources */ = {isa = PBXBuildFile; fileRef = 2783412C1E03D6A3007E606E /* MYCHANGELOG.md */; };
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
@@ -73,6 +74,7 @@
 
 /* Begin PBXFileReference section */
 		11BDFD1AB91580A33D83C75E /* libPods-iosMathExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2783412C1E03D6A3007E606E /* MYCHANGELOG.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = MYCHANGELOG.md; sourceTree = "<group>"; };
 		33459E3F7CC9ECC36CCA7414 /* libPods-iosMathTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iosMathTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 		49965EF317CBBA2700A555C5 = {
 			isa = PBXGroup;
 			children = (
+				2783412C1E03D6A3007E606E /* MYCHANGELOG.md */,
 				498730AB17D548DB0041B02B /* QuartzCore.framework */,
 				49B83EF217CE74620014B739 /* CoreText.framework */,
 				4987307717D546800041B02B /* iosMath */,
@@ -671,6 +674,7 @@
 				49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */,
 				49B83F0217CF2AE90014B739 /* main.m in Sources */,
 				49B83F0817CF2B420014B739 /* ViewController.m in Sources */,
+				2783412D1E03D6A3007E606E /* MYCHANGELOG.md in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
