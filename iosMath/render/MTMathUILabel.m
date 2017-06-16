@@ -102,6 +102,8 @@
         _errorLabel.text = error.localizedDescription;
         _errorLabel.frame = self.bounds;
         _errorLabel.hidden = !self.displayErrorInline;
+        /* Latex error reporting notification */
+        [[NSNotificationCenter defaultCenter] postNotificationName: @"LatexErrorNotification" object: error.localizedDescription];
     } else {
         _errorLabel.hidden = YES;
     }
