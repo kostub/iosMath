@@ -44,7 +44,7 @@
     _fontSize = 20;
     _contentInsets = MTEdgeInsetsZero;
     _labelMode = kMTMathUILabelModeDisplay;
-    MTFont* font = [MTFontManager fontManager].defaultFont;
+    MTFont* font = [MTFontManager sharedInstance].defaultFont;
     self.font = font;
     _textAlignment = kMTTextAlignmentLeft;
     _displayList = nil;

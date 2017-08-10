@@ -22,7 +22,7 @@ const int kDefaultFontSize = 20;
 
 @implementation MTFontManager
 
-+ (instancetype) fontManager
++ (instancetype) sharedInstance 
 {
     static MTFontManager* manager = nil;
     if (manager == nil) {

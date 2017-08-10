@@ -18,7 +18,7 @@
 @interface MTFontManager : NSObject
 
 /** Get the singleton instance of MTFontManager. */
-+ (nonnull instancetype) fontManager;
++ (nonnull instancetype) sharedInstance;
 
 /** Returns the default font, which is Latin Modern Math with 20pt */
 - (nonnull MTFont*) defaultFont;
