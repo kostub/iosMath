@@ -635,6 +635,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Custom
                      @"bigtriangleup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25B3"],
                      @"bigtriangledown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25BD"],
+                     @"because" : [MTMathAtom atomWithType:kMTMathAtomRelation
+                         value:@"\u2235"],
+                     @"therefore" : [MTMathAtom atomWithType:kMTMathAtomRelation
+                         value:@"\u2234"],
                      
                      }];
         
