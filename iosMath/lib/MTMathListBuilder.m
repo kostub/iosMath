@@ -37,11 +37,16 @@ NSString *const MTParseError = @"ParseError";
 
 @end
 
+@interface MTMathListBuilder()
+
+@property (nonatomic, strong) MTInner* currentInnerAtom;
+
+@end
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
     NSUInteger _length;
-    MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
@@ -460,22 +465,22 @@ NSString *const MTParseError = @"ParseError";
         return rad;
     } else if ([command isEqualToString:@"left"]) {
         // Save the current inner while a new one gets built.
-        MTInner* oldInner = _currentInnerAtom;
-        _currentInnerAtom = [MTInner new];
-        _currentInnerAtom.leftBoundary = [self getBoundaryAtom:@"left"];
-        if (!_currentInnerAtom.leftBoundary) {
+        MTInner* oldInner = self.currentInnerAtom;
+        self.currentInnerAtom = [MTInner new];
+        self.currentInnerAtom.leftBoundary = [self getBoundaryAtom:@"left"];
+        if (!self.currentInnerAtom.leftBoundary) {
             return nil;
         }
-        _currentInnerAtom.innerList = [self buildInternal:false];
-        if (!_currentInnerAtom.rightBoundary) {
+        self.currentInnerAtom.innerList = [self buildInternal:false];
+        if (!self.currentInnerAtom.rightBoundary) {
             // A right node would have set the right boundary so we must be missing the right node.
             NSString* errorMessage = @"Missing \\right";
             [self setError:MTParseErrorMissingRight message:errorMessage];
             return nil;
         }
         // reinstate the old inner atom.
-        MTInner* newInner = _currentInnerAtom;
-        _currentInnerAtom = oldInner;
+        MTInner* newInner = self.currentInnerAtom;
+        self.currentInnerAtom = oldInner;
         return newInner;
     } else if ([command isEqualToString:@"overline"]) {
         // The overline command has 1 arguments
@@ -518,13 +523,13 @@ NSString *const MTParseError = @"ParseError";
                               @"brace" : @[ @"{", @"}"]};
     }
     if ([command isEqualToString:@"right"]) {
-        if (!_currentInnerAtom) {
+        if (!self.currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
             [self setError:MTParseErrorMissingLeft message:errorMessage];
             return nil;
         }
-        _currentInnerAtom.rightBoundary = [self getBoundaryAtom:@"right"];
-        if (!_currentInnerAtom.rightBoundary) {
+        self.currentInnerAtom.rightBoundary = [self getBoundaryAtom:@"right"];
+        if (!self.currentInnerAtom.rightBoundary) {
             return nil;
         }
         // return the list read so far.
