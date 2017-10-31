@@ -638,9 +638,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"because" : [MTMathAtom atomWithType:kMTMathAtomRelation
                          value:@"\u2235"],
                      @"therefore" : [MTMathAtom atomWithType:kMTMathAtomRelation
-                         value:@"\u2234"],
-                     
+                         value:@"\u2234"]
                      }];
+        
         
     }
     return commands;
@@ -718,6 +718,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"vec" : @"\u20D7",
                     @"widehat" : @"\u0302",
                     @"widetilde" : @"\u0303",
+                    @"rightharpoonup" : @"\u21c0"
                     };
     }
     return accents;
