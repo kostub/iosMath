@@ -79,10 +79,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (MTMathAtom *)atomForCharacter:(unichar)ch
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
-    if ((ch < 0x21 || ch > 0x7E) && !(ch >= 0x2010 && ch <= 0x2015)) {
-        // skip non ascii characters and spaces but use dashes
-        return nil;
-    } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
+    if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
         // These are latex control characters that have special meanings. We don't support them.
         return nil;
     } else if (ch == '^' || ch == '_' || ch == '{' || ch == '}' || ch == '\\') {
@@ -99,7 +96,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     } else if (ch == ':') {
         // Math colon is ratio. Regular colon is \colon
         return [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2236"];
-    } else if (ch == '-' || ch == L'‐' || ch == L'‑' || ch == L'‒' || ch == L'–' || ch == L'—' || ch == L'―') {
+    } else if (ch == '-') {
         // Use the math minus sign
         return [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2212"];
     } else if (ch == '+' || ch == '*') {
@@ -108,13 +105,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         return [MTMathAtom atomWithType:kMTMathAtomNumber value:chStr];
     } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
         return [MTMathAtom atomWithType:kMTMathAtomVariable value:chStr];
-    } else if (ch == '"' || ch == '/' || ch == '@' || ch == '`' || ch == '|') {
-        // just an ordinary character. The following are allowed ordinary chars
-        // | / ` @ "
-        return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
     } else {
-        NSAssert(false, @"Unknown ascii character %@. Should have been accounted for.", @(ch));
-        return nil;
+        // Catch-all for non-ASCII characters.
+        return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
     }
 }
 
