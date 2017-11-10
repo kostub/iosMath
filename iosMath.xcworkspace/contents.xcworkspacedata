@@ -5,9 +5,6 @@
       location = "group:iosMath.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:MacOSMath.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:Pods/Pods.xcodeproj">
    </FileRef>
 </Workspace>

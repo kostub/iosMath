@@ -1,5 +1,10 @@
 ## Changelog
 
+### v1.0.0 (2017-11-10)
+* Add as Pod to Top Hat iOS Repo
+* Render non-ASCII characters
+* Fix memory crash
+
 ### v0.9.4 (2017-05-07)
 * Support for color (\\textcolor) (Thanks to Markus)
 * Fix issue with cramped style in tables (Thanks to Jacob)
