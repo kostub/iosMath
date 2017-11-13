@@ -1284,9 +1284,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
     // Get the bounds for these glyphs
-    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
-    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
-    CGFloat ascent, descent, width;
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, glyphs, bboxes, numVariants);
+    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, glyphs, advances, numVariants);
+    CGFloat ascent = 0.0, descent = 0.0, width = 0.0;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         width = advances[i].width;
@@ -1315,7 +1315,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGFloat height;
     [self constructGlyphWithParts:parts height:glyphHeight glyphs:&glyphs offsets:&offsets height:&height];
     CGGlyph first = glyphs[0].shortValue;
-    CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &first, NULL, 1);
+    CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, &first, NULL, 1);
     MTGlyphConstructionDisplay* display = [[MTGlyphConstructionDisplay alloc] initWithGlyphs:glyphs offsets:offsets font:_styleFont];
     display.width = width;
     display.ascent = height;
@@ -1425,8 +1425,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         delta = [_styleFont.mathTable getItalicCorrection:glyph];
         
         // vertically center
-        CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
-        CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, &glyph, NULL, 1);
+        CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, &glyph, NULL, 1);
         CGFloat ascent, descent;
         getBboxDetails(bbox, &ascent, &descent);
         CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
@@ -1640,8 +1640,8 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
     // Get the bounds for these glyphs
-    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
-    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, glyphs, bboxes, numVariants);
+    CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationHorizontal, glyphs, advances, numVariants);
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         CGFloat ascent, descent;

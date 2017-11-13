@@ -8,7 +8,7 @@
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
 
-#import <iosMath/render/MTMathUILabel.h>
-#import <iosMath/render/MTMathListDisplay.h>
-#import <iosMath/lib/MTMathList.h>
-#import <iosMath/lib/MTMathListBuilder.h>
+#import "MTMathUILabel.h"
+#import "MTMathListDisplay.h"
+#import "MTMathList.h"
+#import "MTMathListBuilder.h"
