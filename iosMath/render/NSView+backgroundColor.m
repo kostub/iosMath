@@ -15,6 +15,9 @@
 
 - (NSColor *)backgroundColor
 {
+	if (self.layer.backgroundColor == nil) {
+		return [NSColor clearColor];
+	}
     return [NSColor colorWithCGColor:self.layer.backgroundColor];
 }
 
