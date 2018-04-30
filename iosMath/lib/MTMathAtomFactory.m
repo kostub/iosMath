@@ -718,7 +718,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"vec" : @"\u20D7",
                     @"widehat" : @"\u0302",
                     @"widetilde" : @"\u0303",
-                    @"rightharpoonup" : @"\u21c0"
+                    @"rightharpoonup" : @"\u21c0", //⇀
+                    @"overleftrightarrow" : @"\u2194" //↔
                     };
     }
     return accents;
