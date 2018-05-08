@@ -1,5 +1,24 @@
 ## Changelog
 
+### v0.9.4 (2017-05-07)
+* Support for color (\\textcolor) (Thanks to Markus)
+* Fix issue with cramped style in tables (Thanks to Jacob)
+
+### v0.9.3 (2017-01-22)
+* Support for changing font styles: (\\mathrm, \\mathcal, \\mathbf etc.)
+* Support for the \\text command.
+* Fix issue with \\$ not being rendered correctly.
+* Support for \\limits and \\nolimits
+
+### v0.9.2 (2017-01-11)
+* Support for MacOS (Thanks to AnZhg)
+* Better AutoLayout support (Thanks to zhubofei)
+* Support for custom defined commands.
+* Bug fixes for error label.
+* Removing error logging (Thanks to saagarjha)
+* API changes:
+  * Replace `padding` fields with `contentInsets` in `MTMathUILabel`.
+
 ### v0.9.1 (2016-10-17)
 * Support for constructing arbitrarily tall delimiters and radicals.
 * Fix placement of limits on large operators for the XITS font.

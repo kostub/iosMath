@@ -226,6 +226,50 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return dict[boundary.nucleus];
 }
 
++ (MTFontStyle)fontStyleWithName:(NSString *)fontName {
+    NSDictionary<NSString*, NSNumber*>* fontStyles = [self fontStyles];
+    NSNumber* style = fontStyles[fontName];
+    if (!style) {
+        return NSNotFound;
+    }
+    return style.integerValue;
+}
+
++ (NSString *)fontNameForStyle:(MTFontStyle)fontStyle
+{
+    switch (fontStyle) {
+        case kMTFontStyleDefault:
+            return @"mathnormal";
+
+        case kMTFontStyleRoman:
+            return @"mathrm";
+
+        case kMTFontStyleBold:
+            return @"mathbf";
+
+        case kMTFontStyleFraktur:
+            return @"mathfrak";
+
+        case kMTFontStyleCaligraphic:
+            return @"mathcal";
+
+        case kMTFontStyleItalic:
+            return @"mathit";
+
+        case kMTFontStyleSansSerif:
+            return @"mathsf";
+
+        case kMTFontStyleBlackboard:
+            return @"mathbb";
+
+        case kMTFontStyleTypewriter:
+            return @"mathtt";
+
+        case kMTFontStyleBoldItalic:
+            return @"bm";
+    }
+}
+
 + (MTFraction *)fractionWithNumerator:(MTMathList *)num denominator:(MTMathList *)denom
 {
     MTFraction *frac = [[MTFraction alloc] init];
@@ -391,7 +435,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"omicron" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03BF"],
                      @"pi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C0"],
                      @"rho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
-                     @"varsigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C1"],
+                     @"varsigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C2"],
                      @"sigma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C3"],
                      @"tau" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C4"],
                      @"upsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C5"],
@@ -399,15 +443,14 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"chi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C7"],
                      @"psi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C8"],
                      @"omega" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03C9"],
-                     // We mark the following greek chars as ordinary so that we don't try
-                     // to automatically italicize them as we do with variables.
-                     // These characters fall outside the rules of italicization that we have defined.
-                     @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D716"],
-                     @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D717"],
-                     @"phi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D719"],
-                     @"varrho" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71A"],
-                     @"varpi" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D71B"],
-                     
+
+                     @"vartheta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D1"],
+                     @"phi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D5"],
+                     @"varpi" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03D6"],
+                     @"varkappa" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F0"],
+                     @"varrho" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F1"],
+                     @"epsilon" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03F5"],
+
                      // Capital greek characters
                      @"Gamma" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0393"],
                      @"Delta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u0394"],
@@ -823,6 +866,39 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         delimToCommands = [mutableDict copy];
     }
     return delimToCommands;
+}
+
+
++(NSDictionary<NSString*, NSNumber*> *) fontStyles
+{
+    static NSDictionary<NSString*, NSNumber*>* fontStyles = nil;
+    if (!fontStyles) {
+        fontStyles = @{
+                       @"mathnormal" : @(kMTFontStyleDefault),
+                       @"mathrm": @(kMTFontStyleRoman),
+                       @"textrm": @(kMTFontStyleRoman),
+                       @"rm": @(kMTFontStyleRoman),
+                       @"mathbf": @(kMTFontStyleBold),
+                       @"bf": @(kMTFontStyleBold),
+                       @"textbf": @(kMTFontStyleBold),
+                       @"mathcal": @(kMTFontStyleCaligraphic),
+                       @"cal": @(kMTFontStyleCaligraphic),
+                       @"mathtt": @(kMTFontStyleTypewriter),
+                       @"texttt": @(kMTFontStyleTypewriter),
+                       @"mathit": @(kMTFontStyleItalic),
+                       @"textit": @(kMTFontStyleItalic),
+                       @"mit": @(kMTFontStyleItalic),
+                       @"mathsf": @(kMTFontStyleSansSerif),
+                       @"textsf": @(kMTFontStyleSansSerif),
+                       @"mathfrak": @(kMTFontStyleFraktur),
+                       @"frak": @(kMTFontStyleFraktur),
+                       @"mathbb": @(kMTFontStyleBlackboard),
+                       @"mathbfit": @(kMTFontStyleBoldItalic),
+                       @"bm": @(kMTFontStyleBoldItalic),
+                       @"text": @(kMTFontStyleRoman),
+                   };
+    }
+    return fontStyles;
 }
 
 @end

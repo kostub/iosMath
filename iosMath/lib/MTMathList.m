@@ -66,6 +66,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Space";
         case kMTMathAtomStyle:
             return @"Style";
+        case kMTMathAtomColor:
+            return @"Color";
         case kMTMathAtomTable:
             return @"Table";
     }
@@ -116,6 +118,9 @@ static NSString* typeToText(MTMathAtomType type) {
             
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
+        
+        case kMTMathAtomColor:
+            return [[MTMathColor alloc] init];
             
         default:
             return [[MTMathAtom alloc] initWithType:type value:value];
@@ -160,6 +165,7 @@ static NSString* typeToText(MTMathAtomType type) {
     atom.subScript = [self.subScript copyWithZone:zone];
     atom.superScript = [self.superScript copyWithZone:zone];
     atom.indexRange = self.indexRange;
+    atom.fontStyle = self.fontStyle;
     return atom;
 }
 
@@ -647,6 +653,51 @@ static NSString* typeToText(MTMathAtomType type) {
     MTMathStyle* op = [super copyWithZone:zone];
     op->_style = self.style;
     return op;
+}
+
+@end
+
+#pragma mark - MTMathColor
+
+@implementation MTMathColor
+
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomColor value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomColor) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathColor initWithType:value:] cannot be called. Use [MTMathColor init] instead."
+                                 userInfo:nil];
+}
+
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithString:@"\\color"];
+    [str appendFormat:@"{%@}{%@}", self.colorString, self.innerList.stringValue];
+    return str;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathColor* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    op->_colorString = self.colorString;
+    return op;
+}
+
+- (instancetype)finalized
+{
+    MTMathColor *newInner = [super finalized];
+    newInner.innerList = newInner.innerList.finalized;
+    return newInner;
 }
 
 @end
