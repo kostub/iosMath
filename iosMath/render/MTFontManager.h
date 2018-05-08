@@ -41,4 +41,7 @@
 /** Helper function to return the Latin Modern Math font. */
 - (nonnull MTFont*) latinModernFontWithSize:(CGFloat) size;
 
+/** Helper function to return the Xits Math with Chinese Characters extension font. */
+- (nonnull MTFont *)xitsFontAndChineseExtensionWithSize:(CGFloat)size;
+
 @end

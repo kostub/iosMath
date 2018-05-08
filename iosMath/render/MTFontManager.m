@@ -74,4 +74,9 @@ const int kDefaultFontSize = 20;
     return [self latinModernFontWithSize:kDefaultFontSize];
 }
 
+- (MTFont *)xitsFontAndChineseExtensionWithSize:(CGFloat)size
+{
+    return [self fontWithName:@"xits-math-cn" size:size];
+}
+
 @end

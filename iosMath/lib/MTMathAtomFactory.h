@@ -54,6 +54,10 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 
 #pragma mark -
 
+/** Gets the atom with the right type for the given character.
+ */
++ (MTMathAtom *)atomForAnyCharacter:(unichar) ch;
+
 /** Gets the atom with the right type for the given character. If an atom
  cannot be determined for a given character this returns nil. 
  This function follows latex conventions for assigning types to the atoms.

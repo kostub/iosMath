@@ -77,7 +77,7 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
                 return -1;
             }
         }
-            
+
         default:
             NSCAssert(false, @"Interelement space undefined for type %lu", (unsigned long)type);
             return -1;
@@ -125,7 +125,7 @@ UTF32Char getItalicized(unichar ch) {
         case 'h':
             return kMTUnicodePlanksConstant;   // italic h (plank's constant)
     }
-    
+
     if (IS_UPPER_EN(ch)) {
         unicode = kMTUnicodeMathCapitalItalicStart + (ch - 'A');
     } else if (IS_LOWER_EN(ch)) {
@@ -374,34 +374,34 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
     switch (fontStyle) {
         case kMTFontStyleDefault:
             return getDefaultStyle(ch);
-            
+
         case kMTFontStyleRoman:
             return ch;
-            
+
         case kMTFontStyleBold:
             return getBold(ch);
-            
+
         case kMTFontStyleItalic:
             return getItalicized(ch);
-            
+
         case kMTFontStyleBoldItalic:
             return getBoldItalic(ch);
-            
+
         case kMTFontStyleCaligraphic:
             return getCaligraphic(ch);
-            
+
         case kMTFontStyleTypewriter:
             return getTypewriter(ch);
-            
+
         case kMTFontStyleSansSerif:
             return getSansSerif(ch);
-            
+
         case kMTFontStyleFraktur:
             return getFraktur(ch);
-            
+
         case kMTFontStyleBlackboard:
             return getBlackboard(ch);
-            
+
         default:
             @throw [NSException exceptionWithName:@"Invalid style"
                                            reason:[NSString stringWithFormat:@"Unknown style %lu for font.", (unsigned long)fontStyle]
@@ -429,7 +429,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     if (ascent) {
         *ascent = MAX(0, CGRectGetMaxY(bbox) - 0);
     }
-    
+
     if (descent) {
         // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
         *descent = MAX(0, 0 - CGRectGetMinY(bbox));
@@ -518,7 +518,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             // TeX treats these as Ordinary. So will we.
             atom.type = kMTMathAtomOrdinary;
         }
-        
+
         if (atom.type == kMTMathAtomOrdinary) {
             // This is Rule 14 to merge ordinary characters.
             // combine ordinary atoms together
@@ -528,7 +528,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 continue;
             }
         }
-        
+
         // TODO: add italic correction here or in second pass?
         prevNode = atom;
         [preprocessed addObject:atom];
@@ -544,10 +544,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         case kMTLineStyleDisplay:
         case kMTLineStyleText:
             return original;
-            
+
         case kMTLineStyleScript:
             return original * font.mathTable.scriptScaleDown;
-            
+
         case kMTLineStyleScriptScript:
             return original * font.mathTable.scriptScriptScaleDown;
     }
@@ -584,11 +584,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // These should never appear as they should have been removed by preprocessing
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
-                
+
             case kMTMathAtomBoundary:
                 NSAssert(NO, @"A boundary atom should never be inside a mathlist.");
                 break;
-                
+
             case kMTMathAtomSpace: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -602,7 +602,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // we skip to the next node.
                 continue;
             }
-                
+
             case kMTMathAtomStyle: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -614,7 +614,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // so we skip to the next node.
                 continue;
             }
-                
+
             case kMTMathAtomColor: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -628,7 +628,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 [_displayAtoms addObject:display];
                 break;
             }
-                
+
             case kMTMathAtomRadical: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -645,7 +645,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 [_displayAtoms addObject:displayRad];
                 _currentPosition.x += displayRad.width;
-                
+
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:displayRad index:rad.indexRange.location delta:0];
@@ -654,7 +654,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 //atom.type = kMTMathAtomOrdinary;
                 break;
             }
-                
+
             case kMTMathAtomFraction: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -671,7 +671,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 break;
             }
-                
+
             case kMTMathAtomLargeOperator: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -683,7 +683,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 [_displayAtoms addObject:display];
                 break;
             }
-                
+
             case kMTMathAtomInner: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -706,7 +706,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 break;
             }
-                
+
             case kMTMathAtomUnderline: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -715,7 +715,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // Underline is considered as Ord in rule 16.
                 [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
                 atom.type = kMTMathAtomOrdinary;
-                
+
                 MTUnderLine* under = (MTUnderLine*) atom;
                 MTDisplay* display = [self makeUnderline:under];
                 [_displayAtoms addObject:display];
@@ -726,7 +726,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 break;
             }
-                
+
             case kMTMathAtomOverline: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -735,7 +735,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // Overline is considered as Ord in rule 16.
                 [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
                 atom.type = kMTMathAtomOrdinary;
-                
+
                 MTOverLine* over = (MTOverLine*) atom;
                 MTDisplay* display = [self makeOverline:over];
                 [_displayAtoms addObject:display];
@@ -746,7 +746,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 break;
             }
-                
+
             case kMTMathAtomAccent: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -755,19 +755,19 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // Accent is considered as Ord in rule 16.
                 [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
                 atom.type = kMTMathAtomOrdinary;
-                
+
                 MTAccent* accent = (MTAccent*) atom;
                 MTDisplay* display = [self makeAccent:accent];
                 [_displayAtoms addObject:display];
                 _currentPosition.x += display.width;
-                
+
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
                 }
                 break;
             }
-                
+
             case kMTMathAtomTable: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {
@@ -776,7 +776,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // We will consider tables as inner
                 [self addInterElementSpace:prevNode currentType:kMTMathAtomInner];
                 atom.type = kMTMathAtomInner;
-                
+
                 MTMathTable* table = (MTMathTable*) atom;
                 MTDisplay* display = [self makeTable:table];
                 [_displayAtoms addObject:display];
@@ -784,7 +784,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 // A table doesn't have subscripts or superscripts
                 break;
             }
-                
+
             case kMTMathAtomOrdinary:
             case kMTMathAtomBinaryOperator:
             case kMTMathAtomRelation:
@@ -829,7 +829,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 } else {
                     [_currentAtoms addObject:atom];
                 }
-                
+
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
                     // stash the existing line
@@ -871,7 +871,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     /*NSAssert(_currentLineIndexRange.length == numCodePoints(_currentLine.string),
      @"The length of the current line: %@ does not match the length of the range (%d, %d)",
      _currentLine, _currentLineIndexRange.location, _currentLineIndexRange.length);*/
-    
+
     MTCTLineDisplay* displayAtom = [[MTCTLineDisplay alloc] initWithString:_currentLine position:_currentPosition range:_currentLineIndexRange font:_styleFont atoms:_currentAtoms];
     [_displayAtoms addObject:displayAtom];
     // update the position
@@ -897,10 +897,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             return 3;
         case kMTSpaceNSThin:
             return (_style < kMTLineStyleScript) ? 3 : 0;
-            
+
         case kMTSpaceNSMedium:
             return (_style < kMTLineStyleScript) ? 4 : 0;
-            
+
         case kMTSpaceNSThick:
             return (_style < kMTLineStyleScript) ? 5 : 0;
     }
@@ -914,7 +914,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     NSNumber* spaceTypeObj = spaceArray[rightIndex];
     MTInterElementSpaceType spaceType = spaceTypeObj.intValue;
     NSAssert(spaceType != kMTSpaceInvalid, @"Invalid space between %lu and %lu", (unsigned long)left, (unsigned long)right);
-    
+
     int spaceMultipler = [self getSpacingInMu:spaceType];
     if (spaceMultipler > 0) {
         // 1 em = size of font in pt. space multipler is in multiples mu or 1/18 em
@@ -965,28 +965,28 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (void) makeScripts:(MTMathAtom*) atom display:(MTDisplay*) display index:(NSUInteger) index delta:(CGFloat) delta
 {
     assert(atom.subScript || atom.superScript);
-    
+
     double superScriptShiftUp = 0;
     double subscriptShiftDown = 0;
-    
+
     display.hasScript = YES;
     if (![display isKindOfClass:[MTCTLineDisplay class]]) {
         // get the font in script style
         CGFloat scriptFontSize = [[self class] getStyleSize:self.scriptStyle font:_font];
         MTFont* scriptFont = [_font copyFontWithSize:scriptFontSize];
         MTFontMathTable *scriptFontMetrics = scriptFont.mathTable;
-        
+
         // if it is not a simple line then
         superScriptShiftUp = display.ascent - scriptFontMetrics.superscriptBaselineDropMax;
         subscriptShiftDown = display.descent + scriptFontMetrics.subscriptBaselineDropMin;
     }
-    
+
     if (!atom.superScript) {
         assert(atom.subScript);
         MTMathListDisplay* subscript = [MTTypesetter createLineForMathList:atom.subScript font:_font style:self.scriptStyle cramped:self.subscriptCramped];
         subscript.type = kMTLinePositionSubscript;
         subscript.index = index;
-        
+
         subscriptShiftDown = fmax(subscriptShiftDown, _styleFont.mathTable.subscriptShiftDown);
         subscriptShiftDown = fmax(subscriptShiftDown, subscript.ascent - _styleFont.mathTable.subscriptTopMax);
         // add the subscript
@@ -996,13 +996,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         _currentPosition.x += subscript.width + _styleFont.mathTable.spaceAfterScript;
         return;
     }
-    
+
     MTMathListDisplay* superScript = [MTTypesetter createLineForMathList:atom.superScript font:_font style:self.scriptStyle cramped:self.superScriptCramped];
     superScript.type = kMTLinePositionSuperscript;
     superScript.index = index;
     superScriptShiftUp = fmax(superScriptShiftUp, self.superScriptShiftUp);
     superScriptShiftUp = fmax(superScriptShiftUp, superScript.descent + _styleFont.mathTable.superscriptBottomMin);
-    
+
     if (!atom.subScript) {
         superScript.position = CGPointMake(_currentPosition.x, _currentPosition.y + superScriptShiftUp);
         [_displayAtoms addObject:superScript];
@@ -1014,7 +1014,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     subscript.type = kMTLinePositionSubscript;
     subscript.index = index;
     subscriptShiftDown = fmax(subscriptShiftDown, _styleFont.mathTable.subscriptShiftDown);
-    
+
     // joint positioning of subscript & superscript
     CGFloat subSuperScriptGap = (superScriptShiftUp - superScript.descent) + (subscriptShiftDown - subscript.ascent);
     if (subSuperScriptGap < _styleFont.mathTable.subSuperscriptGapMin) {
@@ -1115,13 +1115,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     MTLineStyle fractionStyle = self.fractionStyle;
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
     MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
-    
+
     // determine the location of the numerator
     CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
     CGFloat denominatorShiftDown = [self denominatorShiftDown:frac.hasRule];
     CGFloat barLocation = _styleFont.mathTable.axisHeight;
     CGFloat barThickness = (frac.hasRule) ? _styleFont.mathTable.fractionRuleThickness : 0;
-    
+
     if (frac.hasRule) {
         // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
         CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
@@ -1132,7 +1132,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             // at least minNumeratorGap.
             numeratorShiftUp += (minNumeratorGap - distanceFromNumeratorToBar);
         }
-        
+
         // Do the same for the denominator
         // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
         CGFloat distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denominatorDisplay.ascent - denominatorShiftDown);
@@ -1153,10 +1153,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             denominatorShiftDown += (minGap - clearance)/2;
         }
     }
-    
+
     MTFractionDisplay *display = [[MTFractionDisplay alloc] initWithNumerator:numeratorDisplay denominator:denominatorDisplay
                                                                      position:_currentPosition range:frac.indexRange];
-    
+
     display.numeratorUp = numeratorShiftUp;
     display.denominatorDown = denominatorShiftDown;
     display.lineThickness = barThickness;
@@ -1171,7 +1171,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (MTDisplay*) addDelimitersToFractionDisplay:(MTFractionDisplay*)display forFraction:(MTFraction*) frac
 {
     NSAssert(frac.leftDelimiter || frac.rightDelimiter, @"Fraction should have a delimiters to call this function");
-    
+
     NSMutableArray* innerElements = [[NSMutableArray alloc] init];
     CGFloat glyphHeight = self.fractionDelimiterHeight;
     CGPoint position = CGPointZero;
@@ -1181,11 +1181,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
     }
-    
+
     display.position = position;
     position.x += display.width;
     [innerElements addObject:display];
-    
+
     if (frac.rightDelimiter.length > 0) {
         MTDisplay* rightGlyph = [self findGlyphForBoundary:frac.rightDelimiter withHeight:glyphHeight];
         rightGlyph.position = position;
@@ -1211,16 +1211,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (MTDisplay<DownShift>*)getRadicalGlyphWithHeight:(CGFloat)radicalHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
-    
+
     CGGlyph radicalGlyph = [self findGlyphForCharacterAtIndex:0 inString:@"\u221A"];
     CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
-    
+
     MTDisplay<DownShift>* glyphDisplay;
     if (glyphAscent + glyphDescent < radicalHeight) {
         // the glyphs is not as large as required. A glyph needs to be constructed using the extenders.
         glyphDisplay = [self constructGlyph:radicalGlyph withHeight:radicalHeight];
     }
-    
+
     if (!glyphDisplay) {
         // No constructed display so use the glyph we got.
         glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph range:NSMakeRange(NSNotFound, 0) font:_styleFont];
@@ -1237,10 +1237,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGFloat clearance = self.radicalVerticalGap;
     CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
-    
+
     MTDisplay<DownShift>* glyph = [self getRadicalGlyphWithHeight:radicalHeight];
-    
-    
+
+
     // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
     // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
     // Latex computes delta as descent - (h(inner) + d(inner) + clearance)
@@ -1250,13 +1250,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     if (delta > 0) {
         clearance += delta/2;  // increase the clearance to center the radicand inside the sign.
     }
-    
+
     // we need to shift the radical glyph up, to coincide with the baseline of inner.
     // The new ascent of the radical glyph should be thickness + adjusted clearance + h(inner)
     CGFloat radicalAscent = radicalRuleThickness + clearance + innerDisplay.ascent;
     CGFloat shiftUp = radicalAscent - glyph.ascent;  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
     glyph.shiftDown = -shiftUp;
-    
+
     MTRadicalDisplay* radical = [[MTRadicalDisplay alloc] initWitRadicand:innerDisplay glpyh:glyph position:_currentPosition range:range];
     radical.ascent = radicalAscent + _styleFont.mathTable.radicalExtraAscender;
     radical.topKern = _styleFont.mathTable.radicalExtraAscender;
@@ -1280,7 +1280,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         CGGlyph glyph = [variants[i] shortValue];
         glyphs[i] = glyph;
     }
-    
+
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
     // Get the bounds for these glyphs
@@ -1291,7 +1291,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         CGRect bounds = bboxes[i];
         width = advances[i].width;
         getBboxDetails(bounds, &ascent, &descent);
-        
+
         if (ascent + descent >= height) {
             *glyphAscent = ascent;
             *glyphDescent = descent;
@@ -1327,16 +1327,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 {
     NSParameterAssert(glyphs);
     NSParameterAssert(offsets);
-    
+
     for (int numExtenders = 0; true; numExtenders++) {
         NSMutableArray<NSNumber*>* glyphsRv = [NSMutableArray array];
         NSMutableArray<NSNumber*>* offsetsRv = [NSMutableArray array];
-        
+
         MTGlyphPart* prev = nil;
         CGFloat minDistance = _styleFont.mathTable.minConnectorOverlap;
         CGFloat minOffset = 0;
         CGFloat maxDelta = CGFLOAT_MAX;  // the maximum amount we can increase the offsets by
-        
+
         for (MTGlyphPart* part in parts) {
             int repeats = 1;
             if (part.isExtender) {
@@ -1359,7 +1359,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 prev = part;
             }
         }
-        
+
         NSAssert(glyphsRv.count == offsetsRv.count, @"Offsets should match the glyphs");
         if (!prev) {
             continue;   // maybe only extenders
@@ -1397,7 +1397,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     NSRange range = [str rangeOfComposedCharacterSequenceAtIndex:index];
     unichar chars[range.length];
     [str getCharacters:chars range:range];
-    
+
     // Get the glyph fromt the font
     CGGlyph glyph[range.length];
     bool found = CTFontGetGlyphsForCharacters(_styleFont.ctFont, chars, glyph, range
@@ -1423,7 +1423,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         }
         // This is be the italic correction of the character.
         delta = [_styleFont.mathTable getItalicCorrection:glyph];
-        
+
         // vertically center
         CGRect bbox = CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
         CGFloat width = CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, &glyph, NULL, 1);
@@ -1498,7 +1498,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
 - (MTDisplay*) makeLeftRight:(MTInner*) inner
 {
     NSAssert(inner.leftBoundary || inner.rightBoundary, @"Inner should have a boundary to call this function");
-    
+
     MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped spaced:YES];
     CGFloat axisHeight = _styleFont.mathTable.axisHeight;
     // delta is the max distance from the axis
@@ -1508,7 +1508,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     // The size of the delimiter glyph should cover at least 90% of the formula or
     // be at most 5pt short.
     CGFloat glyphHeight = MAX(d1, d2);
-    
+
     NSMutableArray* innerElements = [[NSMutableArray alloc] init];
     CGPoint position = CGPointZero;
     if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
@@ -1517,11 +1517,11 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         position.x += leftGlyph.width;
         [innerElements addObject:leftGlyph];
     }
-    
+
     innerListDisplay.position = position;
     position.x += innerListDisplay.width;
     [innerElements addObject:innerListDisplay];
-    
+
     if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
         MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
         rightGlyph.position = position;
@@ -1537,13 +1537,13 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     CGGlyph leftGlyph = [self findGlyphForCharacterAtIndex:0 inString:delimiter];
     CGGlyph glyph = [self findGlyph:leftGlyph withHeight:glyphHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
-    
+
     MTDisplay<DownShift>* glyphDisplay;
     if (glyphAscent + glyphDescent < glyphHeight) {
         // we didn't find a pre-built glyph that is large enough
         glyphDisplay = [self constructGlyph:leftGlyph withHeight:glyphHeight];
     }
-    
+
     if (!glyphDisplay) {
         // Create a glyph display
         glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:glyph range:NSMakeRange(NSNotFound, 0) font:_styleFont];
@@ -1635,7 +1635,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         CGGlyph glyph = [variants[i] shortValue];
         glyphs[i] = glyph;
     }
-    
+
     CGGlyph curGlyph = glyphs[0];  // if no other glyph is found, we'll return the first one.
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
@@ -1647,7 +1647,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         CGFloat ascent, descent;
         CGFloat width = CGRectGetMaxX(bounds);
         getBboxDetails(bounds, &ascent, &descent);
-        
+
         if (width > maxWidth) {
             if (i == 0) {
                 // glyph dimensions are not yet set
@@ -1679,7 +1679,19 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     CGFloat glyphAscent, glyphDescent, glyphWidth;
     accentGlyph = [self findVariantGlyph:accentGlyph withMaxWidth:accenteeWidth glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
     CGFloat delta = MIN(accentee.ascent, _styleFont.mathTable.accentBaseHeight);
-    
+    //custom ascent baseHieght
+    if([accent.nucleus isEqualToString:@"⇀"]){
+        delta = MIN(accentee.ascent, 2);
+    }
+    if([accent.nucleus isEqualToString:@"↔"]){
+        delta = MIN(accentee.ascent, 1);
+    }
+    if([accent.nucleus isEqualToString:@"→"]){
+        delta = MIN(accentee.ascent, 1);
+    }
+    if([accent.nucleus isEqualToString:@"←"]){
+        delta = MIN(accentee.ascent, 1);
+    }
     CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(skew, height);
@@ -1688,7 +1700,7 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     accentGlyphDisplay.descent = glyphDescent;
     accentGlyphDisplay.width = glyphWidth;
     accentGlyphDisplay.position = accentPosition;
-    
+
     if ([self isSingleCharAccentee:accent] && (accent.subScript || accent.superScript)) {
         // Attach the super/subscripts to the accentee instead of the accent.
         MTMathAtom* innerAtom = accent.innerList.atoms[0];
@@ -1701,14 +1713,14 @@ static const NSInteger kDelimiterShortfallPoints = 5;
         // only affects fractions and superscripts. We skip adjusting the heights.
         accentee = [MTTypesetter createLineForMathList:accent.innerList font:_font style:_style cramped:_cramped];
     }
-    
+
     MTAccentDisplay* display = [[MTAccentDisplay alloc] initWithAccent:accentGlyphDisplay accentee:accentee range:accent.indexRange];
     display.width = accentee.width;
     display.descent = accentee.descent;
     CGFloat ascent = accentee.ascent - delta + glyphAscent;
     display.ascent = MAX(accentee.ascent, ascent);
     display.position = _currentPosition;
-    
+
     return display;
 }
 
@@ -1726,20 +1738,20 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         // Empty table
         return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
     }
-    
+
     CGFloat columnWidths[numColumns];
     for (int i = 0; i < numColumns; i++) {
         columnWidths[i] = 0;
     }
     NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
-    
+
     // Position all the columns in each row
     NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
     for (NSArray<MTDisplay*>* row in displays) {
         MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
         [rowDisplays addObject:rowDisplay];
     }
-    
+
     // Position all the rows
     [self positionRows:rowDisplays forTable:table];
     MTMathListDisplay* tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
@@ -1751,7 +1763,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 - (NSArray<NSArray<MTDisplay*>*>*) typesetCells:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     NSMutableArray<NSMutableArray<MTDisplay*>*> *displays = [NSMutableArray arrayWithCapacity:table.numRows];
-    
+
     for(NSArray<MTMathList*>* row in table.cells) {
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
@@ -1772,17 +1784,17 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         MTDisplay* col = cols[i];
         CGFloat colWidth = columnWidths[i];
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
-        
+
         CGFloat cellPos = columnStart;
         switch (alignment) {
             case kMTColumnAlignmentRight:
                 cellPos += colWidth - col.width;
                 break;
-                
+
             case kMTColumnAlignmentCenter:
                 cellPos += (colWidth - col.width) / 2;
                 break;
-                
+
             case kMTColumnAlignmentLeft:
                 // No changes if left aligned
                 break;
@@ -1792,7 +1804,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         } else {
             rowRange = col.range;
         }
-        
+
         col.position = CGPointMake(cellPos, 0);
         columnStart += colWidth + table.interColumnSpacing * _styleFont.mathTable.muUnit;
     };
@@ -1830,13 +1842,13 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         }
         prevRowDescent = row.descent;
     }
-    
+
     // Vertically center the whole structure around the axis
     // The descent of the structure is the position of the last row
     // plus the descent of the last row.
     CGFloat descent =  - currPos + prevRowDescent;
     CGFloat shiftDown = 0.5*(ascent - descent) - _styleFont.mathTable.axisHeight;
-    
+
     for (MTDisplay* row in rows) {
         row.position = CGPointMake(row.position.x, row.position.y - shiftDown);
     }

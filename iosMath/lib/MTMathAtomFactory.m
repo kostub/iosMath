@@ -76,10 +76,19 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return [[MTLargeOperator alloc] initWithValue:name limits:limits];
 }
 
++ (MTMathAtom *)atomForAnyCharacter:(unichar) ch{
+    NSString *chStr = [NSString stringWithCharacters:&ch length:1];
+//    NSLog(@"%@",chStr);
+    return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
+}
+
 + (MTMathAtom *)atomForCharacter:(unichar)ch
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
-    if (ch < 0x21 || ch > 0x7E) {
+    if ((ch >= 0x4E00) && (ch <= 0x9FFF)) {
+        // CJK support. But xits-math-cn font only has Chinese characters support.
+        return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
+    } else if (ch < 0x21 || ch > 0x7E) {
         // skip non ascii characters and spaces
         return nil;
     } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
@@ -665,7 +674,16 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"textstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleText],
                      @"scriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript],
                      @"scriptscriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript],
+                     
+                     // Custom
+                     @"bigtriangleup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25B3"],
+                     @"bigtriangledown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u25BD"],
+                     @"because" : [MTMathAtom atomWithType:kMTMathAtomRelation
+                         value:@"\u2235"],
+                     @"therefore" : [MTMathAtom atomWithType:kMTMathAtomRelation
+                         value:@"\u2234"]
                      }];
+        
         
     }
     return commands;
@@ -743,6 +761,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"vec" : @"\u20D7",
                     @"widehat" : @"\u0302",
                     @"widetilde" : @"\u0303",
+                    @"rightharpoonup" : @"\u21c0", //⇀
+                    @"overleftrightarrow" : @"\u2194", //↔
+                    @"overrightarrow" :@"\u2192", //→
+                    @"overleftarrow" :@"\u2190", //←
                     };
     }
     return accents;
