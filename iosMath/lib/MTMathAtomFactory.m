@@ -439,8 +439,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"rightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2192"],
                      @"downarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2193"],
                      @"leftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2194"],
-                     @"overrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2192"],
-                     @"overleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2190"],
                      @"updownarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2195"],
                      @"nwarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2196"],
                      @"nearrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2197"],
