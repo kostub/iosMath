@@ -1370,6 +1370,12 @@ static const NSInteger kDelimiterShortfallPoints = 5;
     if([accent.nucleus isEqualToString:@"↔"]){
         delta = MIN(accentee.ascent, 1);
     }
+    if([accent.nucleus isEqualToString:@"→"]){
+        delta = MIN(accentee.ascent, 1);
+    }
+    if([accent.nucleus isEqualToString:@"←"]){
+        delta = MIN(accentee.ascent, 1);
+    }
     CGFloat skew = [self getSkew:accent accenteeWidth:accenteeWidth accentGlyph:accentGlyph];
     CGFloat height = accentee.ascent - delta;  // This is always positive since delta <= height.
     CGPoint accentPosition = CGPointMake(skew, height);
