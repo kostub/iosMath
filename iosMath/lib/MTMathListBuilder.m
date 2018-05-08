@@ -43,6 +43,8 @@ NSString *const MTParseError = @"ParseError";
     NSUInteger _length;
     MTInner* _currentInnerAtom;
     MTEnvProperties* _currentEnv;
+    MTFontStyle _currentFontStyle;
+    BOOL _spacesAllowed;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -54,6 +56,7 @@ NSString *const MTParseError = @"ParseError";
         _length = str.length;
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
+        _currentFontStyle = kMTFontStyleDefault;
     }
     return self;
 }
@@ -105,14 +108,12 @@ NSString *const MTParseError = @"ParseError";
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
     MTMathAtom* prevAtom = nil;
-    NSMutableArray *textCharArray = [NSMutableArray array];
     while([self hasCharacters]) {
         if (_error) {
             // If there is an error thus far then bail out.
             return nil;
         }
         MTMathAtom* atom = nil;
-        [textCharArray removeAllObjects];
         unichar ch = [self getNextCharacter];
         if (oneCharOnly) {
             if (ch == '^' || ch == '}' || ch == '_' || ch == '&') {
@@ -179,48 +180,37 @@ NSString *const MTParseError = @"ParseError";
             } else if (_error) {
                 return nil;
             }
-            
-            if([command isEqualToString:@"text"]) {
-                
-                bool isLeftParentless = false;
-                while([self hasCharacters]){
-                    unichar textch = [self getNextCharacter];
-                    if(isLeftParentless){
-                        if(textch == '\\'){
-                            textch = [self getNextCharacter];
-                            NSString *chStr = [NSString stringWithCharacters:&textch length:1];
-                            [textCharArray addObject:chStr];
-                        }else if(textch == '}'){
-                            break;
-                        }else{
-                            NSString *chStr = [NSString stringWithCharacters:&textch length:1];
-                            [textCharArray addObject:chStr];
-                        }
-                    }else{
-                        if(textch == '{'){
-                            isLeftParentless = true;
-                        }
-                        continue;
-                    }
-                }
-                if([textCharArray count] == 0){
-                    continue;
-                }
-                
-            }else{
-                
-                atom = [self atomForCommand:command];
-                if (atom == nil) {
-                    // this was an unknown command,
-                    // we flag an error and return
-                    // (note setError will not set the error if there is already one, so we flag internal error
-                    // in the odd case that an _error is not set.
-                    [self setError:MTParseErrorInternalError message:@"Internal error"];
-                    return nil;
-                }
-                
+            if ([self applyModifier:command atom:prevAtom]) {
+                continue;
             }
-            
+            MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
+            if (fontStyle != NSNotFound) {
+                BOOL oldSpacesAllowed = _spacesAllowed;
+                // Text has special consideration where it allows spaces without escaping.
+                _spacesAllowed = [command isEqualToString:@"text"];
+                MTFontStyle oldFontStyle = _currentFontStyle;
+                _currentFontStyle = fontStyle;
+                MTMathList* sublist = [self buildInternal:true];
+                // Restore the font style.
+                _currentFontStyle = oldFontStyle;
+                _spacesAllowed = oldSpacesAllowed;
+
+                prevAtom = [sublist.atoms lastObject];
+                [list append:sublist];
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
+            atom = [self atomForCommand:command];
+            if (atom == nil) {
+                // this was an unknown command,
+                // we flag an error and return
+                // (note setError will not set the error if there is already one, so we flag internal error
+                // in the odd case that an _error is not set.
+                [self setError:MTParseErrorInternalError message:@"Internal error"];
+                return nil;
+            }
         } else if (ch == '&') {
             // used for column separation in tables
             NSAssert(!oneCharOnly, @"This should have been handled before");
@@ -231,6 +221,9 @@ NSString *const MTParseError = @"ParseError";
                 MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
                 return [MTMathList mathListWithAtoms:table, nil];
             }
+        } else if (_spacesAllowed && ch == ' ') {
+            // If spaces are allowed then spaces do not need escaping with a \ before being used.
+            atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
@@ -238,19 +231,10 @@ NSString *const MTParseError = @"ParseError";
                 continue;
             }
         }
-        
-        if([textCharArray count]){
-            for(int i=0; i<[textCharArray count];i++){
-                unichar textch = [[textCharArray objectAtIndex:i] characterAtIndex:0];
-                atom = [MTMathAtomFactory atomForAnyCharacter:textch];
-                [list addAtom:atom];
-                prevAtom = atom;
-            }
-        }else{
-            NSAssert(atom != nil, @"Atom shouldn't be nil");
-            [list addAtom:atom];
-            prevAtom = atom;
-        }
+        NSAssert(atom != nil, @"Atom shouldn't be nil");
+        atom.fontStyle = _currentFontStyle;
+        [list addAtom:atom];
+        prevAtom = atom;
         
         if (oneCharOnly) {
             // we consumed our onechar
@@ -283,6 +267,38 @@ NSString *const MTParseError = @"ParseError";
             [self unlookCharacter];
             break;
         }
+    }
+    return mutable;
+}
+
+- (NSString*) readColor
+{
+    if (![self expectCharacter:'{']) {
+        // We didn't find an opening brace, so no env found.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
+        return nil;
+    }
+    
+    // Ignore spaces and nonascii.
+    [self skipSpaces];
+
+    // a string of all upper and lower case characters.
+    NSMutableString* mutable = [NSMutableString string];
+    while([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
+            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
+        } else {
+            // we went too far
+            [self unlookCharacter];
+            break;
+        }
+    }
+
+    if (![self expectCharacter:'}']) {
+        // We didn't find an closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
     }
     return mutable;
 }
@@ -478,6 +494,12 @@ NSString *const MTParseError = @"ParseError";
         }
         MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
         return table;
+    } else if ([command isEqualToString:@"color"]) {
+        // A color command has 2 arguments
+        MTMathColor* mathColor = [[MTMathColor alloc] init];
+        mathColor.colorString = [self readColor];
+        mathColor.innerList = [self buildInternal:true];
+        return mathColor;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
@@ -558,6 +580,32 @@ NSString *const MTParseError = @"ParseError";
         return list;
     }
     return nil;
+}
+
+// Applies the modifier to the atom. Returns true if modifier applied.
+- (BOOL) applyModifier:(NSString*) modifier atom:(MTMathAtom*) atom
+{
+    if ([modifier isEqualToString:@"limits"]) {
+        if (atom.type != kMTMathAtomLargeOperator) {
+            NSString* errorMessage = [NSString stringWithFormat:@"limits can only be applied to an operator."];
+            [self setError:MTParseErrorInvalidLimits message:errorMessage];
+        } else {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            op.limits = YES;
+        }
+        return true;
+    } else if ([modifier isEqualToString:@"nolimits"]) {
+        if (atom.type != kMTMathAtomLargeOperator) {
+            NSString* errorMessage = [NSString stringWithFormat:@"nolimits can only be applied to an operator."];
+            [self setError:MTParseErrorInvalidLimits message:errorMessage];
+            return YES;
+        } else {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            op.limits = NO;
+        }
+        return true;
+    }
+    return false;
 }
 
 - (void) setError:(MTParseErrors) code message:(NSString*) message
@@ -684,7 +732,20 @@ NSString *const MTParseError = @"ParseError";
 + (NSString *)mathListToString:(MTMathList *)ml
 {
     NSMutableString* str = [NSMutableString string];
+    MTFontStyle currentfontStyle = kMTFontStyleDefault;
     for (MTMathAtom* atom in ml.atoms) {
+        if (currentfontStyle != atom.fontStyle) {
+            if (currentfontStyle != kMTFontStyleDefault) {
+                // close the previous font style.
+                [str appendString:@"}"];
+            }
+            if (atom.fontStyle != kMTFontStyleDefault) {
+                // open new font style
+                NSString* fontStyleName = [MTMathAtomFactory fontNameForStyle:atom.fontStyle];
+                [str appendFormat:@"\\%@{", fontStyleName];
+            }
+            currentfontStyle = atom.fontStyle;
+        }
         if (atom.type == kMTMathAtomFraction) {
             MTFraction* frac = (MTFraction*) atom;
             if (frac.hasRule) {
@@ -774,6 +835,18 @@ NSString *const MTParseError = @"ParseError";
         } else if (atom.type == kMTMathAtomAccent) {
             MTAccent* accent = (MTAccent*) atom;
             [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:accent], [self mathListToString:accent.innerList]];
+        } else if (atom.type == kMTMathAtomLargeOperator) {
+            MTLargeOperator* op = (MTLargeOperator*) atom;
+            NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:atom];
+            MTLargeOperator* originalOp = (MTLargeOperator*) [MTMathAtomFactory atomForLatexSymbolName:command];
+            [str appendFormat:@"\\%@ ", command];
+            if (originalOp.limits != op.limits) {
+                if (op.limits) {
+                    [str appendString:@"\\limits "];
+                } else {
+                    [str appendString:@"\\nolimits "];
+                }
+            }
         } else if (atom.type == kMTMathAtomSpace) {
             MTMathSpace* space = (MTMathSpace*) atom;
             NSDictionary* spaceToCommands = [MTMathListBuilder spaceToCommands];
@@ -804,7 +877,7 @@ NSString *const MTParseError = @"ParseError";
                 [str appendString:atom.nucleus];
             }
         }
-        
+
         if (atom.superScript) {
             [str appendFormat:@"^{%@}", [self mathListToString:atom.superScript]];
         }
@@ -812,6 +885,9 @@ NSString *const MTParseError = @"ParseError";
         if (atom.subScript) {
             [str appendFormat:@"_{%@}", [self mathListToString:atom.subScript]];
         }
+    }
+    if (currentfontStyle != kMTFontStyleDefault) {
+        [str appendString:@"}"];
     }
     return [str copy];
 }
