@@ -1286,7 +1286,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     // Get the bounds for these glyphs
     CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
     CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
-    CGFloat ascent, descent, width;
+    CGFloat ascent = 0.0, descent = 0.0, width = 0.0;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         width = advances[i].width;
