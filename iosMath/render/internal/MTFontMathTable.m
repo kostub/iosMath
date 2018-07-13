@@ -481,7 +481,7 @@ static NSString* const kAccents = @"accents";
     NSDictionary* accents = (NSDictionary*) _mathTable[kAccents];
     NSString* glyphName = [self.font getGlyphName:glyph];
     NSNumber* val = (NSNumber*) accents[glyphName];
-    if (val) {
+    if (val != nil) {
         return [self fontUnitsToPt:val.intValue];
     } else {
         // If no top accent is defined then it is the center of the advance width.
