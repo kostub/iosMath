@@ -1728,9 +1728,10 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     }
     
     CGFloat columnWidths[numColumns];
-    for (int i = 0; i < numColumns; i++) {
-        columnWidths[i] = 0;
-    }
+    // NOTE: Using memset to initialize columnWidths array avoids
+    // Xcode Analyze "Assigned value is garbage or undefined".
+    // https://stackoverflow.com/questions/21191194/analyzer-warning-assigned-value-is-garbage-or-undefined
+    memset(columnWidths, 0, sizeof(columnWidths));
     NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
     
     // Position all the columns in each row
