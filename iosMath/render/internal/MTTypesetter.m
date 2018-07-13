@@ -1286,7 +1286,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     // Get the bounds for these glyphs
     CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, bboxes, numVariants);
     CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontHorizontalOrientation, glyphs, advances, numVariants);
-    CGFloat ascent, descent, width;
+    CGFloat ascent = 0.0, descent = 0.0, width = 0.0;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         width = advances[i].width;
@@ -1728,9 +1728,10 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     }
     
     CGFloat columnWidths[numColumns];
-    for (int i = 0; i < numColumns; i++) {
-        columnWidths[i] = 0;
-    }
+    // NOTE: Using memset to initialize columnWidths array avoids
+    // Xcode Analyze "Assigned value is garbage or undefined".
+    // https://stackoverflow.com/questions/21191194/analyzer-warning-assigned-value-is-garbage-or-undefined
+    memset(columnWidths, 0, sizeof(columnWidths));
     NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
     
     // Position all the columns in each row
