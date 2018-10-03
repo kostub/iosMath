@@ -79,7 +79,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (nullable MTMathAtom *)atomForCharacter:(unichar)ch
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
-    if (ch < 0x21 || ch > 0x7E) {
+    if (ch > 0x0410 && ch < 0x044F){
+        // show basic cyrillic alphabet
+        return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
+    } else if (ch < 0x21 || ch > 0x7E) {
         // skip non ascii characters and spaces
         return nil;
     } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
