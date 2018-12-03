@@ -576,7 +576,7 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-iosMathTests/Pods-iosMathTests-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-iOS6.0/mathFonts.bundle",
+        "${PODS_CONFIGURATION_BUILD_DIR}/iosMath-iOS6.0/mathFonts.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -822,11 +822,15 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D93290960585498BBAEE4535 /* Pods-iosMathExample.debug.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = T984FR9Q54;
 				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				PRODUCT_BUNDLE_IDENTIFIER = MathChat.iosMathExample;
+				PRODUCT_BUNDLE_IDENTIFIER = rotpanda.MathChat.iosMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -835,11 +839,15 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B16B9A63054AE3FFB5C36F6B /* Pods-iosMathExample.release.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = T984FR9Q54;
 				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				PRODUCT_BUNDLE_IDENTIFIER = MathChat.iosMathExample;
+				PRODUCT_BUNDLE_IDENTIFIER = rotpanda.MathChat.iosMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
