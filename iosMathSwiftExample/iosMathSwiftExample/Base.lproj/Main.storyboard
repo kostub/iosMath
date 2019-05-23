@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="49e-Tb-3d3">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Live-->
+        <scene sceneID="hNz-n2-bh7">
+            <objects>
+                <viewController id="9pv-A4-QxB" customClass="LiveViewController" customModule="iosMathSwiftExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="tsR-hK-woN">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" text="Live View" textAlignment="center" lineBreakMode="tailTruncation" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="KQZ-1w-vlD">
+                                <rect key="frame" x="133.5" y="44" width="147" height="43"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="36"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Type a LaTex rules..." textAlignment="center" minimumFontSize="23" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="ljR-Ew-Hgt">
+                                <rect key="frame" x="38" y="95" width="338" height="30"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" enablesReturnKeyAutomatically="YES"/>
+                            </textField>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xfv-KN-hMk" customClass="Label" customModule="iosMathSwiftExample" customModuleProvider="target">
+                                <rect key="frame" x="38" y="152" width="338" height="140"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="ljR-Ew-Hgt" firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="4J1-jT-Maf"/>
+                            <constraint firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="6BV-lF-sBN"/>
+                            <constraint firstItem="xfv-KN-hMk" firstAttribute="leading" secondItem="ljR-Ew-Hgt" secondAttribute="leading" id="9Kx-TQ-XAO"/>
+                            <constraint firstItem="xfv-KN-hMk" firstAttribute="top" secondItem="ljR-Ew-Hgt" secondAttribute="bottom" constant="27" id="AWX-tE-e4g"/>
+                            <constraint firstItem="xfv-KN-hMk" firstAttribute="width" secondItem="ljR-Ew-Hgt" secondAttribute="width" id="dyW-pg-SM1"/>
+                            <constraint firstAttribute="centerY" secondItem="KQZ-1w-vlD" secondAttribute="centerY" constant="382.5" id="exm-UA-ej4"/>
+                            <constraint firstItem="ljR-Ew-Hgt" firstAttribute="leading" secondItem="PQr-Ze-W5v" secondAttribute="leading" constant="38" id="fgu-wC-KDs"/>
+                            <constraint firstItem="PQr-Ze-W5v" firstAttribute="bottom" secondItem="xfv-KN-hMk" secondAttribute="bottom" constant="521" id="uaU-Zq-yUL"/>
+                            <constraint firstItem="ljR-Ew-Hgt" firstAttribute="top" secondItem="KQZ-1w-vlD" secondAttribute="bottom" constant="8" symbolic="YES" id="vVt-Th-8hQ"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="PQr-Ze-W5v"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Live" image="first" id="acW-dT-cKf"/>
+                    <connections>
+                        <outlet property="latexInput" destination="ljR-Ew-Hgt" id="yDe-x3-gN7"/>
+                        <outlet property="latexLabel" destination="xfv-KN-hMk" id="PmJ-SQ-yWh"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="W5J-7L-Pyd" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="749.27536231884062" y="-320.08928571428572"/>
+        </scene>
+        <!--Demo-->
+        <scene sceneID="wg7-f3-ORb">
+            <objects>
+                <viewController id="8rJ-Kc-sve" customClass="DemoViewController" customModule="iosMathSwiftExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="QS5-Rx-YEW">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" text="Demo View" textAlignment="center" lineBreakMode="tailTruncation" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="zEq-FU-wV5">
+                                <rect key="frame" x="119" y="44" width="176" height="43"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="36"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="oyd-IG-PbV" customClass="Label" customModule="iosMathSwiftExample" customModuleProvider="target">
+                                <rect key="frame" x="52" y="115" width="310" height="44"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EcO-ZW-Rpk">
+                                <rect key="frame" x="52" y="201" width="310" height="59"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="59" id="OVy-oK-tun"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="19"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="EcO-ZW-Rpk" firstAttribute="top" secondItem="oyd-IG-PbV" secondAttribute="bottom" constant="42" id="0f7-Xz-Enq"/>
+                            <constraint firstItem="EcO-ZW-Rpk" firstAttribute="leading" secondItem="O1u-W8-tvY" secondAttribute="leading" constant="52" id="4H9-RL-HGO"/>
+                            <constraint firstItem="EcO-ZW-Rpk" firstAttribute="leading" secondItem="oyd-IG-PbV" secondAttribute="leading" id="Amj-VE-wgN"/>
+                            <constraint firstItem="oyd-IG-PbV" firstAttribute="top" secondItem="zEq-FU-wV5" secondAttribute="bottom" constant="28" id="Jqs-20-boc"/>
+                            <constraint firstItem="oyd-IG-PbV" firstAttribute="trailing" secondItem="EcO-ZW-Rpk" secondAttribute="trailing" id="m4W-Xt-bzU"/>
+                            <constraint firstAttribute="centerX" secondItem="zEq-FU-wV5" secondAttribute="centerX" id="qqM-NS-xev"/>
+                            <constraint firstAttribute="centerY" secondItem="zEq-FU-wV5" secondAttribute="centerY" constant="382.5" id="qzY-Ky-pLD"/>
+                            <constraint firstItem="O1u-W8-tvY" firstAttribute="bottom" secondItem="EcO-ZW-Rpk" secondAttribute="bottom" constant="553" id="xbw-DD-o1B"/>
+                            <constraint firstItem="EcO-ZW-Rpk" firstAttribute="centerX" secondItem="zEq-FU-wV5" secondAttribute="centerX" id="zff-B3-5Os"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="O1u-W8-tvY"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Demo" image="second" id="cPa-gy-q4n"/>
+                    <connections>
+                        <outlet property="firstDemoLabel" destination="oyd-IG-PbV" id="UbB-ET-3Bx"/>
+                        <outlet property="firstDemoRawLabel" destination="EcO-ZW-Rpk" id="wHH-NX-62p"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4Nw-L8-lE0" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="749.27536231884062" y="359.59821428571428"/>
+        </scene>
+        <!--Tab Bar Controller-->
+        <scene sceneID="yl2-sM-qoP">
+            <objects>
+                <tabBarController id="49e-Tb-3d3" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" id="W28-zg-YXA">
+                        <rect key="frame" x="0.0" y="975" width="768" height="49"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="9pv-A4-QxB" kind="relationship" relationship="viewControllers" id="u7Y-xg-7CH"/>
+                        <segue destination="8rJ-Kc-sve" kind="relationship" relationship="viewControllers" id="lzU-1b-eKA"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="HuB-VB-40B" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0.0" y="0.0"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="first" width="30" height="30"/>
+        <image name="second" width="30" height="30"/>
+    </resources>
+</document>

@@ -178,8 +178,8 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-macOS10.8/mathFonts.bundle",
+				"${PODS_ROOT}/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-macOS/mathFonts.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -187,7 +187,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		8F9D374876485E2879D1DA44 /* [CP] Check Pods Manifest.lock */ = {
