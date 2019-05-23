@@ -1,0 +1,14 @@
+# Needed due to
+# http://stackoverflow.com/questions/33395675/cocoapods-file-reference-is-a-member-of-multiple-groups
+inhibit_all_warnings!
+use_frameworks!
+
+#install! 'cocoapods', :deterministic_uuids => false
+
+target 'iosMathSwiftExample' do
+  platform :ios, '11'
+  pod 'iosMath', :path => '../'
+  pod 'RxSwift'
+  pod 'RxCocoa'
+  pod 'RxRelay'
+end

@@ -134,7 +134,7 @@
 		267EC26E1E230CB400E34886 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1020;
 				TargetAttributes = {
 					26123D4A1E230D80007A742A = {
 						CreatedOnToolsVersion = 8.1;
@@ -147,6 +147,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -178,8 +179,8 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-macOS10.8/mathFonts.bundle",
+				"${PODS_ROOT}/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-macOS/mathFonts.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -187,7 +188,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		8F9D374876485E2879D1DA44 /* [CP] Check Pods Manifest.lock */ = {
@@ -338,6 +339,7 @@
 		267EC2721E230CB400E34886 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -373,6 +375,7 @@
 		267EC2731E230CB400E34886 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
