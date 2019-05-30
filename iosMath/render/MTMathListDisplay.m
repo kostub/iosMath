@@ -45,6 +45,14 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    if (self.localBackgroundColor != nil) {
+        CGContextSaveGState(context);
+        CGContextSetBlendMode(context, kCGBlendModeNormal);
+        CGContextSetFillColorWithColor(context, self.localBackgroundColor.CGColor);
+        CGContextFillRect(context, [self displayBounds]);
+        CGContextRestoreGState(context);
+    }
+    
 }
 
 - (CGRect) displayBounds
@@ -154,6 +162,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     CGContextSaveGState(context);
     
     CGContextSetTextPosition(context, self.position.x, self.position.y);
@@ -212,6 +221,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     CGContextSaveGState(context);
     
     // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
@@ -324,6 +334,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     [_numerator draw:context];
     [_denominator draw:context];
     
@@ -416,6 +427,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     // draw the radicand & degree at its position
     [self.radicand draw:context];
     [self.degree draw:context];
@@ -474,6 +486,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     CGContextSaveGState(context);
     
     [self.textColor setFill];
@@ -530,6 +543,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     CGContextSaveGState(context);
     
     [self.textColor setFill];
@@ -671,6 +685,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     // Draw the elements.
     [self.upperLimit draw:context];
     [self.lowerLimit draw:context];
@@ -703,6 +718,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     [self.inner draw:context];
     
     CGContextSaveGState(context);
@@ -770,6 +786,7 @@ static BOOL isIos6Supported() {
 
 - (void)draw:(CGContextRef)context
 {
+    [super draw:context];
     [self.accentee draw:context];
     
     CGContextSaveGState(context);

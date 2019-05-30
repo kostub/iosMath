@@ -82,7 +82,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:self.scrollView];
-    [self setHeight:4280 forView:contentView];
+    [self setHeight:4350 forView:contentView];
 
 
     // Demo formulae
@@ -303,7 +303,7 @@
     self.labels[39] = [self createMathLabel:@"\\hat{\\frac12} \\; \\hat{\\sqrt 3}" withHeight:50];
 
     // large roots
-    self.labels[40] = [self createMathLabel:@"\\sqrt{1+\\sqrt{1+\\sqrt{1+\\sqrt{1+\\sqrt{1+\\cdots}}}}}" withHeight:80];
+    self.labels[40] = [self createMathLabel:@"\\colorbox{#f0f0e0}{\\sqrt{1+\\colorbox{#d0c0d0}{\\sqrt{1+\\colorbox{#a080c0}{\\sqrt{1+\\colorbox{#7050a0}{\\sqrt{1+\\colorbox{403060}{\\colorbox{#102000}{\\sqrt{1+\\cdots}}}}}}}}}}}" withHeight:80];
     
     self.labels[41] = [self createMathLabel:@"\\begin{bmatrix}"
                            "a & b\\\\ c & d \\\\ e & f \\\\ g &  h \\\\ i & j"
@@ -314,6 +314,12 @@
     self.labels[44] = [self createMathLabel:@"\\mathrm{using\\ mathrm}" withHeight:30];
     self.labels[45] = [self createMathLabel:@"\\text{using text}" withHeight:30];
     self.labels[46] = [self createMathLabel:@"\\text{Mary has }\\$500 + \\$200." withHeight:30];
+    
+    self.labels[47] = [self createMathLabel:@"\\colorbox{#888888}{\\begin{pmatrix}"
+                       "\\colorbox{#ff0000}{a} & \\colorbox{#00ff00}{b} \\\\"
+                       "\\colorbox{#00aaff}{c} & \\colorbox{#f0f0f0}{d}"
+                       "\\end{pmatrix}}"
+                                 withHeight:70];
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];

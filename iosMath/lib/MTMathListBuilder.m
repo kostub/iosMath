@@ -500,6 +500,12 @@ NSString *const MTParseError = @"ParseError";
         mathColor.colorString = [self readColor];
         mathColor.innerList = [self buildInternal:true];
         return mathColor;
+    } else if ([command isEqualToString:@"colorbox"]) {
+        // A color command has 2 arguments
+        MTMathColorbox* mathColorbox = [[MTMathColorbox alloc] init];
+        mathColorbox.colorString = [self readColor];
+        mathColorbox.innerList = [self buildInternal:true];
+        return mathColorbox;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];

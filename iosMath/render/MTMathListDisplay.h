@@ -52,7 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 // The local color, if the color was mutated local with the color
 // command
 @property (nonatomic, nullable) MTColor *localTextColor;
-
+/// The background color for this display.
+@property (nonatomic, nullable) MTColor *localBackgroundColor;
 @end
 
 /// A rendering of a single CTLine as an MTDisplay
