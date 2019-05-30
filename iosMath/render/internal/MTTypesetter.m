@@ -48,6 +48,7 @@ NSArray* getInterElementSpaces() {
 NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) {
     switch (type) {
         case kMTMathAtomColor:
+        case kMTMathAtomColorbox:
         case kMTMathAtomOrdinary:
         case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
             return 0;
@@ -623,6 +624,21 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 MTMathColor* colorAtom = (MTMathColor*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
                 display.localTextColor = [MTColor colorFromHexString:colorAtom.colorString];
+                display.position = _currentPosition;
+                _currentPosition.x += display.width;
+                [_displayAtoms addObject:display];
+                break;
+            }
+                
+            case kMTMathAtomColorbox: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                MTMathColorbox* colorboxAtom = (MTMathColorbox*) atom;
+                MTDisplay* display = [MTTypesetter createLineForMathList:colorboxAtom.innerList font:_font style:_style];
+                
+                display.localBackgroundColor = [MTColor colorFromHexString:colorboxAtom.colorString];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];

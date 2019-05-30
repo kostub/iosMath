@@ -73,6 +73,7 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// Denotes style changes during rendering.
     kMTMathAtomStyle,
     kMTMathAtomColor,
+    kMTMathAtomColorbox,
     
     // Atoms after this point are not part of TeX and do not have the usual structure.
     
@@ -328,6 +329,23 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
  class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
  in the nucleus, subscript or superscript fields. */
 @interface MTMathColor : MTMathAtom
+
+/// Creates an empty color with a nil environment
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
+/** The style represented by this object. */
+@property (nonatomic, nullable) NSString* colorString;
+
+/// The inner math list
+@property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
+/** An atom representing an colorbox element.
+ @note None of the usual fields of the `MTMathAtom` apply even though this
+ class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
+ in the nucleus, subscript or superscript fields. */
+@interface MTMathColorbox : MTMathAtom
 
 /// Creates an empty color with a nil environment
 - (instancetype) init NS_DESIGNATED_INITIALIZER;

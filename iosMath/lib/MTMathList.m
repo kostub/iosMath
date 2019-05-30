@@ -68,6 +68,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Style";
         case kMTMathAtomColor:
             return @"Color";
+        case kMTMathAtomColorbox:
+            return @"Colorbox";
         case kMTMathAtomTable:
             return @"Table";
     }
@@ -121,6 +123,9 @@ static NSString* typeToText(MTMathAtomType type) {
         
         case kMTMathAtomColor:
             return [[MTMathColor alloc] init];
+            
+        case kMTMathAtomColorbox:
+            return [[MTMathColorbox alloc] init];
             
         default:
             return [[MTMathAtom alloc] initWithType:type value:value];
@@ -701,6 +706,52 @@ static NSString* typeToText(MTMathAtomType type) {
 }
 
 @end
+
+#pragma mark - MTMathColorbox
+
+@implementation MTMathColorbox
+
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomColorbox value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomColorbox) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathColorbox initWithType:value:] cannot be called. Use [MTMathColorbox init] instead."
+                                 userInfo:nil];
+}
+
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithString:@"\\colorbox"];
+    [str appendFormat:@"{%@}{%@}", self.colorString, self.innerList.stringValue];
+    return str;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathColorbox* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    op->_colorString = self.colorString;
+    return op;
+}
+
+- (instancetype)finalized
+{
+    MTMathColorbox *newInner = [super finalized];
+    newInner.innerList = newInner.innerList.finalized;
+    return newInner;
+}
+
+@end
+
 
 #pragma mark - MTMathTable
 
