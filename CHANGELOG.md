@@ -1,5 +1,12 @@
 ## Changelog
 
+### v0.9.5 (2019-06-03)
+* Add colorbox command (#121)
+* Cyrillic support (#108)
+* When there is only one element in row, an array error is reported. (#111)
+* Fix: on macOS 10.13, NSSegmentItemImageView returns nil for layer.backgroundColor. Need to check for this and return a default color (clear)
+* Added textrm (#61)
+
 ### v0.9.4 (2017-05-07)
 * Support for color (\\textcolor) (Thanks to Markus)
 * Fix issue with cramped style in tables (Thanks to Jacob)
