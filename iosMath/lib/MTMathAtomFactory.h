@@ -13,6 +13,8 @@
 
 #import "MTMathList.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
@@ -120,7 +122,7 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  @note This is not an exact reverse of the above function. Some delimiters have two names (e.g.
  `<` and `langle`) and this function always returns the shorter name.
  */
-+ (NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary;
++ (nullable NSString*) delimiterNameForBoundaryAtom:(MTMathAtom*) boundary;
 
 /** Returns a font style associated with the name. If none is found returns NSNotFound. */
 + (MTFontStyle) fontStyleWithName:(NSString*) fontName;
@@ -142,7 +144,7 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  @note The reason this function returns a `MTMathAtom` and not a `MTMathTable` is because some
  matrix environments are have builtin delimiters added to the table and hence are returned as inner atoms.
  */
-+ (MTMathAtom*) tableWithEnvironment:(nullable NSString*) env rows:(NSArray<NSArray<MTMathList*>*>*) rows error:(NSError**) error;
++ (nullable MTMathAtom*) tableWithEnvironment:(nullable NSString*) env rows:(NSArray<NSArray<MTMathList*>*>*) rows error:(NSError**) error;
 @end
 
-
+NS_ASSUME_NONNULL_END
