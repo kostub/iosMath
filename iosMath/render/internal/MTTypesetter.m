@@ -1424,7 +1424,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 - (MTDisplay*) makeLargeOp:(MTLargeOperator*) op
 {
-    bool limits = (op.limits && _style == kMTLineStyleDisplay);
+    bool limits = op.limits;
     CGFloat delta = 0;
     if (op.nucleus.length == 1) {
         CGGlyph glyph = [self findGlyphForCharacterAtIndex:0 inString:op.nucleus];
@@ -1470,7 +1470,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         _currentPosition.x += display.width;
         return display;
     }
-    if (op.limits && _style == kMTLineStyleDisplay) {
+    if (op.limits) {
         // make limits
         MTMathListDisplay *superScript = nil, *subScript = nil;
         if (op.superScript) {
