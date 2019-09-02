@@ -798,3 +798,108 @@ static BOOL isIos6Supported() {
     CGContextRestoreGState(context);
 }
 @end
+
+#pragma mark - MTInnerDisplay
+
+@implementation MTInnerDisplay {
+  MTMathListDisplay *_inner;
+}
+
+- (instancetype) initWithInner:(MTMathListDisplay*) inner leftDelimiter:(MTDisplay*) leftDelimiter rightDelimiter:(MTDisplay*) rightDelimiter atIndex:(NSUInteger) index
+{
+  self = [super init];
+  if (self) {
+    _leftDelimiter = leftDelimiter;
+    _rightDelimiter = rightDelimiter;
+    _inner = inner;
+    _index = index;
+    self.range = NSMakeRange(_index, 1);
+    
+    self.width = leftDelimiter.width + inner.width + rightDelimiter.width;
+  }
+  return self;
+}
+
+- (void)setPosition:(CGPoint)position
+{
+  super.position = position;
+  [self updateLeftDelimiterPosition];
+  [self updateInnerPosition];
+  [self updateRightDelimiterPosition];
+}
+
+- (void) updateLeftDelimiterPosition
+{
+  if (_leftDelimiter) {
+    _leftDelimiter.position = self.position;
+  }
+}
+
+- (void) updateRightDelimiterPosition
+{
+  if (_rightDelimiter) {
+    _rightDelimiter.position = CGPointMake(_inner.position.x + _inner.width, self.position.y);    
+  }
+}
+
+- (void) updateInnerPosition
+{
+  if (_leftDelimiter) {
+    _inner.position = CGPointMake(_leftDelimiter.position.x + _leftDelimiter.width, self.position.y);
+  } else {
+    _inner.position = self.position;
+  }
+}
+
+- (CGFloat)ascent
+{
+  if (_leftDelimiter) {
+    return _leftDelimiter.ascent;
+  }
+  if (_rightDelimiter) {
+    return _rightDelimiter.ascent;
+  }
+  return _inner.ascent;
+}
+
+- (CGFloat)descent
+{
+  if (_leftDelimiter) {
+    return _leftDelimiter.descent;
+  }
+  if (_rightDelimiter) {
+    return _rightDelimiter.descent;
+  }
+  return _inner.descent;
+}
+
+- (CGFloat)width
+{
+  CGFloat w = _inner.width;
+  if (_leftDelimiter) {
+    w += _leftDelimiter.width;
+  }
+  if (_rightDelimiter) {
+    w += _rightDelimiter.width;
+  }
+  return w;
+}
+
+- (void)setTextColor:(MTColor *)textColor
+{
+  [super setTextColor:textColor];
+  self.leftDelimiter.textColor = textColor;
+  self.rightDelimiter.textColor = textColor;
+  _inner.textColor = textColor;
+}
+
+- (void)draw:(CGContextRef)context
+{
+  [super draw:context];
+  // Draw the elements.
+  [self.leftDelimiter draw:context];
+  [self.rightDelimiter draw:context];
+  [_inner draw:context];
+}
+
+@end

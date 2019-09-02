@@ -111,3 +111,17 @@
 - (instancetype)initWithAccent:(MTGlyphDisplay*) glyph accentee:(MTMathListDisplay*) accentee range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @end
+
+
+@interface MTInnerDisplay ()
+
+- (instancetype) initWithInner:(MTMathListDisplay*) inner leftDelimiter:(MTDisplay*) leftDelimiter rightDelimiter:(MTDisplay*) rightDelimiter atIndex:(NSUInteger) index NS_DESIGNATED_INITIALIZER;
+
+@property (nonatomic) MTMathListDisplay* inner;
+
+@property (nonatomic, nullable) MTDisplay* leftDelimiter;
+@property (nonatomic, nullable) MTDisplay* rightDelimiter;
+
+@property (nonatomic) NSUInteger index;
+
+@end

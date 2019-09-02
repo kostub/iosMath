@@ -993,33 +993,27 @@
     XCTAssertEqual(display.subDisplays.count, 1);
     
     MTDisplay* sub0 = display.subDisplays[0];
-    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
-    MTMathListDisplay* display2 = (MTMathListDisplay*) sub0;
-    XCTAssertEqual(display2.type, kMTLinePositionRegular);
+    XCTAssertTrue([sub0 isKindOfClass:[MTInnerDisplay class]]);
+    MTInnerDisplay* display2 = (MTInnerDisplay*) sub0;
     XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
-    XCTAssertEqual(display2.index, NSNotFound);
-    XCTAssertEqual(display2.subDisplays.count, 3);
-    
-    MTDisplay* subLeft = display2.subDisplays[0];
-    XCTAssertTrue([subLeft isKindOfClass:[MTGlyphDisplay class]]);
-    MTGlyphDisplay* glyph = (MTGlyphDisplay*) subLeft;
+    XCTAssertTrue([display2.leftDelimiter isKindOfClass:[MTGlyphDisplay class]]);
+
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*) display2.leftDelimiter;
     XCTAssertTrue(CGPointEqualToPoint(glyph.position, CGPointZero));
     XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(NSNotFound, 0)));
     XCTAssertFalse(glyph.hasScript);
-    
-    MTDisplay* sub3 = display2.subDisplays[1];
-    XCTAssertTrue([sub3 isKindOfClass:[MTMathListDisplay class]]);
-    MTMathListDisplay* display3 = (MTMathListDisplay*) sub3;
-    XCTAssertEqual(display3.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display3.position, CGPointMake(7.78, 0), 0.01);
-    XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
-    XCTAssertFalse(display3.hasScript);
-    XCTAssertEqual(display3.index, NSNotFound);
-    XCTAssertEqual(display3.subDisplays.count, 1);
-    
-    MTDisplay* subsub3 = display3.subDisplays[0];
+  
+    XCTAssertTrue([display2.inner isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* innerMathListDisplay = (MTMathListDisplay*) display2.inner;
+    XCTAssertEqualsCGPoint(innerMathListDisplay.position, CGPointMake(7.78, 0), 0.001);
+    XCTAssertTrue(NSEqualRanges(innerMathListDisplay.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(innerMathListDisplay.hasScript);
+    XCTAssertEqual(innerMathListDisplay.index, NSNotFound);
+    XCTAssertEqual(innerMathListDisplay.subDisplays.count, 1);
+
+    MTDisplay* subsub3 = innerMathListDisplay.subDisplays[0];
     XCTAssertTrue([subsub3 isKindOfClass:[MTCTLineDisplay class]]);
     MTCTLineDisplay* line = (MTCTLineDisplay*) subsub3;
     XCTAssertEqual(line.atoms.count, 1);
@@ -1027,19 +1021,18 @@
     XCTAssertEqualObjects(line.attributedString.string, @"𝑥");
     XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
     XCTAssertFalse(line.hasScript);
-    
-    MTDisplay* subRight = display2.subDisplays[2];
-    XCTAssertTrue([subRight isKindOfClass:[MTGlyphDisplay class]]);
-    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) subRight;
-    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(19.22, 0), 0.01);
+
+    XCTAssertTrue([display2.rightDelimiter isKindOfClass:[MTGlyphDisplay class]]);
+    MTGlyphDisplay* glyph2 = (MTGlyphDisplay*) display2.rightDelimiter;
+    XCTAssertEqualsCGPoint(glyph2.position, CGPointMake(19.22, 0), 0.001);
     XCTAssertTrue(NSEqualRanges(glyph2.range, NSMakeRange(NSNotFound, 0)), "Got %@ instead", NSStringFromRange(glyph2.range));
     XCTAssertFalse(glyph2.hasScript);
-    
+
     // dimensions
     XCTAssertEqual(display.ascent, display2.ascent);
     XCTAssertEqual(display.descent, display2.descent);
     XCTAssertEqual(display.width, display2.width);
-    
+
     XCTAssertEqualWithAccuracy(display.ascent, 14.97, 0.001);
     XCTAssertEqualWithAccuracy(display.descent, 4.97, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 27, 0.01);
