@@ -707,12 +707,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 [self addInterElementSpace:prevNode currentType:atom.type];
                 MTInner* inner = (MTInner*) atom;
-                MTDisplay* display = nil;
-                if (inner.leftBoundary || inner.rightBoundary) {
-                    display = [self makeLeftRight:inner];
-                } else {
-                    display = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped];
-                }
+              MTInnerDisplay* display = [self makeInner:inner atIndex:atom.indexRange.location];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
@@ -1507,47 +1502,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 #pragma mark Large delimiters
 
-// Delimiter shortfall from plain.tex
-static const NSInteger kDelimiterFactor = 901;
-static const NSInteger kDelimiterShortfallPoints = 5;
-
-- (MTDisplay*) makeLeftRight:(MTInner*) inner
-{
-    NSAssert(inner.leftBoundary || inner.rightBoundary, @"Inner should have a boundary to call this function");
-    
-    MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped spaced:YES];
-    CGFloat axisHeight = _styleFont.mathTable.axisHeight;
-    // delta is the max distance from the axis
-    CGFloat delta = MAX(innerListDisplay.ascent - axisHeight, innerListDisplay.descent + axisHeight);
-    CGFloat d1 = (delta / 500) * kDelimiterFactor;  // This represents atleast 90% of the formula
-    CGFloat d2 = 2 * delta - kDelimiterShortfallPoints;  // This represents a shortfall of 5pt
-    // The size of the delimiter glyph should cover at least 90% of the formula or
-    // be at most 5pt short.
-    CGFloat glyphHeight = MAX(d1, d2);
-    
-    NSMutableArray* innerElements = [[NSMutableArray alloc] init];
-    CGPoint position = CGPointZero;
-    if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
-        MTDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
-        leftGlyph.position = position;
-        position.x += leftGlyph.width;
-        [innerElements addObject:leftGlyph];
-    }
-    
-    innerListDisplay.position = position;
-    position.x += innerListDisplay.width;
-    [innerElements addObject:innerListDisplay];
-    
-    if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
-        MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
-        rightGlyph.position = position;
-        position.x += rightGlyph.width;
-        [innerElements addObject:rightGlyph];
-    }
-    MTMathListDisplay* innerDisplay = [[MTMathListDisplay alloc] initWithDisplays:innerElements range:inner.indexRange];
-    return innerDisplay;
-}
-
 - (MTDisplay*) findGlyphForBoundary:(NSString*) delimiter withHeight:(CGFloat) glyphHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
@@ -1858,4 +1812,46 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         row.position = CGPointMake(row.position.x, row.position.y - shiftDown);
     }
 }
+
+#pragma mark inner
+
+// Delimiter shortfall from plain.tex
+static const NSInteger kDelimiterFactor = 901;
+static const NSInteger kDelimiterShortfallPoints = 5;
+
+- (MTInnerDisplay*) makeInner:(MTInner*) inner atIndex:(NSUInteger) index
+{
+  NSAssert(inner.leftBoundary || inner.rightBoundary, @"Inner should have a boundary to call this function");
+  
+  MTMathListDisplay* innerListDisplay = [MTTypesetter createLineForMathList:inner.innerList font:_font style:_style cramped:_cramped];
+  CGFloat axisHeight = _styleFont.mathTable.axisHeight;
+  // delta is the max distance from the axis
+  CGFloat delta = MAX(innerListDisplay.ascent - axisHeight, innerListDisplay.descent + axisHeight);
+  CGFloat d1 = (delta / 500) * kDelimiterFactor;  // This represents atleast 90% of the formula
+  CGFloat d2 = 2 * delta - kDelimiterShortfallPoints;  // This represents a shortfall of 5pt
+  // The size of the delimiter glyph should cover at least 90% of the formula or
+  // be at most 5pt short.
+  CGFloat glyphHeight = MAX(d1, d2);
+  
+  MTDisplay* leftDelimiter = nil;
+  if (inner.leftBoundary && inner.leftBoundary.nucleus.length > 0) {
+    MTDisplay* leftGlyph = [self findGlyphForBoundary:inner.leftBoundary.nucleus withHeight:glyphHeight];
+    if (leftGlyph) {
+      leftDelimiter = leftGlyph;
+    }
+  }
+  
+  MTDisplay* rightDelimiter = nil;
+  if (inner.rightBoundary && inner.rightBoundary.nucleus.length > 0) {
+    MTDisplay* rightGlyph = [self findGlyphForBoundary:inner.rightBoundary.nucleus withHeight:glyphHeight];
+    if (rightGlyph) {
+      rightDelimiter = rightGlyph;
+    }
+  }
+
+  MTInnerDisplay* innerDisplay = [[MTInnerDisplay alloc] initWithInner:innerListDisplay leftDelimiter:leftDelimiter rightDelimiter:rightDelimiter atIndex: index];
+  
+  return innerDisplay;
+}
+
 @end
