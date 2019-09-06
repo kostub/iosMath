@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.10.0 (2019-09-06)
+* Add MTInnerDisplay (#126)
+* Cyrillic support (#108)
+* Fix: Adds nullability annotations MTMathAtomFactory.h (#124)
+
 ### v0.9.5 (2019-06-03)
 * Add colorbox command (#121)
 * Cyrillic support (#108)
