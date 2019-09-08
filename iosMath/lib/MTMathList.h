@@ -494,4 +494,15 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 
 @end
 
+/** A subclass of MTLargeOperator, it adds no new functionality,
+  but allows to check if the atom if of said type when building a string
+  out of a math list
+ */
+@interface MTStackRel : MTLargeOperator
+
+/// Convenience init to create the stackrel
+- (instancetype) initWithBottom:(NSString*) bottom andTop:(MTMathList*) top NS_DESIGNATED_INITIALIZER;
+
+@end
+
 NS_ASSUME_NONNULL_END

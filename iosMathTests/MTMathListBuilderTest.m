@@ -1385,4 +1385,23 @@ static NSArray* getTestDataParseErrors() {
     latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"\\sum \\nolimits ", @"%@", desc);
 }
+
+- (void) testStackrel
+{
+  // L'hopital rule
+  NSString *str = @"\\stackrel{H}{=}";
+  MTMathList* list = [MTMathListBuilder buildFromString:str];
+  NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+  
+  XCTAssertNotNil(list, @"%@", desc);
+  XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+  MTLargeOperator* op = list.atoms[0];
+  XCTAssertEqual(op.type, kMTMathAtomLargeOperator, @"%@", desc);
+  XCTAssertTrue(op.limits);
+  XCTAssertTrue([op isKindOfClass:[MTStackRel class]]);
+  
+  // convert it back to latex
+  NSString* latex = [MTMathListBuilder mathListToString:list];
+  XCTAssertEqualObjects(latex, @"\\stackrel{H}{=}", @"%@", desc);
+}
 @end

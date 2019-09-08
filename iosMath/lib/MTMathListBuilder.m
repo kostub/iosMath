@@ -506,6 +506,11 @@ NSString *const MTParseError = @"ParseError";
         mathColorbox.colorString = [self readColor];
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
+    } else if ([command isEqualToString:@"stackrel"]) {
+        MTMathList* top = [self buildInternal:YES];
+        MTMathList* bottom = [self buildInternal:YES];
+        MTLargeOperator* stack = [[MTStackRel alloc] initWithBottom:bottom.stringValue andTop:top];
+        return stack;
     } else {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
@@ -842,15 +847,20 @@ NSString *const MTParseError = @"ParseError";
             MTAccent* accent = (MTAccent*) atom;
             [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:accent], [self mathListToString:accent.innerList]];
         } else if (atom.type == kMTMathAtomLargeOperator) {
-            MTLargeOperator* op = (MTLargeOperator*) atom;
-            NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:atom];
-            MTLargeOperator* originalOp = (MTLargeOperator*) [MTMathAtomFactory atomForLatexSymbolName:command];
-            [str appendFormat:@"\\%@ ", command];
-            if (originalOp.limits != op.limits) {
-                if (op.limits) {
-                    [str appendString:@"\\limits "];
-                } else {
-                    [str appendString:@"\\nolimits "];
+            if ([atom isKindOfClass:[MTStackRel class]]) {
+                [str appendFormat:@"\\stackrel{%@}{%@}", [self mathListToString:atom.superScript], atom.nucleus];
+                continue;
+            } else {
+                MTLargeOperator* op = (MTLargeOperator*) atom;
+                NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:atom];
+                MTLargeOperator* originalOp = (MTLargeOperator*) [MTMathAtomFactory atomForLatexSymbolName:command];
+                [str appendFormat:@"\\%@ ", command];
+                if (originalOp.limits != op.limits) {
+                    if (op.limits) {
+                        [str appendString:@"\\limits "];
+                    } else {
+                        [str appendString:@"\\nolimits "];
+                    }
                 }
             }
         } else if (atom.type == kMTMathAtomSpace) {
