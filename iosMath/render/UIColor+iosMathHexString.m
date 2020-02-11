@@ -1,18 +1,12 @@
-//
-//  UIColor+HexString.m
-//  iosMath
-//
-//  Created by Markus Sähn on 21/03/2017.
-//
-//
 
-#import "UIColor+HexString.h"
+
+#import "UIColor+iosMathHexString.h"
 
 #if TARGET_OS_IPHONE
 
-@implementation UIColor (HexString)
+@implementation UIColor (iosMathHexString)
 
-+ (UIColor *)colorFromHexString:(NSString *)hexString {
++ (UIColor *)iosMathColorFromHexString:(NSString *)hexString {
     if ([hexString isEqualToString:@""]) {
         return nil;
     }
