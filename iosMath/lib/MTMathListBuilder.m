@@ -651,7 +651,11 @@ NSString *const MTParseError = @"ParseError";
         currentCol++;
         if (_currentEnv.numRows > currentRow) {
             currentRow = _currentEnv.numRows;
-            rows[currentRow] = [NSMutableArray array];
+            if (rows.count > currentRow) {
+                rows[currentRow] = [NSMutableArray array];
+            } else {
+                [rows addObject:[NSMutableArray array]];
+            }
             currentCol = 0;
         }
     }
