@@ -3,23 +3,24 @@
 import PackageDescription
 
 let package = Package(
-  name: "iosMath",
+  name: "IosMath",
   defaultLocalization: "en",
   platforms: [.iOS(.v10), .macOS(.v11)],
   products: [
     .library(
-      name: "iosMath",
-      targets: ["iosMath"])
+      name: "IosMath",
+      targets: ["IosMath"])
   ],
   dependencies: [],
   targets: [
     .target(
-      name: "iosMath",
+      name: "IosMath",
       dependencies: [],
-      path: "./iosMath",
+      path: "./IosMath",
       resources: [
         .process("fonts")
       ],
+      publicHeadersPath: "include",
       cSettings: [
         .headerSearchPath("./render"),
         .headerSearchPath("./lib"),
@@ -27,13 +28,13 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "iosMathTests",
-      dependencies: ["iosMath"],
-      path: "iosMathTests",
+      name: "IosMathTests",
+      dependencies: ["IosMath"],
+      path: "IosMathTests",
       cSettings: [
-        .headerSearchPath("../iosMath/render"),
-        .headerSearchPath("../iosMath/lib"),
-        .headerSearchPath("../iosMath/render/internal"),
+        .headerSearchPath("../IosMath/render"),
+        .headerSearchPath("../IosMath/lib"),
+        .headerSearchPath("../IosMath/render/internal"),
       ]
     ),
   ]
