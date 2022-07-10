@@ -70,7 +70,15 @@
 + (NSBundle*) fontBundle
 {
     // Uses bundle for class so that this can be access by the unit tests.
-    return [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"mathFonts" withExtension:@"bundle"]];
+    NSBundle* classBundle = [NSBundle bundleForClass:[self class]];
+    NSURL* bundleURL = [classBundle URLForResource:@"mathFonts" withExtension:@"bundle"];
+    if (!bundleURL) {
+        // Most likely we're running under Swift Package Manager context.
+        // Try loading the bundle resource corresponding to the `iosMath` target.
+        bundleURL = [classBundle URLForResource:@"iosMath_iosMath" withExtension:@"bundle"];
+        NSAssert(bundleURL, @"SPM bundle resources for target iosMath was not found.");
+    }
+    return [NSBundle bundleWithURL: bundleURL];
 }
 
 - (MTFont *)copyFontWithSize:(CGFloat)size
