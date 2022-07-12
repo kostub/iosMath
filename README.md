@@ -46,6 +46,23 @@ Additionally for MacOS it requires:
 
 ## Installation
 
+### Swift Package Manager
+To install iosMath using [Swift Package Manager](https://github.com/apple/swift-package-manager):
+
+1. In Xcode, select "File" -> "Add Packages"
+2. Enter `https://github.com/kostub/iosMath.git`
+
+Alternatively, add iosMath to a `Package.swift`:
+
+```
+dependencies: [
+  .package(url: "https://github.com/kostub/iosMath.git", branch: "master")
+  // Any other dependencies you have...
+],
+```
+
+You can also follow the [tutorial from developer.apple.com](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app).
+
 ### Cocoapods
 
 iosMath is available through [CocoaPods](http://cocoapods.org). To install
