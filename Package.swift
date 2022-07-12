@@ -20,7 +20,6 @@ let package = Package(
       resources: [
         .process("fonts")
       ],
-      publicHeadersPath: "include",
       cSettings: [
         .headerSearchPath("./render"),
         .headerSearchPath("./lib"),

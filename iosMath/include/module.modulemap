@@ -1,9 +1,0 @@
-module iosMath {
-  header "../lib/MTMathList.h"
-  header "../render/MTMathUILabel.h"
-  header "../render/MTMathListDisplay.h"
-  header "../lib/MTMathListBuilder.h"
-  
-  export *
-}
-
