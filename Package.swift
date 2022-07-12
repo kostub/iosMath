@@ -32,8 +32,6 @@ let package = Package(
       path: "iosMathTests",
       cSettings: [
         .headerSearchPath("../iosMath/render"),
-        .headerSearchPath("../iosMath/lib"),
-        .headerSearchPath("../iosMath/render/internal"),
       ]
     ),
   ]
