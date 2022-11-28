@@ -33,10 +33,10 @@
         NSBundle* bundle = [MTFont fontBundle];
         NSString* fontPath = [bundle pathForResource:name ofType:@"otf"];
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename(fontPath.UTF8String);
-        self.defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
+        _defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
         CFRelease(fontDataProvider);
 
-        self.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
+        _ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
 
         NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist"];
         NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
@@ -80,11 +80,11 @@
 {
     MTFont* copyFont = [[[self class] alloc] init];
     copyFont.defaultCGFont = self.defaultCGFont;
-    // Retain the font as we are adding another reference to it.
-    CGFontRetain(copyFont.defaultCGFont);
-    copyFont.ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
+    CTFontRef newCtFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
+    copyFont.ctFont = newCtFont;
     copyFont.rawMathTable = self.rawMathTable;
     copyFont.mathTable = [[MTFontMathTable alloc] initWithFont:copyFont mathTable:copyFont.rawMathTable];
+    CFRelease(newCtFont);
     return copyFont;
 }
 
