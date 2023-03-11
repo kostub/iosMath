@@ -31,6 +31,11 @@ const int kDefaultFontSize = 20;
     return manager;
 }
 
++ (instancetype) sharedInstance
+{
+    return [MTFontManager fontManager];
+}
+
 - (instancetype)init
 {
     self = [super init];
