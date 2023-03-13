@@ -303,7 +303,7 @@
     self.labels[39] = [self createMathLabel:@"\\hat{\\frac12} \\; \\hat{\\sqrt 3}" withHeight:50];
 
     // large roots
-    self.labels[40] = [self createMathLabel:@"\\colorbox{#f0f0e0}{\\sqrt{1+\\colorbox{#d0c0d0}{\\sqrt{1+\\colorbox{#a080c0}{\\sqrt{1+\\colorbox{#7050a0}{\\sqrt{1+\\colorbox{403060}{\\colorbox{#102000}{\\sqrt{1+\\cdots}}}}}}}}}}}" withHeight:80];
+    self.labels[40] = [self createMathLabel:@"\\colorbox{#f0f0e0}{\\sqrt{1+\\colorbox{#d0c0d0}{\\sqrt{1+\\colorbox{#a080c0}{\\sqrt{1+\\colorbox{#7050a0}{\\sqrt{1+\\colorbox{#403060}{\\colorbox{#102000}{\\sqrt{1+\\cdots}}}}}}}}}}}" withHeight:80];
     
     self.labels[41] = [self createMathLabel:@"\\begin{bmatrix}"
                            "a & b\\\\ c & d \\\\ e & f \\\\ g &  h \\\\ i & j"
