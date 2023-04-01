@@ -623,7 +623,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 MTMathColor* colorAtom = (MTMathColor*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
-                display.localTextColor = [MTColor colorFromHexString:colorAtom.colorString];
+                display.localTextColor = [MTColor iosMathColorFromHexString:colorAtom.colorString];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
@@ -638,7 +638,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 MTMathColorbox* colorboxAtom = (MTMathColorbox*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorboxAtom.innerList font:_font style:_style];
                 
-                display.localBackgroundColor = [MTColor colorFromHexString:colorboxAtom.colorString];
+                display.localBackgroundColor = [MTColor iosMathColorFromHexString:colorboxAtom.colorString];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
