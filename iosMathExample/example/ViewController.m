@@ -82,7 +82,7 @@
     // set the size of the content view
     // Disable horizontal scrolling.
     [self setEqualWidths:contentView andView:self.scrollView];
-    [self setHeight:4350 forView:contentView];
+    [self setHeight:4520 forView:contentView];
 
 
     // Demo formulae
@@ -177,7 +177,7 @@
                            "\\end{cases}" withHeight:60];
     
     self.demoLabels[21] = [self createMathLabel:@"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}+\\color{#99ff33}{\\frac{\\color{#ff99ff}{o}}{\\color{#990099}{r}}}-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}" withHeight:60];
-
+  
 
     for (NSUInteger i = 1; i < self.demoLabels.count; i++) {
         self.demoLabels[i].fontSize = 15;
@@ -320,6 +320,10 @@
                        "\\colorbox{#00aaff}{c} & \\colorbox{#f0f0f0}{d}"
                        "\\end{pmatrix}}"
                                  withHeight:70];
+  
+    // Test stackrel
+    self.labels[48] = [self createMathLabel:@"\\lim_{x \\to 0} \\frac{\\ln{x}}{x^{2} - 1} \\stackrel{H}{=} \\lim_{x \\to 0} \\frac{\\frac{1}{x}}{2x}" withHeight:90];
+    self.labels[49] = [self createMathLabel:@"\\stackrel{up}{bottom}" withHeight:60];
 
     for (NSUInteger i = 1; i < self.labels.count; i++) {
         [self addLabelWithIndex:i inArray:self.labels toView:contentView];
