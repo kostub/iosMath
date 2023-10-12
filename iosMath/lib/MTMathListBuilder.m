@@ -157,7 +157,12 @@ NSString *const MTParseError = @"ParseError";
         } else if (ch == '{') {
             // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
             MTMathList* sublist = [self buildInternal:false stopChar:'}'];
-            prevAtom = [sublist.atoms lastObject];
+            if ([_currentEnv.envName isEqual: @"array"]) {
+                prevAtom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+                [sublist removeLastAtom];
+            } else {
+                prevAtom = [sublist.atoms lastObject];
+            }
             [list append:sublist];
             if (oneCharOnly) {
                 return list;
