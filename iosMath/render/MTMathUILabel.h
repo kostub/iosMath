@@ -104,4 +104,6 @@ IB_DESIGNABLE @interface MTMathUILabel : MTView
 /** The internal display of the MTMathUILabel. This is for advanced use only. */
 @property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
 
+- (CGSize) sizeThatFits:(CGSize)size;
+
 @end
