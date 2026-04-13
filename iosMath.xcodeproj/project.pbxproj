@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA000011000000000000AA11 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
+		AA000012000000000000AA12 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
+		AA000030000000000000AA30 /* UIColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA20 /* UIColor+HexString.m */; };
+		AA000031000000000000AA31 /* NSColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000021000000000000AA21 /* NSColor+HexString.m */; };
+		AA000032000000000000AA32 /* NSBezierPath+addLineToPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000022000000000000AA22 /* NSBezierPath+addLineToPoint.m */; };
+		AA000033000000000000AA33 /* NSView+backgroundColor.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000AA23 /* NSView+backgroundColor.m */; };
+		AA000034000000000000AA34 /* MTLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000AA24 /* MTLabel.m */; };
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
@@ -114,6 +121,12 @@
 		49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTypesetter.h; sourceTree = "<group>"; };
 		49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetter.m; sourceTree = "<group>"; };
 		49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplayInternal.h; sourceTree = "<group>"; };
+		AA000010000000000000AA10 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = iosMath/fonts; sourceTree = "<group>"; };
+		AA000020000000000000AA20 /* UIColor+HexString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+HexString.m"; sourceTree = "<group>"; };
+		AA000021000000000000AA21 /* NSColor+HexString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+HexString.m"; sourceTree = "<group>"; };
+		AA000022000000000000AA22 /* NSBezierPath+addLineToPoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBezierPath+addLineToPoint.m"; sourceTree = "<group>"; };
+		AA000023000000000000AA23 /* NSView+backgroundColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSView+backgroundColor.m"; sourceTree = "<group>"; };
+		AA000024000000000000AA24 /* MTLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +287,11 @@
 				492EECF617DAED9000939107 /* MTMathListDisplay.m */,
 				492EECF417DAED9000939107 /* MTMathUILabel.h */,
 				492EECF517DAED9000939107 /* MTMathUILabel.m */,
+				AA000020000000000000AA20 /* UIColor+HexString.m */,
+				AA000021000000000000AA21 /* NSColor+HexString.m */,
+				AA000022000000000000AA22 /* NSBezierPath+addLineToPoint.m */,
+				AA000023000000000000AA23 /* NSView+backgroundColor.m */,
+				AA000024000000000000AA24 /* MTLabel.m */,
 			);
 			path = render;
 			sourceTree = "<group>";
@@ -438,6 +456,7 @@
 				49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */,
 				49B83F0417CF2AE90014B739 /* Default.png in Resources */,
 				49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */,
+				AA000011000000000000AA11 /* fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -446,6 +465,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				498730A417D547450041B02B /* InfoPlist.strings in Resources */,
+				AA000012000000000000AA12 /* fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,6 +487,11 @@
 				492EED0D17DAEDDD00939107 /* MTMathAtomFactory.m in Sources */,
 				49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */,
 				492EED0E17DAEDDD00939107 /* MTMathList.m in Sources */,
+				AA000030000000000000AA30 /* UIColor+HexString.m in Sources */,
+				AA000031000000000000AA31 /* NSColor+HexString.m in Sources */,
+				AA000032000000000000AA32 /* NSBezierPath+addLineToPoint.m in Sources */,
+				AA000033000000000000AA33 /* NSView+backgroundColor.m in Sources */,
+				AA000034000000000000AA34 /* MTLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -641,6 +666,7 @@
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = rotpanda.MathChat.iosMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -657,6 +683,7 @@
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "iosMathExample/iosMath-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = rotpanda.MathChat.iosMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -669,6 +696,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "MathChat.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -678,6 +706,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "iosMathTests/iosMathTests-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "MathChat.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

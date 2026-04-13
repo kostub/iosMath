@@ -31,14 +31,14 @@
         // So we first load a CGFont from the file and then convert it to a CTFont.
 
         NSBundle* bundle = [MTFont fontBundle];
-        NSString* fontPath = [bundle pathForResource:name ofType:@"otf"];
+        NSString* fontPath = [bundle pathForResource:name ofType:@"otf" inDirectory:@"fonts"];
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename(fontPath.UTF8String);
         _defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
         CFRelease(fontDataProvider);
 
         _ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
 
-        NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist"];
+        NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist" inDirectory:@"fonts"];
         NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
         self.rawMathTable = dict;
         self.mathTable = [[MTFontMathTable alloc] initWithFont:self mathTable:_rawMathTable];
@@ -73,8 +73,8 @@
 #if SWIFT_PACKAGE
     return SWIFTPM_MODULE_BUNDLE;
 #else
-    // Uses bundle for class so that this can be access by the unit tests.
-    return [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"mathFonts" withExtension:@"bundle"]];
+    // For Xcode builds: fonts are added directly to the app/test bundle.
+    return [NSBundle bundleForClass:[self class]];
 #endif
 }
 
