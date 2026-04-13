@@ -1,0 +1,499 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.xctest/Contents/MacOS/iosMathPackageTests",
+      "packagePath" : "/Users/kostub/Work/iosmath/iosMath",
+      "productName" : "iosMathPackageTests"
+    }
+  ],
+  "copyCommands" : {
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/GUST-FONT-LICENSE.txt" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/GUST-FONT-LICENSE.txt"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/GUST-FONT-LICENSE.txt"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/OFL.txt" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/OFL.txt"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/OFL.txt"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-Latin-Modern-Math.txt" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-Latin-Modern-Math.txt"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-Latin-Modern-Math.txt"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-TeX-Gyre-Termes-Math.txt" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-TeX-Gyre-Termes-Math.txt"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-TeX-Gyre-Termes-Math.txt"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.otf" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.otf"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.otf"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.plist" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.plist"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.plist"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/math_table_to_plist.py" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/math_table_to_plist.py"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/math_table_to_plist.py"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.otf" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.otf"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.otf"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.plist" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.plist"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.plist"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.otf" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.otf"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.otf"
+        }
+      ]
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.plist" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.plist"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.plist"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.iosMathPackageTests-arm64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources",
+      "importPath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "iosMathPackageTests",
+      "moduleOutputPath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx15.0",
+        "-enable-batch-mode",
+        "-index-store-path",
+        "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-Xcc",
+        "-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap",
+        "-Xcc",
+        "-I",
+        "-Xcc",
+        "/Users/kostub/Work/iosmath/iosMath/iosMath",
+        "-module-cache-path",
+        "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/iosMathPackageTests-Swift.h",
+        "-color-diagnostics",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "iosmath"
+      ],
+      "outputFileMapPath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "iosMathPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "iosMathPackageTests",
+      "-package-name",
+      "iosmath",
+      "-incremental",
+      "-c",
+      "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx15.0",
+      "-enable-batch-mode",
+      "-index-store-path",
+      "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-Xcc",
+      "-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap",
+      "-Xcc",
+      "-I",
+      "-Xcc",
+      "/Users/kostub/Work/iosmath/iosMath/iosMath",
+      "-module-cache-path",
+      "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/iosMathPackageTests-Swift.h",
+      "-color-diagnostics",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "iosmath",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "iosMath" : [
+
+    ],
+    "iosMathPackageTests" : [
+      "iosMathTests",
+      "iosMath"
+    ],
+    "iosMathTests" : [
+      "iosMath"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "writeCommands" : {
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources"
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"
+        }
+      ],
+      "outputFilePath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

@@ -1,9 +1,6 @@
 # iosMath
 
-[![Build Status](http://img.shields.io/travis/kostub/iosMath.svg?style=flat)](https://travis-ci.org/kostub/iosMath)
-[![Version](https://img.shields.io/cocoapods/v/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
-[![License](https://img.shields.io/cocoapods/l/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
-[![Platform](https://img.shields.io/cocoapods/p/iosMath.svg?style=flat)](http://cocoapods.org/pods/iosMath)
+[![License](https://img.shields.io/github/license/kostub/iosMath.svg?style=flat)](./LICENSE)
 
 `iosMath` is a library for displaying beautifully rendered math equations
 in iOS and MacOS applications. It typesets formulae written using the LaTeX in
@@ -30,46 +27,44 @@ library:
 The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
  
 ## Requirements
-`iosMath` works on iOS 6+ or MacOS 10.8+ and requires ARC to build. It depends
-on the following Apple frameworks:
+
+`iosMath` requires **iOS 18+** or **macOS 15+**. It depends on the following
+Apple frameworks:
 
 * Foundation.framework
 * CoreGraphics.framework
 * QuartzCore.framework
 * CoreText.framework
 
-Additionally for iOS it requires:
-* UIKit.framework
-
-Additionally for MacOS it requires:
-* AppKit.framework
+Additionally for iOS it requires UIKit.framework; for macOS it requires
+AppKit.framework.
 
 ## Installation
 
-### Cocoapods
+iosMath is distributed via **Swift Package Manager** (the only supported
+distribution method).
 
-iosMath is available through [CocoaPods](http://cocoapods.org). To install
-it:
+**In Xcode:** File → Add Package Dependencies… and enter the repository URL.
 
-1. Add a entry for iosMath to your Podfile: `pod 'iosMath'`.
-2. Install the pod by running `pod install`.
+**In `Package.swift`:**
 
-### Static library
+```swift
+dependencies: [
+    .package(url: "https://github.com/kostub/iosMath.git", from: "0.9.5"),
+],
+targets: [
+    .target(
+        name: "YourTarget",
+        dependencies: ["iosMath"]
+    ),
+]
+```
 
-You can also add iosMath as a static library to your project or
-workspace.
+### Migrating from CocoaPods
 
-1. Download the [latest code version](https://github.com/kostub/iosMath/downloads) or add the
-repository as a git submodule to your git-tracked project.
-2. Open your project in Xcode, then drag and drop
-   `iosMath.xcodeproj` onto your project or workspace (use the
-"Product Navigator view").
-3. Select your target and go to the Build phases tab. In the Link Binary
-   With Libraries section select the add button. On the sheet find and
-add `libIosMath.a`. You might also need to add `iosMath` to
-the Target Dependencies list.
-4. Add the `MathFontBundle` to the list of `Copy Bundle Resources`.
-5. Include IosMath wherever you need it with `#import <IosMath/IosMath.h>`.
+Remove the `pod 'iosMath'` entry from your Podfile and add the package via
+Swift Package Manager using the instructions above. CocoaPods and the manual
+static-library install paths are no longer supported.
 
 ## Usage
 
@@ -114,9 +109,9 @@ This is a list of formula types that the library currently supports:
 ### Example
 
 There is a sample app included in this project that shows how to use the
-app and the different equations that you can render. To run the sample
-app, clone the repository, and run `pod install` first. Then on iOS run the
-__iosMathExample__ app. For MacOS run the __MacOSMath__ app.
+library and the different equations that you can render. Example apps are
+being updated as part of the Swift Package Manager migration; a Swift example
+will be added in a follow-up.
 
 ### Advanced configuration
 
@@ -230,9 +225,9 @@ file for more info.
 ### Fonts
 This distribution contains the following fonts. These fonts are
 licensed as follows:
-* Latin Modern Math: 
-    [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
+* Latin Modern Math:
+    [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt)
 * Tex Gyre Termes:
-    [GUST Font License](./fonts/GUST-FONT-LICENSE.txt)
+    [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt)
 * [XITS Math](https://github.com/khaledhosny/xits-math):
-    [Open Font License](./fonts/OFL.txt)
+    [Open Font License](./iosMath/fonts/OFL.txt)

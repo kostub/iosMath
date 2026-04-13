@@ -1,0 +1,317 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "PackageStructure": ["<PackageStructure>"]
+  "iosMath-arm64-apple-macosx15.0-debug.module": ["<iosMath-arm64-apple-macosx15.0-debug.module>"]
+  "iosMathPackageTests-arm64-apple-macosx15.0-debug.module": ["<iosMathPackageTests-arm64-apple-macosx15.0-debug.module>"]
+  "iosMathPackageTests-arm64-apple-macosx15.0-debug.test": ["<iosMathPackageTests-arm64-apple-macosx15.0-debug.test>"]
+  "iosMathTests-arm64-apple-macosx15.0-debug.module": ["<iosMathTests-arm64-apple-macosx15.0-debug.module>"]
+  "main": ["<iosMath-arm64-apple-macosx15.0-debug.module>"]
+  "test": ["<iosMath-arm64-apple-macosx15.0-debug.module>","<iosMathPackageTests-arm64-apple-macosx15.0-debug.test>","<iosMathTests-arm64-apple-macosx15.0-debug.module>"]
+default: "main"
+nodes:
+  "/Users/kostub/Work/iosmath/iosMath/iosMath/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/kostub/Work/iosmath/iosMath/iosMathTests/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathAtomFactory.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o"]
+    description: "Compiling iosMath lib/MTMathAtomFactory.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathAtomFactory.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathList.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o"]
+    description: "Compiling iosMath lib/MTMathList.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathList.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathListBuilder.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o"]
+    description: "Compiling iosMath lib/MTMathListBuilder.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathListBuilder.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathListIndex.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o"]
+    description: "Compiling iosMath lib/MTMathListIndex.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTMathListIndex.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTUnicode.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o"]
+    description: "Compiling iosMath lib/MTUnicode.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/lib/MTUnicode.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTFont.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o"]
+    description: "Compiling iosMath render/MTFont.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTFont.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTFontManager.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o"]
+    description: "Compiling iosMath render/MTFontManager.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTFontManager.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTLabel.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o"]
+    description: "Compiling iosMath render/MTLabel.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTLabel.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTMathListDisplay.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o"]
+    description: "Compiling iosMath render/MTMathListDisplay.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTMathListDisplay.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTMathUILabel.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o"]
+    description: "Compiling iosMath render/MTMathUILabel.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/MTMathUILabel.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSBezierPath+addLineToPoint.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o"]
+    description: "Compiling iosMath render/NSBezierPath+addLineToPoint.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSBezierPath+addLineToPoint.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSColor+HexString.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o"]
+    description: "Compiling iosMath render/NSColor+HexString.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSColor+HexString.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSView+backgroundColor.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o"]
+    description: "Compiling iosMath render/NSView+backgroundColor.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/NSView+backgroundColor.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/UIColor+HexString.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o"]
+    description: "Compiling iosMath render/UIColor+HexString.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/UIColor+HexString.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal/MTFontMathTable.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o"]
+    description: "Compiling iosMath render/internal/MTFontMathTable.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal/MTFontMathTable.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal/MTTypesetter.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o"]
+    description: "Compiling iosMath render/internal/MTTypesetter.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal/MTTypesetter.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o":
+    tool: clang
+    inputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o"]
+    description: "Compiling iosMath resource_bundle_accessor.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMath","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-I/Users/kostub/Work/iosmath/iosMath/iosMath/lib","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render","-I/Users/kostub/Work/iosmath/iosMath/iosMath/render/internal","-include","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.h","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.d","-c","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/DerivedSources/resource_bundle_accessor.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources"]
+    description: "Write auxiliary file /Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift":
+    tool: test-entry-point-tool
+    inputs: []
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift"]
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o":
+    tool: clang
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTMathListBuilderTest.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o"]
+    description: "Compiling iosMathTests MTMathListBuilderTest.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMathTests","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMathTests/include","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTMathListBuilderTest.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o":
+    tool: clang
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTMathListTest.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o"]
+    description: "Compiling iosMathTests MTMathListTest.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMathTests","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMathTests/include","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTMathListTest.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o":
+    tool: clang
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTTypesetterTest.m"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"]
+    description: "Compiling iosMathTests MTTypesetterTest.m"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang","-fobjc-arc","-target","arm64-apple-macosx15.0","-O0","-DSWIFT_PACKAGE=1","-DDEBUG=1","-fblocks","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-fmodules","-fmodule-name=iosMathTests","-fmodules-cache-path=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-I","/Users/kostub/Work/iosmath/iosMath/iosMathTests/include","-I","/Users/kostub/Work/iosmath/iosMath/iosMath","-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap","-isysroot","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-fPIC","-g","-MD","-MT","dependencies","-MF","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.d","-c","/Users/kostub/Work/iosmath/iosMath/iosMathTests/MTTypesetterTest.m","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"]
+    deps: "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.d"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/GUST-FONT-LICENSE.txt":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/GUST-FONT-LICENSE.txt"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/GUST-FONT-LICENSE.txt"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/GUST-FONT-LICENSE.txt"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/OFL.txt":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/OFL.txt"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/OFL.txt"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/OFL.txt"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-Latin-Modern-Math.txt":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-Latin-Modern-Math.txt"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-Latin-Modern-Math.txt"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-Latin-Modern-Math.txt"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-TeX-Gyre-Termes-Math.txt":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-TeX-Gyre-Termes-Math.txt"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-TeX-Gyre-Termes-Math.txt"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/README-TeX-Gyre-Termes-Math.txt"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.otf":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.otf"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.otf"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.otf"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.plist":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.plist"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.plist"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/latinmodern-math.plist"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/math_table_to_plist.py":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/math_table_to_plist.py"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/math_table_to_plist.py"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/math_table_to_plist.py"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.otf":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.otf"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.otf"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.otf"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.plist":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.plist"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.plist"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/texgyretermes-math.plist"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.otf":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.otf"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.otf"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.otf"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.plist":
+    tool: copy-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.plist"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.plist"]
+    description: "Copying /Users/kostub/Work/iosmath/iosMath/iosMath/fonts/xits-math.plist"
+
+  "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<iosMath-arm64-apple-macosx15.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o"]
+    outputs: ["<iosMath-arm64-apple-macosx15.0-debug.module>"]
+
+  "<iosMathPackageTests-arm64-apple-macosx15.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule"]
+    outputs: ["<iosMathPackageTests-arm64-apple-macosx15.0-debug.module>"]
+
+  "<iosMathPackageTests-arm64-apple-macosx15.0-debug.test>":
+    tool: phony
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.xctest/Contents/MacOS/iosMathPackageTests"]
+    outputs: ["<iosMathPackageTests-arm64-apple-macosx15.0-debug.test>"]
+
+  "<iosMathTests-arm64-apple-macosx15.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o"]
+    outputs: ["<iosMathTests-arm64-apple-macosx15.0-debug.module>"]
+
+  "C.iosMathPackageTests-arm64-apple-macosx15.0-debug.module":
+    tool: shell
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.derived/runner.swift","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule"]
+    description: "Compiling Swift Module 'iosMathPackageTests' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","iosMathPackageTests","-emit-dependencies","-emit-module","-emit-module-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule","-output-file-map","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/sources","-I","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx15.0","-enable-batch-mode","-index-store-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j8","-DSWIFT_PACKAGE","-DDEBUG","-Xcc","-fmodule-map-file=/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/module.modulemap","-Xcc","-I","-Xcc","/Users/kostub/Work/iosmath/iosMath/iosMath","-module-cache-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/iosMathPackageTests-Swift.h","-color-diagnostics","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","iosmath"]
+
+  "C.iosMathPackageTests-arm64-apple-macosx15.0-debug.test":
+    tool: shell
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathAtomFactory.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathList.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListBuilder.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTMathListIndex.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/lib/MTUnicode.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFont.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTFontManager.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTLabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathListDisplay.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/MTMathUILabel.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSBezierPath+addLineToPoint.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/NSView+backgroundColor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/UIColor+HexString.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTFontMathTable.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/render/internal/MTTypesetter.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath.build/resource_bundle_accessor.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/runner.swift.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListBuilderTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTMathListTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathTests.build/MTTypesetterTest.m.o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList"]
+    outputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.xctest/Contents/MacOS/iosMathPackageTests"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/iosMathPackageTests.xctest/Contents/MacOS/iosMathPackageTests"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug","-o","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.xctest/Contents/MacOS/iosMathPackageTests","-module-name","iosMathPackageTests","-Xlinker","-no_warn_duplicate_libraries","-Xlinker","-bundle","-Xlinker","-rpath","-Xlinker","@loader_path/../../../","@/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.product/Objects.LinkFileList","-runtime-compatibility-version","none","-target","arm64-apple-macosx15.0","-Xlinker","-add_ast_path","-Xlinker","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/Modules/iosMathPackageTests.swiftmodule","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/iosMath/","/Users/kostub/Work/iosmath/iosMath/iosMathTests/","/Users/kostub/Work/iosmath/iosMath/Package.swift","/Users/kostub/Work/iosmath/iosMath/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+
+  "iosMath-arm64-apple-macosx15.0-debug.module-resources":
+    tool: phony
+    inputs: ["/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/GUST-FONT-LICENSE.txt","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/OFL.txt","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-Latin-Modern-Math.txt","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/README-TeX-Gyre-Termes-Math.txt","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.otf","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/latinmodern-math.plist","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/math_table_to_plist.py","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.otf","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/texgyretermes-math.plist","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.otf","/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMath_iosMath.bundle/xits-math.plist"]
+    outputs: ["<iosMath-arm64-apple-macosx15.0-debug.module-resources>"]
+

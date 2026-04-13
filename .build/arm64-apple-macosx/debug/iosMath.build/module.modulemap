@@ -1,0 +1,4 @@
+module iosMath {
+    umbrella "/Users/kostub/Work/iosmath/iosMath/iosMath"
+    export *
+}
