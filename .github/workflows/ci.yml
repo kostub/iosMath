@@ -7,17 +7,74 @@ on:
     branches: [master]
 
 jobs:
-  spm:
-    name: Swift Package Manager
+  build-and-test:
+    name: Build & Test
     runs-on: macos-15
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Select Xcode 16.2
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
-      - name: Build
+      # ── Swift Package Manager ──────────────────────────────────────────────
+      - name: SPM build
         run: swift build
 
-      - name: Test
+      - name: SPM test
         run: swift test
+
+      # ── iosMath.xcodeproj (library + XCTest suite, iOS simulator) ─────────
+      - name: Xcode test – iOS
+        run: |
+          xcodebuild test \
+            -project iosMath.xcodeproj \
+            -scheme iosMath \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || xcodebuild test \
+              -project iosMath.xcodeproj \
+              -scheme iosMath \
+              -sdk iphonesimulator \
+              -destination 'platform=iOS Simulator,name=iPhone 16' \
+              CODE_SIGNING_ALLOWED=NO
+
+      # ── MacOSMath.xcodeproj (macOS example app build) ─────────────────────
+      - name: Xcode build – macOS example
+        run: |
+          xcodebuild build \
+            -project MacOSMath.xcodeproj \
+            -scheme MacOSMath \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || xcodebuild build \
+              -project MacOSMath.xcodeproj \
+              -scheme MacOSMath \
+              CODE_SIGNING_ALLOWED=NO
+
+      # ── SwiftMathExample.xcodeproj (Swift example, iOS + macOS) ──────────
+      - name: Xcode build – Swift example (iOS)
+        run: |
+          xcodebuild build \
+            -project SwiftMathExample.xcodeproj \
+            -scheme SwiftMathExample \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || xcodebuild build \
+              -project SwiftMathExample.xcodeproj \
+              -scheme SwiftMathExample \
+              -sdk iphonesimulator \
+              -destination 'platform=iOS Simulator,name=iPhone 16' \
+              CODE_SIGNING_ALLOWED=NO
+
+      - name: Xcode build – Swift example (macOS)
+        run: |
+          xcodebuild build \
+            -project SwiftMathExample.xcodeproj \
+            -scheme SwiftMathExampleMac \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || xcodebuild build \
+              -project SwiftMathExample.xcodeproj \
+              -scheme SwiftMathExampleMac \
+              CODE_SIGNING_ALLOWED=NO
