@@ -23,8 +23,8 @@
 
 - (void)setBackgroundColor:(NSColor *)backgroundColor
 {
-    self.layer.backgroundColor = [NSColor clearColor].CGColor;
     [self setWantsLayer:YES];
+    self.layer.backgroundColor = backgroundColor.CGColor;
 }
 
 @end
