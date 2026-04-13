@@ -454,7 +454,7 @@ static BOOL isIos6Supported() {
     [path moveToPoint:lineStart];
     [path addLineToPoint:lineEnd];
     path.lineWidth = _lineThickness;
-    path.lineCapStyle = NSLineCapStyleRound;
+    path.lineCapStyle = MTLineCapStyleRound;
     [path stroke];
     
     CGContextRestoreGState(context);

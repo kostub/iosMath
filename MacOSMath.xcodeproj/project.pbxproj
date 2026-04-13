@@ -15,7 +15,7 @@
 		26123D661E230E6C007A742A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26123D651E230E6C007A742A /* CoreGraphics.framework */; };
 		26123D681E230E72007A742A /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26123D671E230E72007A742A /* CoreText.framework */; };
 		26123D6A1E230E78007A742A /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26123D691E230E78007A742A /* QuartzCore.framework */; };
-		D0BD0CD8F17DD64F1CD97F02 /* libPods-MacOSMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A369C2D9AD493F2ABA76EF1C /* libPods-MacOSMath.a */; };
+		BB000003000000000000BB03 /* iosMath in Frameworks */ = {isa = PBXBuildFile; productRef = BB000002000000000000BB02 /* iosMath */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,9 +31,6 @@
 		26123D651E230E6C007A742A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		26123D671E230E72007A742A /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		26123D691E230E78007A742A /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		5C5FFD05171A4E4DDD124552 /* Pods-MacOSMath.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MacOSMath.release.xcconfig"; path = "Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath.release.xcconfig"; sourceTree = "<group>"; };
-		724A2FB140C9614157026EDF /* Pods-MacOSMath.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MacOSMath.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath.debug.xcconfig"; sourceTree = "<group>"; };
-		A369C2D9AD493F2ABA76EF1C /* libPods-MacOSMath.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MacOSMath.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,7 +43,7 @@
 				26123D661E230E6C007A742A /* CoreGraphics.framework in Frameworks */,
 				26123D641E230E64007A742A /* AppKit.framework in Frameworks */,
 				26123D621E230E5D007A742A /* Foundation.framework in Frameworks */,
-				D0BD0CD8F17DD64F1CD97F02 /* libPods-MacOSMath.a in Frameworks */,
+				BB000003000000000000BB03 /* iosMath in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,7 +74,6 @@
 				26123D651E230E6C007A742A /* CoreGraphics.framework */,
 				26123D631E230E64007A742A /* AppKit.framework */,
 				26123D611E230E5D007A742A /* Foundation.framework */,
-				A369C2D9AD493F2ABA76EF1C /* libPods-MacOSMath.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -93,17 +89,7 @@
 				26123D461E230D48007A742A /* Supporting Files */,
 				26123D4C1E230D80007A742A /* Products */,
 				26123D601E230E5D007A742A /* Frameworks */,
-				F86DF2EFDC1C28185FF1FFA8 /* Pods */,
 			);
-			sourceTree = "<group>";
-		};
-		F86DF2EFDC1C28185FF1FFA8 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				724A2FB140C9614157026EDF /* Pods-MacOSMath.debug.xcconfig */,
-				5C5FFD05171A4E4DDD124552 /* Pods-MacOSMath.release.xcconfig */,
-			);
-			name = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -113,17 +99,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 26123D5A1E230D80007A742A /* Build configuration list for PBXNativeTarget "MacOSMath" */;
 			buildPhases = (
-				8F9D374876485E2879D1DA44 /* [CP] Check Pods Manifest.lock */,
 				26123D471E230D80007A742A /* Sources */,
 				26123D481E230D80007A742A /* Frameworks */,
 				26123D491E230D80007A742A /* Resources */,
-				2CE45346B6FE841608881E74 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = MacOSMath;
+			packageProductDependencies = (
+				BB000002000000000000BB02 /* iosMath */,
+			);
 			productName = MacOSMath;
 			productReference = 26123D4B1E230D80007A742A /* MacOSMath.app */;
 			productType = "com.apple.product-type.application";
@@ -157,6 +144,9 @@
 			targets = (
 				26123D4A1E230D80007A742A /* MacOSMath */,
 			);
+			packageReferences = (
+				BB000001000000000000BB01 /* XCLocalSwiftPackageReference "." */,
+			);
 		};
 /* End PBXProject section */
 
@@ -172,42 +162,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2CE45346B6FE841608881E74 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/iosMath-macOS10.8/mathFonts.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/mathFonts.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MacOSMath/Pods-MacOSMath-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		8F9D374876485E2879D1DA44 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MacOSMath-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -236,7 +190,6 @@
 /* Begin XCBuildConfiguration section */
 		26123D5B1E230D80007A742A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 724A2FB140C9614157026EDF /* Pods-MacOSMath.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -277,6 +230,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/render",
+				);
 				INFOPLIST_FILE = MacOSMathExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -290,7 +247,6 @@
 		};
 		26123D5C1E230D80007A742A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5C5FFD05171A4E4DDD124552 /* Pods-MacOSMath.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -325,6 +281,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/render",
+				);
 				INFOPLIST_FILE = MacOSMathExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -425,6 +385,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BB000001000000000000BB01 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ".";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BB000002000000000000BB02 /* iosMath */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB000001000000000000BB01 /* XCLocalSwiftPackageReference "." */;
+			productName = iosMath;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 267EC26E1E230CB400E34886 /* Project object */;
 }
