@@ -1,4 +1,0 @@
-module iosMathPackageTests {
-    header "/Users/kostub/Work/iosmath/iosMath/.build/arm64-apple-macosx/debug/iosMathPackageTests.build/iosMathPackageTests-Swift.h"
-    requires objc
-}

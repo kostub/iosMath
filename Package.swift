@@ -31,7 +31,12 @@ let package = Package(
             name: "iosMathTests",
             dependencies: ["iosMath"],
             path: "iosMathTests",
-            exclude: ["en.lproj"]
+            exclude: ["en.lproj"],
+            cSettings: [
+                .headerSearchPath("../iosMath/lib"),
+                .headerSearchPath("../iosMath/render"),
+                .headerSearchPath("../iosMath/render/internal"),
+            ]
         ),
     ]
 )
