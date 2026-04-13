@@ -45,16 +45,18 @@ typedef NS_ENUM(unsigned int, MTTextAlignment) {
     kMTTextAlignmentRight,
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** The main view for rendering math.
- 
+
  `MTMathLabel` accepts either a string in LaTeX or an `MTMathList` to display. Use
  `MTMathList` directly only if you are building it programmatically (e.g. using an
  editor), otherwise using LaTeX is the preferable method.
- 
+
  The math display is centered vertically in the label. The default horizontal alignment is
  is left. This can be changed by setting `textAlignment`. The math is default displayed in
  *Display* mode. This can be changed using `labelMode`.
- 
+
  When created it uses `[MTFontManager defaultFont]` as its font. This can be changed using
  the `font` parameter.
  */
@@ -105,3 +107,5 @@ IB_DESIGNABLE @interface MTMathUILabel : MTView
 @property (nonatomic, readonly, nullable) MTMathListDisplay* displayList;
 
 @end
+
+NS_ASSUME_NONNULL_END
