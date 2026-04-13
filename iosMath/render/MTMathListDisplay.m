@@ -142,7 +142,7 @@ static BOOL isIos6Supported() {
         CFIndex numGlyphs = CTRunGetGlyphCount(run);
         CGGlyph glyphs[numGlyphs];
         CTRunGetGlyphs(run, CFRangeMake(0, numGlyphs), glyphs);
-        CGRect bounds = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontHorizontalOrientation, glyphs, NULL, numGlyphs);
+        CGRect bounds = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, glyphs, NULL, numGlyphs);
         CGFloat ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
         // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
         CGFloat descent = MAX(0, 0 - CGRectGetMinY(bounds));
@@ -454,7 +454,7 @@ static BOOL isIos6Supported() {
     [path moveToPoint:lineStart];
     [path addLineToPoint:lineEnd];
     path.lineWidth = _lineThickness;
-    path.lineCapStyle = kCGLineCapRound;
+    path.lineCapStyle = NSLineCapStyleRound;
     [path stroke];
     
     CGContextRestoreGState(context);

@@ -13,8 +13,6 @@
 #if !TARGET_OS_IPHONE
 @implementation MTLabel
 
-@synthesize bezeled, drawsBackground, editable, selectable, stringValue;
-
 - (instancetype)init
 {
     self = [super init];
