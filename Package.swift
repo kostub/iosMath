@@ -38,5 +38,18 @@ let package = Package(
                 .headerSearchPath("../iosMath/render/internal"),
             ]
         ),
+        .testTarget(
+            name: "iosMathSwiftTests",
+            dependencies: ["iosMath"],
+            path: "iosMathSwiftTests",
+            cSettings: [
+                .headerSearchPath("../iosMath/lib"),
+                .headerSearchPath("../iosMath/render"),
+                .headerSearchPath("../iosMath/render/internal"),
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ]
+        ),
     ]
 )
