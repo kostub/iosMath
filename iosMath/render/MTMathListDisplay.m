@@ -19,7 +19,7 @@
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
 
-static BOOL isIos6Supported() {
+static BOOL isIos6Supported(void) {
     static BOOL initialized = false;
     static BOOL supported = false;
     if (!initialized) {

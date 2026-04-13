@@ -25,7 +25,7 @@ typedef NS_ENUM(int, MTInterElementSpaceType) {
 };
 
 
-NSArray* getInterElementSpaces() {
+NSArray* getInterElementSpaces(void) {
     static NSArray* interElementSpaceArray = nil;
     if (!interElementSpaceArray) {
         interElementSpaceArray =
