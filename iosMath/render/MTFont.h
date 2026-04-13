@@ -15,12 +15,16 @@
 /** MTFont wraps the inconvenient distinction between CTFont and CGFont as well
  as the data loaded from the math table.
  */
+NS_ASSUME_NONNULL_BEGIN
+
 @interface MTFont : NSObject
 
 /** Returns a copy of this font but with a different size. */
-- (nonnull MTFont*) copyFontWithSize:(CGFloat) size;
+- (MTFont *) copyFontWithSize:(CGFloat) size;
 
 /** The size of this font in points. */
 @property (nonatomic, readonly) CGFloat fontSize;
 
 @end
+
+NS_ASSUME_NONNULL_END

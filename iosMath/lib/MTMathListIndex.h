@@ -25,12 +25,14 @@
  * 
  * The level of an index is the number of nodes in the LinkedList to get to the final path.
  */
+NS_ASSUME_NONNULL_BEGIN
+
 @interface MTMathListIndex : NSObject
 
 /**
  @typedef MTMathListSubIndexType
  @brief The type of the subindex.
- 
+
  The type of the subindex denotes what branch the path to the atom that this index points to takes.
  */
 typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
@@ -60,14 +62,14 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 /// The type of subindex, e.g. superscript, numerator etc.
 @property (nonatomic, readonly) MTMathListSubIndexType subIndexType;
 /// The index into the sublist.
-@property (nonatomic, readonly, nullable) MTMathListIndex* subIndex;
+@property (nonatomic, readonly, nullable) MTMathListIndex *subIndex;
 
 /// Returns the previous index if present. Returns `nil` if there is no previous index.
-- (nullable MTMathListIndex*) previous;
+- (nullable MTMathListIndex *) previous;
 /// Returns the next index.
-- (nonnull MTMathListIndex*) next;
+- (MTMathListIndex *) next;
 
-/** 
+/**
  * Returns true if this index represents the beginning of a line. Note there may be multiple lines in a MTMathList,
  * e.g. a superscript or a fraction numerator. This returns true if the innermost subindex points to the beginning of a
  * line.
@@ -78,57 +80,62 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 - (MTMathListSubIndexType) finalSubIndexType;
 
 /** Returns true if any of the subIndexes of this index have the given type. */
-- (BOOL) hasSubIndexOfType:(MTMathListSubIndexType) subIndexType;
+- (BOOL) hasSubIndexOfType:(MTMathListSubIndexType)subIndexType;
 
 /** Creates a new index by attaching this index at the end of the current one. */
-- (nonnull MTMathListIndex*) levelUpWithSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
+- (MTMathListIndex *) levelUpWithSubIndex:(nullable MTMathListIndex *)subIndex
+                                     type:(MTMathListSubIndexType)type;
 /** Creates a new index by removing the last index item. If this is the last one, then returns nil. */
-- (nullable MTMathListIndex*) levelDown;
+- (nullable MTMathListIndex *) levelDown;
 
-- (nonnull instancetype)init NS_UNAVAILABLE;
-- (BOOL)isEqual:(nullable id)object;
-- (NSUInteger)hash;
-- (nonnull NSString *)description;
+- (instancetype) init NS_UNAVAILABLE;
+- (BOOL) isEqual:(nullable id)object;
+- (NSUInteger) hash;
+- (NSString *) description;
 
 /** Factory function to create a `MTMathListIndex` with no subindexes.
     @param index The index of the atom that the `MTMathListIndex` points at.
  */
-+ (nonnull instancetype) level0Index:(NSUInteger) index;
++ (instancetype) level0Index:(NSUInteger)index;
 
 /** Factory function to create at `MTMathListIndex` with a given subIndex.
     @param location The location at which the subIndex should is present.
     @param subIndex The subIndex to be added. Can be nil.
     @param type The type of the subIndex.
  */
-+ (nonnull instancetype) indexAtLocation:(NSUInteger) location withSubIndex:(nullable MTMathListIndex*) subIndex type:(MTMathListSubIndexType) type;
++ (instancetype) indexAtLocation:(NSUInteger)location
+                    withSubIndex:(nullable MTMathListIndex *)subIndex
+                            type:(MTMathListSubIndexType)type;
 
 @end
 
-/** A range of atoms in an `MTMathList`. This is similar to `NSRange` with a start and length, except that 
+/** A range of atoms in an `MTMathList`. This is similar to `NSRange` with a start and length, except that
     the starting location is defined by a `MTMathListIndex` rather than an ordinary integer.
  */
-@interface  MTMathListRange : NSObject
+@interface MTMathListRange : NSObject
 
-- (nonnull instancetype)init NS_UNAVAILABLE;
+- (instancetype) init NS_UNAVAILABLE;
 
 /// Creates a valid range.
-+ (nonnull MTMathListRange*) makeRange:(nonnull MTMathListIndex*) start length:(NSUInteger) length;
++ (MTMathListRange *) makeRange:(MTMathListIndex *)start length:(NSUInteger)length;
 /// Creates a range at level 0 from the give range.
-+ (nonnull MTMathListRange *)makeRangeForRange:(NSRange)range;
++ (MTMathListRange *) makeRangeForRange:(NSRange)range;
 /// Makes a range of length 1
-+ (nonnull MTMathListRange*) makeRange:(nonnull MTMathListIndex*) start;
++ (MTMathListRange *) makeRange:(MTMathListIndex *)start;
 /// Makes a range of length 1 at the level 0 index start
-+ (nonnull MTMathListRange*) makeRangeForIndex:(NSUInteger) start;
++ (MTMathListRange *) makeRangeForIndex:(NSUInteger)start;
 
 /// The starting location of the range. Cannot be `nil`.
-@property (nonatomic, readonly, nonnull) MTMathListIndex* start;
+@property (nonatomic, readonly) MTMathListIndex *start;
 /// The size of the range.
 @property (nonatomic, readonly) NSUInteger length;
 
-- (nullable MTMathListRange*) subIndexRange;
+- (nullable MTMathListRange *) subIndexRange;
 /// Appends the current range to range and returns the resulting range. Any elements between the two are included in the range.
-- (nullable MTMathListRange*) unionRange:(nonnull MTMathListRange*) range;
+- (nullable MTMathListRange *) unionRange:(MTMathListRange *)range;
 /// Unions all ranges in the given array of ranges
-+ (nullable MTMathListRange*) unionRanges:(nonnull NSArray<MTMathListRange*>*) ranges;
++ (nullable MTMathListRange *) unionRanges:(NSArray<MTMathListRange *> *)ranges;
 
 @end
+
+NS_ASSUME_NONNULL_END
