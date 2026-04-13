@@ -60,7 +60,7 @@
     XCTAssertEqual(display.width, line.width);
     
     XCTAssertEqualWithAccuracy(display.ascent, 8.834, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.22, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 11.44, 0.01);
 }
 
@@ -91,7 +91,7 @@
     XCTAssertEqual(display.width, line.width);
     
     XCTAssertEqualWithAccuracy(display.ascent, 8.834, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
 }
 
@@ -122,7 +122,7 @@
     XCTAssertEqual(display.width, line.width);
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 45.56, 0.01);
 }
 
@@ -153,7 +153,7 @@
     XCTAssertEqual(display.width, line.width);
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 92.36, 0.01);
 }
 
@@ -212,7 +212,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 16.584, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.22, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 18.44, 0.01);
 }
 
@@ -262,7 +262,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 8.834, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.954, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.94, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 18.44, 0.01);
 }
 
@@ -318,7 +318,7 @@
     MTMathListDisplay* display3 = (MTMathListDisplay*) sub2;
     XCTAssertEqual(display3.type, kMTLinePositionSubscript);
     // Positioned differently when both subscript and superscript present.
-    XCTAssertEqualsCGPoint(display3.position, CGPointMake(11.44, -5.278), 0.01);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(11.44, -5.264), 0.01);
     XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display3.hasScript);
     XCTAssertEqual(display3.index, 0);
@@ -334,7 +334,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 16.584, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 5.292, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 5.264, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 18.44, 0.01);
 }
 
@@ -383,7 +383,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 1.46, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 26.66, 0.01);
 }
 
@@ -435,7 +435,7 @@
     
     MTMathListDisplay* display3 = radical.degree;
     XCTAssertEqual(display3.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display3.position, CGPointMake(6.12, 10.716), 0.01);
+    XCTAssertEqualsCGPoint(display3.position, CGPointMake(6.12, 10.728), 0.01);
     XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display3.hasScript);
     XCTAssertEqual(display3.index, NSNotFound);
@@ -452,7 +452,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 19.34, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 1.48, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 1.46, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 26.66, 0.01);
 }
 
@@ -521,7 +521,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 26.86, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 14.18, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 14.16, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
@@ -590,7 +590,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 26.86, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 14.18, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 14.16, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
@@ -685,8 +685,8 @@
     XCTAssertFalse(glyph2.hasScript);
     
     // dimensions
-    XCTAssertEqualWithAccuracy(display.ascent, 28.93, 0.001);
-    XCTAssertEqualWithAccuracy(display.descent, 18.93, 0.001);
+    XCTAssertEqualWithAccuracy(display.ascent, 28.92, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 18.92, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 39.44, 0.001);
 }
 
@@ -723,7 +723,7 @@
     XCTAssertFalse(line2.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.14, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.22, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 39.33, 0.01);
 }
 
@@ -758,8 +758,8 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 27.23, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 17.23, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 27.22, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 17.22, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 34.753, 0.01);
 }
 
@@ -787,7 +787,7 @@
     XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]]);
     MTMathListDisplay* display0 = (MTMathListDisplay*) sub0;
     XCTAssertEqual(display0.type, kMTLinePositionSuperscript);
-    XCTAssertEqualsCGPoint(display0.position, CGPointMake(19.98, 23.73), 0.001);
+    XCTAssertEqualsCGPoint(display0.position, CGPointMake(19.98, 23.72), 0.001);
     XCTAssertTrue(NSEqualRanges(display0.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display0.hasScript);
     XCTAssertEqual(display0.index, 0);
@@ -806,7 +806,7 @@
     MTMathListDisplay* display1 = (MTMathListDisplay*) sub1;
     XCTAssertEqual(display1.type, kMTLinePositionSubscript);
     // Due to italic correction, positioned before subscript.
-    XCTAssertEqualsCGPoint(display1.position, CGPointMake(8.16, -20.03), 0.001);
+    XCTAssertEqualsCGPoint(display1.position, CGPointMake(8.16, -20.02), 0.001);
     XCTAssertTrue(NSEqualRanges(display1.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display1.hasScript);
     XCTAssertEqual(display1.index, 0);
@@ -836,8 +836,8 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line1.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 33.054, 0.001);
-    XCTAssertEqualWithAccuracy(display.descent, 20.352, 0.001);
+    XCTAssertEqualWithAccuracy(display.ascent, 33.044, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 20.328, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 42.873, 0.001);
 }
 
@@ -870,7 +870,7 @@
     
     MTMathListDisplay* display2 = largeOp.lowerLimit;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(6.89, -12.02), 0.01);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(6.89, -12.0), 0.01);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -894,7 +894,7 @@
     XCTAssertFalse(line1.hasScript);
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.88, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 12.188, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 12.154, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 42.553, 0.01);
 }
 
@@ -928,7 +928,7 @@
     
     MTMathListDisplay* display2 = largeOp.lowerLimit;
     XCTAssertEqual(display2.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.94, -21.674), 0.001);
+    XCTAssertEqualsCGPoint(display2.position, CGPointMake(10.94, -21.664), 0.001);
     XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
@@ -944,7 +944,7 @@
     
     MTMathListDisplay* displayU = largeOp.upperLimit;
     XCTAssertEqual(displayU.type, kMTLinePositionRegular);
-    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(7.44, 23.178), 0.001);
+    XCTAssertEqualsCGPoint(displayU.position, CGPointMake(7.44, 23.154), 0.001);
     XCTAssertTrue(NSEqualRanges(displayU.range, NSMakeRange(0, 1)));
     XCTAssertFalse(displayU.hasScript);
     XCTAssertEqual(displayU.index, NSNotFound);
@@ -967,8 +967,8 @@
     XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got %@ instead", NSStringFromRange(line2.range));
     XCTAssertFalse(line2.hasScript);
     
-    XCTAssertEqualWithAccuracy(display.ascent, 29.366, 0.001);
-    XCTAssertEqualWithAccuracy(display.descent, 21.996, 0.001);
+    XCTAssertEqualWithAccuracy(display.ascent, 29.342, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 21.972, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 43.653, 0.001);
 }
 
@@ -1033,8 +1033,8 @@
     XCTAssertEqual(display.descent, display2.descent);
     XCTAssertEqual(display.width, display2.width);
 
-    XCTAssertEqualWithAccuracy(display.ascent, 14.97, 0.001);
-    XCTAssertEqualWithAccuracy(display.descent, 4.97, 0.001);
+    XCTAssertEqualWithAccuracy(display.ascent, 14.96, 0.001);
+    XCTAssertEqualWithAccuracy(display.descent, 4.96, 0.001);
     XCTAssertEqualWithAccuracy(display.width, 27, 0.01);
 }
 
@@ -1082,7 +1082,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 17.32, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 0.02, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.0, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
@@ -1130,7 +1130,7 @@
     
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.02, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.0, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
@@ -1188,8 +1188,8 @@
     MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
     
     // dimensions
-    XCTAssertEqualWithAccuracy(display.ascent, 49.18, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 21.308, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, 49.16, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 21.288, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 82.569, 0.01);
 }
 
@@ -1244,7 +1244,7 @@
     XCTAssertFalse(display2.hasScript);
     XCTAssertEqual(display2.index, NSNotFound);
     XCTAssertEqual(display2.subDisplays.count, 3);
-    CGFloat rowPos[3] = { 30.31, -2.67, -31.95};
+    CGFloat rowPos[3] = { 30.28, -2.68, -31.95};
     // alignment is right, center, left.
     CGFloat cellPos[3][3] = { { 35.89, 65.89, 129.438 }, { 45.89, 76.94, 129.438}, { 0, 87.66, 129.438}};
     // check the 3 rows of the matrix
@@ -1520,7 +1520,7 @@
 
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 14.68, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 0.24, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 0.22, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 11.44, 0.01);
 }
 
@@ -1572,7 +1572,7 @@
 
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 14.98, 0.01);
-    XCTAssertEqualWithAccuracy(display.descent, 4.12, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
 }
 

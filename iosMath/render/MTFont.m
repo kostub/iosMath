@@ -69,8 +69,13 @@
 
 + (NSBundle*) fontBundle
 {
+    // SwiftPM exposes processed resources via the generated module bundle.
+#if SWIFT_PACKAGE
+    return SWIFTPM_MODULE_BUNDLE;
+#else
     // Uses bundle for class so that this can be access by the unit tests.
     return [NSBundle bundleWithURL:[[NSBundle bundleForClass:[self class]] URLForResource:@"mathFonts" withExtension:@"bundle"]];
+#endif
 }
 
 - (MTFont *)copyFontWithSize:(CGFloat)size

@@ -20,6 +20,4 @@ jobs:
         run: swift build
 
       - name: Test
-        # Font-loading tests will fail until the SPM bundle accessor is wired up.
-        # Parser and math-list tests should pass now.
-        run: swift test || true
+        run: swift test
