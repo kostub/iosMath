@@ -8,32 +8,27 @@ iosMath is a native iOS/macOS Objective-C library that renders LaTeX math equati
 
 ## Build & Test Commands
 
-**Setup (required before building with Xcode workspace):**
+**Swift Package Manager:**
 ```bash
-pod install
+swift build
+swift test
 ```
 
-**iOS tests:**
+**iOS tests (Xcode):**
 ```bash
-xcodebuild test -workspace iosMath.xcworkspace -scheme iosMath -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14'
+xcodebuild test -project iosMath.xcodeproj -scheme iosMath -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-**macOS tests:**
+**macOS tests (Xcode):**
 ```bash
 xcodebuild test -project MacOSMath.xcodeproj -scheme MacOSMath -sdk macosx
 ```
 
 **Run a single test class:**
 ```bash
-xcodebuild test -workspace iosMath.xcworkspace -scheme iosMath -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 14' \
+xcodebuild test -project iosMath.xcodeproj -scheme iosMath -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
   -only-testing:iosMathTests/MTMathListBuilderTest
-```
-
-**Swift Package Manager (alternative):**
-```bash
-swift build
-swift test
 ```
 
 ## Architecture
@@ -70,7 +65,7 @@ The same source files compile for both iOS and macOS. Platform differences are h
 
 ### Public API Surface
 
-`IosMath.h` (umbrella header) exports: `MTMathUILabel`, `MTMathListDisplay`, `MTMathList`, `MTMathListBuilder`, `MTFont`, `MTFontManager`, `MTMathAtomFactory`.
+Defined by `iosMath/module.modulemap`. Exports: `MTMathUILabel`, `MTMathListDisplay`, `MTMathList`, `MTMathListBuilder`, `MTFont`, `MTFontManager`, `MTMathAtomFactory`, `MTMathListIndex`.
 
 ## Tests
 
