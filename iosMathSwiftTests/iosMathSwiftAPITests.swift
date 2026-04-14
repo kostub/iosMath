@@ -28,13 +28,13 @@ final class MTMathUILabelTests: XCTestCase {
 
     func testLabelModeDefaultIsDisplay() {
         let label = MTMathUILabel()
-        XCTAssertEqual(label.labelMode, .display)
+        XCTAssertEqual(label.mode, .display)
     }
 
     func testSetLabelModeText() {
         let label = MTMathUILabel()
-        label.labelMode = .text
-        XCTAssertEqual(label.labelMode, .text)
+        label.mode = .text
+        XCTAssertEqual(label.mode, .text)
     }
 }
 
@@ -124,17 +124,17 @@ final class MTMathAtomFactoryTests: XCTestCase {
     }
 
     func testAtomForLatexSymbolName() {
-        let atom = MTMathAtomFactory.atom(forLatexSymbolName: "alpha")
+        let atom = MTMathAtomFactory.atom(forLatexSymbol: "alpha")
         XCTAssertNotNil(atom)
     }
 
     func testAtomForLatexSymbolNameUnknown() {
-        let atom = MTMathAtomFactory.atom(forLatexSymbolName: "notasymbol")
+        let atom = MTMathAtomFactory.atom(forLatexSymbol: "notasymbol")
         XCTAssertNil(atom)
     }
 
     func testLatexSymbolNameForAtom() {
-        let atom = MTMathAtomFactory.atom(forLatexSymbolName: "beta")!
+        let atom = MTMathAtomFactory.atom(forLatexSymbol: "beta")!
         let name = MTMathAtomFactory.latexSymbolName(for: atom)
         XCTAssertEqual(name, "beta")
     }
@@ -142,17 +142,17 @@ final class MTMathAtomFactoryTests: XCTestCase {
     func testFractionWithLists() {
         let num = MTMathListBuilder.build(from: "1")!
         let denom = MTMathListBuilder.build(from: "2")!
-        let frac = MTMathAtomFactory.fraction(withNumerator: num, denominator: denom)
+        let frac = MTMathAtomFactory.fraction(numerator: num, denominator: denom)
         XCTAssertNotNil(frac)
     }
 
     func testFractionWithStrings() {
-        let frac = MTMathAtomFactory.fraction(withNumeratorStr: "3", denominatorStr: "4")
+        let frac = MTMathAtomFactory.fraction(numeratorString: "3", denominatorString: "4")
         XCTAssertNotNil(frac)
     }
 
     func testOperatorWithName() {
-        let op = MTMathAtomFactory.operator(withName: "lim", limits: true)
+        let op = MTMathAtomFactory.largeOperator(named: "lim", limits: true)
         XCTAssertNotNil(op)
     }
 
@@ -162,7 +162,7 @@ final class MTMathAtomFactoryTests: XCTestCase {
     }
 
     func testBoundaryAtomForDelimiterName() {
-        let atom = MTMathAtomFactory.boundaryAtom(forDelimiterName: "(")
+        let atom = MTMathAtomFactory.boundaryAtom(forDelimiter: "(")
         XCTAssertNotNil(atom)
     }
 }
@@ -192,7 +192,7 @@ final class MTMathListIndexTests: XCTestCase {
     func testLevelUp() {
         let base = MTMathListIndex.level0Index(0)
         let sub = MTMathListIndex.level0Index(1)
-        let up = base.levelUp(withSubIndex: sub, type: .subIndexTypeNumerator)
+        let up = base.levelingUp(subIndex: sub, type: .subIndexTypeNumerator)
         XCTAssertEqual(up.subIndexType, .subIndexTypeNumerator)
     }
 

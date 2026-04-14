@@ -98,7 +98,7 @@ IB_DESIGNABLE @interface MTMathUILabel : MTView
 @property (nonatomic) IBInspectable MTEdgeInsets contentInsets;
 
 /** The Label mode for the label. The default mode is Display */
-@property (nonatomic) MTMathUILabelMode labelMode;
+@property (nonatomic) MTMathUILabelMode labelMode NS_SWIFT_NAME(mode);
 
 /** Horizontal alignment for the text. The default is align left. */
 @property (nonatomic) MTTextAlignment textAlignment;

@@ -142,9 +142,9 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
 /** The nucleus of the atom. */
 @property (nonatomic, copy) NSString* nucleus;
 /** An optional superscript. */
-@property (nonatomic, nullable) MTMathList* superScript;
+@property (nonatomic, nullable) MTMathList* superScript NS_SWIFT_NAME(superscript);
 /** An optional subscript. */
-@property (nonatomic, nullable) MTMathList* subScript;
+@property (nonatomic, nullable) MTMathList* subScript NS_SWIFT_NAME(subscriptList);
 /** The font style to be used for the atom. */
 @property (nonatomic) MTFontStyle fontStyle;
 

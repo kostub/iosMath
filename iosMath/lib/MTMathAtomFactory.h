@@ -74,7 +74,8 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 /** Returns an atom with the right type for a given latex symbol (e.g. theta)
  If the latex symbol is unknown this will return nil. This supports LaTeX aliases as well.
  */
-+ (nullable MTMathAtom*) atomForLatexSymbolName:(NSString*) symbolName;
++ (nullable MTMathAtom*) atomForLatexSymbolName:(NSString*) symbolName
+    NS_SWIFT_NAME(atom(forLatexSymbol:));
 
 /** Finds the name of the LaTeX symbol name for the given atom. This function is a reverse
  of the above function. If no latex symbol name corresponds to the atom, then this returns `nil`
@@ -84,7 +85,8 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  alias.
  @note: This function does not convert MathSpaces to latex command names either.
  */
-+ (nullable NSString*) latexSymbolNameForAtom:(MTMathAtom*) atom;
++ (nullable NSString*) latexSymbolNameForAtom:(MTMathAtom*) atom
+    NS_SWIFT_NAME(latexSymbolName(for:));
 
 /** Define a latex symbol for rendering. This function allows defining custom symbols that are
  not already present in the default set, or override existing symbols with new meaning.
@@ -97,7 +99,8 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 
 /** Returns a large opertor for the given name. If limits is true, limits are set up on
  the operator and displyed differently. */
-+ (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits;
++ (MTLargeOperator *)operatorWithName:(NSString *)name limits:(bool) limits
+    NS_SWIFT_NAME(largeOperator(named:limits:));
 
 /** Returns an accent with the given name. The name of the accent is the LaTeX name
  such as `grave`, `hat` etc. If the name is not a recognized accent name, this
@@ -111,11 +114,12 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 
 /** Creates a new boundary atom for the given delimiter name. If the delimiter name
  is not recognized it returns nil. A delimiter name can be a single character such
- as '(' or a latex command such as 'uparrow'. 
+ as '(' or a latex command such as 'uparrow'.
  @note In order to distinguish between the delimiter '|' and the delimiter '\|' the delimiter '\|'
  the has been renamed to '||'.
  */
-+(nullable MTMathAtom*) boundaryAtomForDelimiterName:(NSString*) delimiterName;
++(nullable MTMathAtom*) boundaryAtomForDelimiterName:(NSString*) delimiterName
+    NS_SWIFT_NAME(boundaryAtom(forDelimiter:));
 
 /** Returns the delimiter name for a boundary atom. This is a reverse of the above function.
  If the atom is not a boundary atom or if the delimiter value is unknown this returns `nil`.
@@ -131,11 +135,13 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (NSString*) fontNameForStyle:(MTFontStyle) fontStyle;
 
 /** Returns a fraction with the given numerator and denominator. */
-+ (MTFraction*) fractionWithNumerator:(MTMathList*) num denominator:(MTMathList*) denom;
++ (MTFraction*) fractionWithNumerator:(MTMathList*) num denominator:(MTMathList*) denom
+    NS_SWIFT_NAME(fraction(numerator:denominator:));
 
 /** Simplification of above function when numerator and denominator are simple strings.
  This function uses `mathListForCharacters` to convert the strings to `MTMathList`s. */
-+ (MTFraction*) fractionWithNumeratorStr:(NSString*) numStr denominatorStr:(NSString*) denomStr;
++ (MTFraction*) fractionWithNumeratorStr:(NSString*) numStr denominatorStr:(NSString*) denomStr
+    NS_SWIFT_NAME(fraction(numeratorString:denominatorString:));
 
 /** Builds a table for a given environment with the given rows. Returns a `MTMathAtom` containing the
  table and any other atoms necessary for the given environment. Returns nil and sets error

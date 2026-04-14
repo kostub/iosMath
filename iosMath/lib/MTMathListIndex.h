@@ -84,7 +84,8 @@ typedef NS_ENUM(unsigned int, MTMathListSubIndexType) {
 
 /** Creates a new index by attaching this index at the end of the current one. */
 - (MTMathListIndex *) levelUpWithSubIndex:(nullable MTMathListIndex *)subIndex
-                                     type:(MTMathListSubIndexType)type;
+                                     type:(MTMathListSubIndexType)type
+    NS_SWIFT_NAME(levelingUp(subIndex:type:));
 /** Creates a new index by removing the last index item. If this is the last one, then returns nil. */
 - (nullable MTMathListIndex *) levelDown;
 
