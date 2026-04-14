@@ -1091,6 +1091,25 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
+// Regression test: trailing \\ creates a final row with only 1 cell; accessing row[1]
+// without a bounds check used to crash (NSRangeException index 1 beyond bounds [0..0]).
+- (void) testEqalignTrailingNewline
+{
+    NSString *str1 = @"\\begin{eqalign}x&y\\\\\\end{eqalign}";
+    NSString *str2 = @"\\begin{split}x&y\\\\\\end{split}";
+    NSString *str3 = @"\\begin{aligned}x&y\\\\\\end{aligned}";
+    for (NSString* str in @[str1, str2, str3]) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        XCTAssertNotNil(list, @"Should not crash on trailing \\\\: %@", error);
+        XCTAssertNil(error);
+        MTMathTable* table = list.atoms[0];
+        XCTAssertEqual(table.numRows, 2);
+        // Second row exists but has no second column — numColumns is still 2 (the max).
+        XCTAssertEqual(table.numColumns, 2);
+    }
+}
+
 - (void) testDisplayLines
 {
     NSString *str1 = @"\\begin{displaylines}x\\\\ y\\end{displaylines}";
