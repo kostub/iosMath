@@ -39,7 +39,7 @@ iosMath is distributed via **Swift Package Manager**.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/kostub/iosMath.git", from: "0.9.5"),
+    .package(url: "https://github.com/kostub/iosMath.git", from: "2.0.0"),
 ],
 targets: [
     .target(
@@ -48,6 +48,7 @@ targets: [
     ),
 ]
 ```
+
 
 ## Usage
 
@@ -365,6 +366,18 @@ let alpha     = MTMathAtomFactory.atom(forLatexSymbol: "alpha")
 
 * Support for explicit big delimiters (`\bigl`, `\bigr`, etc.)
 * Additional plain TeX commands
+
+## Migration from 0.9.x
+
+Version 2.0.0 is a **breaking release**. The following changes are required
+when upgrading from 0.9.x:
+
+- **Deployment targets raised**: iOS 18+ and macOS 15+ are now required
+  (previously iOS 9+ / macOS 10.12+).
+- **CocoaPods support removed**: distribution is via Swift Package Manager
+  only.
+- **Swift API renames** (Objective-C names are unchanged)
+
 
 ## Related projects
 

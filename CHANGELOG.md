@@ -1,5 +1,12 @@
 ## Changelog
 
+### v2.0.0 (2026-04-14)
+* Raise deployment targets to iOS 18+ and macOS 15+.
+* Remove CocoaPods support; distribute via Swift Package Manager only.
+* Add explicit `module.modulemap` controlling the public API surface.
+* Add GitHub Actions CI.
+* Add Swift example app (`SwiftMathExample`) with Examples and Gallery tabs.
+
 ### v0.9.5 (2019-06-03)
 * Add colorbox command (#121)
 * Cyrillic support (#108)
