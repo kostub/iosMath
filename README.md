@@ -67,7 +67,7 @@ view.addSubview(label)
 <summary>Objective-C</summary>
 
 ```objective-c
-#import <iosMath/iosMath.h>
+@import iosMath;
 
 MTMathUILabel *label = [[MTMathUILabel alloc] init];
 label.latex = @"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
