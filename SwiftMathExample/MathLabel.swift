@@ -56,7 +56,7 @@ private struct _MathLabelRepresentable: UIViewRepresentable {
     func updateUIView(_ label: MTMathUILabel, context: Context) {
         label.latex = latex
         label.fontSize = fontSize
-        label.labelMode = mode
+        label.mode = mode
         label.textAlignment = alignment
         label.contentInsets = UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
         label.backgroundColor = highlighted
@@ -84,7 +84,7 @@ private struct _MathLabelRepresentable: NSViewRepresentable {
     func updateNSView(_ label: MTMathUILabel, context: Context) {
         label.latex = latex
         label.fontSize = fontSize
-        label.labelMode = mode
+        label.mode = mode
         label.textAlignment = alignment
         label.contentInsets = NSEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
         label.backgroundColor = highlighted
