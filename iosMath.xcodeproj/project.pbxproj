@@ -110,8 +110,8 @@
 		49B83F0617CF2B420014B739 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewController.h; path = example/ViewController.h; sourceTree = "<group>"; };
 		49B83F0717CF2B420014B739 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = example/ViewController.m; sourceTree = "<group>"; };
 		49B83F0917CF2EC30014B739 /* iosMath-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iosMath-Info.plist"; sourceTree = "<group>"; };
-		49DA6BC319A05F850086B19F /* MTUnicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTUnicode.h; path = ../../../iosMath/iosMath/lib/MTUnicode.h; sourceTree = "<group>"; };
-		49DA6BC619A062A30086B19F /* MTUnicode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTUnicode.m; path = ../../../iosMath/iosMath/lib/MTUnicode.m; sourceTree = "<group>"; };
+		49DA6BC319A05F850086B19F /* MTUnicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTUnicode.h; sourceTree = "<group>"; };
+		49DA6BC619A062A30086B19F /* MTUnicode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTUnicode.m; sourceTree = "<group>"; };
 		49DEC8041CED71C3000053CD /* MTFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFont.h; sourceTree = "<group>"; };
 		49DEC8051CED71C3000053CD /* MTFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFont.m; sourceTree = "<group>"; };
 		49DEC80B1CEF1028000053CD /* MTFont+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MTFont+Internal.h"; sourceTree = "<group>"; };

@@ -11,7 +11,7 @@
 #import "MTTypesetter.h"
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
-#import "MTUnicode.h"
+#import "../../lib/MTUnicode.h"
 
 #pragma mark Inter Element Spacing
 

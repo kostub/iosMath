@@ -621,6 +621,12 @@ static NSString* typeToText(MTMathAtomType type) {
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
 {
+    if (type == kMTMathAtomOrdinary || type == kMTMathAtomOpen
+        || type == kMTMathAtomClose || type == kMTMathAtomRelation) {
+        return [self initWithDelimiterNucleus:value ?: @""
+                                    mathClass:type
+                                         size:kMTDelimiterSize1];
+    }
     @throw [NSException exceptionWithName:@"InvalidMethod"
                                    reason:@"[MTLargeDelimiter initWithType:value:] cannot be called. Use [MTLargeDelimiter initWithDelimiterNucleus:mathClass:size:] instead."
                                  userInfo:nil];
