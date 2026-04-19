@@ -523,7 +523,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         if (atom.type == kMTMathAtomOrdinary) {
             // This is Rule 14 to merge ordinary characters.
             // combine ordinary atoms together
-            if (prevNode && prevNode.type == kMTMathAtomOrdinary && !prevNode.subScript && !prevNode.superScript) {
+            if (prevNode && prevNode.type == kMTMathAtomOrdinary && !prevNode.subScript && !prevNode.superScript
+                && ![prevNode isKindOfClass:[MTLargeDelimiter class]]
+                && ![atom isKindOfClass:[MTLargeDelimiter class]]) {
                 [prevNode fuse:atom];
                 // skip the current node, we are done here.
                 continue;
