@@ -10,6 +10,8 @@
 //
 
 #import "MTMathList.h"
+#import "MTMathListBuilder.h"
+#import "MTMathAtomFactory.h"
 
 // Returns true if the current binary operator is not really binary.
 static BOOL isNotBinaryOperator(MTMathAtom* prevNode)
@@ -73,6 +75,34 @@ static NSString* typeToText(MTMathAtomType type) {
         case kMTMathAtomTable:
             return @"Table";
     }
+}
+
+@interface MTMathListBuilder (MTMathListSerializationSupport)
+
++ (NSString*)delimToString:(MTMathAtom*)delim;
++ (NSDictionary*)spaceToCommands;
++ (NSDictionary*)styleToCommands;
+
+@end
+
+@interface MTMathAtom (MTMathListBuilderSerialization)
+
+- (void)appendLaTeXToString:(NSMutableString *)str;
+
+@end
+
+static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSString* rightDelimiter)
+{
+    if (!leftDelimiter && !rightDelimiter) {
+        return @"atop";
+    } else if ([leftDelimiter isEqualToString:@"("] && [rightDelimiter isEqualToString:@")"]) {
+        return @"choose";
+    } else if ([leftDelimiter isEqualToString:@"{"] && [rightDelimiter isEqualToString:@"}"]) {
+        return @"brace";
+    } else if ([leftDelimiter isEqualToString:@"["] && [rightDelimiter isEqualToString:@"]"]) {
+        return @"brack";
+    }
+    return [NSString stringWithFormat:@"atopwithdelims%@%@", leftDelimiter, rightDelimiter];
 }
 
 #pragma mark - MTMathAtom
@@ -249,6 +279,26 @@ static NSString* typeToText(MTMathAtomType type) {
     return newNode;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    if (self.nucleus.length == 0) {
+        [str appendString:@"{}"];
+    } else if ([self.nucleus isEqualToString:@"\u2236"]) {
+        // math colon
+        [str appendString:@":"];
+    } else if ([self.nucleus isEqualToString:@"\u2212"]) {
+        // math minus
+        [str appendString:@"-"];
+    } else {
+        NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:self];
+        if (command) {
+            [str appendFormat:@"\\%@ ", command];
+        } else {
+            [str appendString:self.nucleus];
+        }
+    }
+}
+
 @end
 
 #pragma mark - MTFraction
@@ -321,6 +371,16 @@ static NSString* typeToText(MTMathAtomType type) {
     return newFrac;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    if (self.hasRule) {
+        [str appendFormat:@"\\frac{%@}{%@}", [MTMathListBuilder mathListToString:self.numerator], [MTMathListBuilder mathListToString:self.denominator]];
+        return;
+    }
+    NSString* command = fractionCommandForDelimiterPair(self.leftDelimiter, self.rightDelimiter);
+    [str appendFormat:@"{%@ \\%@ %@}", [MTMathListBuilder mathListToString:self.numerator], command, [MTMathListBuilder mathListToString:self.denominator]];
+}
+
 @end
 
 #pragma mark - MTRadical
@@ -377,6 +437,15 @@ static NSString* typeToText(MTMathAtomType type) {
     return newRad;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendString:@"\\sqrt"];
+    if (self.degree) {
+        [str appendFormat:@"[%@]", [MTMathListBuilder mathListToString:self.degree]];
+    }
+    [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:self.radicand]];
+}
+
 @end
 
 #pragma mark - MTLargeOperator
@@ -407,6 +476,16 @@ static NSString* typeToText(MTMathAtomType type) {
     MTLargeOperator* op = [super copyWithZone:zone];
     op->_limits = self.limits;
     return op;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* command = [MTMathAtomFactory latexSymbolNameForAtom:self];
+    MTLargeOperator* originalOp = (MTLargeOperator*) [MTMathAtomFactory atomForLatexSymbolName:command];
+    [str appendFormat:@"\\%@ ", command];
+    if (originalOp.limits != self.limits) {
+        [str appendString:(self.limits ? @"\\limits " : @"\\nolimits ")];
+    }
 }
 
 @end
@@ -488,6 +567,25 @@ static NSString* typeToText(MTMathAtomType type) {
     return newInner;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    if (self.leftBoundary || self.rightBoundary) {
+        if (self.leftBoundary) {
+            [str appendFormat:@"\\left%@ ", [MTMathListBuilder delimToString:self.leftBoundary]];
+        } else {
+            [str appendString:@"\\left. "];
+        }
+        [str appendString:[MTMathListBuilder mathListToString:self.innerList]];
+        if (self.rightBoundary) {
+            [str appendFormat:@"\\right%@ ", [MTMathListBuilder delimToString:self.rightBoundary]];
+        } else {
+            [str appendString:@"\\right. "];
+        }
+        return;
+    }
+    [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:self.innerList]];
+}
+
 @end
 
 #pragma mark - MTOverline
@@ -522,6 +620,11 @@ static NSString* typeToText(MTMathAtomType type) {
     MTOverLine* newOverline = [super finalized];
     newOverline.innerList = newOverline.innerList.finalized;
     return newOverline;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendFormat:@"\\overline{%@}", [MTMathListBuilder mathListToString:self.innerList]];
 }
 
 @end
@@ -560,6 +663,11 @@ static NSString* typeToText(MTMathAtomType type) {
     return newUnderline;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendFormat:@"\\underline{%@}", [MTMathListBuilder mathListToString:self.innerList]];
+}
+
 @end
 
 #pragma mark - MTAccent
@@ -594,6 +702,11 @@ static NSString* typeToText(MTMathAtomType type) {
     MTAccent* newAccent = [super finalized];
     newAccent.innerList = newAccent.innerList.finalized;
     return newAccent;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendFormat:@"\\%@{%@}", [MTMathAtomFactory accentName:self], [MTMathListBuilder mathListToString:self.innerList]];
 }
 
 @end
@@ -644,6 +757,46 @@ static NSString* typeToText(MTMathAtomType type) {
     return copy;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* prefix = nil;
+    switch (self.delimiterSize) {
+        case kMTDelimiterSize1:
+            prefix = @"big";
+            break;
+        case kMTDelimiterSize2:
+            prefix = @"Big";
+            break;
+        case kMTDelimiterSize3:
+            prefix = @"bigg";
+            break;
+        case kMTDelimiterSize4:
+            prefix = @"Bigg";
+            break;
+    }
+    NSString* suffix = nil;
+    switch (self.type) {
+        case kMTMathAtomOrdinary:
+            suffix = @"";
+            break;
+        case kMTMathAtomOpen:
+            suffix = @"l";
+            break;
+        case kMTMathAtomClose:
+            suffix = @"r";
+            break;
+        case kMTMathAtomRelation:
+            suffix = @"m";
+            break;
+        default:
+            NSAssert(NO, @"Unsupported large delimiter class %lu", (unsigned long)self.type);
+            suffix = @"";
+            break;
+    }
+    MTMathAtom* boundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:self.nucleus];
+    [str appendFormat:@"\\%@%@%@", prefix, suffix, [MTMathListBuilder delimToString:boundary]];
+}
+
 @end
 
 #pragma mark - MTMathSpace
@@ -676,6 +829,16 @@ static NSString* typeToText(MTMathAtomType type) {
     return op;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* command = [MTMathListBuilder spaceToCommands][@(self.space)];
+    if (command) {
+        [str appendFormat:@"\\%@ ", command];
+    } else {
+        [str appendFormat:@"\\mkern%.1fmu", self.space];
+    }
+}
+
 @end
 
 #pragma mark - MTMathStyle
@@ -706,6 +869,12 @@ static NSString* typeToText(MTMathAtomType type) {
     MTMathStyle* op = [super copyWithZone:zone];
     op->_style = self.style;
     return op;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* command = [MTMathListBuilder styleToCommands][@(self.style)];
+    [str appendFormat:@"\\%@ ", command];
 }
 
 @end
@@ -811,6 +980,24 @@ static NSString* typeToText(MTMathAtomType type) {
 @end
 
 @implementation MTMathTable
+
+- (MTMathList *)serializedCellAtRow:(NSUInteger)row column:(NSUInteger)column
+{
+    MTMathList* cell = self.cells[row][column];
+    if ([self.environment isEqualToString:@"matrix"]) {
+        if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
+            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
+            return [MTMathList mathListWithAtomsArray:atoms];
+        }
+    }
+    if ([self.environment isEqualToString:@"eqalign"] || [self.environment isEqualToString:@"aligned"] || [self.environment isEqualToString:@"split"]) {
+        if (column == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
+            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
+            return [MTMathList mathListWithAtomsArray:atoms];
+        }
+    }
+    return cell;
+}
 
 - (instancetype)initWithEnvironment:(NSString *)env
 {
@@ -919,6 +1106,28 @@ static NSString* typeToText(MTMathAtomType type) {
 - (NSUInteger) numRows
 {
     return self.cells.count;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    if (self.environment) {
+        [str appendFormat:@"\\begin{%@}", self.environment];
+    }
+    for (NSUInteger i = 0; i < self.numRows; i++) {
+        NSArray<MTMathList*>* row = self.cells[i];
+        for (NSUInteger j = 0; j < row.count; j++) {
+            [str appendString:[MTMathListBuilder mathListToString:[self serializedCellAtRow:i column:j]]];
+            if (j < row.count - 1) {
+                [str appendString:@"&"];
+            }
+        }
+        if (i < self.numRows - 1) {
+            [str appendString:@"\\\\ "];
+        }
+    }
+    if (self.environment) {
+        [str appendFormat:@"\\end{%@}", self.environment];
+    }
 }
 
 @end
