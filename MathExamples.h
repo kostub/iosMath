@@ -17,7 +17,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-string-concatenation"
 
-/// 22 showcase formulae demonstrating the breadth of what iosMath can render.
+/// 23 showcase formulae demonstrating the breadth of what iosMath can render.
 static inline NSArray<NSString*>* MathDemoFormulas(void) {
     return @[
         // 0: Quadratic formula
@@ -88,10 +88,12 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
         @"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}"
          "+\\color{#99ff33}{\\frac{\\color{#ff99ff}{o}}{\\color{#990099}{r}}}"
          "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
+        // 22: Explicit-sized vs content-sized delimiters
+        @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
     ];
 }
 
-/// 48 formulae exercising specific typesetter features and edge cases.
+/// 56 formulae exercising specific typesetter features and edge cases.
 static inline NSArray<NSString*>* MathTestFormulas(void) {
     return @[
         // 0: Basic arithmetic
@@ -195,6 +197,22 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
          "\\colorbox{#ff0000}{a} & \\colorbox{#00ff00}{b} \\\\"
          "\\colorbox{#00aaff}{c} & \\colorbox{#f0f0f0}{d}"
          "\\end{pmatrix}}",
+        // 48: Explicit delimiter sizes
+        @"\\big( \\Big( \\bigg( \\Bigg(",
+        // 49: Explicit delimiter classes
+        @"\\bigl( x + y \\bigr) \\quad \\bigm| \\quad \\Bigm\\| \\quad \\big[z\\big]",
+        // 50: Explicit delimiters with named boundaries
+        @"\\bigl\\langle x \\bigr\\rangle \\quad \\bigl\\lceil y \\bigr\\rceil \\quad \\bigl\\lfloor z \\bigr\\rfloor",
+        // 51: Null delimiter
+        @"\\bigl. \\frac{a}{b} \\bigr)",
+        // 52: Scripts on explicit delimiters
+        @"\\bigl( x \\bigr)^2",
+        // 53: Script-style explicit delimiters
+        @"x{\\scriptstyle \\bigl( y \\bigr)}z",
+        // 54: Explicit delimiters vs content-sized delimiters on the same sum
+        @"\\bigl( \\sum_{i=1}^n x_i \\bigr) \\quad = \\quad \\left( \\sum_{i=1}^n x_i \\right)",
+        // 55: Relation-class explicit delimiters
+        @"a \\bigm| b \\quad \\Bigm\\| \\quad c \\biggm\\Vert d",
     ];
 }
 

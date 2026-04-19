@@ -277,6 +277,55 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
 
 @end
 
+/**
+ @typedef MTDelimiterSize
+ @brief Size of a fixed-size TeX delimiter (`\big`, `\Big`, `\bigg`, `\Bigg`).
+
+ Each value corresponds to one of TeX's four fixed delimiter sizes (in
+ increasing order). The concrete glyph height is chosen by the typesetter
+ as a fixed multiple of the current style's font size.
+ */
+typedef NS_ENUM(NSUInteger, MTDelimiterSize) {
+    /// `\big`, `\bigl`, `\bigr`, `\bigm`
+    kMTDelimiterSize1 = 1,
+    /// `\Big`, `\Bigl`, `\Bigr`, `\Bigm`
+    kMTDelimiterSize2 = 2,
+    /// `\bigg`, `\biggl`, `\biggr`, `\biggm`
+    kMTDelimiterSize3 = 3,
+    /// `\Bigg`, `\Biggl`, `\Biggr`, `\Biggm`
+    kMTDelimiterSize4 = 4,
+};
+
+/** A `MTMathAtom` representing an explicit fixed-size delimiter.
+
+ Produced by the parser from the `\big`/`\Big`/`\bigg`/`\Bigg` family (plus
+ their `l`/`r`/`m` classed variants). Unlike `MTInner`, a large delimiter is
+ a single atom — `\bigl(` and `\bigr)` are independent and do not need to
+ pair. The inherited `type` stores the TeX math class (Ord/Open/Close/Rel)
+ and is used by the existing inter-element spacing machinery; the inherited
+ `nucleus` stores the Unicode delimiter string (empty string for the null
+ delimiter `.`).
+ */
+@interface MTLargeDelimiter : MTMathAtom
+
+/** Designated initializer for a large delimiter atom.
+
+ @param nucleus The Unicode delimiter string (may be empty to denote the
+ null delimiter `.`).
+ @param mathClass The TeX math class for spacing. Must be one of
+ `kMTMathAtomOrdinary`, `kMTMathAtomOpen`, `kMTMathAtomClose`, or
+ `kMTMathAtomRelation`.
+ @param size The fixed delimiter size.
+ */
+- (instancetype)initWithDelimiterNucleus:(NSString*) nucleus
+                               mathClass:(MTMathAtomType) mathClass
+                                    size:(MTDelimiterSize) size NS_DESIGNATED_INITIALIZER;
+
+/// The fixed delimiter size (1…4).
+@property (nonatomic, readonly) MTDelimiterSize delimiterSize;
+
+@end
+
 /** An atom representing space.
  @note None of the usual fields of the `MTMathAtom` apply even though this
  class inherits from `MTMathAtom`. i.e. it is meaningless to have a value

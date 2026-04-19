@@ -426,6 +426,20 @@ NSString *const MTParseError = @"ParseError";
     if (atom) {
         return atom;
     }
+    NSDictionary<NSString*, NSDictionary*>* bigTable = [MTMathListBuilder largeDelimiterCommands];
+    NSDictionary* bigSpec = bigTable[command];
+    if (bigSpec) {
+        MTMathAtom* boundary = [self getBoundaryAtom:command];
+        if (!boundary) {
+            // Error already set by getBoundaryAtom:.
+            return nil;
+        }
+        MTMathAtomType mathClass = (MTMathAtomType)[bigSpec[@"class"] unsignedIntegerValue];
+        MTDelimiterSize size = (MTDelimiterSize)[bigSpec[@"size"] unsignedIntegerValue];
+        return [[MTLargeDelimiter alloc] initWithDelimiterNucleus:boundary.nucleus
+                                                        mathClass:mathClass
+                                                             size:size];
+    }
     MTAccent* accent = [MTMathAtomFactory accentWithName:command];
     if (accent) {
         // The command is an accent
@@ -690,6 +704,41 @@ NSString *const MTParseError = @"ParseError";
     return spaceToCommands;
 }
 
++ (NSDictionary<NSString*, NSDictionary*>*) largeDelimiterCommands
+{
+    static NSDictionary<NSString*, NSDictionary*>* largeDelimiterCommands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSNumber* ord = @(kMTMathAtomOrdinary);
+        NSNumber* open = @(kMTMathAtomOpen);
+        NSNumber* close = @(kMTMathAtomClose);
+        NSNumber* rel = @(kMTMathAtomRelation);
+        NSNumber* s1 = @(kMTDelimiterSize1);
+        NSNumber* s2 = @(kMTDelimiterSize2);
+        NSNumber* s3 = @(kMTDelimiterSize3);
+        NSNumber* s4 = @(kMTDelimiterSize4);
+        largeDelimiterCommands = @{
+            @"big"   : @{ @"class": ord,   @"size": s1 },
+            @"Big"   : @{ @"class": ord,   @"size": s2 },
+            @"bigg"  : @{ @"class": ord,   @"size": s3 },
+            @"Bigg"  : @{ @"class": ord,   @"size": s4 },
+            @"bigl"  : @{ @"class": open,  @"size": s1 },
+            @"Bigl"  : @{ @"class": open,  @"size": s2 },
+            @"biggl" : @{ @"class": open,  @"size": s3 },
+            @"Biggl" : @{ @"class": open,  @"size": s4 },
+            @"bigr"  : @{ @"class": close, @"size": s1 },
+            @"Bigr"  : @{ @"class": close, @"size": s2 },
+            @"biggr" : @{ @"class": close, @"size": s3 },
+            @"Biggr" : @{ @"class": close, @"size": s4 },
+            @"bigm"  : @{ @"class": rel,   @"size": s1 },
+            @"Bigm"  : @{ @"class": rel,   @"size": s2 },
+            @"biggm" : @{ @"class": rel,   @"size": s3 },
+            @"Biggm" : @{ @"class": rel,   @"size": s4 },
+        };
+    });
+    return largeDelimiterCommands;
+}
+
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
@@ -871,6 +920,44 @@ NSString *const MTParseError = @"ParseError";
             NSDictionary* styleToCommands = [MTMathListBuilder styleToCommands];
             NSString* command = styleToCommands[@(style.style)];
             [str appendFormat:@"\\%@ ", command];
+        } else if ([atom isKindOfClass:[MTLargeDelimiter class]]) {
+            MTLargeDelimiter* big = (MTLargeDelimiter*)atom;
+            NSString* prefix = nil;
+            switch (big.delimiterSize) {
+                case kMTDelimiterSize1:
+                    prefix = @"big";
+                    break;
+                case kMTDelimiterSize2:
+                    prefix = @"Big";
+                    break;
+                case kMTDelimiterSize3:
+                    prefix = @"bigg";
+                    break;
+                case kMTDelimiterSize4:
+                    prefix = @"Bigg";
+                    break;
+            }
+            NSString* suffix = nil;
+            switch (big.type) {
+                case kMTMathAtomOrdinary:
+                    suffix = @"";
+                    break;
+                case kMTMathAtomOpen:
+                    suffix = @"l";
+                    break;
+                case kMTMathAtomClose:
+                    suffix = @"r";
+                    break;
+                case kMTMathAtomRelation:
+                    suffix = @"m";
+                    break;
+                default:
+                    NSAssert(NO, @"Unsupported large delimiter class %lu", (unsigned long)big.type);
+                    suffix = @"";
+                    break;
+            }
+            MTMathAtom* boundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:big.nucleus];
+            [str appendFormat:@"\\%@%@%@", prefix, suffix, [self delimToString:boundary]];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

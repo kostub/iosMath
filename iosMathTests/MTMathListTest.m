@@ -531,6 +531,46 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkListCopy:copy.innerList original:accent.innerList forTest:self];
 }
 
+- (void) testCreateLargeDelimiter
+{
+    MTLargeDelimiter* big = [[MTLargeDelimiter alloc] initWithDelimiterNucleus:@"("
+                                                                    mathClass:kMTMathAtomOpen
+                                                                         size:kMTDelimiterSize2];
+    XCTAssertEqualObjects(big.nucleus, @"(");
+    XCTAssertEqual(big.type, kMTMathAtomOpen);
+    XCTAssertEqual(big.delimiterSize, kMTDelimiterSize2);
+    XCTAssertTrue(big.scriptsAllowed);
+
+    // Empty nucleus is allowed (null delimiter `.`).
+    MTLargeDelimiter* null = [[MTLargeDelimiter alloc] initWithDelimiterNucleus:@""
+                                                                     mathClass:kMTMathAtomOrdinary
+                                                                          size:kMTDelimiterSize1];
+    XCTAssertEqualObjects(null.nucleus, @"");
+    XCTAssertEqual(null.type, kMTMathAtomOrdinary);
+    XCTAssertEqual(null.delimiterSize, kMTDelimiterSize1);
+
+    // Legacy atomWithType:value: factory does not route to MTLargeDelimiter.
+    MTMathAtom* generic = [MTMathAtom atomWithType:kMTMathAtomOpen value:@"("];
+    XCTAssertFalse([generic isKindOfClass:[MTLargeDelimiter class]]);
+}
+
+- (void) testCopyLargeDelimiter
+{
+    MTLargeDelimiter* big = [[MTLargeDelimiter alloc] initWithDelimiterNucleus:@"\u2308"
+                                                                    mathClass:kMTMathAtomRelation
+                                                                         size:kMTDelimiterSize3];
+
+    MTMathList* scriptList = [[MTMathList alloc] init];
+    [scriptList addAtom:[MTMathAtomFactory placeholder]];
+    big.superScript = scriptList;
+
+    MTLargeDelimiter* copy = [big copy];
+    [MTMathListTest checkAtomCopy:copy original:big forTest:self];
+    XCTAssertEqual(copy.delimiterSize, big.delimiterSize);
+    XCTAssertEqual(copy.type, kMTMathAtomRelation);
+    [MTMathListTest checkListCopy:copy.superScript original:big.superScript forTest:self];
+}
+
 - (void) testCopySpace
 {
     MTMathSpace* space = [[MTMathSpace alloc] initWithSpace:3];

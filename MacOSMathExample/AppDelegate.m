@@ -28,6 +28,11 @@
 
 @implementation AppDelegate
 
+static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUInteger index, CGFloat fallback)
+{
+    return (index < count) ? heights[index] : fallback;
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     self.demoLabels = [[NSMutableArray alloc] init];
@@ -46,19 +51,21 @@
 
     // Flipped document view for top-down layout with white background.
     CGFloat docWidth = scrollView.contentSize.width;
-    MTFlippedView* contentView = [[MTFlippedView alloc] initWithFrame:NSMakeRect(0, 0, docWidth, 4350)];
+    MTFlippedView* contentView = [[MTFlippedView alloc] initWithFrame:NSMakeRect(0, 0, docWidth, 100)];
     contentView.autoresizingMask = NSViewWidthSizable;
     contentView.backgroundColor = NSColor.whiteColor;
     scrollView.documentView = contentView;
 
     // --- Demo formulae — LaTeX strings from MathExamples.h ---
     static const CGFloat demoHeights[] = {
-        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60
+        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60, 70
     };
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {
-        self.demoLabels[i] = [self createMathLabel:demoFormulas[i] withHeight:demoHeights[i]];
-        self.demoLabels[i].fontSize = 15;
+        CGFloat height = HeightAtIndex(demoHeights, sizeof(demoHeights)/sizeof(CGFloat), i, 60);
+        MTMathUILabel* label = [self createMathLabel:demoFormulas[i] withHeight:height];
+        label.fontSize = 15;
+        [self.demoLabels addObject:label];
     }
 
     [self addLabelAsSubview:self.demoLabels[0] to:contentView];
@@ -79,12 +86,26 @@
     static const CGFloat testHeights[] = {
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,
         60, 60, 60, 60, 60, 60, 30, 20, 20, 60, 30, 40, 30, 30, 50, 50,
-        50, 50, 30, 30, 30, 30, 30, 50, 80, 120, 30, 30, 30, 30, 30, 70
+        50, 50, 30, 30, 30, 30, 30, 50, 80, 120, 30, 30, 30, 30, 30, 70,
+        40, 40, 50, 60, 50, 40, 70, 40
     };
     NSArray<NSString*>* testFormulas = MathTestFormulas();
     for (NSUInteger i = 0; i < testFormulas.count; i++) {
-        self.labels[i] = [self createMathLabel:testFormulas[i] withHeight:testHeights[i]];
+        CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
+        [self.labels addObject:[self createMathLabel:testFormulas[i] withHeight:height]];
     }
+
+    CGFloat documentHeight = 10;
+    for (NSUInteger i = 0; i < demoFormulas.count; i++) {
+        documentHeight += HeightAtIndex(demoHeights, sizeof(demoHeights)/sizeof(CGFloat), i, 60);
+        documentHeight += 10;
+    }
+    documentHeight += 30;
+    for (NSUInteger i = 0; i < testFormulas.count; i++) {
+        documentHeight += HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
+        documentHeight += 10;
+    }
+    contentView.frame = NSMakeRect(0, 0, docWidth, documentHeight);
 
     // Rendering properties that are not shared (alignment, mode, color, insets, fontSize).
     NSColor* highlight = [NSColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
