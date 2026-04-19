@@ -920,6 +920,44 @@ NSString *const MTParseError = @"ParseError";
             NSDictionary* styleToCommands = [MTMathListBuilder styleToCommands];
             NSString* command = styleToCommands[@(style.style)];
             [str appendFormat:@"\\%@ ", command];
+        } else if ([atom isKindOfClass:[MTLargeDelimiter class]]) {
+            MTLargeDelimiter* big = (MTLargeDelimiter*)atom;
+            NSString* prefix = nil;
+            switch (big.delimiterSize) {
+                case kMTDelimiterSize1:
+                    prefix = @"big";
+                    break;
+                case kMTDelimiterSize2:
+                    prefix = @"Big";
+                    break;
+                case kMTDelimiterSize3:
+                    prefix = @"bigg";
+                    break;
+                case kMTDelimiterSize4:
+                    prefix = @"Bigg";
+                    break;
+            }
+            NSString* suffix = nil;
+            switch (big.type) {
+                case kMTMathAtomOrdinary:
+                    suffix = @"";
+                    break;
+                case kMTMathAtomOpen:
+                    suffix = @"l";
+                    break;
+                case kMTMathAtomClose:
+                    suffix = @"r";
+                    break;
+                case kMTMathAtomRelation:
+                    suffix = @"m";
+                    break;
+                default:
+                    NSAssert(NO, @"Unsupported large delimiter class %lu", (unsigned long)big.type);
+                    suffix = @"";
+                    break;
+            }
+            MTMathAtom* boundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:big.nucleus];
+            [str appendFormat:@"\\%@%@%@", prefix, suffix, [self delimToString:boundary]];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

@@ -1406,7 +1406,7 @@ static NSArray* getTestDataParseErrors() {
 }
 
 static NSArray* getTestDataLargeDelimiters() {
-    // Each entry: [latex, expected class, expected size, expected nucleus]
+    // Each entry: [latex, expected class, expected size, expected nucleus, expected serialized latex?]
     return @[
         @[ @"\\big(",     @(kMTMathAtomOrdinary), @(kMTDelimiterSize1), @"(" ],
         @[ @"\\Big(",     @(kMTMathAtomOrdinary), @(kMTDelimiterSize2), @"(" ],
@@ -1422,8 +1422,8 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"\\Biggr\\rfloor", @(kMTMathAtomClose),@(kMTDelimiterSize4), @"\u230B" ],
         @[ @"\\bigm|",    @(kMTMathAtomRelation), @(kMTDelimiterSize1), @"|" ],
         @[ @"\\Bigm\\|",  @(kMTMathAtomRelation), @(kMTDelimiterSize2), @"\u2016" ],
-        @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016" ],
-        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u2329" ],
+        @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016", @"\\biggm\\|" ],
+        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u2329", @"\\Biggm<" ],
         // Null delimiter.
         @[ @"\\bigl.",    @(kMTMathAtomOpen),     @(kMTDelimiterSize1), @"" ],
         @[ @"\\bigr.",    @(kMTMathAtomClose),    @(kMTDelimiterSize1), @"" ],
@@ -1446,6 +1446,10 @@ static NSArray* getTestDataLargeDelimiters() {
         XCTAssertEqual(big.type, (MTMathAtomType)[testCase[1] unsignedIntegerValue], @"%@", str);
         XCTAssertEqual(big.delimiterSize, (MTDelimiterSize)[testCase[2] unsignedIntegerValue], @"%@", str);
         XCTAssertEqualObjects(big.nucleus, testCase[3], @"%@", str);
+
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        NSString* expected = (testCase.count > 4) ? testCase[4] : str;
+        XCTAssertEqualObjects(latex, expected, @"%@", str);
     }
 }
 
@@ -1462,6 +1466,9 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertNotNil(big.superScript);
     XCTAssertEqualObjects(@(big.superScript.atoms.count), @1);
     XCTAssertEqual(big.superScript.atoms[0].type, kMTMathAtomNumber);
+
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\bigl(^{2}");
 }
 
 - (void) testLargeDelimiterErrors
@@ -1497,6 +1504,24 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(big.type, kMTMathAtomOrdinary);
     XCTAssertEqual(big.delimiterSize, kMTDelimiterSize1);
     XCTAssertEqualObjects(big.nucleus, @"(");
+}
+
+- (void) testLargeDelimiterSerializationCanonicalDelimiters
+{
+    NSArray<NSArray<NSString*>*>* cases = @[
+        @[ @"\\bigl|", @"\\bigl|" ],
+        @[ @"\\bigm\\|", @"\\bigm\\|" ],
+        @[ @"\\biggm\\Vert", @"\\biggm\\|" ],
+        @[ @"\\bigl.", @"\\bigl." ],
+    ];
+    for (NSArray<NSString*>* testCase in cases) {
+        NSString* input = testCase[0];
+        NSString* expected = testCase[1];
+        MTMathList* list = [MTMathListBuilder buildFromString:input];
+        XCTAssertNotNil(list, @"%@", input);
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, expected, @"%@", input);
+    }
 }
 
 @end
