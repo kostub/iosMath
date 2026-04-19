@@ -805,6 +805,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             case kMTMathAtomClose:
             case kMTMathAtomPlaceholder:
             case kMTMathAtomPunctuation: {
+                if ([atom isKindOfClass:[MTLargeDelimiter class]]) {
+                    if (_currentLine.length > 0) {
+                        [self addDisplayLine];
+                    }
+                    [self addInterElementSpace:prevNode currentType:atom.type];
+                    MTDisplay* display = [self makeLargeDelimiter:(MTLargeDelimiter*)atom];
+                    display.position = _currentPosition;
+                    _currentPosition.x += display.width;
+                    [_displayAtoms addObject:display];
+                    if (atom.subScript || atom.superScript) {
+                        [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                    }
+                    break;
+                }
                 // the rendering for all the rest is pretty similar
                 // All we need is render the character and set the interelement space.
                 if (prevNode) {
@@ -1112,6 +1126,35 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     } else {
         return _styleFont.mathTable.fractionDelimiterSize;
     }
+}
+
+- (CGFloat) targetHeightForLargeDelimiterSize:(MTDelimiterSize)size
+{
+    CGFloat em = _styleFont.fontSize;
+    switch (size) {
+        case kMTDelimiterSize1:
+            return 1.200f * em;
+        case kMTDelimiterSize2:
+            return 1.623f * em;
+        case kMTDelimiterSize3:
+            return 2.047f * em;
+        case kMTDelimiterSize4:
+            return 2.470f * em;
+    }
+}
+
+- (MTDisplay*) makeLargeDelimiter:(MTLargeDelimiter*)atom
+{
+    if (atom.nucleus.length == 0) {
+        MTDisplay* emptyDisplay = [MTDisplay new];
+        emptyDisplay.width = 0;
+        emptyDisplay.ascent = 0;
+        emptyDisplay.descent = 0;
+        emptyDisplay.range = atom.indexRange;
+        return emptyDisplay;
+    }
+    return [self findGlyphForBoundary:atom.nucleus
+                           withHeight:[self targetHeightForLargeDelimiterSize:atom.delimiterSize]];
 }
 
 - (MTLineStyle) fractionStyle

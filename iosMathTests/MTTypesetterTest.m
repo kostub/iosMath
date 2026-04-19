@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MTTypesetter.h"
+#import "MTFont+Internal.h"
 #import "MTFontManager.h"
 #import "MTMathListDisplay.h"
 #import "MTMathAtomFactory.h"
@@ -30,6 +31,20 @@
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
+}
+
+- (MTMathListDisplay*)displayForLaTeX:(NSString*)latex
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:latex];
+    XCTAssertNotNil(list, @"%@", latex);
+    return [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+}
+
+- (MTDisplay*)singleDisplayForLaTeX:(NSString*)latex
+{
+    MTMathListDisplay* display = [self displayForLaTeX:latex];
+    XCTAssertEqual(display.subDisplays.count, 1, @"%@", latex);
+    return display.subDisplays.firstObject;
 }
 
 - (void)testSimpleVariable {
@@ -1574,6 +1589,98 @@
     XCTAssertEqualWithAccuracy(display.ascent, 14.98, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
     XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
+}
+
+- (void)testLargeDelimiterHeightsIncreaseBySize
+{
+    NSArray<NSString*>* tests = @[ @"\\big(", @"\\Big(", @"\\bigg(", @"\\Bigg(" ];
+    CGFloat previousHeight = 0;
+    for (NSString* latex in tests) {
+        MTDisplay* delimiter = [self singleDisplayForLaTeX:latex];
+        XCTAssertTrue([delimiter isKindOfClass:[MTGlyphDisplay class]], @"%@", latex);
+        CGFloat height = delimiter.ascent + delimiter.descent;
+        XCTAssertGreaterThan(height, previousHeight, @"%@", latex);
+        previousHeight = height;
+    }
+    XCTAssertGreaterThanOrEqual(previousHeight, 2.470f * self.font.fontSize);
+}
+
+- (void)testLargeDelimiterClassDoesNotChangeGlyphMetrics
+{
+    MTDisplay* ordinary = [self singleDisplayForLaTeX:@"\\big("];
+    MTDisplay* open = [self singleDisplayForLaTeX:@"\\bigl("];
+    MTDisplay* close = [self singleDisplayForLaTeX:@"\\bigr("];
+    XCTAssertEqualWithAccuracy(ordinary.ascent, open.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(ordinary.descent, open.descent, 0.01);
+    XCTAssertEqualWithAccuracy(ordinary.width, open.width, 0.01);
+    XCTAssertEqualWithAccuracy(ordinary.ascent, close.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(ordinary.descent, close.descent, 0.01);
+    XCTAssertEqualWithAccuracy(ordinary.width, close.width, 0.01);
+}
+
+- (void)testLargeDelimiterOpenSpacingIsZeroBeforeOrdinaryAtom
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\bigl(x"];
+    XCTAssertEqual(display.subDisplays.count, 2u);
+
+    MTDisplay* left = display.subDisplays[0];
+    MTDisplay* x = display.subDisplays[1];
+    CGFloat gap = x.position.x - (left.position.x + left.width);
+    XCTAssertEqualWithAccuracy(gap, 0, 0.01);
+}
+
+- (void)testLargeDelimiterRelationSpacingExceedsOrdinaryDelimiterSpacing
+{
+    MTMathListDisplay* relation = [self displayForLaTeX:@"\\bigm|x"];
+    MTMathListDisplay* ordinary = [self displayForLaTeX:@"|x"];
+    XCTAssertEqual(relation.subDisplays.count, 2u);
+    XCTAssertEqual(ordinary.subDisplays.count, 1u);
+
+    MTDisplay* relDelimiter = relation.subDisplays[0];
+    MTDisplay* relX = relation.subDisplays[1];
+    MTCTLineDisplay* ordinaryLine = (MTCTLineDisplay*)ordinary.subDisplays[0];
+    XCTAssertTrue([ordinaryLine isKindOfClass:[MTCTLineDisplay class]]);
+    XCTAssertEqual(ordinaryLine.atoms.count, 2u);
+
+    CGFloat relationGap = relX.position.x - (relDelimiter.position.x + relDelimiter.width);
+    XCTAssertGreaterThan(relationGap, 0.0);
+}
+
+- (void)testLargeDelimiterNullDelimiterHasZeroWidth
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\bigl.x\\bigr."];
+    XCTAssertEqual(display.subDisplays.count, 3u);
+
+    MTDisplay* left = display.subDisplays[0];
+    MTDisplay* x = display.subDisplays[1];
+    MTDisplay* right = display.subDisplays[2];
+
+    XCTAssertEqualWithAccuracy(left.width, 0, 0.001);
+    XCTAssertEqualWithAccuracy(left.ascent, 0, 0.001);
+    XCTAssertEqualWithAccuracy(left.descent, 0, 0.001);
+    XCTAssertEqualWithAccuracy(right.width, 0, 0.001);
+    XCTAssertEqualWithAccuracy(x.position.x, 0, 0.001);
+}
+
+- (void)testLargeDelimiterScalesInScriptStyle
+{
+    MTDisplay* displayStyle = [self singleDisplayForLaTeX:@"\\big("];
+    MTDisplay* scriptStyle = [self singleDisplayForLaTeX:@"\\scriptstyle\\big("];
+    CGFloat displayHeight = displayStyle.ascent + displayStyle.descent;
+    CGFloat scriptHeight = scriptStyle.ascent + scriptStyle.descent;
+    CGFloat expectedRatio = self.font.mathTable.scriptScaleDown;
+    XCTAssertEqualWithAccuracy(scriptHeight / displayHeight, expectedRatio, 0.12);
+}
+
+- (void)testLargeDelimiterSupportsScripts
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\big(^2"];
+    XCTAssertEqual(display.subDisplays.count, 2u);
+    MTDisplay* delimiter = display.subDisplays[0];
+    MTMathListDisplay* superscript = (MTMathListDisplay*)display.subDisplays[1];
+    XCTAssertTrue([delimiter isKindOfClass:[MTGlyphDisplay class]]);
+    XCTAssertTrue([superscript isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertEqual(superscript.type, kMTLinePositionSuperscript);
 }
 
 
