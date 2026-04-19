@@ -147,12 +147,13 @@ private struct ExampleCard: View {
 private struct GalleryTab: View {
 
     private static let demoHeights: [CGFloat] = [
-        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60
+        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60, 70
     ]
     private static let testHeights: [CGFloat] = [
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,
         60, 60, 60, 60, 60, 60, 30, 20, 20, 60, 30, 40, 30, 30, 50, 50,
-        50, 50, 30, 30, 30, 30, 30, 50, 80, 120, 30, 30, 30, 30, 30, 70
+        50, 50, 30, 30, 30, 30, 30, 50, 80, 120, 30, 30, 30, 30, 30, 70,
+        40, 40, 50, 60, 50, 40, 70, 40
     ]
 
     private let demoFormulas: [String] = MathDemoFormulas()
@@ -166,7 +167,7 @@ private struct GalleryTab: View {
                     // Demo formulae
                     ForEach(demoFormulas.indices, id: \.self) { i in
                         MathLabel(latex: demoFormulas[i], fontSize: 15)
-                            .frame(height: Self.demoHeights[i])
+                            .frame(height: demoHeight(at: i))
                             .padding(.horizontal, 10)
                     }
 
@@ -183,7 +184,7 @@ private struct GalleryTab: View {
                             leftInset: i == 6 ? 20 : 0,
                             rightInset: i == 3 ? 20 : 0
                         )
-                        .frame(height: Self.testHeights[i])
+                        .frame(height: testHeight(at: i))
                         .padding(.horizontal, 10)
                     }
                 }
@@ -206,6 +207,14 @@ private struct GalleryTab: View {
         case 9: return 10
         default: return 15
         }
+    }
+
+    private func demoHeight(at i: Int) -> CGFloat {
+        Self.demoHeights.indices.contains(i) ? Self.demoHeights[i] : 60
+    }
+
+    private func testHeight(at i: Int) -> CGFloat {
+        Self.testHeights.indices.contains(i) ? Self.testHeights[i] : 40
     }
 
     private func testMode(at i: Int) -> MTMathUILabelMode {
