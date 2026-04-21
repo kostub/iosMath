@@ -8,15 +8,25 @@ let package = Package(
   platforms: [.iOS(.v10), .macOS(.v11)],
   products: [
     .library(
+      name: "iosMathCore",
+      targets: ["iosMathCore"]),
+    .library(
       name: "iosMath",
-      targets: ["iosMath"])
+      targets: ["iosMath"]),
   ],
   dependencies: [],
   targets: [
     .target(
-      name: "iosMath",
+      name: "iosMathCore",
       dependencies: [],
+      path: "./iosMath/lib",
+      publicHeadersPath: ""
+    ),
+    .target(
+      name: "iosMath",
+      dependencies: ["iosMathCore"],
       path: "./iosMath",
+      exclude: ["lib"],
       resources: [
         .process("fonts")
       ],
@@ -30,7 +40,7 @@ let package = Package(
     ),
     .testTarget(
       name: "iosMathTests",
-      dependencies: ["iosMath"],
+      dependencies: ["iosMath", "iosMathCore"],
       path: "iosMathTests",
       cSettings: [
         .headerSearchPath("../iosMath/render"),
