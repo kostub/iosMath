@@ -58,7 +58,11 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     kMTMathAtomOverline,
     /// An accented atom - Accent in TeX
     kMTMathAtomAccent,
-    
+    /// A generic over/under stack atom. Supports \overrightarrow, \overleftarrow,
+    /// \overleftrightarrow, \underrightarrow, \underleftarrow, \underleftrightarrow,
+    /// \overbrace, \underbrace. Future: \stackrel, \overset, \underset.
+    kMTMathAtomStack,
+
     // Atoms after this point do not support subscripts or superscripts
     
     /// A left atom - Left & Right in TeX. We don't need two since we track boundaries separately.
@@ -370,6 +374,93 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
 
 /** The style represented by this object. */
 @property (nonatomic, readonly) MTLineStyle style;
+
+@end
+
+/**
+ @typedef MTMathStackConstructionKind
+ @brief Describes how an over/under row in an `MTMathStack` is produced.
+ */
+typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
+    /// An extensible horizontal construction: left cap glyph, tiled extender glyph, right cap glyph.
+    /// Any of the three fields may be nil; the typesetter dispatches on which are present.
+    kMTMathStackConstructionExtensible,
+    /// A math list typeset at a specified style (for \stackrel / \overset / \underset).
+    kMTMathStackConstructionMathList,
+    /// A horizontal rule (reserved for future \overline / \underline migration; unused in Phase 1).
+    kMTMathStackConstructionRule,
+};
+
+/**
+ An immutable value object describing how one row (over or under) of an `MTMathStack` is produced.
+
+ For the `Extensible` kind the three string properties (`leftCap`, `extender`, `rightCap`) each hold
+ a single Unicode code point (or nil). The typesetter uses whichever are present to construct a
+ horizontal glyph strip that covers the base width. When `extender` is nil and exactly one cap is
+ set the construction is treated as a single stretchy glyph (brace path); otherwise glyphs are
+ assembled. The `Rule` kind is reserved for a future migration of \overline / \underline and is
+ not used in Phase 1.
+ */
+@interface MTMathStackConstruction : NSObject <NSCopying>
+
+@property (nonatomic, readonly) MTMathStackConstructionKind kind;
+
+// Extensible fields (kind == kMTMathStackConstructionExtensible)
+/// Left cap glyph nucleus — a single Unicode codepoint string, or nil.
+@property (nonatomic, readonly, nullable) NSString* leftCap;
+/// Extender (relbar) glyph nucleus — a single Unicode codepoint string, or nil.
+/// When nil and exactly one cap is set, the construction is the single-stretchy path.
+@property (nonatomic, readonly, nullable) NSString* extender;
+/// Right cap glyph nucleus — a single Unicode codepoint string, or nil.
+@property (nonatomic, readonly, nullable) NSString* rightCap;
+
+// MathList fields (kind == kMTMathStackConstructionMathList)
+@property (nonatomic, readonly, nullable) MTMathList* list;
+@property (nonatomic, readonly) MTLineStyle listStyle;
+@property (nonatomic, readonly) BOOL listCramped;
+
+// Rule fields (kind == kMTMathStackConstructionRule)
+/// Rule thickness in points. 0 means use the font's default.
+@property (nonatomic, readonly) CGFloat ruleThickness;
+
++ (instancetype)extensibleWithLeft:(nullable NSString*)leftCap
+                          extender:(nullable NSString*)extender
+                             right:(nullable NSString*)rightCap;
++ (instancetype)mathListWithList:(MTMathList*)list
+                           style:(MTLineStyle)style
+                         cramped:(BOOL)cramped;
++ (instancetype)ruleWithThickness:(CGFloat)thickness;
+
+@end
+
+/**
+ A generic over/under stack atom. Carries a base inner list with optional over and under
+ constructions. Supports \overrightarrow, \overleftarrow, \overleftrightarrow,
+ \underrightarrow, \underleftarrow, \underleftrightarrow, \overbrace, \underbrace.
+
+ The `displayClass` controls inter-element spacing (Rule 16 re-classification). The default
+ is `kMTMathAtomOrdinary` which matches \overline / \underline / accents. \stackrel sets it
+ to `kMTMathAtomRelation`.
+
+ Scripts (super/subscript) are allowed because `kMTMathAtomStack` is below
+ `kMTMathAtomBoundary` in the enum.
+ */
+@interface MTMathStack : MTMathAtom
+
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
+/// The base math list whose width drives the construction width.
+@property (nonatomic, nullable) MTMathList* innerList;
+
+/// The over-row construction, or nil if there is no over row.
+@property (nonatomic, nullable) MTMathStackConstruction* over;
+
+/// The under-row construction, or nil if there is no under row.
+@property (nonatomic, nullable) MTMathStackConstruction* under;
+
+/// The math class used for inter-element spacing after typesetting.
+/// Default: kMTMathAtomOrdinary.
+@property (nonatomic) MTMathAtomType displayClass;
 
 @end
 

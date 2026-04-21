@@ -12,6 +12,7 @@
 #import "MTFont+Internal.h"
 #import "MTFontManager.h"
 #import "MTMathListDisplay.h"
+#import "MTMathListDisplayInternal.h"
 #import "MTMathAtomFactory.h"
 #import "MTMathListBuilder.h"
 
@@ -1681,6 +1682,225 @@
     XCTAssertTrue([delimiter isKindOfClass:[MTGlyphDisplay class]]);
     XCTAssertTrue([superscript isKindOfClass:[MTMathListDisplay class]]);
     XCTAssertEqual(superscript.type, kMTLinePositionSuperscript);
+}
+
+#pragma mark - Stack tests
+
+- (void)testOverrightarrowNarrow
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{x}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
+    XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(display.hasScript);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+    XCTAssertTrue(NSEqualRanges(stack.range, NSMakeRange(0, 1)));
+    XCTAssertFalse(stack.hasScript);
+    XCTAssertTrue(CGPointEqualToPoint(stack.position, CGPointZero));
+
+    XCTAssertNotNil(stack.base);
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+
+    // For narrow 'x' the assembled-path fast-path fires: widest rightarrow variant covers x.
+    XCTAssertTrue([stack.over isKindOfClass:[MTGlyphDisplay class]]);
+
+    // Base is at y=0 (baseline aligned to stack origin).
+    XCTAssertEqualWithAccuracy(stack.base.position.y, 0, 0.01);
+
+    // Dimension assertions using dynamic font metrics.
+    CGFloat gapAbove = self.font.mathTable.stretchStackGapAboveMin;
+    CGFloat expectedAscent = stack.base.ascent + gapAbove + stack.over.ascent + stack.over.descent;
+    XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, stack.base.descent, 0.01);
+
+    // Width accommodates both base and over-row.
+    XCTAssertGreaterThanOrEqual(display.width + 0.01, stack.base.width);
+    XCTAssertGreaterThanOrEqual(display.width + 0.01, stack.over.width);
+}
+
+- (void)testOverrightarrowWide
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{ABCD}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+
+    // Wide base forces assembly: over-row must be a horizontal glyph assembly.
+    XCTAssertTrue([stack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
+
+    // Over must span the full base width.
+    XCTAssertGreaterThanOrEqual(stack.over.width + 0.01, stack.base.width);
+
+    CGFloat gapAbove = self.font.mathTable.stretchStackGapAboveMin;
+    CGFloat expectedAscent = stack.base.ascent + gapAbove + stack.over.ascent + stack.over.descent;
+    XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, stack.base.descent, 0.01);
+    XCTAssertGreaterThanOrEqual(display.width + 0.01, stack.base.width);
+}
+
+- (void)testOverleftrightarrow
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overleftrightarrow{xyz}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+
+    // overleftrightarrow has both caps + extender; for 'xyz' (wider than a single cap), uses assembly.
+    XCTAssertTrue([stack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
+
+    // Over must cover the base.
+    XCTAssertGreaterThanOrEqual(stack.over.width + 0.01, stack.base.width);
+}
+
+- (void)testOverbrace
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overbrace{ABC}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+
+    // Brace uses single-stretchy variant path (no extender) -> plain MTGlyphDisplay.
+    XCTAssertTrue([stack.over isKindOfClass:[MTGlyphDisplay class]]);
+
+    // Selected variant must be wide enough to cover the base.
+    XCTAssertGreaterThanOrEqual(stack.over.width + 0.01, stack.base.width);
+
+    CGFloat gapAbove = self.font.mathTable.stretchStackGapAboveMin;
+    CGFloat expectedAscent = stack.base.ascent + gapAbove + stack.over.ascent + stack.over.descent;
+    XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
+    XCTAssertEqualWithAccuracy(display.descent, stack.base.descent, 0.01);
+}
+
+- (void)testUnderbrace
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\underbrace{ABC}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+
+    XCTAssertNil(stack.over);
+    XCTAssertNotNil(stack.under);
+
+    // Brace uses single-stretchy variant path -> plain MTGlyphDisplay.
+    XCTAssertTrue([stack.under isKindOfClass:[MTGlyphDisplay class]]);
+
+    // Selected variant must be wide enough to cover the base.
+    XCTAssertGreaterThanOrEqual(stack.under.width + 0.01, stack.base.width);
+
+    CGFloat gapBelow = self.font.mathTable.stretchStackGapBelowMin;
+    CGFloat expectedDescent = stack.base.descent + gapBelow + stack.under.ascent + stack.under.descent;
+    XCTAssertEqualWithAccuracy(display.descent, expectedDescent, 0.01);
+    XCTAssertEqualWithAccuracy(display.ascent, stack.base.ascent, 0.01);
+}
+
+- (void)testUnderrightarrow
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\underrightarrow{x}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+
+    XCTAssertNil(stack.over);
+    XCTAssertNotNil(stack.under);
+
+    XCTAssertEqualWithAccuracy(display.ascent, stack.base.ascent, 0.01);
+
+    CGFloat gapBelow = self.font.mathTable.stretchStackGapBelowMin;
+    CGFloat expectedDescent = stack.base.descent + gapBelow + stack.under.ascent + stack.under.descent;
+    XCTAssertEqualWithAccuracy(display.descent, expectedDescent, 0.01);
+}
+
+- (void)testStackScripts
+{
+    // \overrightarrow{x}^2: the superscript should attach to the whole stack, not just the base.
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{x}^2"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* superscript = (MTMathListDisplay*)sub1;
+    XCTAssertEqual(superscript.type, kMTLinePositionSuperscript);
+
+    // Superscript must sit above the baseline and to the right of the stack.
+    XCTAssertGreaterThan(superscript.position.y, 0.0);
+    XCTAssertGreaterThan(superscript.position.x, 0.0);
+
+    // Superscript must be positioned at or above the stack's full ascent
+    // (it should not overlap with the over-row).
+    MTStackDisplay* stack = (MTStackDisplay*)sub0;
+    XCTAssertGreaterThanOrEqual(superscript.position.y + superscript.descent + 0.01,
+                                stack.base.ascent);
+}
+
+- (void)testStackNestedStacks
+{
+    // \overrightarrow{\overleftarrow{x}}: outer base is itself an MTStackDisplay.
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{\\overleftarrow{x}}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]]);
+    MTStackDisplay* outerStack = (MTStackDisplay*)sub0;
+
+    XCTAssertNotNil(outerStack.base);
+    XCTAssertEqual(outerStack.base.subDisplays.count, 1u);
+    MTDisplay* innerSub0 = outerStack.base.subDisplays[0];
+    XCTAssertTrue([innerSub0 isKindOfClass:[MTStackDisplay class]]);
+
+    // Outer ascent must be greater than the base's ascent (it adds the outer over-row).
+    XCTAssertGreaterThan(display.ascent, outerStack.base.ascent);
+}
+
+- (void)testBraceVsArrowUseDifferentPaths
+{
+    // Brace (single stretchy, no extender) should produce MTGlyphDisplay even for a wide base.
+    MTMathListDisplay* braceDisplay = [self displayForLaTeX:@"\\overbrace{ABCDEF}"];
+    XCTAssertEqual(braceDisplay.subDisplays.count, 1u);
+    MTStackDisplay* braceStack = (MTStackDisplay*)braceDisplay.subDisplays[0];
+    XCTAssertTrue([braceStack isKindOfClass:[MTStackDisplay class]]);
+    XCTAssertTrue([braceStack.over isKindOfClass:[MTGlyphDisplay class]]);
+
+    // Arrow with wide base (assembled extensible) should produce MTHorizontalGlyphAssemblyDisplay.
+    MTMathListDisplay* arrowDisplay = [self displayForLaTeX:@"\\overrightarrow{ABCDEF}"];
+    XCTAssertEqual(arrowDisplay.subDisplays.count, 1u);
+    MTStackDisplay* arrowStack = (MTStackDisplay*)arrowDisplay.subDisplays[0];
+    XCTAssertTrue([arrowStack isKindOfClass:[MTStackDisplay class]]);
+    XCTAssertTrue([arrowStack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
 }
 
 

@@ -93,7 +93,7 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
     ];
 }
 
-/// 56 formulae exercising specific typesetter features and edge cases.
+/// 68 formulae exercising specific typesetter features and edge cases.
 static inline NSArray<NSString*>* MathTestFormulas(void) {
     return @[
         // 0: Basic arithmetic
@@ -213,6 +213,30 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"\\bigl( \\sum_{i=1}^n x_i \\bigr) \\quad = \\quad \\left( \\sum_{i=1}^n x_i \\right)",
         // 55: Relation-class explicit delimiters
         @"a \\bigm| b \\quad \\Bigm\\| \\quad c \\biggm\\Vert d",
+        // 56: Narrow vector (single-glyph fast path)
+        @"\\overrightarrow{x}",
+        // 57: Two-letter vector
+        @"\\overrightarrow{AB}",
+        // 58: Leftward arrow
+        @"\\overleftarrow{x}",
+        // 59: Both-direction arrow
+        @"\\overleftrightarrow{ABC}",
+        // 60: Wide base — exercises arrow assembly
+        @"\\overrightarrow{ABCDEFGH}",
+        // 61: Overbrace stretchy
+        @"\\overbrace{a+b+c+d}",
+        // 62: Underbrace stretchy
+        @"\\underbrace{1+2+3+4+5}",
+        // 63: Brace with scripts on top/bottom
+        @"\\overbrace{a+b+c}^{n} + \\underbrace{d+e+f}_{m}",
+        // 64: Stack with scripts
+        @"\\overrightarrow{x}^{2} + \\overrightarrow{y}_{i}",
+        // 65: Nested stacks
+        @"\\overrightarrow{\\overleftarrow{x}}",
+        // 66: Mixed arrow directions
+        @"\\overrightarrow{x} \\cdot \\overleftarrow{y}",
+        // 67: Nested brace over arrow
+        @"\\overbrace{\\overrightarrow{AB}}^{\\text{unit}}",
     ];
 }
 

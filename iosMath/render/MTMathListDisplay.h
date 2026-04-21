@@ -171,6 +171,28 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+/**
+ Rendering of a generic over/under stack as an MTDisplay.
+
+ Produced by `MTTypesetter` for `MTMathStack` atoms (`\overrightarrow`, `\overleftarrow`,
+ `\overbrace`, `\underbrace`, and similar commands). The `base` display is positioned at the
+ stack's baseline; `over` and `under` are pre-positioned above and below it by the typesetter.
+ */
+@interface MTStackDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+/// The base (inner-list) display. Its baseline is the stack's baseline.
+@property (nonatomic, readonly) MTMathListDisplay* base;
+
+/// The over-row display, or nil if there is no over row.
+@property (nonatomic, readonly, nullable) MTDisplay* over;
+
+/// The under-row display, or nil if there is no under row.
+@property (nonatomic, readonly, nullable) MTDisplay* under;
+
+@end
+
 /// Rendering an accent as a display
 @interface MTAccentDisplay : MTDisplay
 

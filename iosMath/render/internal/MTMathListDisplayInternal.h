@@ -114,6 +114,32 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface MTStackDisplay ()
+
+- (instancetype)initWithBase:(MTMathListDisplay*) base
+                        over:(nullable MTDisplay*) over
+                       under:(nullable MTDisplay*) under
+                       range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@end
+
+/// Horizontal assembled glyph display — horizontal twin of `MTGlyphConstructionDisplay`.
+/// Used to render arrow constructions of the form [leftCap, extender×N, rightCap].
+@interface MTHorizontalGlyphAssemblyDisplay : MTDisplay
+
+- (instancetype)init NS_UNAVAILABLE;
+
+/// @param glyphs  Array of CGGlyph values (as NSNumber shortValue).
+/// @param positions  Array of CGPoint values (as NSValue CGPointValue); x=horizontal offset, y=0.
+/// @param font  The font used to draw the glyphs.
+/// @param range  Source range in the parent math list.
+- (instancetype)initWithGlyphs:(NSArray<NSNumber*>*) glyphs
+                     positions:(NSArray<NSValue*>*) positions
+                          font:(MTFont*) font
+                         range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@end
+
 
 @interface MTInnerDisplay ()
 

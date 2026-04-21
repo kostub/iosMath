@@ -60,6 +60,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Overline";
         case kMTMathAtomAccent:
             return @"Accent";
+        case kMTMathAtomStack:
+            return @"Stack";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -117,7 +119,10 @@ static NSString* typeToText(MTMathAtomType type) {
             
         case kMTMathAtomAccent:
             return [[MTAccent alloc] initWithValue:value];
-            
+
+        case kMTMathAtomStack:
+            return [[MTMathStack alloc] init];
+
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
         
@@ -919,6 +924,113 @@ static NSString* typeToText(MTMathAtomType type) {
 - (NSUInteger) numRows
 {
     return self.cells.count;
+}
+
+@end
+
+#pragma mark - MTMathStackConstruction
+
+@implementation MTMathStackConstruction
+
++ (instancetype)extensibleWithLeft:(nullable NSString*)leftCap
+                          extender:(nullable NSString*)extender
+                             right:(nullable NSString*)rightCap
+{
+    MTMathStackConstruction* c = [[self alloc] init];
+    c->_kind = kMTMathStackConstructionExtensible;
+    c->_leftCap = [leftCap copy];
+    c->_extender = [extender copy];
+    c->_rightCap = [rightCap copy];
+    return c;
+}
+
++ (instancetype)mathListWithList:(MTMathList*)list
+                           style:(MTLineStyle)style
+                         cramped:(BOOL)cramped
+{
+    NSParameterAssert(list);
+    MTMathStackConstruction* c = [[self alloc] init];
+    c->_kind = kMTMathStackConstructionMathList;
+    c->_list = [list copy];
+    c->_listStyle = style;
+    c->_listCramped = cramped;
+    return c;
+}
+
++ (instancetype)ruleWithThickness:(CGFloat)thickness
+{
+    MTMathStackConstruction* c = [[self alloc] init];
+    c->_kind = kMTMathStackConstructionRule;
+    c->_ruleThickness = thickness;
+    return c;
+}
+
+- (id)copyWithZone:(NSZone*)zone
+{
+    MTMathStackConstruction* copy = [[MTMathStackConstruction allocWithZone:zone] init];
+    copy->_kind = _kind;
+    copy->_leftCap = [_leftCap copyWithZone:zone];
+    copy->_extender = [_extender copyWithZone:zone];
+    copy->_rightCap = [_rightCap copyWithZone:zone];
+    copy->_list = [_list copyWithZone:zone];
+    copy->_listStyle = _listStyle;
+    copy->_listCramped = _listCramped;
+    copy->_ruleThickness = _ruleThickness;
+    return copy;
+}
+
+@end
+
+#pragma mark - MTMathStack
+
+@implementation MTMathStack
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomStack value:@""];
+    if (self) {
+        _displayClass = kMTMathAtomOrdinary;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomStack) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathStack initWithType:value:] cannot be called. Use [MTMathStack init] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone*)zone
+{
+    MTMathStack* copy = [super copyWithZone:zone];
+    copy.innerList = [self.innerList copyWithZone:zone];
+    copy.over = [self.over copyWithZone:zone];
+    copy.under = [self.under copyWithZone:zone];
+    copy->_displayClass = self.displayClass;
+    return copy;
+}
+
+- (instancetype)finalized
+{
+    MTMathStack* newStack = [super finalized];
+    newStack.innerList = newStack.innerList.finalized;
+    if (newStack.over && newStack.over.kind == kMTMathStackConstructionMathList) {
+        MTMathStackConstruction* overConst = newStack.over;
+        newStack.over = [MTMathStackConstruction mathListWithList:overConst.list.finalized
+                                                           style:overConst.listStyle
+                                                         cramped:overConst.listCramped];
+    }
+    if (newStack.under && newStack.under.kind == kMTMathStackConstructionMathList) {
+        MTMathStackConstruction* underConst = newStack.under;
+        newStack.under = [MTMathStackConstruction mathListWithList:underConst.list.finalized
+                                                            style:underConst.listStyle
+                                                          cramped:underConst.listCramped];
+    }
+    return newStack;
 }
 
 @end
