@@ -135,6 +135,11 @@ app and the different equations that you can render. To run the sample
 app, clone the repository, and run `pod install` first. Then on iOS run the
 __iosMathExample__ app. For MacOS run the __MacOSMath__ app.
 
+For a Swift/SwiftUI sample that consumes iosMath via Swift Package Manager
+(no CocoaPods required), open `iosMathSwiftUIExample/iosMathSwiftUIExample.xcodeproj`
+and run the __iosMathSwiftUIExample__ scheme. The project references the
+iosMath package at the repository root as a local Swift package.
+
 ### Advanced configuration
 
 `MTMathUILabel` supports some advanced configuration options:
