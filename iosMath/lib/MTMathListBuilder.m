@@ -957,7 +957,12 @@ NSString *const MTParseError = @"ParseError";
                     break;
             }
             MTMathAtom* boundary = [MTMathAtom atomWithType:kMTMathAtomBoundary value:big.nucleus];
-            [str appendFormat:@"\\%@%@%@", prefix, suffix, [self delimToString:boundary]];
+            NSString* delimStr = [self delimToString:boundary];
+            // Alphabetic command delimiters (e.g. \lfloor) need a trailing space so
+            // readString in the parser doesn't absorb the next token into the command name.
+            BOOL needsSpace = delimStr.length >= 2 && [delimStr characterAtIndex:0] == '\\'
+                              && isalpha([delimStr characterAtIndex:1]);
+            [str appendFormat:@"\\%@%@%@%@", prefix, suffix, delimStr, needsSpace ? @" " : @""];
         } else if (atom.nucleus.length == 0) {
             [str appendString:@"{}"];
         } else if ([atom.nucleus isEqualToString:@"\u2236"]) {

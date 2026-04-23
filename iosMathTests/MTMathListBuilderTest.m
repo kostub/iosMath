@@ -1415,11 +1415,11 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"\\bigl(",    @(kMTMathAtomOpen),     @(kMTDelimiterSize1), @"(" ],
         @[ @"\\Bigl[",    @(kMTMathAtomOpen),     @(kMTDelimiterSize2), @"[" ],
         @[ @"\\biggl\\{", @(kMTMathAtomOpen),     @(kMTDelimiterSize3), @"{" ],
-        @[ @"\\Biggl\\lceil", @(kMTMathAtomOpen), @(kMTDelimiterSize4), @"\u2308" ],
+        @[ @"\\Biggl\\lceil", @(kMTMathAtomOpen), @(kMTDelimiterSize4), @"\u2308", @"\\Biggl\\lceil " ],
         @[ @"\\bigr)",    @(kMTMathAtomClose),    @(kMTDelimiterSize1), @")" ],
         @[ @"\\Bigr]",    @(kMTMathAtomClose),    @(kMTDelimiterSize2), @"]" ],
         @[ @"\\biggr\\}", @(kMTMathAtomClose),    @(kMTDelimiterSize3), @"}" ],
-        @[ @"\\Biggr\\rfloor", @(kMTMathAtomClose),@(kMTDelimiterSize4), @"\u230B" ],
+        @[ @"\\Biggr\\rfloor", @(kMTMathAtomClose),@(kMTDelimiterSize4), @"\u230B", @"\\Biggr\\rfloor " ],
         @[ @"\\bigm|",    @(kMTMathAtomRelation), @(kMTDelimiterSize1), @"|" ],
         @[ @"\\Bigm\\|",  @(kMTMathAtomRelation), @(kMTDelimiterSize2), @"\u2016" ],
         @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016", @"\\biggm\\|" ],
@@ -1504,6 +1504,36 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(big.type, kMTMathAtomOrdinary);
     XCTAssertEqual(big.delimiterSize, kMTDelimiterSize1);
     XCTAssertEqualObjects(big.nucleus, @"(");
+}
+
+// Regression test: named-command delimiters (e.g. \lfloor) must serialize with a
+// trailing space so that re-parsing doesn't merge the command with the following token.
+- (void) testLargeDelimiterRoundTripNamedCommandDelimiter
+{
+    // \bigl\lfloor x \bigr\rfloor — the named delimiters are followed by a letter atom.
+    // Without a trailing space after \lfloor the serializer would emit \bigl\lfloorx,
+    // which the parser would read as the unknown delimiter "lfloorx" → parse error.
+    NSString* input = @"\\bigl\\lfloor x\\bigr\\rfloor";
+    MTMathList* list = [MTMathListBuilder buildFromString:input];
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @3);
+
+    NSString* serialized = [MTMathListBuilder mathListToString:list];
+    // Confirm the space is present between \lfloor and x (not \lfloorx).
+    XCTAssertEqualObjects(serialized, @"\\bigl\\lfloor x\\bigr\\rfloor ");
+    XCTAssertTrue([serialized containsString:@"\\lfloor x"], @"expected space after \\lfloor, got: %@", serialized);
+
+    // Re-parsing the serialized form must succeed and produce the same atoms.
+    NSError* error = nil;
+    MTMathList* reparsed = [MTMathListBuilder buildFromString:serialized error:&error];
+    XCTAssertNotNil(reparsed);
+    XCTAssertNil(error);
+    XCTAssertEqualObjects(@(reparsed.atoms.count), @3);
+    XCTAssertTrue([reparsed.atoms[0] isKindOfClass:[MTLargeDelimiter class]]);
+    XCTAssertEqualObjects(((MTLargeDelimiter*)reparsed.atoms[0]).nucleus, @"\u230A");
+    XCTAssertEqual(reparsed.atoms[1].type, kMTMathAtomVariable);
+    XCTAssertTrue([reparsed.atoms[2] isKindOfClass:[MTLargeDelimiter class]]);
+    XCTAssertEqualObjects(((MTLargeDelimiter*)reparsed.atoms[2]).nucleus, @"\u230B");
 }
 
 - (void) testLargeDelimiterSerializationCanonicalDelimiters
