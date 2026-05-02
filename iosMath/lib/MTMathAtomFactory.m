@@ -920,22 +920,16 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     static NSDictionary* stackCommands = nil;
     if (!stackCommands) {
-        // Codepoints used in the table:
-        //   U+2212  MINUS SIGN        — the relbar / horizontal extender
-        //   U+2192  RIGHTWARDS ARROW  — right arrow cap
-        //   U+2190  LEFTWARDS ARROW   — left arrow cap
-        //   U+23DE  TOP CURLY BRACKET — overbrace (single stretchy glyph, 8 h_variants in Latin Modern)
-        //   U+23DF  BOTTOM CURLY BRACKET — underbrace
-        MTMathStackConstruction* rightArrow =
-            [MTMathStackConstruction extensibleWithLeft:nil extender:@"\u2212" right:@"\u2192"];
-        MTMathStackConstruction* leftArrow =
-            [MTMathStackConstruction extensibleWithLeft:@"\u2190" extender:@"\u2212" right:nil];
-        MTMathStackConstruction* leftRightArrow =
-            [MTMathStackConstruction extensibleWithLeft:@"\u2190" extender:@"\u2212" right:@"\u2192"];
-        MTMathStackConstruction* overBrace =
-            [MTMathStackConstruction extensibleWithLeft:@"\u23DE" extender:nil right:nil];
-        MTMathStackConstruction* underBrace =
-            [MTMathStackConstruction extensibleWithLeft:@"\u23DF" extender:nil right:nil];
+        // Each command maps to a single stretchy cap glyph (a Unicode codepoint). The
+        // typesetter walks the cap's OpenType h_variants first; if no variant is wide
+        // enough, it falls back to the font's HorizontalGlyphAssembly (parts + connector
+        // overlaps). The cap codepoint must therefore be one whose OpenType MATH table
+        // provides assembly data — the arrow caps carry their own .lft/.ex/.rt parts.
+        MTMathStackConstruction* rightArrow     = [MTMathStackConstruction extensibleWithGlyph:@"\u2192"];
+        MTMathStackConstruction* leftArrow      = [MTMathStackConstruction extensibleWithGlyph:@"\u2190"];
+        MTMathStackConstruction* leftRightArrow = [MTMathStackConstruction extensibleWithGlyph:@"\u2194"];
+        MTMathStackConstruction* overBrace      = [MTMathStackConstruction extensibleWithGlyph:@"\u23DE"];
+        MTMathStackConstruction* underBrace     = [MTMathStackConstruction extensibleWithGlyph:@"\u23DF"];
 
         stackCommands = @{
             @"overrightarrow":     [[MTMathStackCommandSpec alloc] initWithOver:rightArrow     under:nil       displayClass:kMTMathAtomOrdinary],
@@ -964,20 +958,16 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return stack;
 }
 
-/// Returns a canonical key string encoding the six construction fields plus displayClass.
+/// Returns a canonical key string encoding the over/under glyphs plus displayClass.
 /// Used as the key for the reverse-lookup dictionary built in stackCommandForStack:.
 static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
                                  MTMathStackConstruction* _Nullable under,
                                  MTMathAtomType displayClass)
 {
-    NSString* ol = over  && over.leftCap   ? over.leftCap   : @"";
-    NSString* oe = over  && over.extender  ? over.extender  : @"";
-    NSString* or_ = over  && over.rightCap  ? over.rightCap  : @"";
-    NSString* ul = under && under.leftCap  ? under.leftCap  : @"";
-    NSString* ue = under && under.extender ? under.extender : @"";
-    NSString* ur = under && under.rightCap ? under.rightCap : @"";
-    return [NSString stringWithFormat:@"%@|%@|%@|%@|%@|%@|%lu",
-            ol, oe, or_, ul, ue, ur, (unsigned long)displayClass];
+    NSString* og = over  && over.glyph  ? over.glyph  : @"";
+    NSString* ug = under && under.glyph ? under.glyph : @"";
+    return [NSString stringWithFormat:@"%@|%@|%lu",
+            og, ug, (unsigned long)displayClass];
 }
 
 + (NSDictionary<NSString*, NSString*>*) stackCommandReverseTable

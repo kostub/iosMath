@@ -1526,22 +1526,24 @@ static NSArray* getTestDataLargeDelimiters() {
 
 - (void) testStackCommands
 {
-    // Each entry: command, overLeft, overExt, overRight, underLeft, underExt, underRight
+    // Each entry: command, overGlyph, underGlyph.
+    // Each cap is the stretchy cap glyph; the typesetter walks its OpenType h_variants
+    // and falls back to HorizontalGlyphAssembly to cover wide bases.
     NSArray* cases = @[
-        @[@"overrightarrow",     [NSNull null],    @"\u2212", @"\u2192", [NSNull null], [NSNull null], [NSNull null]],
-        @[@"overleftarrow",      @"\u2190",         @"\u2212", [NSNull null], [NSNull null], [NSNull null], [NSNull null]],
-        @[@"overleftrightarrow", @"\u2190",         @"\u2212", @"\u2192", [NSNull null], [NSNull null], [NSNull null]],
-        @[@"underrightarrow",    [NSNull null],    [NSNull null], [NSNull null], [NSNull null],    @"\u2212", @"\u2192"],
-        @[@"underleftarrow",     [NSNull null],    [NSNull null], [NSNull null], @"\u2190",         @"\u2212", [NSNull null]],
-        @[@"underleftrightarrow",[NSNull null],    [NSNull null], [NSNull null], @"\u2190",         @"\u2212", @"\u2192"],
-        @[@"overbrace",          @"\u23DE",         [NSNull null], [NSNull null], [NSNull null], [NSNull null], [NSNull null]],
-        @[@"underbrace",         [NSNull null],    [NSNull null], [NSNull null], @"\u23DF",         [NSNull null], [NSNull null]],
+        @[@"overrightarrow",     @"\u2192",          [NSNull null]],
+        @[@"overleftarrow",      @"\u2190",          [NSNull null]],
+        @[@"overleftrightarrow", @"\u2194",          [NSNull null]],
+        @[@"underrightarrow",    [NSNull null], @"\u2192"],
+        @[@"underleftarrow",     [NSNull null], @"\u2190"],
+        @[@"underleftrightarrow",[NSNull null], @"\u2194"],
+        @[@"overbrace",          @"\u23DE",          [NSNull null]],
+        @[@"underbrace",         [NSNull null], @"\u23DF"],
     ];
 
     for (NSArray* row in cases) {
-        NSString* cmd       = row[0];
-        id overLeft  = row[1]; id overExt   = row[2]; id overRight = row[3];
-        id underLeft = row[4]; id underExt  = row[5]; id underRight = row[6];
+        NSString* cmd        = row[0];
+        id overGlyph  = row[1];
+        id underGlyph = row[2];
 
         NSString* latex = [NSString stringWithFormat:@"\\%@{x}", cmd];
         MTMathList* list = [MTMathListBuilder buildFromString:latex];
@@ -1554,25 +1556,18 @@ static NSArray* getTestDataLargeDelimiters() {
         XCTAssertNotNil(stack.innerList, @"innerList for \\%@", cmd);
         XCTAssertEqual(stack.innerList.atoms.count, 1u, @"innerList count for \\%@", cmd);
 
-        BOOL expectOver  = ![overLeft isKindOfClass:[NSNull class]] || ![overExt isKindOfClass:[NSNull class]] || ![overRight isKindOfClass:[NSNull class]];
-        BOOL expectUnder = ![underLeft isKindOfClass:[NSNull class]] || ![underExt isKindOfClass:[NSNull class]] || ![underRight isKindOfClass:[NSNull class]];
-
-        if (expectOver) {
+        if (![overGlyph isKindOfClass:[NSNull class]]) {
             XCTAssertNotNil(stack.over, @"over for \\%@", cmd);
             XCTAssertEqual(stack.over.kind, kMTMathStackConstructionExtensible, @"over.kind for \\%@", cmd);
-            XCTAssertEqualObjects(stack.over.leftCap,  [overLeft  isKindOfClass:[NSNull class]] ? nil : overLeft,  @"over.leftCap for \\%@",  cmd);
-            XCTAssertEqualObjects(stack.over.extender, [overExt   isKindOfClass:[NSNull class]] ? nil : overExt,   @"over.extender for \\%@", cmd);
-            XCTAssertEqualObjects(stack.over.rightCap, [overRight isKindOfClass:[NSNull class]] ? nil : overRight, @"over.rightCap for \\%@", cmd);
+            XCTAssertEqualObjects(stack.over.glyph, overGlyph, @"over.glyph for \\%@", cmd);
         } else {
             XCTAssertNil(stack.over, @"over should be nil for \\%@", cmd);
         }
 
-        if (expectUnder) {
+        if (![underGlyph isKindOfClass:[NSNull class]]) {
             XCTAssertNotNil(stack.under, @"under for \\%@", cmd);
             XCTAssertEqual(stack.under.kind, kMTMathStackConstructionExtensible, @"under.kind for \\%@", cmd);
-            XCTAssertEqualObjects(stack.under.leftCap,  [underLeft  isKindOfClass:[NSNull class]] ? nil : underLeft,  @"under.leftCap for \\%@",  cmd);
-            XCTAssertEqualObjects(stack.under.extender, [underExt   isKindOfClass:[NSNull class]] ? nil : underExt,   @"under.extender for \\%@", cmd);
-            XCTAssertEqualObjects(stack.under.rightCap, [underRight isKindOfClass:[NSNull class]] ? nil : underRight, @"under.rightCap for \\%@", cmd);
+            XCTAssertEqualObjects(stack.under.glyph, underGlyph, @"under.glyph for \\%@", cmd);
         } else {
             XCTAssertNil(stack.under, @"under should be nil for \\%@", cmd);
         }
@@ -1607,7 +1602,7 @@ static NSArray* getTestDataLargeDelimiters() {
     // A programmatically-built stack with non-canonical fields (leftCap = "Z") cannot
     // round-trip to a command name; serialization should emit only the inner list.
     MTMathStack* stack = [[MTMathStack alloc] init];
-    stack.over = [MTMathStackConstruction extensibleWithLeft:@"Z" extender:nil right:nil];
+    stack.over = [MTMathStackConstruction extensibleWithGlyph:@"Z"];
     MTMathList* inner = [MTMathList new];
     [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
     stack.innerList = inner;

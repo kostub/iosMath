@@ -1763,7 +1763,7 @@
     XCTAssertNotNil(stack.over);
     XCTAssertNil(stack.under);
 
-    // overleftrightarrow has both caps + extender; for 'xyz' (wider than a single cap), uses assembly.
+    // \overleftrightarrow uses U+2194 (single cap, stretchy). For 'xyz' (wider than the largest preset variant), uses horizontal glyph assembly.
     XCTAssertTrue([stack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
 
     // Over must cover the base.
@@ -1783,7 +1783,7 @@
     XCTAssertNotNil(stack.over);
     XCTAssertNil(stack.under);
 
-    // Brace uses single-stretchy variant path (no extender) -> plain MTGlyphDisplay.
+    // For a narrow base, the smallest preset h_variant of the brace cap covers the width -> plain MTGlyphDisplay.
     XCTAssertTrue([stack.over isKindOfClass:[MTGlyphDisplay class]]);
 
     // Selected variant must be wide enough to cover the base.
@@ -1886,21 +1886,24 @@
     XCTAssertGreaterThan(display.ascent, outerStack.base.ascent);
 }
 
-- (void)testBraceVsArrowUseDifferentPaths
+- (void)testWideStackBaseFallsBackToHorizontalAssembly
 {
-    // Brace (single stretchy, no extender) should produce MTGlyphDisplay even for a wide base.
+    // Both braces and arrows take the same path: try preset h_variants of the cap first,
+    // and fall back to OpenType HorizontalGlyphAssembly when no preset variant is wide enough.
+    // For a sufficiently wide base, both must produce MTHorizontalGlyphAssemblyDisplay.
     MTMathListDisplay* braceDisplay = [self displayForLaTeX:@"\\overbrace{ABCDEF}"];
     XCTAssertEqual(braceDisplay.subDisplays.count, 1u);
     MTStackDisplay* braceStack = (MTStackDisplay*)braceDisplay.subDisplays[0];
     XCTAssertTrue([braceStack isKindOfClass:[MTStackDisplay class]]);
-    XCTAssertTrue([braceStack.over isKindOfClass:[MTGlyphDisplay class]]);
+    XCTAssertTrue([braceStack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
+    XCTAssertGreaterThanOrEqual(braceStack.over.width + 0.01, braceStack.base.width);
 
-    // Arrow with wide base (assembled extensible) should produce MTHorizontalGlyphAssemblyDisplay.
     MTMathListDisplay* arrowDisplay = [self displayForLaTeX:@"\\overrightarrow{ABCDEF}"];
     XCTAssertEqual(arrowDisplay.subDisplays.count, 1u);
     MTStackDisplay* arrowStack = (MTStackDisplay*)arrowDisplay.subDisplays[0];
     XCTAssertTrue([arrowStack isKindOfClass:[MTStackDisplay class]]);
     XCTAssertTrue([arrowStack.over isKindOfClass:[MTHorizontalGlyphAssemblyDisplay class]]);
+    XCTAssertGreaterThanOrEqual(arrowStack.over.width + 0.01, arrowStack.base.width);
 }
 
 

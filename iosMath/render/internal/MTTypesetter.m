@@ -1396,6 +1396,50 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     return display;
 }
 
+// Horizontal twin of -constructGlyph:withHeight:. Builds an MTHorizontalGlyphAssemblyDisplay
+// from the font's HorizontalGlyphAssembly parts (left part + N extenders + optional middle +
+// N extenders + right part), with overlaps honoring per-part connector lengths and the
+// font-wide MinConnectorOverlap. Returns nil if no horizontal assembly is defined for the glyph.
+- (MTHorizontalGlyphAssemblyDisplay*) constructHorizontalGlyph:(CGGlyph) glyph withWidth:(CGFloat) glyphWidth range:(NSRange) range
+{
+    NSArray<MTGlyphPart*>* parts = [_styleFont.mathTable getHorizontalGlyphAssemblyForGlyph:glyph];
+    if (parts.count == 0) {
+        return nil;
+    }
+    NSArray<NSNumber*>* glyphs, *offsets;
+    CGFloat width;
+    [self constructGlyphWithParts:parts height:glyphWidth glyphs:&glyphs offsets:&offsets height:&width];
+
+    // Convert 1D offsets (along the construction axis) into 2D positions for the horizontal display.
+    NSMutableArray<NSValue*>* positions = [NSMutableArray arrayWithCapacity:offsets.count];
+    for (NSNumber* offset in offsets) {
+        CGPoint pt = CGPointMake(offset.floatValue, 0);
+        [positions addObject:[NSValue value:&pt withObjCType:@encode(CGPoint)]];
+    }
+
+    // Compute combined ascent/descent from the parts' bounding boxes.
+    NSUInteger n = glyphs.count;
+    CGGlyph cgGlyphs[n];
+    for (NSUInteger i = 0; i < n; i++) cgGlyphs[i] = glyphs[i].shortValue;
+    CGRect bboxes[n];
+    CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, cgGlyphs, bboxes, n);
+    CGFloat maxAsc = 0, maxDes = 0;
+    for (NSUInteger i = 0; i < n; i++) {
+        CGFloat a, d;
+        getBboxDetails(bboxes[i], &a, &d);
+        if (a > maxAsc) maxAsc = a;
+        if (d > maxDes) maxDes = d;
+    }
+
+    MTHorizontalGlyphAssemblyDisplay* display =
+        [[MTHorizontalGlyphAssemblyDisplay alloc] initWithGlyphs:glyphs positions:positions font:_styleFont range:range];
+    display.ascent = maxAsc;
+    display.descent = maxDes;
+    display.width = width;
+    display.position = CGPointZero;
+    return display;
+}
+
 - (void) constructGlyphWithParts:(NSArray<MTGlyphPart*>*) parts height:(CGFloat) glyphHeight glyphs:(NSArray<NSNumber*>**) glyphs offsets:(NSArray<NSNumber*>**) offsets height:(CGFloat*) height
 {
     NSParameterAssert(glyphs);
@@ -1807,23 +1851,27 @@ typedef NS_ENUM(NSUInteger, MTStackRole) {
                                        forWidth:(CGFloat)targetWidth
                                           range:(NSRange)range
 {
-    // Dispatch on shape: single-stretchy (extender==nil, one cap) vs assembled (extender!=nil).
-    if (construction.extender == nil) {
-        // Single-stretchy path: overbrace / underbrace.
-        NSString* capStr = construction.leftCap ? construction.leftCap : construction.rightCap;
-        if (!capStr) {
-            return nil;
-        }
-        CGGlyph capGlyph = [self findGlyphForCharacterAtIndex:capStr.length - 1 inString:capStr];
-        if (capGlyph == 0) {
-            return nil;
-        }
-        CGFloat asc, des, w;
-        CGGlyph bestGlyph = [self findStretchyVariantGlyph:capGlyph
-                                              withMinWidth:targetWidth
-                                               glyphAscent:&asc
-                                              glyphDescent:&des
-                                                glyphWidth:&w];
+    // Single stretchy cap glyph (arrows: \overrightarrow etc., braces: \overbrace, \underbrace).
+    // Pipeline (mirrors -getRadicalGlyphWithHeight: for vertical glyphs):
+    //   1. Try preset h_variants of the cap; pick smallest variant whose width >= targetWidth.
+    //   2. If no variant is wide enough, try the font's HorizontalGlyphAssembly to build
+    //      [lft, ex×N, (md, ex×N), rt] with overlaps honored per the OpenType spec.
+    //   3. If neither covers the width, saturate to the largest available variant.
+    NSString* capStr = construction.glyph;
+    if (!capStr) {
+        return nil;
+    }
+    CGGlyph capGlyph = [self findGlyphForCharacterAtIndex:capStr.length - 1 inString:capStr];
+    if (capGlyph == 0) {
+        return nil;
+    }
+    CGFloat asc, des, w;
+    CGGlyph bestGlyph = [self findStretchyVariantGlyph:capGlyph
+                                          withMinWidth:targetWidth
+                                           glyphAscent:&asc
+                                          glyphDescent:&des
+                                            glyphWidth:&w];
+    if (w >= targetWidth) {
         MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:bestGlyph range:range font:_styleFont];
         glyphDisplay.ascent  = asc;
         glyphDisplay.descent = des;
@@ -1831,118 +1879,18 @@ typedef NS_ENUM(NSUInteger, MTStackRole) {
         glyphDisplay.position = CGPointZero;
         return glyphDisplay;
     }
-
-    // Assembled path: arrow constructions [leftCap?, extender×N, rightCap?].
-    CGGlyph leftGlyph = 0, extGlyph = 0, rightGlyph = 0;
-    CGFloat leftW = 0, extW = 0, rightW = 0;
-    CGFloat leftAsc = 0, leftDes = 0, extAsc = 0, extDes = 0, rightAsc = 0, rightDes = 0;
-
-    if (construction.leftCap) {
-        leftGlyph = [self findGlyphForCharacterAtIndex:construction.leftCap.length - 1 inString:construction.leftCap];
-        if (leftGlyph != 0) {
-            CGRect bbox; CGSize adv;
-            CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &leftGlyph, &bbox, 1);
-            CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &leftGlyph, &adv, 1);
-            getBboxDetails(bbox, &leftAsc, &leftDes);
-            leftW = adv.width;
-        }
+    // No variant covers the width; try font-supplied horizontal glyph assembly.
+    MTHorizontalGlyphAssemblyDisplay* assembled = [self constructHorizontalGlyph:capGlyph withWidth:targetWidth range:range];
+    if (assembled) {
+        return assembled;
     }
-    if (construction.extender) {
-        extGlyph = [self findGlyphForCharacterAtIndex:construction.extender.length - 1 inString:construction.extender];
-        if (extGlyph != 0) {
-            CGRect bbox; CGSize adv;
-            CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &extGlyph, &bbox, 1);
-            CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &extGlyph, &adv, 1);
-            getBboxDetails(bbox, &extAsc, &extDes);
-            extW = adv.width;
-        }
-    }
-    if (construction.rightCap) {
-        rightGlyph = [self findGlyphForCharacterAtIndex:construction.rightCap.length - 1 inString:construction.rightCap];
-        if (rightGlyph != 0) {
-            CGRect bbox; CGSize adv;
-            CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &rightGlyph, &bbox, 1);
-            CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, &rightGlyph, &adv, 1);
-            getBboxDetails(bbox, &rightAsc, &rightDes);
-            rightW = adv.width;
-        }
-    }
-
-    // Fast path: if one cap's largest variant alone covers targetWidth and there's only one cap, return it.
-    if (leftGlyph == 0 || rightGlyph == 0) {
-        // Only one cap present; check if the widest variant of that cap covers targetWidth.
-        NSString* singleCapStr = (leftGlyph != 0) ? construction.leftCap : construction.rightCap;
-        CGGlyph singleCapGlyph = (leftGlyph != 0) ? leftGlyph : rightGlyph;
-        if (singleCapGlyph != 0) {
-            CGFloat asc, des, w;
-            CGGlyph bestVariant = [self findStretchyVariantGlyph:singleCapGlyph
-                                                    withMinWidth:targetWidth
-                                                     glyphAscent:&asc
-                                                    glyphDescent:&des
-                                                      glyphWidth:&w];
-            if (w >= targetWidth) {
-                MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:bestVariant range:range font:_styleFont];
-                glyphDisplay.ascent  = asc;
-                glyphDisplay.descent = des;
-                glyphDisplay.width   = w;
-                glyphDisplay.position = CGPointZero;
-                return glyphDisplay;
-            }
-            // Refresh metrics back to base glyph for assembly.
-            if (leftGlyph != 0) { leftW = extW > 0 ? leftW : w; }
-            else                 { rightW = extW > 0 ? rightW : w; }
-            (void)singleCapStr;
-        }
-    }
-
-    // Compute how many extender repetitions we need.
-    CGFloat capsWidth = leftW + rightW;
-    NSInteger numExt = 1;  // always at least one extender so the bar reaches the caps
-    if (extW > 0 && targetWidth > capsWidth + extW) {
-        numExt = (NSInteger)ceil((targetWidth - capsWidth) / extW);
-    }
-
-    // Build glyph + position arrays.
-    NSMutableArray<NSNumber*>* glyphs    = [NSMutableArray array];
-    NSMutableArray<NSValue*>*  positions = [NSMutableArray array];
-    CGFloat x = 0;
-    CGFloat totalAsc = 0, totalDes = 0;
-
-    if (leftGlyph != 0) {
-        [glyphs addObject:@(leftGlyph)];
-        CGPoint pt_ = CGPointMake(x, 0); [positions addObject:[NSValue value:&pt_ withObjCType:@encode(CGPoint)]];
-        x += leftW;
-        totalAsc = MAX(totalAsc, leftAsc);
-        totalDes = MAX(totalDes, leftDes);
-    }
-    for (NSInteger i = 0; i < numExt; i++) {
-        if (extGlyph != 0) {
-            [glyphs addObject:@(extGlyph)];
-            CGPoint pt_ = CGPointMake(x, 0); [positions addObject:[NSValue value:&pt_ withObjCType:@encode(CGPoint)]];
-            x += extW;
-            totalAsc = MAX(totalAsc, extAsc);
-            totalDes = MAX(totalDes, extDes);
-        }
-    }
-    if (rightGlyph != 0) {
-        [glyphs addObject:@(rightGlyph)];
-        CGPoint pt_ = CGPointMake(x, 0); [positions addObject:[NSValue value:&pt_ withObjCType:@encode(CGPoint)]];
-        x += rightW;
-        totalAsc = MAX(totalAsc, rightAsc);
-        totalDes = MAX(totalDes, rightDes);
-    }
-
-    if (glyphs.count == 0) {
-        return nil;
-    }
-
-    MTHorizontalGlyphAssemblyDisplay* assemblyDisplay =
-        [[MTHorizontalGlyphAssemblyDisplay alloc] initWithGlyphs:glyphs positions:positions font:_styleFont range:range];
-    assemblyDisplay.ascent  = totalAsc;
-    assemblyDisplay.descent = totalDes;
-    assemblyDisplay.width   = x;
-    assemblyDisplay.position = CGPointZero;
-    return assemblyDisplay;
+    // Saturation: use the largest available variant.
+    MTGlyphDisplay* glyphDisplay = [[MTGlyphDisplay alloc] initWithGlpyh:bestGlyph range:range font:_styleFont];
+    glyphDisplay.ascent  = asc;
+    glyphDisplay.descent = des;
+    glyphDisplay.width   = w;
+    glyphDisplay.position = CGPointZero;
+    return glyphDisplay;
 }
 
 - (MTDisplay*) buildStackConstruction:(MTMathStackConstruction*)construction

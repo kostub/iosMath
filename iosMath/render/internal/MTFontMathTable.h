@@ -171,4 +171,8 @@
  of this glyph. If there is no glyph assembly defined, returns nil. */
 - (nullable NSArray<MTGlyphPart*>*) getVerticalGlyphAssemblyForGlyph:(CGGlyph) glyph;
 
+/** Returns an array of the glyph parts to be used for constructing horizontal variants
+ of this glyph. If there is no glyph assembly defined, returns nil. */
+- (nullable NSArray<MTGlyphPart*>*) getHorizontalGlyphAssemblyForGlyph:(CGGlyph) glyph;
+
 @end

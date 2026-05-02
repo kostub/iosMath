@@ -382,8 +382,9 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
  @brief Describes how an over/under row in an `MTMathStack` is produced.
  */
 typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
-    /// An extensible horizontal construction: left cap glyph, tiled extender glyph, right cap glyph.
-    /// Any of the three fields may be nil; the typesetter dispatches on which are present.
+    /// An extensible horizontal construction: a single stretchy cap glyph. The typesetter
+    /// walks the cap's OpenType h_variants and falls back to the font's
+    /// HorizontalGlyphAssembly to cover wide bases.
     kMTMathStackConstructionExtensible,
     /// A math list typeset at a specified style (for \stackrel / \overset / \underset).
     kMTMathStackConstructionMathList,
@@ -394,25 +395,19 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 /**
  An immutable value object describing how one row (over or under) of an `MTMathStack` is produced.
 
- For the `Extensible` kind the three string properties (`leftCap`, `extender`, `rightCap`) each hold
- a single Unicode code point (or nil). The typesetter uses whichever are present to construct a
- horizontal glyph strip that covers the base width. When `extender` is nil and exactly one cap is
- set the construction is treated as a single stretchy glyph (brace path); otherwise glyphs are
- assembled. The `Rule` kind is reserved for a future migration of \overline / \underline and is
- not used in Phase 1.
+ For the `Extensible` kind, `glyph` holds a single Unicode codepoint string identifying the
+ stretchy cap glyph. The typesetter picks the smallest preset h_variant whose width covers the
+ base; if none is wide enough it falls back to the font's OpenType HorizontalGlyphAssembly
+ (lft + ex×N + md? + rt) with per-part connector overlaps. The `Rule` kind is reserved for a
+ future migration of \overline / \underline and is not used in Phase 1.
  */
 @interface MTMathStackConstruction : NSObject <NSCopying>
 
 @property (nonatomic, readonly) MTMathStackConstructionKind kind;
 
 // Extensible fields (kind == kMTMathStackConstructionExtensible)
-/// Left cap glyph nucleus — a single Unicode codepoint string, or nil.
-@property (nonatomic, readonly, nullable) NSString* leftCap;
-/// Extender (relbar) glyph nucleus — a single Unicode codepoint string, or nil.
-/// When nil and exactly one cap is set, the construction is the single-stretchy path.
-@property (nonatomic, readonly, nullable) NSString* extender;
-/// Right cap glyph nucleus — a single Unicode codepoint string, or nil.
-@property (nonatomic, readonly, nullable) NSString* rightCap;
+/// The stretchy cap glyph — a single Unicode codepoint string.
+@property (nonatomic, readonly, nullable) NSString* glyph;
 
 // MathList fields (kind == kMTMathStackConstructionMathList)
 @property (nonatomic, readonly, nullable) MTMathList* list;
@@ -423,9 +418,7 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 /// Rule thickness in points. 0 means use the font's default.
 @property (nonatomic, readonly) CGFloat ruleThickness;
 
-+ (instancetype)extensibleWithLeft:(nullable NSString*)leftCap
-                          extender:(nullable NSString*)extender
-                             right:(nullable NSString*)rightCap;
++ (instancetype)extensibleWithGlyph:(NSString*)glyph;
 + (instancetype)mathListWithList:(MTMathList*)list
                            style:(MTLineStyle)style
                          cramped:(BOOL)cramped;

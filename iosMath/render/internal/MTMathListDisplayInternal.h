@@ -124,7 +124,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /// Horizontal assembled glyph display — horizontal twin of `MTGlyphConstructionDisplay`.
-/// Used to render arrow constructions of the form [leftCap, extender×N, rightCap].
+/// Used to render OpenType HorizontalGlyphAssembly: [lft, ex×N, (md, ex×N), rt] with per-part
+/// connector overlaps honoring MinConnectorOverlap.
 @interface MTHorizontalGlyphAssemblyDisplay : MTDisplay
 
 - (instancetype)init NS_UNAVAILABLE;

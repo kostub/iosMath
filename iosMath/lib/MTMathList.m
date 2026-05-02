@@ -932,15 +932,12 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @implementation MTMathStackConstruction
 
-+ (instancetype)extensibleWithLeft:(nullable NSString*)leftCap
-                          extender:(nullable NSString*)extender
-                             right:(nullable NSString*)rightCap
++ (instancetype)extensibleWithGlyph:(NSString*)glyph
 {
+    NSParameterAssert(glyph);
     MTMathStackConstruction* c = [[self alloc] init];
     c->_kind = kMTMathStackConstructionExtensible;
-    c->_leftCap = [leftCap copy];
-    c->_extender = [extender copy];
-    c->_rightCap = [rightCap copy];
+    c->_glyph = [glyph copy];
     return c;
 }
 
@@ -969,9 +966,7 @@ static NSString* typeToText(MTMathAtomType type) {
 {
     MTMathStackConstruction* copy = [[MTMathStackConstruction allocWithZone:zone] init];
     copy->_kind = _kind;
-    copy->_leftCap = [_leftCap copyWithZone:zone];
-    copy->_extender = [_extender copyWithZone:zone];
-    copy->_rightCap = [_rightCap copyWithZone:zone];
+    copy->_glyph = [_glyph copyWithZone:zone];
     copy->_list = [_list copyWithZone:zone];
     copy->_listStyle = _listStyle;
     copy->_listCramped = _listCramped;
