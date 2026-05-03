@@ -501,7 +501,14 @@ NSString *const MTParseError = @"ParseError";
         MTUnderLine* under = [MTUnderLine new];
         under.innerList = [self buildInternal:true];
         return under;
-    } else if ([command isEqualToString:@"begin"]) {
+    } else {
+        MTMathStack* stack = [MTMathAtomFactory stackAtomForCommand:command];
+        if (stack) {
+            stack.innerList = [self buildInternal:true];
+            return stack;
+        }
+    }
+    if ([command isEqualToString:@"begin"]) {
         NSString* env = [self readEnvironment];
         if (!env) {
             return nil;

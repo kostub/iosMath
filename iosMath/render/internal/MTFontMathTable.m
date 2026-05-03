@@ -52,7 +52,7 @@
         _unitsPerEm = CTFontGetUnitsPerEm(font.ctFont);
         _fontSize = font.fontSize;
         _mathTable = mathTable;
-        if (![@"1.3" isEqualToString:_mathTable[@"version"]]) {
+        if (![@"1.4" isEqualToString:_mathTable[@"version"]]) {
             // Invalid version
             @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                            reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
@@ -499,20 +499,19 @@ static NSString* const kAccents = @"accents";
 }
 
 static NSString* const kVertAssembly = @"v_assembly";
+static NSString* const kHorizAssembly = @"h_assembly";
 static NSString* const kAssemblyParts = @"parts";
 
-- (NSArray<MTGlyphPart *> *)getVerticalGlyphAssemblyForGlyph:(CGGlyph)glyph
+- (NSArray<MTGlyphPart *> *)getGlyphAssemblyFromTable:(NSString*)tableKey forGlyph:(CGGlyph)glyph
 {
-    NSDictionary* assemblyTable = (NSDictionary*) _mathTable[kVertAssembly];
+    NSDictionary* assemblyTable = (NSDictionary*) _mathTable[tableKey];
     NSString* glyphName = [self.font getGlyphName:glyph];
     NSDictionary* assemblyInfo = (NSDictionary*) assemblyTable[glyphName];
     if (!assemblyInfo) {
-        // No vertical assembly defined for glyph
         return nil;
     }
     NSArray* parts = (NSArray*) assemblyInfo[kAssemblyParts];
     if (!parts) {
-        // parts should always have been defined, but if it isn't return nil
         return nil;
     }
     NSMutableArray<MTGlyphPart*>* rv = [NSMutableArray array];
@@ -526,12 +525,22 @@ static NSString* const kAssemblyParts = @"parts";
         part.startConnectorLength = [self fontUnitsToPt:start.intValue];
         NSNumber* ext = (NSNumber*) partInfo[@"extender"];
         part.isExtender = ext.boolValue;
-        NSString* glyphName = (NSString*) partInfo[@"glyph"];
-        part.glyph = [self.font getGlyphWithName:glyphName];
-        
+        NSString* partGlyphName = (NSString*) partInfo[@"glyph"];
+        part.glyph = [self.font getGlyphWithName:partGlyphName];
+
         [rv addObject:part];
     }
     return rv;
+}
+
+- (NSArray<MTGlyphPart *> *)getVerticalGlyphAssemblyForGlyph:(CGGlyph)glyph
+{
+    return [self getGlyphAssemblyFromTable:kVertAssembly forGlyph:glyph];
+}
+
+- (NSArray<MTGlyphPart *> *)getHorizontalGlyphAssemblyForGlyph:(CGGlyph)glyph
+{
+    return [self getGlyphAssemblyFromTable:kHorizAssembly forGlyph:glyph];
 }
 
 @end

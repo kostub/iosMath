@@ -1524,4 +1524,92 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testStackCommands
+{
+    // Each entry: command, overGlyph, underGlyph.
+    // Each cap is the stretchy cap glyph; the typesetter walks its OpenType h_variants
+    // and falls back to HorizontalGlyphAssembly to cover wide bases.
+    NSArray* cases = @[
+        @[@"overrightarrow",     @"\u2192",          [NSNull null]],
+        @[@"overleftarrow",      @"\u2190",          [NSNull null]],
+        @[@"overleftrightarrow", @"\u2194",          [NSNull null]],
+        @[@"underrightarrow",    [NSNull null], @"\u2192"],
+        @[@"underleftarrow",     [NSNull null], @"\u2190"],
+        @[@"underleftrightarrow",[NSNull null], @"\u2194"],
+        @[@"overbrace",          @"\u23DE",          [NSNull null]],
+        @[@"underbrace",         [NSNull null], @"\u23DF"],
+    ];
+
+    for (NSArray* row in cases) {
+        NSString* cmd        = row[0];
+        id overGlyph  = row[1];
+        id underGlyph = row[2];
+
+        NSString* latex = [NSString stringWithFormat:@"\\%@{x}", cmd];
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"nil list for \\%@", cmd);
+        XCTAssertEqual(list.atoms.count, 1u, @"atom count for \\%@", cmd);
+
+        MTMathStack* stack = list.atoms[0];
+        XCTAssertEqual(stack.type, kMTMathAtomStack, @"type for \\%@", cmd);
+        XCTAssertEqual(stack.displayClass, kMTMathAtomOrdinary, @"displayClass for \\%@", cmd);
+        XCTAssertNotNil(stack.innerList, @"innerList for \\%@", cmd);
+        XCTAssertEqual(stack.innerList.atoms.count, 1u, @"innerList count for \\%@", cmd);
+
+        if (![overGlyph isKindOfClass:[NSNull class]]) {
+            XCTAssertNotNil(stack.over, @"over for \\%@", cmd);
+            XCTAssertEqual(stack.over.kind, kMTMathStackConstructionExtensible, @"over.kind for \\%@", cmd);
+            XCTAssertEqualObjects(stack.over.glyph, overGlyph, @"over.glyph for \\%@", cmd);
+        } else {
+            XCTAssertNil(stack.over, @"over should be nil for \\%@", cmd);
+        }
+
+        if (![underGlyph isKindOfClass:[NSNull class]]) {
+            XCTAssertNotNil(stack.under, @"under for \\%@", cmd);
+            XCTAssertEqual(stack.under.kind, kMTMathStackConstructionExtensible, @"under.kind for \\%@", cmd);
+            XCTAssertEqualObjects(stack.under.glyph, underGlyph, @"under.glyph for \\%@", cmd);
+        } else {
+            XCTAssertNil(stack.under, @"under should be nil for \\%@", cmd);
+        }
+
+        // Round-trip serialization.
+        NSString* roundTrip = [MTMathListBuilder mathListToString:list];
+        NSString* expectedLatex = [NSString stringWithFormat:@"\\%@{x}", cmd];
+        XCTAssertEqualObjects(roundTrip, expectedLatex, @"round-trip for \\%@", cmd);
+    }
+}
+
+- (void) testStackRoundTripNested
+{
+    NSString* input = @"\\overrightarrow{\\frac{a}{b}}";
+    MTMathList* list = [MTMathListBuilder buildFromString:input];
+    XCTAssertNotNil(list);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\overrightarrow{\\frac{a}{b}}");
+}
+
+- (void) testStackUnknownCommandFallthrough
+{
+    // \overfoo is not a known stack command — should produce a parse error.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\overfoo{x}" error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+}
+
+- (void) testStackNonCanonicalSerializesInnerOnly
+{
+    // A programmatically-built stack with non-canonical fields (leftCap = "Z") cannot
+    // round-trip to a command name; serialization should emit only the inner list.
+    MTMathStack* stack = [[MTMathStack alloc] init];
+    stack.over = [MTMathStackConstruction extensibleWithGlyph:@"Z"];
+    MTMathList* inner = [MTMathList new];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    stack.innerList = inner;
+    MTMathList* list = [MTMathList new];
+    [list addAtom:stack];
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"x");
+}
+
 @end

@@ -77,6 +77,7 @@ Defined in `MTMathList.h` as `MTMathAtomType`.
 | `kMTMathAtomUnderline` | Under | Rule 10. |
 | `kMTMathAtomOverline` | Over | Rule 9. |
 | `kMTMathAtomAccent` | Acc | Rule 12. |
+| `kMTMathAtomStack` | Acc (over/under extensible) | iosMath extension. Generic over/under atom used for `\overrightarrow`, `\overleftarrow`, `\overleftrightarrow`, `\underrightarrow`, `\underleftarrow`, `\underleftrightarrow`, `\overbrace`, `\underbrace`. Retyped to `displayClass` (default Ord) before Rule 16 spacing lookup. Renders via `MTTypesetter.makeStack:` → `MTStackDisplay`. Extensible over/under rows use OpenType `stretchStackGapAboveMin` / `stretchStackGapBelowMin` for vertical clearance. |
 | `kMTMathAtomBoundary` | (for \left, \right) | Cannot appear in a `MTMathList` directly; only on `MTInner.leftBoundary` / `.rightBoundary`. Rule 19 analogue is in `MTTypesetter.makeInner:atIndex:`. |
 | `kMTMathAtomSpace` | glue/kern | Rule 2. |
 | `kMTMathAtomStyle` | style item | Rule 3. |
