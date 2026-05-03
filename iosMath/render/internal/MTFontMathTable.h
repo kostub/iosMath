@@ -119,6 +119,12 @@
 @property (nonatomic, readonly) CGFloat overbarRuleThickness;                          // \xi_8 in TeX
 @property (nonatomic, readonly) CGFloat overbarExtraAscender;                          // \xi_8 in TeX
 
+#pragma mark Stretch Stack
+@property (nonatomic, readonly) CGFloat stretchStackTopShiftUp;
+@property (nonatomic, readonly) CGFloat stretchStackBottomShiftDown;
+@property (nonatomic, readonly) CGFloat stretchStackGapAboveMin;
+@property (nonatomic, readonly) CGFloat stretchStackGapBelowMin;
+
 #pragma mark Constants
 
 @property (nonatomic, readonly) CGFloat axisHeight;                                    // \sigma_22 in TeX
@@ -164,5 +170,9 @@
 /** Returns an array of the glyph parts to be used for constructing vertical variants
  of this glyph. If there is no glyph assembly defined, returns nil. */
 - (nullable NSArray<MTGlyphPart*>*) getVerticalGlyphAssemblyForGlyph:(CGGlyph) glyph;
+
+/** Returns an array of the glyph parts to be used for constructing horizontal variants
+ of this glyph. If there is no glyph assembly defined, returns nil. */
+- (nullable NSArray<MTGlyphPart*>*) getHorizontalGlyphAssemblyForGlyph:(CGGlyph) glyph;
 
 @end

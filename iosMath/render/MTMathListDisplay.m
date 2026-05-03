@@ -799,6 +799,113 @@ static BOOL isIos6Supported(void) {
 }
 @end
 
+#pragma mark - MTStackDisplay
+
+@implementation MTStackDisplay
+
+- (instancetype)initWithBase:(MTMathListDisplay*)base
+                        over:(MTDisplay*)over
+                       under:(MTDisplay*)under
+                       range:(NSRange)range
+{
+    self = [super init];
+    if (self) {
+        _base = base;
+        _over = over;
+        _under = under;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)setPosition:(CGPoint)position
+{
+    // Shift all children by the delta so their pre-computed relative offsets are preserved.
+    CGPoint delta = CGPointMake(position.x - self.position.x, position.y - self.position.y);
+    super.position = position;
+    _base.position = CGPointMake(_base.position.x + delta.x, _base.position.y + delta.y);
+    if (_over) {
+        _over.position = CGPointMake(_over.position.x + delta.x, _over.position.y + delta.y);
+    }
+    if (_under) {
+        _under.position = CGPointMake(_under.position.x + delta.x, _under.position.y + delta.y);
+    }
+}
+
+- (void)setTextColor:(MTColor *)textColor
+{
+    [super setTextColor:textColor];
+    _base.textColor = textColor;
+    _over.textColor = textColor;
+    _under.textColor = textColor;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [super draw:context];
+    [_base draw:context];
+    [_over draw:context];
+    [_under draw:context];
+}
+
+@end
+
+#pragma mark - MTHorizontalGlyphAssemblyDisplay
+
+@implementation MTHorizontalGlyphAssemblyDisplay {
+    CGGlyph *_glyphs;
+    CGPoint *_positions;
+    MTFont* _font;
+    NSInteger _numGlyphs;
+}
+
+- (instancetype)initWithGlyphs:(NSArray<NSNumber*>*)glyphs
+                     positions:(NSArray<NSValue*>*)positions
+                          font:(MTFont*)font
+                         range:(NSRange)range
+{
+    self = [super init];
+    if (self) {
+        NSAssert(glyphs.count == positions.count, @"Glyphs and positions need to match");
+        _numGlyphs = glyphs.count;
+        _glyphs = malloc(sizeof(CGGlyph) * _numGlyphs);
+        _positions = malloc(sizeof(CGPoint) * _numGlyphs);
+        for (int i = 0; i < _numGlyphs; i++) {
+            _glyphs[i] = glyphs[i].shortValue;
+            CGPoint pt;
+            [positions[i] getValue:&pt];
+            _positions[i] = pt;
+        }
+        _font = font;
+        self.range = range;
+        self.position = CGPointZero;
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [super draw:context];
+    CGContextSaveGState(context);
+
+    [self.textColor setFill];
+
+    CGContextTranslateCTM(context, self.position.x, self.position.y);
+    CGContextSetTextPosition(context, 0, 0);
+
+    CTFontDrawGlyphs(_font.ctFont, _glyphs, _positions, _numGlyphs, context);
+
+    CGContextRestoreGState(context);
+}
+
+- (void)dealloc
+{
+    free(_glyphs);
+    free(_positions);
+}
+
+@end
+
 #pragma mark - MTInnerDisplay
 
 @implementation MTInnerDisplay {

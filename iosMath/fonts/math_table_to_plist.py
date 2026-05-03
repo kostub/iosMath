@@ -14,16 +14,18 @@ def process_font(font_file, out_file):
     italic_c = get_italic_correction(math_table)
     v_variants = get_v_variants(math_table)
     h_variants = get_h_variants(math_table)
-    assembly = get_v_assembly(math_table)
+    v_assembly = get_v_assembly(math_table)
+    h_assembly = get_h_assembly(math_table)
     accents = get_accent_attachments(math_table)
     pl = {
-            "version" : "1.3",
+            "version" : "1.4",
             "constants": constants,
             "v_variants" : v_variants,
             "h_variants" : h_variants,
             "italic" : italic_c,
             "accents" : accents,
-            "v_assembly" : assembly }
+            "v_assembly" : v_assembly,
+            "h_assembly" : h_assembly }
     ofile = open(out_file, 'w+b')
     plistlib.dump(pl, ofile)
     ofile.close()
@@ -181,7 +183,25 @@ def get_v_assembly(math_table):
             # There is an assembly for this glyph
             italic = assembly.ItalicsCorrection.Value
             parts = [part_dict(part) for part in assembly.PartRecords]
-            assembly_dict[name] = { 
+            assembly_dict[name] = {
+                    "italic" : assembly.ItalicsCorrection.Value,
+                    "parts" : parts }
+    return assembly_dict
+
+def get_h_assembly(math_table):
+    variants = math_table.MathVariants
+    hglyphs = variants.HorizGlyphCoverage.glyphs
+    hconstruction = variants.HorizGlyphConstruction
+    count = variants.HorizGlyphCount
+    assembly_dict = {}
+    for i in range(count):
+        name = hglyphs[i]
+        record = hconstruction[i]
+        assembly = record.GlyphAssembly
+        if assembly is not None:
+            italic = assembly.ItalicsCorrection.Value
+            parts = [part_dict(part) for part in assembly.PartRecords]
+            assembly_dict[name] = {
                     "italic" : assembly.ItalicsCorrection.Value,
                     "parts" : parts }
     return assembly_dict

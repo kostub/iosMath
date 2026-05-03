@@ -112,6 +112,20 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  function. */
 +(NSString*) accentName:(MTAccent*) accent;
 
+/** Returns a pre-configured MTMathStack for one of the eight supported over/under arrow
+ or brace commands: overrightarrow, overleftarrow, overleftrightarrow, underrightarrow,
+ underleftarrow, underleftrightarrow, overbrace, underbrace. Returns nil for any other name.
+ The returned atom's innerList is nil; the caller must set it (typically via buildInternal:).
+ To add a new command, add a row to the static stack commands dictionary in MTMathAtomFactory.m. */
++ (nullable MTMathStack*) stackAtomForCommand:(NSString*)command
+    NS_SWIFT_NAME(stackAtom(forCommand:));
+
+/** Returns the LaTeX command name for the given stack atom, or nil if the atom does not
+ match any entry in the stack commands table (e.g. a programmatically-built stack with
+ non-canonical constructions). This is the inverse of stackAtomForCommand:. */
++ (nullable NSString*) stackCommandForStack:(MTMathStack*)stack
+    NS_SWIFT_NAME(stackCommand(for:));
+
 /** Creates a new boundary atom for the given delimiter name. If the delimiter name
  is not recognized it returns nil. A delimiter name can be a single character such
  as '(' or a latex command such as 'uparrow'.

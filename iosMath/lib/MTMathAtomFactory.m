@@ -26,6 +26,30 @@ NSString *const MTSymbolInfinity = @"\u221E"; // \infty
 NSString *const MTSymbolAngle = @"\u2220"; // \angle
 NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
+/// File-private value type carrying the over/under spec and displayClass for one command.
+@interface MTMathStackCommandSpec : NSObject
+@property (nonatomic, readonly, nullable) MTMathStackConstruction* overConstruction;
+@property (nonatomic, readonly, nullable) MTMathStackConstruction* underConstruction;
+@property (nonatomic, readonly) MTMathAtomType displayClass;
+- (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
+                       under:(nullable MTMathStackConstruction*)under
+                displayClass:(MTMathAtomType)displayClass;
+@end
+
+@implementation MTMathStackCommandSpec
+- (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
+                       under:(nullable MTMathStackConstruction*)under
+                displayClass:(MTMathAtomType)displayClass {
+    self = [super init];
+    if (self) {
+        _overConstruction = over;
+        _underConstruction = under;
+        _displayClass = displayClass;
+    }
+    return self;
+}
+@end
+
 @implementation MTMathAtomFactory
 
 + (MTMathAtom *)times
@@ -888,6 +912,92 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                    };
     }
     return fontStyles;
+}
+
+#pragma mark - Stack commands
+
++ (NSDictionary<NSString*, MTMathStackCommandSpec*>*) stackCommands
+{
+    static NSDictionary* stackCommands = nil;
+    if (!stackCommands) {
+        // Each command maps to a single stretchy cap glyph (a Unicode codepoint). The
+        // typesetter walks the cap's OpenType h_variants first; if no variant is wide
+        // enough, it falls back to the font's HorizontalGlyphAssembly (parts + connector
+        // overlaps). The cap codepoint must therefore be one whose OpenType MATH table
+        // provides assembly data — the arrow caps carry their own .lft/.ex/.rt parts.
+        MTMathStackConstruction* rightArrow     = [MTMathStackConstruction extensibleWithGlyph:@"\u2192"];
+        MTMathStackConstruction* leftArrow      = [MTMathStackConstruction extensibleWithGlyph:@"\u2190"];
+        MTMathStackConstruction* leftRightArrow = [MTMathStackConstruction extensibleWithGlyph:@"\u2194"];
+        MTMathStackConstruction* overBrace      = [MTMathStackConstruction extensibleWithGlyph:@"\u23DE"];
+        MTMathStackConstruction* underBrace     = [MTMathStackConstruction extensibleWithGlyph:@"\u23DF"];
+
+        stackCommands = @{
+            @"overrightarrow":     [[MTMathStackCommandSpec alloc] initWithOver:rightArrow     under:nil       displayClass:kMTMathAtomOrdinary],
+            @"overleftarrow":      [[MTMathStackCommandSpec alloc] initWithOver:leftArrow      under:nil       displayClass:kMTMathAtomOrdinary],
+            @"overleftrightarrow": [[MTMathStackCommandSpec alloc] initWithOver:leftRightArrow under:nil       displayClass:kMTMathAtomOrdinary],
+            @"underrightarrow":    [[MTMathStackCommandSpec alloc] initWithOver:nil            under:rightArrow     displayClass:kMTMathAtomOrdinary],
+            @"underleftarrow":     [[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftArrow      displayClass:kMTMathAtomOrdinary],
+            @"underleftrightarrow":[[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftRightArrow displayClass:kMTMathAtomOrdinary],
+            @"overbrace":          [[MTMathStackCommandSpec alloc] initWithOver:overBrace      under:nil       displayClass:kMTMathAtomOrdinary],
+            @"underbrace":         [[MTMathStackCommandSpec alloc] initWithOver:nil            under:underBrace     displayClass:kMTMathAtomOrdinary],
+        };
+    }
+    return stackCommands;
+}
+
++ (nullable MTMathStack*) stackAtomForCommand:(NSString*)command
+{
+    MTMathStackCommandSpec* spec = [self stackCommands][command];
+    if (!spec) {
+        return nil;
+    }
+    MTMathStack* stack = [[MTMathStack alloc] init];
+    stack.over = spec.overConstruction;
+    stack.under = spec.underConstruction;
+    stack.displayClass = spec.displayClass;
+    return stack;
+}
+
+/// Returns a canonical key string encoding the over/under glyphs plus displayClass.
+/// Used as the key for the reverse-lookup dictionary built in stackCommandForStack:.
+static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
+                                 MTMathStackConstruction* _Nullable under,
+                                 MTMathAtomType displayClass)
+{
+    NSString* og = over  && over.glyph  ? over.glyph  : @"";
+    NSString* ug = under && under.glyph ? under.glyph : @"";
+    return [NSString stringWithFormat:@"%@|%@|%lu",
+            og, ug, (unsigned long)displayClass];
+}
+
++ (NSDictionary<NSString*, NSString*>*) stackCommandReverseTable
+{
+    static NSDictionary* reverseTable = nil;
+    if (!reverseTable) {
+        NSDictionary<NSString*, MTMathStackCommandSpec*>* forward = [self stackCommands];
+        NSMutableDictionary* mutable = [NSMutableDictionary dictionaryWithCapacity:forward.count];
+        for (NSString* cmd in forward) {
+            MTMathStackCommandSpec* spec = forward[cmd];
+            NSString* key = StackCommandKey(spec.overConstruction, spec.underConstruction, spec.displayClass);
+            mutable[key] = cmd;
+        }
+        reverseTable = [mutable copy];
+    }
+    return reverseTable;
+}
+
++ (nullable NSString*) stackCommandForStack:(MTMathStack*)stack
+{
+    // Only Extensible constructions are in the Phase-1 table; non-Extensible
+    // (MathList / Rule) or constructions with non-canonical field values won't match.
+    if (stack.over && stack.over.kind != kMTMathStackConstructionExtensible) {
+        return nil;
+    }
+    if (stack.under && stack.under.kind != kMTMathStackConstructionExtensible) {
+        return nil;
+    }
+    NSString* key = StackCommandKey(stack.over, stack.under, stack.displayClass);
+    return [self stackCommandReverseTable][key];
 }
 
 @end
