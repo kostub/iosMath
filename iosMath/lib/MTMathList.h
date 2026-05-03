@@ -141,6 +141,11 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
 /** Returns a string representation of the MTMathAtom */
 @property (nonatomic, readonly) NSString *stringValue;
 
+/** Appends the LaTeX serialization of this atom (and its scripts) to the given string.
+ Subclasses override to emit their own LaTeX form; the default implementation handles
+ ordinary atoms and scripts. */
+- (void)appendLaTeXToString:(NSMutableString *)str;
+
 /** The type of the atom. */
 @property (nonatomic) MTMathAtomType type;
 /** The nucleus of the atom. */
