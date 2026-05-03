@@ -799,54 +799,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 @end
 
-#pragma mark - MTLargeDelimiter
-
-@implementation MTLargeDelimiter
-
-- (instancetype)initWithDelimiterNucleus:(NSString *)nucleus
-                               mathClass:(MTMathAtomType)mathClass
-                                    size:(MTDelimiterSize)size
-{
-    NSParameterAssert(nucleus);
-    NSAssert(mathClass == kMTMathAtomOrdinary || mathClass == kMTMathAtomOpen
-             || mathClass == kMTMathAtomClose || mathClass == kMTMathAtomRelation,
-             @"Large delimiter math class must be Ordinary, Open, Close, or Relation");
-    NSAssert(size >= kMTDelimiterSize1 && size <= kMTDelimiterSize4,
-             @"Large delimiter size must be in the range 1…4");
-    self = [super initWithType:mathClass value:nucleus];
-    if (self) {
-        _delimiterSize = size;
-    }
-    return self;
-}
-
-- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
-{
-    if (type == kMTMathAtomOrdinary || type == kMTMathAtomOpen
-        || type == kMTMathAtomClose || type == kMTMathAtomRelation) {
-        return [self initWithDelimiterNucleus:value ?: @""
-                                    mathClass:type
-                                         size:kMTDelimiterSize1];
-    }
-    @throw [NSException exceptionWithName:@"InvalidMethod"
-                                   reason:@"[MTLargeDelimiter initWithType:value:] cannot be called. Use [MTLargeDelimiter initWithDelimiterNucleus:mathClass:size:] instead."
-                                 userInfo:nil];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    MTLargeDelimiter* copy = [[MTLargeDelimiter allocWithZone:zone] initWithDelimiterNucleus:self.nucleus
-                                                                                   mathClass:self.type
-                                                                                        size:self.delimiterSize];
-    copy.subScript = [self.subScript copyWithZone:zone];
-    copy.superScript = [self.superScript copyWithZone:zone];
-    copy.indexRange = self.indexRange;
-    copy.fontStyle = self.fontStyle;
-    return copy;
-}
-
-@end
-
 #pragma mark - MTMathSpace
 
 @implementation MTMathSpace
