@@ -85,12 +85,6 @@ static NSString* typeToText(MTMathAtomType type) {
 
 @end
 
-@interface MTMathAtom (MTMathListBuilderSerialization)
-
-- (void)appendLaTeXToString:(NSMutableString *)str;
-
-@end
-
 static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSString* rightDelimiter)
 {
     if (!leftDelimiter && !rightDelimiter) {

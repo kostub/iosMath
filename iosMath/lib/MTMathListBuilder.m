@@ -14,12 +14,6 @@
 
 NSString *const MTParseError = @"ParseError";
 
-@interface MTMathAtom (MTMathListBuilderSerialization)
-
-- (void)appendLaTeXToString:(NSMutableString *)str;
-
-@end
-
 @interface MTEnvProperties : NSObject
 
 @property (nonatomic, readonly) NSString* envName;
