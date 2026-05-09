@@ -39,7 +39,7 @@ iosMath is distributed via **Swift Package Manager**.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/kostub/iosMath.git", from: "2.0.0"),
+    .package(url: "https://github.com/kostub/iosMath.git", from: "2.1.0"),
 ],
 targets: [
     .target(
@@ -364,7 +364,6 @@ let alpha     = MTMathAtomFactory.atom(forLatexSymbol: "alpha")
 
 ## Future enhancements
 
-* Support for explicit big delimiters (`\bigl`, `\bigr`, etc.)
 * Additional plain TeX commands
 
 ## Migration from 0.9.x

@@ -1,5 +1,9 @@
 ## Changelog
 
+### v2.1.0 (2026-05-10)
+* Add support for explicit-size big delimiters: `\bigl`, `\bigr`, `\Bigl`, `\Bigr`, `\biggl`, `\biggr`, `\Biggl`, `\Biggr`.
+* Add over/under accent commands: `\overrightarrow`, `\overleftarrow`, `\overbrace`, `\underbrace`, and relatives, backed by a new generic `MTMathStack` atom.
+
 ### v2.0.0 (2026-04-14)
 * Raise deployment targets to iOS 18+ and macOS 15+.
 * Remove CocoaPods support; distribute via Swift Package Manager only.
