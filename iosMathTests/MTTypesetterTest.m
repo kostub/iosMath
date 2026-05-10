@@ -2013,4 +2013,118 @@
     if (font) CFRelease(font);
 }
 
+#pragma mark - Phase 4: Typesetter handles MTTextAtom
+
+- (MTMathList *) listWithTextAtom:(MTTextAtom *)atom {
+    MTMathList *list = [[MTMathList alloc] init];
+    [list addAtom:atom];
+    return list;
+}
+
+// Helper: walk every glyph run in the CTLine and assert no glyph index 0
+// (`.notdef` in TrueType/OpenType). Re-create the line from the public
+// MTTextDisplay properties since the line itself is private.
+- (void) assertCTLineHasNoNotdef:(MTTextDisplay *)display {
+    CTFontRef font = [MTFontManager textCTFontForStyle:display.textStyle size:20];
+    NSAttributedString *as = [[NSAttributedString alloc]
+                               initWithString:display.text
+                                   attributes:@{(NSString *)kCTFontAttributeName: (__bridge id)font}];
+    CTLineRef line = CTLineCreateWithAttributedString(
+                        (__bridge CFAttributedStringRef)as);
+    CFArrayRef runs = CTLineGetGlyphRuns(line);
+    for (CFIndex i = 0; i < CFArrayGetCount(runs); i++) {
+        CTRunRef run = CFArrayGetValueAtIndex(runs, i);
+        CFIndex count = CTRunGetGlyphCount(run);
+        CGGlyph glyphs[count];
+        CTRunGetGlyphs(run, CFRangeMake(0, count), glyphs);
+        for (CFIndex j = 0; j < count; j++) {
+            XCTAssertNotEqual(glyphs[j], 0,
+                              @"`.notdef` for char index %ld in '%@'",
+                              (long)j, display.text);
+        }
+    }
+    CFRelease(line);
+    CFRelease(font);
+}
+
+- (void) testTypesetterTextDisplayPresent {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc"
+                                                  style:kMTTextStyleBold];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)1);
+    XCTAssertTrue([display.subDisplays.firstObject
+                    isKindOfClass:[MTTextDisplay class]]);
+    XCTAssertGreaterThan(display.subDisplays.firstObject.width, 0);
+}
+
+- (void) testTypesetterTextDisplayEmpty {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@""
+                                                  style:kMTTextStyleRoman];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    XCTAssertNoThrow(([MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay]));
+}
+
+- (void) testTypesetterTextDisplayChinese {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"你好"
+                                                  style:kMTTextStyleRoman];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    XCTAssertEqualObjects(text.text, @"你好");
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTypesetterTextNotFusedAcrossAtoms {
+    // Two adjacent text atoms must remain separate displays — Rule 14
+    // would fuse Ord+Ord, and this test pins down that distinct enum
+    // prevents fusion.
+    MTTextAtom *a = [[MTTextAtom alloc] initWithText:@"a" style:kMTTextStyleRoman];
+    MTTextAtom *b = [[MTTextAtom alloc] initWithText:@"b" style:kMTTextStyleBold];
+    MTMathList *list = [[MTMathList alloc] init];
+    [list addAtom:a];
+    [list addAtom:b];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)2);
+    XCTAssertTrue([display.subDisplays[0] isKindOfClass:[MTTextDisplay class]]);
+    XCTAssertTrue([display.subDisplays[1] isKindOfClass:[MTTextDisplay class]]);
+}
+
+- (void) testTypesetterTextWithSuperscript {
+    MTTextAtom *t = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleBold];
+    MTMathList *sup = [[MTMathList alloc] init];
+    [sup addAtom:[MTMathAtomFactory atomForCharacter:'2']];
+    t.superScript = sup;
+
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:t]
+                         font:font
+                        style:kMTLineStyleDisplay];
+
+    BOOL hasText   = NO;
+    BOOL hasScript = NO;
+    for (MTDisplay *d in display.subDisplays) {
+        if ([d isKindOfClass:[MTTextDisplay class]]) hasText = YES;
+        // Scripts emerge as MTMathListDisplay sub-displays (per existing
+        // makeScripts: convention).
+        if ([d isKindOfClass:[MTMathListDisplay class]]) hasScript = YES;
+    }
+    XCTAssertTrue(hasText);
+    XCTAssertTrue(hasScript);
+}
+
 @end
