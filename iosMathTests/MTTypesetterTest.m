@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <CoreText/CoreText.h>
 
 #import "MTTypesetter.h"
 #import "MTFont+Internal.h"
@@ -1906,5 +1907,52 @@
     XCTAssertGreaterThanOrEqual(arrowStack.over.width + 0.01, arrowStack.base.width);
 }
 
+#pragma mark - MTFontManager +textCTFontForStyle:size:
+
+- (void) testTextCTFontRomanReturnsFont {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    XCTAssertTrue(font != NULL);
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(font);
+    XCTAssertFalse((traits & kCTFontTraitBold)   != 0);
+    XCTAssertFalse((traits & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontBoldHasBoldTrait {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleBold size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitBold) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontItalicHasItalicTrait {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleItalic size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontTypewriterIsMonospace {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleTypewriter size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitMonoSpace) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontSansFallback {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleSansSerif size:20];
+    XCTAssertTrue(font != NULL);
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(font);
+    XCTAssertFalse((traits & kCTFontTraitBold)   != 0);
+    XCTAssertFalse((traits & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontSizeMatches {
+    CGFloat target = 17.5;
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:target];
+    XCTAssertEqualWithAccuracy(CTFontGetSize(font), target, 0.001);
+    if (font) CFRelease(font);
+}
 
 @end

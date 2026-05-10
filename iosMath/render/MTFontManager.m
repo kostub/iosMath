@@ -74,4 +74,43 @@ const int kDefaultFontSize = 20;
     return [self latinModernFontWithSize:kDefaultFontSize];
 }
 
++ (CTFontRef) textCTFontForStyle:(MTTextStyle) style
+                            size:(CGFloat) size
+{
+    CTFontUIFontType base;
+    switch (style) {
+        case kMTTextStyleTypewriter:
+            base = kCTFontUIFontUserFixedPitch;
+            break;
+        case kMTTextStyleRoman:
+        case kMTTextStyleBold:
+        case kMTTextStyleItalic:
+        case kMTTextStyleSansSerif:
+        default:
+            base = kCTFontUIFontSystem;
+            break;
+    }
+
+    CTFontRef baseFont = CTFontCreateUIFontForLanguage(base, size, NULL);
+    if (baseFont == NULL) {
+        return CTFontCreateWithName(CFSTR("Helvetica"), size, NULL);
+    }
+
+    CTFontSymbolicTraits requested = 0;
+    if (style == kMTTextStyleBold)   requested |= kCTFontTraitBold;
+    if (style == kMTTextStyleItalic) requested |= kCTFontTraitItalic;
+
+    if (requested == 0) {
+        return baseFont;
+    }
+
+    CTFontRef styled = CTFontCreateCopyWithSymbolicTraits(
+        baseFont, size, NULL, requested, requested);
+    if (styled != NULL) {
+        CFRelease(baseFont);
+        return styled;
+    }
+    return baseFont;
+}
+
 @end

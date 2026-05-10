@@ -10,8 +10,10 @@
 //  
 
 @import Foundation;
+@import CoreText;
 
 #import "MTFont.h"
+#import "MTMathList.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -42,6 +44,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Helper function to return the Latin Modern Math font. */
 - (MTFont *) latinModernFontWithSize:(CGFloat)size;
+
+/**
+ Returns a CoreText font suitable for `\text*` rendering. The caller owns
+ the returned reference (CF_RETAINED) and must `CFRelease` it.
+
+ - `kMTTextStyleRoman` and `kMTTextStyleSansSerif` → system text font.
+ - `kMTTextStyleBold` / `kMTTextStyleItalic` → system text font with
+   `kCTFontTraitBold` / `kCTFontTraitItalic` applied via
+   `CTFontCreateCopyWithSymbolicTraits`. If the trait is unsatisfiable the
+   plain system font is returned.
+ - `kMTTextStyleTypewriter` → system monospace font.
+ */
++ (CTFontRef) textCTFontForStyle:(MTTextStyle) style
+                            size:(CGFloat) size CF_RETURNS_RETAINED;
 
 @end
 
