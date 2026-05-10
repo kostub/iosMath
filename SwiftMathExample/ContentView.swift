@@ -98,6 +98,21 @@ private let namedExamples: [NamedFormula] = [
         latex: #"\frak Q(\lambda,\hat{\lambda}) = -\frac{1}{2}\mathbb P(O \mid \lambda)\sum_s\sum_m\sum_t \gamma_m^{(s)}(t) +\\ \quad \left(\log(2\pi) + \log\left|\cal C_m^{(s)}\right| + \left(o_t - \hat{\mu}_m^{(s)}\right)^T \cal C_m^{(s)-1}\right)"#,
         height: 130
     ),
+    NamedFormula(
+        title: "Mixed text & math (Latin)",
+        latex: #"f(\text{input}) = \sum_{i=1}^n x_i"#,
+        height: 80
+    ),
+    NamedFormula(
+        title: "Mixed text & math (CJK)",
+        latex: #"\text{设} f(x) = x^2 + 1"#,
+        height: 80
+    ),
+    NamedFormula(
+        title: "Text styles",
+        latex: #"\textrm{rm}\ \textbf{bf}\ \textit{it}\ \textsf{sf}\ \texttt{tt}"#,
+        height: 60
+    ),
 ]
 
 /// Curated, named examples — suitable as a quick-start reference.
