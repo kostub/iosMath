@@ -1849,4 +1849,19 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
 }
 
+- (void) testRawCyrillicDropped {
+    // Post-removal: raw Cyrillic outside \text* drops to nothing.
+    // Pre-removal: U+0411–U+044E silently became Variable atoms.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"Привет"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)0);
+}
+
+- (void) testRawCyrillicInTextStillWorks {
+    // Sanity: the only supported path is \text* — already covered
+    // elsewhere, repeated here for symmetry against the regression.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{Привет}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(((MTTextAtom *)list.atoms[0]).text, @"Привет");
+}
+
 @end
