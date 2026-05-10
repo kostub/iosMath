@@ -1955,4 +1955,62 @@
     if (font) CFRelease(font);
 }
 
+#pragma mark - MTTextDisplay construction
+
+- (void) testTextDisplayConstructionLatin {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                              xHeightShift:0
+                                                     range:NSMakeRange(0, 3)];
+    XCTAssertNotNil(d);
+    XCTAssertEqualObjects(d.text, @"abc");
+    XCTAssertEqual(d.textStyle, kMTTextStyleRoman);
+    XCTAssertGreaterThan(d.width, 0);
+    XCTAssertEqual(d.range.location, (NSUInteger)0);
+    XCTAssertEqual(d.range.length,   (NSUInteger)3);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayConstructionEmpty {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@""
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                              xHeightShift:0
+                                                     range:NSMakeRange(0, 0)];
+    XCTAssertNotNil(d);
+    XCTAssertLessThan(d.width, 0.5);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayConstructionChinese {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"你好"
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                              xHeightShift:0
+                                                     range:NSMakeRange(0, 2)];
+    XCTAssertNotNil(d);
+    XCTAssertGreaterThan(d.width, 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayDrawDoesNotCrash {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleBold size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
+                                                 textStyle:kMTTextStyleBold
+                                                    ctFont:font
+                                              xHeightShift:0
+                                                     range:NSMakeRange(0, 3)];
+    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 50, 8, 0, cs,
+                                             kCGImageAlphaPremultipliedLast);
+    XCTAssertNoThrow([d draw:ctx]);
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(cs);
+    if (font) CFRelease(font);
+}
+
 @end
