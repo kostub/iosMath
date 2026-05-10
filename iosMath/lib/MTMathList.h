@@ -61,10 +61,14 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// A generic over/under stack atom. Supports \overrightarrow, \overleftarrow,
     /// \overleftrightarrow, \underrightarrow, \underleftarrow, \underleftrightarrow,
     /// \overbrace, \underbrace. Future: \stackrel, \overset, \underset.
-    kMTMathAtomStack,
+    kMTMathAtomStack = 18,
+    /// A run of opaque (non-math) Unicode text — \text, \textrm, \textbf,
+    /// \textit, \textsf, \texttt. Captured raw at parse time; the body cannot
+    /// contain math.
+    kMTMathAtomText = 19,
 
     // Atoms after this point do not support subscripts or superscripts
-    
+
     /// A left atom - Left & Right in TeX. We don't need two since we track boundaries separately.
     kMTMathAtomBoundary = 101,
     
@@ -116,6 +120,28 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
     kMTFontStyleBlackboard,
     /// Bold italic
     kMTFontStyleBoldItalic,
+};
+
+/**
+ @typedef MTTextStyle
+ @brief The "text-mode" font style used by `\text`, `\textrm`, `\textbf`, …
+
+ Distinct from `MTFontStyle` because text-mode renders via system text
+ fonts (with CoreText traits), while `MTFontStyle` controls
+ Unicode-math-alphanumeric remapping for math-mode atoms.
+ */
+typedef NS_ENUM(NSUInteger, MTTextStyle)
+{
+    /// `\text`, `\textrm`
+    kMTTextStyleRoman = 0,
+    /// `\textbf`
+    kMTTextStyleBold,
+    /// `\textit`
+    kMTTextStyleItalic,
+    /// `\textsf`
+    kMTTextStyleSansSerif,
+    /// `\texttt`
+    kMTTextStyleTypewriter,
 };
 
 /** A `MTMathAtom` is the basic unit of a math list. Each atom represents a single character
@@ -459,6 +485,34 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 /// The math class used for inter-element spacing after typesetting.
 /// Default: kMTMathAtomOrdinary.
 @property (nonatomic) MTMathAtomType displayClass;
+
+@end
+
+/**
+ An atom representing a run of plain Unicode text (text mode).
+ Created by `\text`, `\textrm`, `\textbf`, `\textit`, `\textsf`, `\texttt`.
+ The body is captured verbatim at parse time — math is not permitted inside.
+ */
+@interface MTTextAtom : MTMathAtom
+
+- (instancetype) init NS_UNAVAILABLE;
++ (instancetype) atomWithType:(MTMathAtomType) type
+                        value:(NSString*) value NS_UNAVAILABLE;
+
+/**
+ Designated initializer. `style` must be a valid `MTTextStyle` value;
+ out-of-range values trigger an assertion in debug builds.
+ */
+- (instancetype) initWithText:(NSString*) text
+                        style:(MTTextStyle) style NS_DESIGNATED_INITIALIZER;
+
+/// The raw Unicode text, with backslash escapes already processed at
+/// parse time. The string may contain characters outside the BMP
+/// (UTF-16 surrogate pairs).
+@property (nonatomic, copy) NSString* text;
+
+/// The text-mode style.
+@property (nonatomic) MTTextStyle textStyle;
 
 @end
 

@@ -64,6 +64,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Accent";
         case kMTMathAtomStack:
             return @"Stack";
+        case kMTMathAtomText:
+            return @"Text";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -1240,6 +1242,86 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         // Programmatically-built stack with non-canonical constructions — emit only the inner list.
         [str appendString:[MTMathListBuilder mathListToString:self.innerList]];
     }
+}
+
+@end
+
+#pragma mark - MTTextAtom
+
+@implementation MTTextAtom
+
+- (instancetype)initWithText:(NSString *)text style:(MTTextStyle)style
+{
+    NSParameterAssert(text);
+    NSParameterAssert(style <= kMTTextStyleTypewriter);
+    // The nucleus is set to the raw text so existing consumers reading
+    // nucleus (e.g. description, stringValue) work reasonably without
+    // changes. fontStyle is left at kMTFontStyleDefault so
+    // mathListToString: does not wrap the atom in a \mathrm{...} group.
+    self = [super initWithType:kMTMathAtomText value:text];
+    if (self) {
+        _text = [text copy];
+        _textStyle = style;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomText) {
+        return [self initWithText:value ?: @"" style:kMTTextStyleRoman];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTTextAtom initWithType:value:] cannot be called. Use [MTTextAtom initWithText:style:] instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    // [super copyWithZone:] uses [[[self class] alloc] initWithType:self.type value:self.nucleus]
+    // which dispatches to our overridden initWithType:value: (defaulting to Roman style),
+    // and copies fontStyle, indexRange, sub/superScript. We then restore the textStyle
+    // and ensure text is set from the source.
+    MTTextAtom* copy = [super copyWithZone:zone];
+    copy->_text = [self.text copyWithZone:zone];
+    copy->_textStyle = self.textStyle;
+    return copy;
+}
+
+- (instancetype)finalized
+{
+    MTTextAtom* fin = [super finalized];
+    fin->_text = [self.text copy];
+    fin->_textStyle = self.textStyle;
+    return fin;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* command = [MTMathAtomFactory commandNameForTextStyle:self.textStyle];
+    [str appendFormat:@"\\%@{", command];
+
+    // Escape only the eight characters that are special in TeX text-mode
+    // bodies. All other characters (including arbitrary Unicode) pass
+    // through verbatim.
+    for (NSUInteger i = 0; i < self.text.length; i++) {
+        unichar c = [self.text characterAtIndex:i];
+        switch (c) {
+            case '\\': [str appendString:@"\\\\"]; break;
+            case '{':  [str appendString:@"\\{"];  break;
+            case '}':  [str appendString:@"\\}"];  break;
+            case '_':  [str appendString:@"\\_"];  break;
+            case '^':  [str appendString:@"\\^"];  break;
+            case '%':  [str appendString:@"\\%"];  break;
+            case '&':  [str appendString:@"\\&"];  break;
+            case '#':  [str appendString:@"\\#"];  break;
+            case '$':  [str appendString:@"\\$"];  break;
+            default:
+                [str appendFormat:@"%C", c];
+                break;
+        }
+    }
+    [str appendString:@"}"];
 }
 
 @end

@@ -1612,4 +1612,32 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(latex, @"x");
 }
 
+#pragma mark - MTTextStyle factory APIs
+
+- (void) testTextStyleWithNameKnown
+{
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"text"],   kMTTextStyleRoman);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textrm"], kMTTextStyleRoman);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textbf"], kMTTextStyleBold);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textit"], kMTTextStyleItalic);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textsf"], kMTTextStyleSansSerif);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"texttt"], kMTTextStyleTypewriter);
+}
+
+- (void) testTextStyleWithNameUnknown
+{
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"mathbf"], (MTTextStyle)NSNotFound);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"foobar"], (MTTextStyle)NSNotFound);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@""],       (MTTextStyle)NSNotFound);
+}
+
+- (void) testCommandNameForTextStyle
+{
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleRoman],      @"text");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleBold],       @"textbf");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleItalic],     @"textit");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleSansSerif],  @"textsf");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleTypewriter], @"texttt");
+}
+
 @end

@@ -253,6 +253,44 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return style.integerValue;
 }
 
++ (NSDictionary<NSString*, NSNumber*>*) textStyles
+{
+    static NSDictionary<NSString*, NSNumber*>* textStyles = nil;
+    if (!textStyles) {
+        textStyles = @{
+            @"text":   @(kMTTextStyleRoman),
+            @"textrm": @(kMTTextStyleRoman),
+            @"textbf": @(kMTTextStyleBold),
+            @"textit": @(kMTTextStyleItalic),
+            @"textsf": @(kMTTextStyleSansSerif),
+            @"texttt": @(kMTTextStyleTypewriter),
+        };
+    }
+    return textStyles;
+}
+
++ (MTTextStyle) textStyleWithName:(NSString *)name
+{
+    NSNumber* boxed = [self textStyles][name];
+    if (!boxed) {
+        return (MTTextStyle)NSNotFound;
+    }
+    return (MTTextStyle)boxed.unsignedIntegerValue;
+}
+
++ (NSString*) commandNameForTextStyle:(MTTextStyle)style
+{
+    switch (style) {
+        case kMTTextStyleRoman:      return @"text";
+        case kMTTextStyleBold:       return @"textbf";
+        case kMTTextStyleItalic:     return @"textit";
+        case kMTTextStyleSansSerif:  return @"textsf";
+        case kMTTextStyleTypewriter: return @"texttt";
+    }
+    NSAssert(NO, @"Unknown MTTextStyle %lu", (unsigned long)style);
+    return @"text";
+}
+
 + (NSString *)fontNameForStyle:(MTFontStyle)fontStyle
 {
     switch (fontStyle) {
