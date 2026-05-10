@@ -924,29 +924,25 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     static NSDictionary<NSString*, NSNumber*>* fontStyles = nil;
     if (!fontStyles) {
+        // \text* commands are handled by the parser via the textStyles
+        // dictionary, so they do NOT appear here.
         fontStyles = @{
                        @"mathnormal" : @(kMTFontStyleDefault),
                        @"mathrm": @(kMTFontStyleRoman),
-                       @"textrm": @(kMTFontStyleRoman),
                        @"rm": @(kMTFontStyleRoman),
                        @"mathbf": @(kMTFontStyleBold),
                        @"bf": @(kMTFontStyleBold),
-                       @"textbf": @(kMTFontStyleBold),
                        @"mathcal": @(kMTFontStyleCaligraphic),
                        @"cal": @(kMTFontStyleCaligraphic),
                        @"mathtt": @(kMTFontStyleTypewriter),
-                       @"texttt": @(kMTFontStyleTypewriter),
                        @"mathit": @(kMTFontStyleItalic),
-                       @"textit": @(kMTFontStyleItalic),
                        @"mit": @(kMTFontStyleItalic),
                        @"mathsf": @(kMTFontStyleSansSerif),
-                       @"textsf": @(kMTFontStyleSansSerif),
                        @"mathfrak": @(kMTFontStyleFraktur),
                        @"frak": @(kMTFontStyleFraktur),
                        @"mathbb": @(kMTFontStyleBlackboard),
                        @"mathbfit": @(kMTFontStyleBoldItalic),
                        @"bm": @(kMTFontStyleBoldItalic),
-                       @"text": @(kMTFontStyleRoman),
                    };
     }
     return fontStyles;

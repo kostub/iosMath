@@ -2127,4 +2127,74 @@
     XCTAssertTrue(hasScript);
 }
 
+#pragma mark - End-to-end \text* rendering (Phase 5)
+
+- (void) testTextDisplayChineseFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{你好}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)1);
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayCyrillicBoldFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{Привет}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertEqual(text.textStyle, kMTTextStyleBold);
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayDevanagariFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{नमस्ते}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayHebrewFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{שלום}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayArabicFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{مرحبا}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    // Per LLD §1 we don't assert RTL ordering — just that all glyphs resolved.
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextInMixedLine {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"x + \\text{ok}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    BOOL hasMath = NO;
+    BOOL hasText = NO;
+    for (MTDisplay *d in display.subDisplays) {
+        if ([d isKindOfClass:[MTCTLineDisplay class]]) hasMath = YES;
+        if ([d isKindOfClass:[MTTextDisplay class]])   hasText = YES;
+    }
+    XCTAssertTrue(hasMath);
+    XCTAssertTrue(hasText);
+}
+
 @end

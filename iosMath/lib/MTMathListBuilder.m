@@ -183,6 +183,25 @@ NSString *const MTParseError = @"ParseError";
             if ([self applyModifier:command atom:prevAtom]) {
                 continue;
             }
+            // Recognize \text* commands first — they consume their {…}
+            // body raw, so they must be handled before the legacy
+            // font-style dispatch (and before the six \text* keys are
+            // removed from MTMathAtomFactory.fontStyles).
+            MTTextStyle textStyle = [MTMathAtomFactory textStyleWithName:command];
+            if (textStyle != (MTTextStyle)NSNotFound) {
+                NSString* body = [self readTextArgument];
+                if (!body) {
+                    return nil; // error already set
+                }
+                MTTextAtom* textAtom = [[MTTextAtom alloc] initWithText:body
+                                                                  style:textStyle];
+                [list addAtom:textAtom];
+                prevAtom = textAtom;
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
                 BOOL oldSpacesAllowed = _spacesAllowed;
@@ -269,6 +288,76 @@ NSString *const MTParseError = @"ParseError";
         }
     }
     return mutable;
+}
+
+// Reads the {...} body following a \text* command.  The body is captured
+// raw — every code point flows through unchanged except for the eight
+// LaTeX escapes \\, \{, \}, \_, \^, \%, \&, \#, \$ which unescape to their
+// literal character.  Balanced nested {...} groups are accepted as
+// TeX-style grouping (the braces are stripped, the inner content is
+// captured).  Any other backslash sequence is a parse error, as is `$`,
+// any unmatched brace, or a trailing backslash.
+- (NSString*) readTextArgument
+{
+    [self skipSpaces];
+    if (![self hasCharacters] || [self getNextCharacter] != '{') {
+        // Roll the position back so the error highlights the right spot.
+        if ([self hasCharacters] || _currentChar > 0) {
+            [self unlookCharacter];
+        }
+        [self setError:MTParseErrorCharacterNotFound
+               message:@"Missing { for \\text* argument"];
+        return nil;
+    }
+
+    NSMutableString* body = [NSMutableString string];
+    NSInteger depth = 0;
+    while ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '\\') {
+            if (![self hasCharacters]) {
+                [self setError:MTParseErrorMismatchBraces
+                       message:@"Trailing \\ inside \\text*"];
+                return nil;
+            }
+            unichar esc = [self getNextCharacter];
+            switch (esc) {
+                case '\\': case '{': case '}': case '_':
+                case '^':  case '%': case '&': case '#': case '$':
+                    [body appendFormat:@"%C", esc];
+                    break;
+                default:
+                    [self setError:MTParseErrorInvalidCommand
+                           message:[NSString stringWithFormat:
+                                    @"Unsupported escape \\%C in \\text* body",
+                                    esc]];
+                    return nil;
+            }
+            continue;
+        }
+        if (c == '{') {
+            // Balanced group — opening brace is grouping, not content.
+            depth += 1;
+            continue;
+        }
+        if (c == '}') {
+            if (depth == 0) {
+                return body; // matched the outer {
+            }
+            depth -= 1;
+            continue;
+        }
+        if (c == '$') {
+            // Math-in-text is out of scope.
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"$ is not allowed inside \\text*"];
+            return nil;
+        }
+        [body appendFormat:@"%C", c];
+    }
+    [self setError:MTParseErrorMismatchBraces
+           message:@"Unmatched { in \\text* body"];
+    return nil;
 }
 
 - (NSString*) readColor
