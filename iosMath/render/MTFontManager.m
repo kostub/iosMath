@@ -92,9 +92,6 @@ const int kDefaultFontSize = 20;
     }
 
     CTFontRef baseFont = CTFontCreateUIFontForLanguage(base, size, NULL);
-    if (baseFont == NULL) {
-        return CTFontCreateWithName(CFSTR("Helvetica"), size, NULL);
-    }
 
     CTFontSymbolicTraits requested = 0;
     if (style == kMTTextStyleBold)   requested |= kCTFontTraitBold;
