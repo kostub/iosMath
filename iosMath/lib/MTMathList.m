@@ -1296,29 +1296,28 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return fin;
 }
 
++ (NSCharacterSet *)latexEscapableCharacterSet
+{
+    static NSCharacterSet *set;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        set = [NSCharacterSet characterSetWithCharactersInString:@"\\{}_^%&#$"];
+    });
+    return set;
+}
+
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
     NSString* command = [MTMathAtomFactory commandNameForTextStyle:self.textStyle];
     [str appendFormat:@"\\%@{", command];
 
-    // Escape only the eight characters that are special in TeX text-mode
-    // bodies. All other characters (including arbitrary Unicode) pass
-    // through verbatim.
+    NSCharacterSet* escapable = [MTTextAtom latexEscapableCharacterSet];
     for (NSUInteger i = 0; i < self.text.length; i++) {
         unichar c = [self.text characterAtIndex:i];
-        switch (c) {
-            case '\\': [str appendString:@"\\\\"]; break;
-            case '{':  [str appendString:@"\\{"];  break;
-            case '}':  [str appendString:@"\\}"];  break;
-            case '_':  [str appendString:@"\\_"];  break;
-            case '^':  [str appendString:@"\\^"];  break;
-            case '%':  [str appendString:@"\\%"];  break;
-            case '&':  [str appendString:@"\\&"];  break;
-            case '#':  [str appendString:@"\\#"];  break;
-            case '$':  [str appendString:@"\\$"];  break;
-            default:
-                [str appendFormat:@"%C", c];
-                break;
+        if ([escapable characterIsMember:c]) {
+            [str appendFormat:@"\\%C", c];
+        } else {
+            [str appendFormat:@"%C", c];
         }
     }
     [str appendString:@"}"];

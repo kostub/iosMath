@@ -90,22 +90,23 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
          "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
         // 22: Explicit-sized vs content-sized delimiters
         @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
-        // 23: Mixed text + math - Latin baseline
-        @"x + \\text{input} + y = \\sum_{i=1}^n x_i",
-        // 24: Mixed text + math - Cyrillic
-        @"x + \\text{Привет} + y = x^2 + 1",
-        // 25: Mixed text + math - CJK
-        @"x + \\text{你好} + y = x^2 + 1",
-        // 26: Mixed text + math - Devanagari
-        @"x + \\text{नमस्ते} + y = x^2 + 1",
-        // 27: Mixed text + math - Arabic
-        @"x + \\text{مرحبا} + y = x^2 + 1",
-        // 28: Mixed text + math - Hebrew
-        @"x + \\text{שלום} + y = x^2 + 1",
-        // 29: All five \\text* styles in one math row
-        @"x + \\textrm{rm} + \\textbf{bf} + \\textit{it} + \\textsf{sf} + \\texttt{tt} = y",
-        // 30: Styled non-Latin text blocks
-        @"\\textbf{Привет} + \\textit{नमस्ते} + \\textsf{你好} + \\texttt{abc}",
+        // 23: Mixed text + math — labelled definition with a fraction
+        @"\\text{velocity} = \\frac{d\\vec{x}}{dt}",
+        // 24: Russian-labelled area-of-a-circle formula
+        @"\\text{Площадь круга} = \\pi r^2",
+        // 25: Chinese-labelled area formula
+        @"\\text{面积} = \\pi r^2",
+        // 26: Hindi-labelled area formula (Devanagari conjuncts + top matras)
+        @"\\text{क्षेत्रफल} = \\pi r^2",
+        // 27: Arabic-labelled area formula (RTL run inside an LTR equation)
+        @"\\text{المساحة} = \\pi r^2",
+        // 28: Hebrew-labelled area formula
+        @"\\text{שטח} = \\pi r^2",
+        // 29: Textbook-style definition exercising all five \\text* styles
+        @"\\textbf{Def.}\\textit{ Let } \\textsf{f}: \\textsf{R} \\to \\textsf{R}, "
+         "\\textrm{ where } \\texttt{f}(x) = x^2",
+        // 30: Styled non-Latin theorem label preceding a math statement
+        @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
     ];
 }
 

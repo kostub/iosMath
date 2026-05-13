@@ -132,15 +132,15 @@ typedef NS_ENUM(NSUInteger, MTFontStyle)
  */
 typedef NS_ENUM(NSUInteger, MTTextStyle)
 {
-    /// `\text`, `\textrm`
+    /// Upright (roman) text style — the default for `\text` and `\textrm`.
     kMTTextStyleRoman = 0,
-    /// `\textbf`
+    /// Upright bold text style i.e. `\textbf`.
     kMTTextStyleBold,
-    /// `\textit`
+    /// Italic text style i.e. `\textit`.
     kMTTextStyleItalic,
-    /// `\textsf`
+    /// Sans-serif (upright) text style i.e. `\textsf`.
     kMTTextStyleSansSerif,
-    /// `\texttt`
+    /// Typewriter (monospace) text style i.e. `\texttt`.
     kMTTextStyleTypewriter,
 };
 
@@ -513,6 +513,14 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 
 /// The text-mode style.
 @property (nonatomic) MTTextStyle textStyle;
+
+/**
+ The set of characters that are special inside a `\text*` body and must be
+ backslash-escaped on serialization (and consumed unescaped on parse).
+ Shared by the parser and the LaTeX writer so the two operations cannot
+ drift out of sync.
+ */
++ (NSCharacterSet *)latexEscapableCharacterSet;
 
 @end
 

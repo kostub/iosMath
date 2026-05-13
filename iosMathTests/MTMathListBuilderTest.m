@@ -1777,6 +1777,27 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(atom.superScript.atoms[0].nucleus, @"2");
 }
 
+- (void) testTextSubAndSuperscript {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{abc}_i^{n+1}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"abc");
+
+    XCTAssertNotNil(atom.subScript);
+    XCTAssertEqual(atom.subScript.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(atom.subScript.atoms[0].nucleus, @"i");
+
+    XCTAssertNotNil(atom.superScript);
+    XCTAssertEqual(atom.superScript.atoms.count, (NSUInteger)3);
+    XCTAssertEqualObjects(atom.superScript.atoms[0].nucleus, @"n");
+    XCTAssertEqualObjects(atom.superScript.atoms[1].nucleus, @"+");
+    XCTAssertEqualObjects(atom.superScript.atoms[2].nucleus, @"1");
+
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list],
+                          @"\\textbf{abc}^{n+1}_{i}");
+}
+
 #pragma mark - MTTextAtom parsing — round-trip
 
 - (void) testTextRoundTripChineseBold {

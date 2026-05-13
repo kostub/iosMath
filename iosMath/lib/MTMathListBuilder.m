@@ -291,12 +291,12 @@ NSString *const MTParseError = @"ParseError";
 }
 
 // Reads the {...} body following a \text* command.  The body is captured
-// raw — every code point flows through unchanged except for the eight
-// LaTeX escapes \\, \{, \}, \_, \^, \%, \&, \#, \$ which unescape to their
-// literal character.  Balanced nested {...} groups are accepted as
-// TeX-style grouping (the braces are stripped, the inner content is
-// captured).  Any other backslash sequence is a parse error, as is `$`,
-// any unmatched brace, or a trailing backslash.
+// raw — every code point flows through unchanged except for the backslash
+// escapes accepted by `[MTTextAtom latexEscapableCharacterSet]`, which
+// unescape to their literal character.  Balanced nested {...} groups are
+// accepted as TeX-style grouping (the braces are stripped, the inner
+// content is captured).  Any other backslash sequence is a parse error,
+// as is `$`, any unmatched brace, or a trailing backslash.
 - (NSString*) readTextArgument
 {
     [self skipSpaces];
@@ -310,6 +310,7 @@ NSString *const MTParseError = @"ParseError";
         return nil;
     }
 
+    NSCharacterSet* escapable = [MTTextAtom latexEscapableCharacterSet];
     NSMutableString* body = [NSMutableString string];
     NSInteger depth = 0;
     while ([self hasCharacters]) {
@@ -321,17 +322,14 @@ NSString *const MTParseError = @"ParseError";
                 return nil;
             }
             unichar esc = [self getNextCharacter];
-            switch (esc) {
-                case '\\': case '{': case '}': case '_':
-                case '^':  case '%': case '&': case '#': case '$':
-                    [body appendFormat:@"%C", esc];
-                    break;
-                default:
-                    [self setError:MTParseErrorInvalidCommand
-                           message:[NSString stringWithFormat:
-                                    @"Unsupported escape \\%C in \\text* body",
-                                    esc]];
-                    return nil;
+            if ([escapable characterIsMember:esc]) {
+                [body appendFormat:@"%C", esc];
+            } else {
+                [self setError:MTParseErrorInvalidCommand
+                       message:[NSString stringWithFormat:
+                                @"Unsupported escape \\%C in \\text* body",
+                                esc]];
+                return nil;
             }
             continue;
         }
