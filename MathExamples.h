@@ -17,7 +17,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-string-concatenation"
 
-/// 23 showcase formulae demonstrating the breadth of what iosMath can render.
+/// Gallery demo formulae: math showcase rows followed by mixed text and style checks.
 static inline NSArray<NSString*>* MathDemoFormulas(void) {
     return @[
         // 0: Quadratic formula
@@ -90,22 +90,22 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
          "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
         // 22: Explicit-sized vs content-sized delimiters
         @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
-        // 23: Mixed text + math — Latin
-        @"f(\\text{input}) = \\sum_{i=1}^n x_i",
-        // 24: Mixed text + math — Cyrillic
-        @"\\textbf{Сумма}: \\sum_{i=1}^n a_i = S",
-        // 25: Mixed text + math — Chinese
-        @"\\text{设} f(x) = x^2 + 1",
-        // 26: Mixed text + math — Devanagari
-        @"\\text{योग}: \\sum_{i=1}^n a_i",
-        // 27: Mixed text + math — Hebrew
-        @"\\text{סכום}: \\sum_{i=1}^n a_i",
-        // 28: Mixed text + math — Arabic
-        @"\\text{مجموع}: \\sum_{i=1}^n a_i",
-        // 29: All five \\text* styles in one line
-        @"\\textrm{rm} \\textbf{bf} \\textit{it} \\textsf{sf} \\texttt{tt}",
-        // 30: Text block carrying scripts
-        @"\\textbf{abc}^{2} + \\textit{def}_{0}",
+        // 23: Mixed text + math - Latin baseline
+        @"x + \\text{input} + y = \\sum_{i=1}^n x_i",
+        // 24: Mixed text + math - Cyrillic
+        @"x + \\text{Привет} + y = x^2 + 1",
+        // 25: Mixed text + math - CJK
+        @"x + \\text{你好} + y = x^2 + 1",
+        // 26: Mixed text + math - Devanagari
+        @"x + \\text{नमस्ते} + y = x^2 + 1",
+        // 27: Mixed text + math - Arabic
+        @"x + \\text{مرحبا} + y = x^2 + 1",
+        // 28: Mixed text + math - Hebrew
+        @"x + \\text{שלום} + y = x^2 + 1",
+        // 29: All five \\text* styles in one math row
+        @"x + \\textrm{rm} + \\textbf{bf} + \\textit{it} + \\textsf{sf} + \\texttt{tt} = y",
+        // 30: Styled non-Latin text blocks
+        @"\\textbf{Привет} + \\textit{नमस्ते} + \\textsf{你好} + \\texttt{abc}",
     ];
 }
 

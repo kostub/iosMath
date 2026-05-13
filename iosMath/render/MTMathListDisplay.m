@@ -178,20 +178,17 @@ static BOOL isIos6Supported(void) {
 @implementation MTTextDisplay {
     CTLineRef _line;
     NSAttributedString *_attributedString;
-    CGFloat _xHeightShift;
 }
 
 - (instancetype) initWithText:(NSString *) text
                     textStyle:(MTTextStyle) textStyle
                        ctFont:(CTFontRef) ctFont
-                 xHeightShift:(CGFloat) xHeightShift
                         range:(NSRange) range
 {
     self = [super init];
     if (self) {
         _text = [text copy];
         _textStyle = textStyle;
-        _xHeightShift = xHeightShift;
         self.range = range;
         self.position = CGPointZero;
 
@@ -236,9 +233,7 @@ static BOOL isIos6Supported(void) {
 {
     [super draw:context];
     CGContextSaveGState(context);
-    CGContextSetTextPosition(context,
-                             self.position.x,
-                             self.position.y - _xHeightShift);
+    CGContextSetTextPosition(context, self.position.x, self.position.y);
     CTLineDraw(_line, context);
     CGContextRestoreGState(context);
 }

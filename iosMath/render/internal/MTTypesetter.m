@@ -575,19 +575,6 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     _currentPosition.x += interElementSpace;
 }
 
-// Returns the y-shift needed so a text-font baseline lines up with the
-// math-font's x-height. Positive ⇒ the text run should be drawn lower than
-// the math baseline so that the lower-case x-heights of the two fonts meet.
-// (LLD §3.3 / §5.1)
-- (CGFloat) xHeightShiftForTextFont:(CTFontRef) textFont
-{
-    // The math-table x-height is exposed as `accentBaseHeight`
-    // (\fontdimen5 in TeX, see MTFontMathTable.h:136).
-    CGFloat mathX = _styleFont.mathTable.accentBaseHeight;
-    CGFloat textX = (CGFloat) CTFontGetXHeight(textFont);
-    return mathX - textX;
-}
-
 - (void) createDisplayAtoms:(NSArray*) preprocessed
 {
     // items should contain all the nodes that need to be layed out.
@@ -675,13 +662,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 MTTextAtom* textAtom = (MTTextAtom*) atom;
                 CTFontRef textFont = [MTFontManager textCTFontForStyle:textAtom.textStyle
                                                                   size:_styleFont.fontSize];
-                CGFloat shift = [self xHeightShiftForTextFont:textFont];
 
                 MTTextDisplay* display = [[MTTextDisplay alloc]
                                           initWithText:textAtom.text
                                              textStyle:textAtom.textStyle
                                                 ctFont:textFont
-                                          xHeightShift:shift
                                                  range:textAtom.indexRange];
                 // MTTextDisplay's initializer takes its own retain on the
                 // CTFont via the attributed-string attribute dictionary.

@@ -1962,7 +1962,6 @@
     MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
                                                  textStyle:kMTTextStyleRoman
                                                     ctFont:font
-                                              xHeightShift:0
                                                      range:NSMakeRange(0, 3)];
     XCTAssertNotNil(d);
     XCTAssertEqualObjects(d.text, @"abc");
@@ -1978,7 +1977,6 @@
     MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@""
                                                  textStyle:kMTTextStyleRoman
                                                     ctFont:font
-                                              xHeightShift:0
                                                      range:NSMakeRange(0, 0)];
     XCTAssertNotNil(d);
     XCTAssertLessThan(d.width, 0.5);
@@ -1990,7 +1988,6 @@
     MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"你好"
                                                  textStyle:kMTTextStyleRoman
                                                     ctFont:font
-                                              xHeightShift:0
                                                      range:NSMakeRange(0, 2)];
     XCTAssertNotNil(d);
     XCTAssertGreaterThan(d.width, 0);
@@ -2002,7 +1999,6 @@
     MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
                                                  textStyle:kMTTextStyleBold
                                                     ctFont:font
-                                              xHeightShift:0
                                                      range:NSMakeRange(0, 3)];
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 50, 8, 0, cs,
@@ -2189,12 +2185,21 @@
         createLineForMathList:list font:font style:kMTLineStyleDisplay];
     BOOL hasMath = NO;
     BOOL hasText = NO;
+    MTCTLineDisplay *math = nil;
+    MTTextDisplay *text = nil;
     for (MTDisplay *d in display.subDisplays) {
-        if ([d isKindOfClass:[MTCTLineDisplay class]]) hasMath = YES;
-        if ([d isKindOfClass:[MTTextDisplay class]])   hasText = YES;
+        if ([d isKindOfClass:[MTCTLineDisplay class]]) {
+            hasMath = YES;
+            if (!math) math = (MTCTLineDisplay *)d;
+        }
+        if ([d isKindOfClass:[MTTextDisplay class]]) {
+            hasText = YES;
+            if (!text) text = (MTTextDisplay *)d;
+        }
     }
     XCTAssertTrue(hasMath);
     XCTAssertTrue(hasText);
+    XCTAssertEqualWithAccuracy(text.position.y, math.position.y, 0.001);
 }
 
 @end
