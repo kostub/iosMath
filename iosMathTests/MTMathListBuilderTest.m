@@ -1612,4 +1612,32 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(latex, @"x");
 }
 
+- (void) testReverseMapTypeKeyedRoundTrip
+{
+    // Regression guard for Feature 7: re-keying the reverse map by
+    // (nucleus, type) must not break round-tripping of Bin symbols that
+    // become Un at the start of a list via -[MTMathList finalized].
+    NSArray<NSArray*>* cases = @[
+        @[ @"\\pm a",   @"\\pm a" ],
+        @[ @"a\\pm b",  @"a\\pm b" ],
+        @[ @"\\pm",     @"\\pm " ],
+        @[ @"\\cdot a", @"\\cdot a" ],
+        @[ @"a\\cdot b",@"a\\cdot b" ],
+        @[ @"\\leq",    @"\\leq " ],
+        @[ @"\\alpha",  @"\\alpha " ],
+        @[ @"\\to",     @"\\rightarrow " ],   // alias resolves to canonical
+    ];
+    for (NSArray* c in cases) {
+        NSString* input = c[0];
+        NSString* expected = c[1];
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"Parse error for %@", input);
+        XCTAssertNotNil(list, @"Nil list for %@", input);
+        MTMathList* final = [list finalized];
+        NSString* roundTrip = [MTMathListBuilder mathListToString:final];
+        XCTAssertEqualObjects(roundTrip, expected, @"Round-trip mismatch for %@", input);
+    }
+}
+
 @end

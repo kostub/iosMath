@@ -186,8 +186,22 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     if (atom.nucleus.length == 0) {
         return nil;
     }
-    NSDictionary* dict = [MTMathAtomFactory textToLatexSymbolNames];
-    return dict[atom.nucleus];
+    NSDictionary<NSString*, NSDictionary<NSNumber*, NSString*>*>* dict = [MTMathAtomFactory textToLatexSymbolNames];
+    NSDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
+    if (!inner) {
+        return nil;
+    }
+    NSString* name = inner[@(atom.type)];
+    if (name) {
+        return name;
+    }
+    // -[MTMathList finalized] reclassifies a leading/orphan Bin to Un. The
+    // forward table only ever registers atoms as Bin, so a (nucleus, Un)
+    // lookup must fall back to the Bin cell to recover the canonical name.
+    if (atom.type == kMTMathAtomUnaryOperator) {
+        return inner[@(kMTMathAtomBinaryOperator)];
+    }
+    return nil;
 }
 
 + (void)addLatexSymbol:(NSString *)name value:(MTMathAtom *)atom
@@ -197,8 +211,13 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     NSMutableDictionary<NSString*, MTMathAtom*>* commands = [self supportedLatexSymbols];
     commands[name] = atom;
     if (atom.nucleus.length != 0) {
-        NSMutableDictionary<NSString*, NSString*>* dict = [self textToLatexSymbolNames];
-        dict[atom.nucleus] = name;
+        NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* dict = [self textToLatexSymbolNames];
+        NSMutableDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
+        if (!inner) {
+            inner = [NSMutableDictionary dictionaryWithCapacity:1];
+            dict[atom.nucleus] = inner;
+        }
+        inner[@(atom.type)] = name;
     }
 }
 
@@ -729,9 +748,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     return aliases;
 }
 
-+ (NSMutableDictionary<NSString*, NSString*>*) textToLatexSymbolNames
++ (NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>*) textToLatexSymbolNames
 {
-    static NSMutableDictionary<NSString*, NSString*>* textToCommands = nil;
+    static NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* textToCommands = nil;
     if (!textToCommands) {
         NSDictionary* commands = [self supportedLatexSymbols];
         textToCommands = [NSMutableDictionary dictionaryWithCapacity:commands.count];
@@ -740,22 +759,27 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             if (atom.nucleus.length == 0) {
                 continue;
             }
-            
-            NSString* existingCommand = textToCommands[atom.nucleus];
+            NSNumber* typeKey = @(atom.type);
+
+            NSMutableDictionary<NSNumber*, NSString*>* inner = textToCommands[atom.nucleus];
+            if (!inner) {
+                inner = [NSMutableDictionary dictionaryWithCapacity:1];
+                textToCommands[atom.nucleus] = inner;
+            }
+
+            NSString* existingCommand = inner[typeKey];
             if (existingCommand) {
-                // If there are 2 commands for the same symbol, choose one deterministically.
+                // If there are 2 commands for the same (nucleus, type), choose
+                // one deterministically: shorter wins, alphabetical ascending breaks ties.
                 if (command.length > existingCommand.length) {
-                    // Keep the shorter command
                     continue;
                 } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
                     if ([command compare:existingCommand] == NSOrderedDescending) {
                         continue;
                     }
                 }
             }
-            // In other cases replace the command.
-            textToCommands[atom.nucleus] = command;
+            inner[typeKey] = command;
         }
     }
     return textToCommands;
