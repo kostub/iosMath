@@ -1815,4 +1815,55 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testBoxedCircledOperators
+{
+    NSArray* rows = @[
+        @[ @"boxplus",       @0x229E ],
+        @[ @"boxminus",      @0x229F ],
+        @[ @"boxtimes",      @0x22A0 ],
+        @[ @"boxdot",        @0x22A1 ],
+        @[ @"circledast",    @0x229B ],
+        @[ @"circledcirc",   @0x229A ],
+        @[ @"circleddash",   @0x229D ],
+        @[ @"barwedge",      @0x22BC ],
+        @[ @"veebar",        @0x22BB ],
+        @[ @"triangleleft",  @0x25C1 ],
+        @[ @"triangleright", @0x25B7 ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)11);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomBinaryOperator, @"%@ pre-finalize type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        // Between variables: stays Bin.
+        NSString* middle = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* middleList = [MTMathListBuilder buildFromString:middle error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:middleList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip Bin in middle %@", input);
+
+        // At start of list: finalize reclassifies Bin → Un. Round-trip must
+        // still recover the command name via the Un/Bin retry (PR 1).
+        NSString* start = [NSString stringWithFormat:@"%@ a", input];
+        MTMathList* startList = [MTMathListBuilder buildFromString:start error:&error];
+        XCTAssertNil(error);
+        MTMathList* startFinal = [startList finalized];
+        XCTAssertEqual([startFinal.atoms[0] type], kMTMathAtomUnaryOperator,
+                       @"%@ should finalize to Un at start of list", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:startFinal],
+                              ([NSString stringWithFormat:@"%@ a", input]),
+                              @"round-trip Bin→Un at start %@", input);
+    }
+}
+
 @end

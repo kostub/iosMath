@@ -639,7 +639,20 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"star"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C6"],
                      @"cdot"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C5"],
                      @"amalg" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2A3F"],
-                     
+
+                     // Boxed / circled binary operators (amssymb)
+                     @"boxplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229E"],
+                     @"boxminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229F"],
+                     @"boxtimes" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22A0"],
+                     @"boxdot" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22A1"],
+                     @"circledast" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229B"],
+                     @"circledcirc" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229A"],
+                     @"circleddash" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229D"],
+                     @"barwedge" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BC"],
+                     @"veebar" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BB"],
+                     @"triangleleft" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25C1"],
+                     @"triangleright" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B7"],
+
                      // No limit operators
                      @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
                      @"lg" : [MTMathAtomFactory operatorWithName:@"lg" limits:NO],
