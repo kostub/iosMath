@@ -1218,6 +1218,14 @@ static NSArray* getTestDataParseErrors() {
     XCTAssertEqualObjects(latex, @"\\lcm (a,b)");
 }
 
+- (void) testCustomSymbolDoesNotReplacePreferredReverseName
+{
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"];
+    [MTMathAtomFactory addLatexSymbol:@"zzpm" value:atom];
+
+    XCTAssertEqualObjects([MTMathAtomFactory latexSymbolNameForAtom:atom], @"pm");
+}
+
 - (void) testFontSingle
 {
     NSString *str = @"\\mathbf x";
@@ -1788,8 +1796,8 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"nsupset",         @0x2285 ],
         @[ @"nsucc",           @0x2281 ],
         @[ @"nprec",           @0x2280 ],
-        @[ @"nsucceq",         @0x2AB1 ],
-        @[ @"npreceq",         @0x2AB0 ],
+        @[ @"nsucceq",         @0x22E1 ],
+        @[ @"npreceq",         @0x22E0 ],
     ];
     XCTAssertEqual(rows.count, (NSUInteger)31);
     for (NSArray* r in rows) {
@@ -1990,7 +1998,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"dotsc",        @"ldots",          @"…", @"\\ldots " ],
         @[ @"dotsb",        @"cdots",          @"⋯", @"\\cdots " ],
         @[ @"dotsm",        @"cdots",          @"⋯", @"\\cdots " ],
-        @[ @"dotsi",        @"ldots",          @"…", @"\\ldots " ],
+        @[ @"dotsi",        @"cdots",          @"⋯", @"\\cdots " ],
         @[ @"square",       @"Box",            @"□", @"\\Box " ],
         @[ @"vartriangle",  @"triangle",       @"△", @"\\triangle " ],
     ];
@@ -2029,6 +2037,7 @@ static NSArray* getTestDataLargeDelimiters() {
 
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:a], @"\\Box ");
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:b], @"\\Box ");
+    XCTAssertTrue([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:@"square"]);
 
     MTMathAtom* p = [MTMathAtomFactory placeholder];
     XCTAssertEqual(p.type, kMTMathAtomPlaceholder);

@@ -195,7 +195,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     if (name) {
         return name;
     }
-    // -[MTMathList finalized] reclassifies a leading/orphan Bin to Un. The
+    // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
     // forward table only ever registers atoms as Bin, so a (nucleus, Un)
     // lookup must fall back to the Bin cell to recover the canonical name.
     if (atom.type == kMTMathAtomUnaryOperator) {
@@ -217,7 +217,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             inner = [NSMutableDictionary dictionaryWithCapacity:1];
             dict[atom.nucleus] = inner;
         }
-        inner[@(atom.type)] = name;
+        NSNumber* typeKey = @(atom.type);
+        NSString* existing = inner[typeKey];
+        if (!existing || name.length < existing.length ||
+            (name.length == existing.length && [name compare:existing] == NSOrderedAscending)) {
+            inner[typeKey] = name;
+        }
     }
 }
 
@@ -625,8 +630,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"nsupset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2285"],
                      @"nsucc" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2281"],
                      @"nprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2280"],
-                     @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB1"],
-                     @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB0"],
+                     @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E1"],
+                     @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E0"],
 
                      // Missing relations (proof / set theory / amssymb)
                      @"vdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A2"],
@@ -650,6 +655,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
                      @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
                      @"Box" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
+                     @"square" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
                      @"Diamond" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C7"],
                      @"lozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25CA"],
                      @"blacklozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u29EB"],
@@ -849,7 +855,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"dotsc" : @"ldots",
                     @"dotsb" : @"cdots",
                     @"dotsm" : @"cdots",
-                    @"dotsi" : @"ldots",
+                    @"dotsi" : @"cdots",
                     @"square" : @"Box",
                     @"vartriangle" : @"triangle",
                     };
