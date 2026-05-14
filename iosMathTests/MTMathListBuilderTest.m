@@ -1815,6 +1815,65 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testHarpoonsAndExtendedArrows
+{
+    NSArray* rows = @[
+        @[ @"rightleftharpoons", @0x21CC ],
+        @[ @"leftrightharpoons", @0x21CB ],
+        @[ @"upharpoonleft",     @0x21BF ],
+        @[ @"upharpoonright",    @0x21BE ],
+        @[ @"downharpoonleft",   @0x21C3 ],
+        @[ @"downharpoonright",  @0x21C2 ],
+        @[ @"rightharpoonup",    @0x21C0 ],
+        @[ @"leftharpoonup",     @0x21BC ],
+        @[ @"rightharpoondown",  @0x21C1 ],
+        @[ @"leftharpoondown",   @0x21BD ],
+        @[ @"hookleftarrow",     @0x21A9 ],
+        @[ @"hookrightarrow",    @0x21AA ],
+        @[ @"twoheadleftarrow",  @0x219E ],
+        @[ @"twoheadrightarrow", @0x21A0 ],
+        @[ @"rightarrowtail",    @0x21A3 ],
+        @[ @"leftarrowtail",     @0x21A2 ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)16);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testRestrictionAlias
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\restriction" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomRelation);
+    XCTAssertEqualObjects(atom.nucleus, @"↾", @"\\restriction should resolve to \\upharpoonright (U+21BE)");
+
+    // Round-trip emits canonical.
+    MTMathList* probe = [MTMathListBuilder buildFromString:@"a\\restriction b" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:probe], @"a\\upharpoonright b");
+}
+
 - (void) testBoxedCircledOperators
 {
     NSArray* rows = @[

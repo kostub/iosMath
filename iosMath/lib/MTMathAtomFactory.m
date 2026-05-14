@@ -545,8 +545,26 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"Longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F8"],
                      @"Longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F9"],
                      @"Longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FA"],
-                     
-                     
+
+                     // Harpoons and extended arrows (amssymb)
+                     @"rightleftharpoons" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CC"],
+                     @"leftrightharpoons" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CB"],
+                     @"upharpoonleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BF"],
+                     @"upharpoonright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BE"],
+                     @"downharpoonleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C3"],
+                     @"downharpoonright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C2"],
+                     @"rightharpoonup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C0"],
+                     @"leftharpoonup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BC"],
+                     @"rightharpoondown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C1"],
+                     @"leftharpoondown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BD"],
+                     @"hookleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A9"],
+                     @"hookrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21AA"],
+                     @"twoheadleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u219E"],
+                     @"twoheadrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A0"],
+                     @"rightarrowtail" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A3"],
+                     @"leftarrowtail" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A2"],
+
+
                      // Relations
                      @"leq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolLessEqual],
                      @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
@@ -789,6 +807,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"to" : @"rightarrow",
                     @"iff" : @"Longleftrightarrow",
                     @"AA" : @"angstrom",
+                    @"restriction" : @"upharpoonright",
                     };
     }
     return aliases;
