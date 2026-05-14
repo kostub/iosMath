@@ -625,6 +625,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"ll" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226A"],
                      @"prec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227A"],
                      @"succ" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227B"],
+                     @"preceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AAF"],
+                     @"succeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB0"],
+                     @"preccurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227C"],
+                     @"succcurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227D"],
                      @"subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2282"],
                      @"supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2283"],
                      @"subseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2286"],
@@ -668,6 +672,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"nprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2280"],
                      @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E1"],
                      @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E0"],
+                     @"precneq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB1"],
+                     @"succneq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB2"],
+                     @"precneqq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB5"],
+                     @"succneqq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB6"],
 
                      // Missing relations (proof / set theory / amssymb)
                      @"vdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A2"],

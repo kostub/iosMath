@@ -1791,8 +1791,12 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"nprec",           @0x2280 ],
         @[ @"nsucceq",         @0x22E1 ],
         @[ @"npreceq",         @0x22E0 ],
+        @[ @"precneq",         @0x2AB1 ],
+        @[ @"succneq",         @0x2AB2 ],
+        @[ @"precneqq",        @0x2AB5 ],
+        @[ @"succneqq",        @0x2AB6 ],
     ];
-    XCTAssertEqual(rows.count, (NSUInteger)31);
+    XCTAssertEqual(rows.count, (NSUInteger)35);
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
         unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
@@ -1837,6 +1841,38 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"leftarrowtail",     @0x21A2 ],
     ];
     XCTAssertEqual(rows.count, (NSUInteger)16);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testPrecedesSucceeds
+{
+    NSArray* rows = @[
+        @[ @"prec",         @0x227A ],
+        @[ @"succ",         @0x227B ],
+        @[ @"preceq",       @0x2AAF ],
+        @[ @"succeq",       @0x2AB0 ],
+        @[ @"preccurlyeq",  @0x227C ],
+        @[ @"succcurlyeq",  @0x227D ],
+    ];
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
         unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
