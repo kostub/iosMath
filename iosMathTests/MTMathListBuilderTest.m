@@ -1925,4 +1925,114 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testMissingRelationsAndOrdinaries
+{
+    NSArray* rows = @[
+        // Relations
+        @[ @"vdash",            @0x22A2, @(kMTMathAtomRelation) ],
+        @[ @"dashv",            @0x22A3, @(kMTMathAtomRelation) ],
+        @[ @"Subset",           @0x22D0, @(kMTMathAtomRelation) ],
+        @[ @"Supset",           @0x22D1, @(kMTMathAtomRelation) ],
+        @[ @"backsim",          @0x223D, @(kMTMathAtomRelation) ],
+        @[ @"backsimeq",        @0x22CD, @(kMTMathAtomRelation) ],
+        @[ @"eqsim",            @0x2242, @(kMTMathAtomRelation) ],
+        @[ @"Bumpeq",           @0x224E, @(kMTMathAtomRelation) ],
+        @[ @"bumpeq",           @0x224F, @(kMTMathAtomRelation) ],
+        @[ @"therefore",        @0x2234, @(kMTMathAtomRelation) ],
+        @[ @"because",          @0x2235, @(kMTMathAtomRelation) ],
+        @[ @"multimap",         @0x22B8, @(kMTMathAtomRelation) ],
+        @[ @"vartriangleleft",  @0x22B2, @(kMTMathAtomRelation) ],
+        @[ @"vartriangleright", @0x22B3, @(kMTMathAtomRelation) ],
+        @[ @"trianglelefteq",   @0x22B4, @(kMTMathAtomRelation) ],
+        @[ @"trianglerighteq",  @0x22B5, @(kMTMathAtomRelation) ],
+        @[ @"triangleq",        @0x225C, @(kMTMathAtomRelation) ],
+        // Ordinaries
+        @[ @"complement",       @0x2201, @(kMTMathAtomOrdinary) ],
+        @[ @"Box",              @0x25A1, @(kMTMathAtomOrdinary) ],
+        @[ @"Diamond",          @0x25C7, @(kMTMathAtomOrdinary) ],
+        @[ @"lozenge",          @0x25CA, @(kMTMathAtomOrdinary) ],
+        @[ @"blacklozenge",     @0x29EB, @(kMTMathAtomOrdinary) ],
+        @[ @"diamondsuit",      @0x2662, @(kMTMathAtomOrdinary) ],
+        @[ @"heartsuit",        @0x2661, @(kMTMathAtomOrdinary) ],
+        @[ @"spadesuit",        @0x2660, @(kMTMathAtomOrdinary) ],
+        @[ @"clubsuit",         @0x2663, @(kMTMathAtomOrdinary) ],
+        @[ @"beth",             @0x2136, @(kMTMathAtomOrdinary) ],
+        @[ @"gimel",            @0x2137, @(kMTMathAtomOrdinary) ],
+        @[ @"daleth",           @0x2138, @(kMTMathAtomOrdinary) ],
+        @[ @"triangledown",     @0x25BD, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangle",    @0x25B2, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangledown",@0x25BC, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangleleft",@0x25C0, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangleright",@0x25B6, @(kMTMathAtomOrdinary) ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)34);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        MTMathAtomType expectedType = (MTMathAtomType)[r[2] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, expectedType, @"%@ pre-finalize type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+    }
+}
+
+- (void) testNewAliases
+{
+    NSArray* rows = @[
+        @[ @"implies",      @"Longrightarrow", @"⟹", @"\\Longrightarrow " ],
+        @[ @"impliedby",    @"Longleftarrow",  @"⟸", @"\\Longleftarrow " ],
+        @[ @"dotsc",        @"ldots",          @"…", @"\\ldots " ],
+        @[ @"dotsb",        @"cdots",          @"⋯", @"\\cdots " ],
+        @[ @"dotsm",        @"cdots",          @"⋯", @"\\cdots " ],
+        @[ @"dotsi",        @"ldots",          @"…", @"\\ldots " ],
+        @[ @"square",       @"Box",            @"□", @"\\Box " ],
+        @[ @"vartriangle",  @"triangle",       @"△", @"\\triangle " ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)8);
+    for (NSArray* r in rows) {
+        NSString* alias = r[0];
+        NSString* expectedNucleus = r[2];
+        NSString* expectedRT = r[3];
+        NSString* input = [@"\\" stringByAppendingString:alias];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqualObjects(atom.nucleus, expectedNucleus, @"%@ nucleus", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], expectedRT,
+                              @"%@ round-trip", input);
+    }
+}
+
+- (void) testSquareBoxParity
+{
+    NSError* error = nil;
+    MTMathList* a = [MTMathListBuilder buildFromString:@"\\square" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(a.atoms.count, (NSUInteger)1);
+    XCTAssertEqual([a.atoms[0] type], kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([a.atoms[0] nucleus], @"□");
+
+    MTMathList* b = [MTMathListBuilder buildFromString:@"\\Box" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(b.atoms.count, (NSUInteger)1);
+    XCTAssertEqual([b.atoms[0] type], kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([b.atoms[0] nucleus], @"□");
+
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:a], @"\\Box ");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:b], @"\\Box ");
+
+    MTMathAtom* p = [MTMathAtomFactory placeholder];
+    XCTAssertEqual(p.type, kMTMathAtomPlaceholder);
+    XCTAssertEqualObjects(p.nucleus, @"□");
+}
+
 @end

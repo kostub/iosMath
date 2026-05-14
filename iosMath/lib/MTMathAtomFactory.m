@@ -460,8 +460,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     static NSMutableDictionary<NSString*, MTMathAtom*>* commands = nil;
     if (!commands) {
         commands = [NSMutableDictionary dictionaryWithDictionary:@{
-                     @"square" : [MTMathAtomFactory placeholder],
-                     
                      // Greek characters
                      @"alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B1"],
                      @"beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B2"],
@@ -629,6 +627,44 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"nprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2280"],
                      @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB1"],
                      @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB0"],
+
+                     // Missing relations (proof / set theory / amssymb)
+                     @"vdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A2"],
+                     @"dashv" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A3"],
+                     @"Subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22D0"],
+                     @"Supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22D1"],
+                     @"backsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u223D"],
+                     @"backsimeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22CD"],
+                     @"eqsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2242"],
+                     @"Bumpeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224E"],
+                     @"bumpeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224F"],
+                     @"therefore" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2234"],
+                     @"because" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2235"],
+                     @"multimap" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B8"],
+                     @"vartriangleleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B2"],
+                     @"vartriangleright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B3"],
+                     @"trianglelefteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B4"],
+                     @"trianglerighteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B5"],
+                     @"triangleq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u225C"],
+
+                     // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
+                     @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
+                     @"Box" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
+                     @"Diamond" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C7"],
+                     @"lozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25CA"],
+                     @"blacklozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u29EB"],
+                     @"diamondsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2662"],
+                     @"heartsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2661"],
+                     @"spadesuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2660"],
+                     @"clubsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2663"],
+                     @"beth" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2136"],
+                     @"gimel" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2137"],
+                     @"daleth" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2138"],
+                     @"triangledown" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25BD"],
+                     @"blacktriangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B2"],
+                     @"blacktriangledown" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25BC"],
+                     @"blacktriangleleft" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C0"],
+                     @"blacktriangleright" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B6"],
 
                      // operators
                      @"times" : [MTMathAtomFactory times],
@@ -808,6 +844,14 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"iff" : @"Longleftrightarrow",
                     @"AA" : @"angstrom",
                     @"restriction" : @"upharpoonright",
+                    @"implies" : @"Longrightarrow",
+                    @"impliedby" : @"Longleftarrow",
+                    @"dotsc" : @"ldots",
+                    @"dotsb" : @"cdots",
+                    @"dotsm" : @"cdots",
+                    @"dotsi" : @"ldots",
+                    @"square" : @"Box",
+                    @"vartriangle" : @"triangle",
                     };
     }
     return aliases;
