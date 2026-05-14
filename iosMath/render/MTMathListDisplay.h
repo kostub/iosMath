@@ -72,6 +72,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+/**
+ A display rendering one run of plain text via CoreText, used by
+ `\text`, `\textrm`, `\textbf`, `\textit`, `\textsf`, `\texttt`. The
+ underlying font is a system text font (not an `MTFont`).
+ */
+@interface MTTextDisplay : MTDisplay
+
+- (instancetype) init NS_UNAVAILABLE;
+
+/// The raw Unicode text rendered by this display.
+@property (nonatomic, readonly, copy) NSString* text;
+
+/// The text-mode style this display was built with.
+@property (nonatomic, readonly) MTTextStyle textStyle;
+
+@end
+
 /// An MTLine is a rendered form of MTMathList in one line.
 /// It can render itself using the draw method.
 @interface MTMathListDisplay : MTDisplay

@@ -164,10 +164,77 @@ static BOOL isIos6Supported(void) {
 {
     [super draw:context];
     CGContextSaveGState(context);
-    
+
     CGContextSetTextPosition(context, self.position.x, self.position.y);
     CTLineDraw(_line, context);
-    
+
+    CGContextRestoreGState(context);
+}
+
+@end
+
+#pragma mark - MTTextDisplay
+
+@implementation MTTextDisplay {
+    CTLineRef _line;
+    NSAttributedString *_attributedString;
+}
+
+- (instancetype) initWithText:(NSString *) text
+                    textStyle:(MTTextStyle) textStyle
+                       ctFont:(CTFontRef) ctFont
+                        range:(NSRange) range
+{
+    self = [super init];
+    if (self) {
+        _text = [text copy];
+        _textStyle = textStyle;
+        self.range = range;
+        self.position = CGPointZero;
+
+        NSDictionary *attrs = @{ (NSString *)kCTFontAttributeName: (__bridge id)ctFont };
+        _attributedString = [[NSAttributedString alloc]
+                              initWithString:text ?: @""
+                                  attributes:attrs];
+        _line = CTLineCreateWithAttributedString(
+                    (__bridge CFAttributedStringRef)_attributedString);
+
+        self.width = (CGFloat)CTLineGetTypographicBounds(_line, NULL, NULL, NULL);
+        CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
+        self.ascent  = MAX(0, CGRectGetMaxY(bounds));
+        self.descent = MAX(0, -CGRectGetMinY(bounds));
+    }
+    return self;
+}
+
+- (void) dealloc
+{
+    if (_line) {
+        CFRelease(_line);
+        _line = NULL;
+    }
+}
+
+- (void) setTextColor:(MTColor *) textColor
+{
+    [super setTextColor:textColor];
+
+    NSMutableAttributedString *m = [_attributedString mutableCopy];
+    [m addAttribute:(NSString *)kCTForegroundColorAttributeName
+              value:(id)textColor.CGColor
+              range:NSMakeRange(0, m.length)];
+    _attributedString = [m copy];
+    if (_line) CFRelease(_line);
+    _line = CTLineCreateWithAttributedString(
+                (__bridge CFAttributedStringRef)_attributedString);
+}
+
+- (void) draw:(CGContextRef) context
+{
+    [super draw:context];
+    CGContextSaveGState(context);
+    CGContextSetTextPosition(context, self.position.x, self.position.y);
+    CTLineDraw(_line, context);
     CGContextRestoreGState(context);
 }
 

@@ -688,4 +688,134 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkListCopy:copy.cells[0][2] original:list2 forTest:self];
 }
 
+#pragma mark - MTTextAtom
+
+- (void) testTextAtomTypeIsText
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleRoman];
+    XCTAssertEqual(atom.type, kMTMathAtomText);
+    XCTAssertEqualObjects(atom.text, @"abc");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+}
+
+- (void) testTextAtomFactoryCreatesTextAtom
+{
+    MTMathAtom *atom = [MTMathAtom atomWithType:kMTMathAtomText value:@"abc"];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqual(atom.type, kMTMathAtomText);
+    XCTAssertEqualObjects(atom.nucleus, @"abc");
+    XCTAssertEqualObjects(((MTTextAtom *)atom).text, @"abc");
+    XCTAssertEqual(((MTTextAtom *)atom).textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextAtomTextAndNucleusStayInSync
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleRoman];
+    atom.text = @"def";
+    XCTAssertEqualObjects(atom.nucleus, @"def");
+    XCTAssertEqualObjects(atom.stringValue, @"def");
+
+    atom.nucleus = @"ghi";
+    XCTAssertEqualObjects(atom.text, @"ghi");
+
+    NSMutableString *out = [NSMutableString string];
+    [atom appendLaTeXToString:out];
+    XCTAssertEqualObjects(out, @"\\text{ghi}");
+}
+
+- (void) testTextAtomScriptsAllowed
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"x" style:kMTTextStyleBold];
+    XCTAssertTrue(atom.scriptsAllowed);
+}
+
+- (void) testTextAtomFontStyleDefault
+{
+    // MTTextAtom must keep fontStyle = Default so the round-trip serializer
+    // does not wrap it in a \mathrm{...} group; the atom's own
+    // appendLaTeXToString: writes the \textbf{...} envelope.
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"x" style:kMTTextStyleBold];
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleDefault);
+}
+
+- (void) testTextAtomCopy
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"你好" style:kMTTextStyleItalic];
+    MTMathList *sup = [[MTMathList alloc] init];
+    [sup addAtom:[MTMathAtomFactory atomForCharacter:'2']];
+    atom.superScript = sup;
+    // indexRange is read-only in the public header; set via KVC for this test.
+    [atom setValue:[NSValue valueWithRange:NSMakeRange(3, 7)] forKey:@"indexRange"];
+
+    MTTextAtom *copy = [atom copy];
+    XCTAssertTrue([copy isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(copy.text, @"你好");
+    XCTAssertEqual(copy.textStyle, kMTTextStyleItalic);
+    XCTAssertNotNil(copy.superScript);
+    XCTAssertNotEqual(copy.superScript, sup); // deep copy
+    XCTAssertEqual(copy.indexRange.location, (NSUInteger)3);
+    XCTAssertEqual(copy.indexRange.length,   (NSUInteger)7);
+}
+
+- (void) testTextAtomFinalize
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"x" style:kMTTextStyleRoman];
+    MTMathList *sup = [[MTMathList alloc] init];
+    [sup addAtom:[MTMathAtomFactory atomForCharacter:'2']];
+    atom.superScript = sup;
+
+    MTTextAtom *fin = (MTTextAtom *)[atom finalized];
+    XCTAssertTrue([fin isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(fin.text, @"x");
+    XCTAssertNotNil(fin.superScript);
+}
+
+- (void) testTextAtomRoundTripPlain
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleRoman];
+    NSMutableString *out = [NSMutableString string];
+    [atom appendLaTeXToString:out];
+    XCTAssertEqualObjects(out, @"\\text{abc}");
+}
+
+- (void) testTextAtomRoundTripBold
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"你好" style:kMTTextStyleBold];
+    NSMutableString *out = [NSMutableString string];
+    [atom appendLaTeXToString:out];
+    XCTAssertEqualObjects(out, @"\\textbf{你好}");
+}
+
+- (void) testTextAtomRoundTripEscapes
+{
+    // Body contains characters that must be escaped on round-trip:
+    // backslash, braces, _, ^, %, &, #, $.
+    MTTextAtom *atom = [[MTTextAtom alloc]
+                         initWithText:@"50% $5 {x} \\ a_b^c &d #e"
+                                style:kMTTextStyleRoman];
+    NSMutableString *out = [NSMutableString string];
+    [atom appendLaTeXToString:out];
+    XCTAssertEqualObjects(out, @"\\text{50\\% \\$5 \\{x\\} \\\\ a\\_b\\^c \\&d \\#e}");
+}
+
+- (void) testTextAtomAllStylesRoundTrip
+{
+    NSDictionary *cases = @{
+        @(kMTTextStyleRoman):      @"\\text{x}",
+        @(kMTTextStyleBold):       @"\\textbf{x}",
+        @(kMTTextStyleItalic):     @"\\textit{x}",
+        @(kMTTextStyleSansSerif):  @"\\textsf{x}",
+        @(kMTTextStyleTypewriter): @"\\texttt{x}",
+    };
+    for (NSNumber *key in cases) {
+        MTTextAtom *atom = [[MTTextAtom alloc]
+                             initWithText:@"x"
+                                    style:(MTTextStyle)key.unsignedIntegerValue];
+        NSMutableString *out = [NSMutableString string];
+        [atom appendLaTeXToString:out];
+        XCTAssertEqualObjects(out, cases[key], @"style %@", key);
+    }
+}
+
 @end

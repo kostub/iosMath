@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <CoreText/CoreText.h>
 
 #import "MTTypesetter.h"
 #import "MTFont+Internal.h"
@@ -1906,5 +1907,299 @@
     XCTAssertGreaterThanOrEqual(arrowStack.over.width + 0.01, arrowStack.base.width);
 }
 
+#pragma mark - MTFontManager +textCTFontForStyle:size:
+
+- (void) testTextCTFontRomanReturnsFont {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    XCTAssertTrue(font != NULL);
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(font);
+    XCTAssertFalse((traits & kCTFontTraitBold)   != 0);
+    XCTAssertFalse((traits & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontBoldHasBoldTrait {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleBold size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitBold) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontItalicHasItalicTrait {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleItalic size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontTypewriterIsMonospace {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleTypewriter size:20];
+    XCTAssertTrue(font != NULL);
+    XCTAssertTrue((CTFontGetSymbolicTraits(font) & kCTFontTraitMonoSpace) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontSansFallback {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleSansSerif size:20];
+    XCTAssertTrue(font != NULL);
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(font);
+    XCTAssertFalse((traits & kCTFontTraitBold)   != 0);
+    XCTAssertFalse((traits & kCTFontTraitItalic) != 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextCTFontSizeMatches {
+    CGFloat target = 17.5;
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:target];
+    XCTAssertEqualWithAccuracy(CTFontGetSize(font), target, 0.001);
+    if (font) CFRelease(font);
+}
+
+#pragma mark - MTTextDisplay construction
+
+- (void) testTextDisplayConstructionLatin {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                                     range:NSMakeRange(0, 3)];
+    XCTAssertNotNil(d);
+    XCTAssertEqualObjects(d.text, @"abc");
+    XCTAssertEqual(d.textStyle, kMTTextStyleRoman);
+    XCTAssertGreaterThan(d.width, 0);
+    XCTAssertEqual(d.range.location, (NSUInteger)0);
+    XCTAssertEqual(d.range.length,   (NSUInteger)3);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayConstructionEmpty {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@""
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                                     range:NSMakeRange(0, 0)];
+    XCTAssertNotNil(d);
+    XCTAssertLessThan(d.width, 0.5);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayConstructionChinese {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleRoman size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"你好"
+                                                 textStyle:kMTTextStyleRoman
+                                                    ctFont:font
+                                                     range:NSMakeRange(0, 2)];
+    XCTAssertNotNil(d);
+    XCTAssertGreaterThan(d.width, 0);
+    if (font) CFRelease(font);
+}
+
+- (void) testTextDisplayDrawDoesNotCrash {
+    CTFontRef font = [MTFontManager textCTFontForStyle:kMTTextStyleBold size:20];
+    MTTextDisplay *d = [[MTTextDisplay alloc] initWithText:@"abc"
+                                                 textStyle:kMTTextStyleBold
+                                                    ctFont:font
+                                                     range:NSMakeRange(0, 3)];
+    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 50, 8, 0, cs,
+                                             kCGImageAlphaPremultipliedLast);
+    XCTAssertNoThrow([d draw:ctx]);
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(cs);
+    if (font) CFRelease(font);
+}
+
+#pragma mark - Phase 4: Typesetter handles MTTextAtom
+
+- (MTMathList *) listWithTextAtom:(MTTextAtom *)atom {
+    MTMathList *list = [[MTMathList alloc] init];
+    [list addAtom:atom];
+    return list;
+}
+
+// Helper: walk every glyph run in the CTLine and assert no glyph index 0
+// (`.notdef` in TrueType/OpenType). Re-create the line from the public
+// MTTextDisplay properties since the line itself is private.
+- (void) assertCTLineHasNoNotdef:(MTTextDisplay *)display {
+    CTFontRef font = [MTFontManager textCTFontForStyle:display.textStyle size:20];
+    NSAttributedString *as = [[NSAttributedString alloc]
+                               initWithString:display.text
+                                   attributes:@{(NSString *)kCTFontAttributeName: (__bridge id)font}];
+    CTLineRef line = CTLineCreateWithAttributedString(
+                        (__bridge CFAttributedStringRef)as);
+    CFArrayRef runs = CTLineGetGlyphRuns(line);
+    for (CFIndex i = 0; i < CFArrayGetCount(runs); i++) {
+        CTRunRef run = CFArrayGetValueAtIndex(runs, i);
+        CFIndex count = CTRunGetGlyphCount(run);
+        CGGlyph glyphs[count];
+        CTRunGetGlyphs(run, CFRangeMake(0, count), glyphs);
+        for (CFIndex j = 0; j < count; j++) {
+            XCTAssertNotEqual(glyphs[j], 0,
+                              @"`.notdef` for char index %ld in '%@'",
+                              (long)j, display.text);
+        }
+    }
+    CFRelease(line);
+    CFRelease(font);
+}
+
+- (void) testTypesetterTextDisplayPresent {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc"
+                                                  style:kMTTextStyleBold];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)1);
+    XCTAssertTrue([display.subDisplays.firstObject
+                    isKindOfClass:[MTTextDisplay class]]);
+    XCTAssertGreaterThan(display.subDisplays.firstObject.width, 0);
+}
+
+- (void) testTypesetterTextDisplayEmpty {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@""
+                                                  style:kMTTextStyleRoman];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    XCTAssertNoThrow(([MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay]));
+}
+
+- (void) testTypesetterTextDisplayChinese {
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"你好"
+                                                  style:kMTTextStyleRoman];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:atom]
+                         font:font
+                        style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    XCTAssertEqualObjects(text.text, @"你好");
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTypesetterTextNotFusedAcrossAtoms {
+    // Two adjacent text atoms must remain separate displays — Rule 14
+    // would fuse Ord+Ord, and this test pins down that distinct enum
+    // prevents fusion.
+    MTTextAtom *a = [[MTTextAtom alloc] initWithText:@"a" style:kMTTextStyleRoman];
+    MTTextAtom *b = [[MTTextAtom alloc] initWithText:@"b" style:kMTTextStyleBold];
+    MTMathList *list = [[MTMathList alloc] init];
+    [list addAtom:a];
+    [list addAtom:b];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)2);
+    XCTAssertTrue([display.subDisplays[0] isKindOfClass:[MTTextDisplay class]]);
+    XCTAssertTrue([display.subDisplays[1] isKindOfClass:[MTTextDisplay class]]);
+}
+
+- (void) testTypesetterTextWithSuperscript {
+    MTTextAtom *t = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleBold];
+    MTMathList *sup = [[MTMathList alloc] init];
+    [sup addAtom:[MTMathAtomFactory atomForCharacter:'2']];
+    t.superScript = sup;
+
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:[self listWithTextAtom:t]
+                         font:font
+                        style:kMTLineStyleDisplay];
+
+    BOOL hasText   = NO;
+    BOOL hasScript = NO;
+    for (MTDisplay *d in display.subDisplays) {
+        if ([d isKindOfClass:[MTTextDisplay class]]) hasText = YES;
+        // Scripts emerge as MTMathListDisplay sub-displays (per existing
+        // makeScripts: convention).
+        if ([d isKindOfClass:[MTMathListDisplay class]]) hasScript = YES;
+    }
+    XCTAssertTrue(hasText);
+    XCTAssertTrue(hasScript);
+}
+
+#pragma mark - End-to-end \text* rendering (Phase 5)
+
+- (void) testTextDisplayChineseFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{你好}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, (NSUInteger)1);
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayCyrillicBoldFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{Привет}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertEqual(text.textStyle, kMTTextStyleBold);
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayDevanagariFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{नमस्ते}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayHebrewFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{שלום}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextDisplayArabicFromString {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{مرحبا}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    MTTextDisplay *text = (MTTextDisplay *)display.subDisplays.firstObject;
+    XCTAssertGreaterThan(text.width, 0);
+    // Per LLD §1 we don't assert RTL ordering — just that all glyphs resolved.
+    [self assertCTLineHasNoNotdef:text];
+}
+
+- (void) testTextInMixedLine {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"x + \\text{ok}"];
+    MTFont *font = [MTFontManager fontManager].defaultFont;
+    MTMathListDisplay *display = [MTTypesetter
+        createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    BOOL hasMath = NO;
+    BOOL hasText = NO;
+    MTCTLineDisplay *math = nil;
+    MTTextDisplay *text = nil;
+    for (MTDisplay *d in display.subDisplays) {
+        if ([d isKindOfClass:[MTCTLineDisplay class]]) {
+            hasMath = YES;
+            if (!math) math = (MTCTLineDisplay *)d;
+        }
+        if ([d isKindOfClass:[MTTextDisplay class]]) {
+            hasText = YES;
+            if (!text) text = (MTTextDisplay *)d;
+        }
+    }
+    XCTAssertTrue(hasMath);
+    XCTAssertTrue(hasText);
+    XCTAssertEqualWithAccuracy(text.position.y, math.position.y, 0.001);
+}
 
 @end
