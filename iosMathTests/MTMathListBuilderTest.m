@@ -1758,7 +1758,7 @@ static NSArray* getTestDataLargeDelimiters() {
 
 - (void) testNegatedRelations
 {
-    // Each row: @[ command (no leading \), expected nucleus codepoint NSNumber ]
+    // Each row: @[ command (no leading \), expected nucleus (NSNumber for codepoint or NSString) ]
     NSArray* rows = @[
         @[ @"nleq",            @0x2270 ],
         @[ @"ngeq",            @0x2271 ],
@@ -1789,17 +1789,19 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"nsupset",         @0x2285 ],
         @[ @"nsucc",           @0x2281 ],
         @[ @"nprec",           @0x2280 ],
-        @[ @"nsucceq",         @0x22E1 ],
-        @[ @"npreceq",         @0x22E0 ],
+        @[ @"nsucceq",         @"\u2AB0\u0338" ],
+        @[ @"npreceq",         @"\u2AAF\u0338" ],
+        @[ @"nsucccurlyeq",    @0x22E1 ],
+        @[ @"npreccurlyeq",    @0x22E0 ],
         @[ @"precneq",         @0x2AB1 ],
         @[ @"succneq",         @0x2AB2 ],
         @[ @"precneqq",        @0x2AB5 ],
         @[ @"succneqq",        @0x2AB6 ],
     ];
-    XCTAssertEqual(rows.count, (NSUInteger)35);
+    XCTAssertEqual(rows.count, (NSUInteger)37);
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
-        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        id expectedNucObj = r[1];
         NSString* input = [@"\\" stringByAppendingString:cmd];
 
         NSError* error = nil;
@@ -1808,8 +1810,14 @@ static NSArray* getTestDataLargeDelimiters() {
         XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
         MTMathAtom* atom = list.atoms[0];
         XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
-        XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
-        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+        
+        if ([expectedNucObj isKindOfClass:[NSString class]]) {
+            XCTAssertEqualObjects(atom.nucleus, expectedNucObj, @"%@ nucleus", input);
+        } else {
+            unichar expectedNuc = (unichar)[expectedNucObj unsignedIntegerValue];
+            XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
+            XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+        }
 
         // Round-trip: relation surrounded by variables to keep finalize stable.
         NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
