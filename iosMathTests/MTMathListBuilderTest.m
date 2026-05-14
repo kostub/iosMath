@@ -1326,25 +1326,18 @@ static NSArray* getTestDataParseErrors() {
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
 
     XCTAssertNotNil(list, @"%@", desc);
-    XCTAssertEqualObjects(@(list.atoms.count), @3, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+
     MTMathAtom* atom = list.atoms[0];
-    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
-    XCTAssertEqualObjects(atom.nucleus, @"x", @"%@", desc);
-    XCTAssertEqual(atom.fontStyle, kMTFontStyleRoman);
-
-    atom = list.atoms[1];
-    XCTAssertEqual(atom.type, kMTMathAtomOrdinary, @"%@", desc);
-    XCTAssertEqualObjects(atom.nucleus, @" ", @"%@", desc);
-
-    atom = list.atoms[2];
-    XCTAssertEqual(atom.type, kMTMathAtomVariable, @"%@", desc);
-    XCTAssertEqualObjects(atom.nucleus, @"y", @"%@", desc);
-    XCTAssertEqual(atom.fontStyle, kMTFontStyleRoman);
-
+    XCTAssertEqual(atom.type, kMTMathAtomText, @"%@", desc);
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]], @"%@", desc);
+    XCTAssertEqualObjects(((MTTextAtom *)atom).text, @"x y", @"%@", desc);
+    XCTAssertEqual(((MTTextAtom *)atom).textStyle, kMTTextStyleRoman, @"%@", desc);
+    XCTAssertEqual(atom.fontStyle, kMTFontStyleDefault, @"%@", desc);
 
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    XCTAssertEqualObjects(latex, @"\\mathrm{x\\  y}", @"%@", desc);
+    XCTAssertEqualObjects(latex, @"\\text{x y}", @"%@", desc);
 }
 
 - (void) testLimits
@@ -2042,6 +2035,337 @@ static NSArray* getTestDataLargeDelimiters() {
     MTMathAtom* p = [MTMathAtomFactory placeholder];
     XCTAssertEqual(p.type, kMTMathAtomPlaceholder);
     XCTAssertEqualObjects(p.nucleus, @"□");
+}
+
+#pragma mark - MTTextStyle factory APIs
+
+- (void) testTextStyleWithNameKnown
+{
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"text"],   kMTTextStyleRoman);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textrm"], kMTTextStyleRoman);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textbf"], kMTTextStyleBold);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textit"], kMTTextStyleItalic);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"textsf"], kMTTextStyleSansSerif);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"texttt"], kMTTextStyleTypewriter);
+}
+
+- (void) testTextStyleWithNameUnknown
+{
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"mathbf"], (MTTextStyle)NSNotFound);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@"foobar"], (MTTextStyle)NSNotFound);
+    XCTAssertEqual([MTMathAtomFactory textStyleWithName:@""],       (MTTextStyle)NSNotFound);
+}
+
+- (void) testCommandNameForTextStyle
+{
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleRoman],      @"text");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleBold],       @"textbf");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleItalic],     @"textit");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleSansSerif],  @"textsf");
+    XCTAssertEqualObjects([MTMathAtomFactory commandNameForTextStyle:kMTTextStyleTypewriter], @"texttt");
+}
+
+#pragma mark - MTTextAtom parsing — body capture
+
+- (void) testTextEmpty {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextAscii {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{abc}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"abc");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextStyles {
+    NSDictionary *cases = @{
+        @"\\textrm{x}":  @(kMTTextStyleRoman),
+        @"\\text{x}":    @(kMTTextStyleRoman),
+        @"\\textbf{x}":  @(kMTTextStyleBold),
+        @"\\textit{x}":  @(kMTTextStyleItalic),
+        @"\\textsf{x}":  @(kMTTextStyleSansSerif),
+        @"\\texttt{x}":  @(kMTTextStyleTypewriter),
+    };
+    for (NSString *src in cases) {
+        MTMathList *list = [MTMathListBuilder buildFromString:src];
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", src);
+        MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+        XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]], @"%@", src);
+        XCTAssertEqualObjects(atom.text, @"x", @"%@", src);
+        XCTAssertEqual(atom.textStyle,
+                       (MTTextStyle)[cases[src] unsignedIntegerValue],
+                       @"%@", src);
+    }
+}
+
+- (void) testTextSingleCharacterArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf abc"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)3);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"a");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleBold);
+    XCTAssertEqualObjects(list.atoms[1].nucleus, @"b");
+    XCTAssertEqualObjects(list.atoms[2].nucleus, @"c");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\textbf{a}bc");
+}
+
+- (void) testTextSingleEscapedArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textit\\%"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"%");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleItalic);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\textit{\\%}");
+}
+
+- (void) testTextSingleNonLatinArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text 你"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"你");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextChinese {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{你好}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"你好");
+}
+
+- (void) testTextCyrillicRoman {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{Привет}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"Привет");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextCyrillicBold {
+    // Today \textbf{Привет} drops the body characters because Cyrillic
+    // outside U+0411–U+044E is filtered and bold-font-trait styling is
+    // unavailable. New path captures the body raw.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{Привет}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"Привет");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleBold);
+}
+
+- (void) testTextCyrillicItalic {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textit{Привет}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"Привет");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleItalic);
+}
+
+- (void) testTextDevanagari {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{नमस्ते}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"नमस्ते");
+}
+
+- (void) testTextHebrew {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{שלום}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"שלום");
+}
+
+- (void) testTextArabic {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{مرحبا}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"مرحبا");
+}
+
+- (void) testTextMixedScripts {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{Hello 你好 שלום}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"Hello 你好 שלום");
+}
+
+- (void) testTextWithSpaces {
+    // \textbf{a b} previously dropped the space silently because
+    // _spacesAllowed was set only for \text. Raw capture keeps it.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{a b}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"a b");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleBold);
+}
+
+- (void) testTextEscapes {
+    NSString *src = @"\\text{50\\% \\$5 \\{x\\} \\\\}";
+    MTMathList *list = [MTMathListBuilder buildFromString:src];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"50% $5 {x} \\");
+}
+
+- (void) testTextBackslashSpace {
+    // \<space> is the canonical LaTeX forced space in text mode. The legacy
+    // parser accepted it via the single-char command table, so existing
+    // inputs like \text{hello\ world} and \textbf{hello\ world} must keep
+    // working under the new \text* path.
+    MTMathList *plain = [MTMathListBuilder buildFromString:@"\\text{hello\\ world}"];
+    MTTextAtom *plainAtom = (MTTextAtom *)plain.atoms[0];
+    XCTAssertTrue([plainAtom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(plainAtom.text, @"hello world");
+
+    MTMathList *bold = [MTMathListBuilder buildFromString:@"\\textbf{hello\\ world}"];
+    MTTextAtom *boldAtom = (MTTextAtom *)bold.atoms[0];
+    XCTAssertTrue([boldAtom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(boldAtom.text, @"hello world");
+    XCTAssertEqual(boldAtom.textStyle, kMTTextStyleBold);
+}
+
+- (void) testTextUnicodeWhitespace {
+    // U+00A0 NBSP must pass through unchanged.
+    NSString *src = [NSString stringWithFormat:@"\\text{a%Cb}", (unichar)0x00A0];
+    MTMathList *list = [MTMathListBuilder buildFromString:src];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    NSString *expected = [NSString stringWithFormat:@"a%Cb", (unichar)0x00A0];
+    XCTAssertEqualObjects(atom.text, expected);
+}
+
+- (void) testTextNestedBraceGrouping {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{a {b} c}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"a b c");
+}
+
+- (void) testTextDeeplyNestedGrouping {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{{{x}}}"];
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertEqualObjects(atom.text, @"x");
+}
+
+#pragma mark - MTTextAtom parsing — scripts
+
+- (void) testTextSuperscript {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{abc}^2"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertNotNil(atom.superScript);
+    XCTAssertEqual(atom.superScript.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(atom.superScript.atoms[0].nucleus, @"2");
+}
+
+- (void) testTextSubAndSuperscript {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{abc}_i^{n+1}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"abc");
+
+    XCTAssertNotNil(atom.subScript);
+    XCTAssertEqual(atom.subScript.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(atom.subScript.atoms[0].nucleus, @"i");
+
+    XCTAssertNotNil(atom.superScript);
+    XCTAssertEqual(atom.superScript.atoms.count, (NSUInteger)3);
+    XCTAssertEqualObjects(atom.superScript.atoms[0].nucleus, @"n");
+    XCTAssertEqualObjects(atom.superScript.atoms[1].nucleus, @"+");
+    XCTAssertEqualObjects(atom.superScript.atoms[2].nucleus, @"1");
+
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list],
+                          @"\\textbf{abc}^{n+1}_{i}");
+}
+
+#pragma mark - MTTextAtom parsing — round-trip
+
+- (void) testTextRoundTripChineseBold {
+    NSString *src = @"\\textbf{你好}";
+    MTMathList *list = [MTMathListBuilder buildFromString:src];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], src);
+}
+
+- (void) testTextRoundTripWithScript {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{你好}^{2}"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list],
+                          @"\\textbf{你好}^{2}");
+}
+
+- (void) testTextRoundTripEscapes {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{50\\% \\$5}"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list],
+                          @"\\text{50\\% \\$5}");
+}
+
+#pragma mark - MTTextAtom parsing — error cases
+
+- (void) testTextMissingArgument {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorCharacterNotFound);
+}
+
+- (void) testTextMissingCloseBrace {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{abc"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorMismatchBraces);
+}
+
+- (void) testTextUnbalancedNestedBrace {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{a{b}"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertEqual(error.code, MTParseErrorMismatchBraces);
+}
+
+- (void) testTextNestedTextRejected {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf{\\textit{x}}"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void) testTextDollarRejected {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{$x$}"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+}
+
+- (void) testTextUnknownEscapeRejected {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{a\\foo b}"
+                                                     error:&error];
+    XCTAssertNil(list);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void) testRawCyrillicDropped {
+    // Post-removal: raw Cyrillic outside \text* drops to nothing.
+    // Pre-removal: U+0411–U+044E silently became Variable atoms.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"Привет"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)0);
+}
+
+- (void) testRawCyrillicInTextStillWorks {
+    // Sanity: the only supported path is \text* — already covered
+    // elsewhere, repeated here for symmetry against the regression.
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{Привет}"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(((MTTextAtom *)list.atoms[0]).text, @"Привет");
 }
 
 @end

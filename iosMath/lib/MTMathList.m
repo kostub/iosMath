@@ -64,6 +64,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Accent";
         case kMTMathAtomStack:
             return @"Stack";
+        case kMTMathAtomText:
+            return @"Text";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -146,6 +148,10 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
         case kMTMathAtomStack:
             return [[MTMathStack alloc] init];
+
+        case kMTMathAtomText:
+            return [[MTTextAtom alloc] initWithText:value ?: @""
+                                             style:kMTTextStyleRoman];
 
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
@@ -1240,6 +1246,101 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         // Programmatically-built stack with non-canonical constructions — emit only the inner list.
         [str appendString:[MTMathListBuilder mathListToString:self.innerList]];
     }
+}
+
+@end
+
+#pragma mark - MTTextAtom
+
+@implementation MTTextAtom
+
+- (instancetype)initWithText:(NSString *)text style:(MTTextStyle)style
+{
+    NSParameterAssert(text);
+    NSParameterAssert(style <= kMTTextStyleTypewriter);
+    // The nucleus is set to the raw text so existing consumers reading
+    // nucleus (e.g. description, stringValue) work reasonably without
+    // changes. fontStyle is left at kMTFontStyleDefault so
+    // mathListToString: does not wrap the atom in a \mathrm{...} group.
+    self = [super initWithType:kMTMathAtomText value:text];
+    if (self) {
+        _text = [text copy];
+        _textStyle = style;
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomText) {
+        return [self initWithText:value ?: @"" style:kMTTextStyleRoman];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTTextAtom initWithType:value:] cannot be called. Use [MTTextAtom initWithText:style:] instead."
+                                 userInfo:nil];
+}
+
+- (void)setText:(NSString *)text
+{
+    NSParameterAssert(text);
+    NSString* copiedText = [text copy] ?: @"";
+    _text = copiedText;
+    [super setNucleus:copiedText];
+}
+
+- (void)setNucleus:(NSString *)nucleus
+{
+    NSParameterAssert(nucleus);
+    NSString* copiedNucleus = [nucleus copy] ?: @"";
+    [super setNucleus:copiedNucleus];
+    _text = copiedNucleus;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    // [super copyWithZone:] uses [[[self class] alloc] initWithType:self.type value:self.nucleus]
+    // which dispatches to our overridden initWithType:value: (defaulting to Roman style),
+    // and copies fontStyle, indexRange, sub/superScript. We then restore the textStyle
+    // and ensure text is set from the source.
+    MTTextAtom* copy = [super copyWithZone:zone];
+    copy->_text = [self.text copyWithZone:zone];
+    copy->_textStyle = self.textStyle;
+    return copy;
+}
+
+- (instancetype)finalized
+{
+    MTTextAtom* fin = [super finalized];
+    fin->_text = [self.text copy];
+    fin->_textStyle = self.textStyle;
+    return fin;
+}
+
++ (NSCharacterSet *)latexEscapableCharacterSet
+{
+    static NSCharacterSet *set;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        set = [NSCharacterSet characterSetWithCharactersInString:@"\\{}_^%&#$"];
+    });
+    return set;
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    NSString* command = [MTMathAtomFactory commandNameForTextStyle:self.textStyle];
+    [str appendFormat:@"\\%@{", command];
+
+    NSCharacterSet* escapable = [MTTextAtom latexEscapableCharacterSet];
+    for (NSUInteger i = 0; i < self.text.length; i++) {
+        unichar c = [self.text characterAtIndex:i];
+        if ([escapable characterIsMember:c]) {
+            [str appendFormat:@"\\%C", c];
+        } else {
+            [str appendFormat:@"%C", c];
+        }
+    }
+    [str appendString:@"}"];
 }
 
 @end

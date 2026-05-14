@@ -148,6 +148,17 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 /** Returns the latex font name for a given style. */
 + (NSString*) fontNameForStyle:(MTFontStyle) fontStyle;
 
+/** Look up a text-mode command name (`text`, `textrm`, `textbf`, …) and
+ return the matching `MTTextStyle`. Returns `NSNotFound` for unknown names.
+ */
++ (MTTextStyle) textStyleWithName:(NSString*) name;
+
+/** Inverse of `+textStyleWithName:`. Returns the canonical command name
+ for a given style: `kMTTextStyleRoman` → `@"text"`,
+ `kMTTextStyleBold` → `@"textbf"`, etc.
+ */
++ (NSString*) commandNameForTextStyle:(MTTextStyle) style;
+
 /** Returns a fraction with the given numerator and denominator. */
 + (MTFraction*) fractionWithNumerator:(MTMathList*) num denominator:(MTMathList*) denom
     NS_SWIFT_NAME(fraction(numerator:denominator:));

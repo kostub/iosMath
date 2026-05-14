@@ -6,14 +6,13 @@
 //  useful for verifying correctness but not as a beginner reference. This file
 //  restructures the app into two tabs:
 //
-//   • Examples — 10 named, curated formulae (quadratic formula, Euler's
-//     identity, matrices, …) that mirror the README quick-start snippets.
+//   • Examples — named, curated formulae (quadratic formula, Euler's
+//     identity, matrices, ...) that mirror the README quick-start snippets.
 //     Each formula is displayed in a card with a human-readable title, making
 //     the app usable as a first-look reference alongside the documentation.
 //
-//   • Gallery — the original full rendering test suite (22 demo formulae +
-//     48 typesetter cases) preserved verbatim so regression coverage is not
-//     lost.
+//   • Gallery — the full rendering test suite plus visual regression cases
+//     for parser and typesetter features.
 //
 //  This software may be modified and distributed under the terms of the
 //  MIT license. See the LICENSE file for details.
@@ -147,7 +146,8 @@ private struct ExampleCard: View {
 private struct GalleryTab: View {
 
     private static let demoHeights: [CGFloat] = [
-        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60, 70
+        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60, 70,
+        60, 60, 60, 70, 60, 60, 60, 60
     ]
     private static let testHeights: [CGFloat] = [
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,

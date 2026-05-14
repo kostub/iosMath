@@ -103,11 +103,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (nullable MTMathAtom *)atomForCharacter:(unichar)ch
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
-    if (ch > 0x0410 && ch < 0x044F){
-        // show basic cyrillic alphabet. Latin Modern Math font is not good for cyrillic symbols
-        return [MTMathAtom atomWithType:kMTMathAtomOrdinary value:chStr];
-    } else if (ch < 0x21 || ch > 0x7E) {
-        // skip non ascii characters and spaces
+    if (ch < 0x21 || ch > 0x7E) {
+        // skip non ascii characters and spaces. Non-Latin text must be
+        // wrapped in \text*, \textbf{...}, etc.
         return nil;
     } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
         // These are latex control characters that have special meanings. We don't support them.
@@ -275,6 +273,44 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         return NSNotFound;
     }
     return style.integerValue;
+}
+
++ (NSDictionary<NSString*, NSNumber*>*) textStyles
+{
+    static NSDictionary<NSString*, NSNumber*>* textStyles = nil;
+    if (!textStyles) {
+        textStyles = @{
+            @"text":   @(kMTTextStyleRoman),
+            @"textrm": @(kMTTextStyleRoman),
+            @"textbf": @(kMTTextStyleBold),
+            @"textit": @(kMTTextStyleItalic),
+            @"textsf": @(kMTTextStyleSansSerif),
+            @"texttt": @(kMTTextStyleTypewriter),
+        };
+    }
+    return textStyles;
+}
+
++ (MTTextStyle) textStyleWithName:(NSString *)name
+{
+    NSNumber* boxed = [self textStyles][name];
+    if (!boxed) {
+        return (MTTextStyle)NSNotFound;
+    }
+    return (MTTextStyle)boxed.unsignedIntegerValue;
+}
+
++ (NSString*) commandNameForTextStyle:(MTTextStyle)style
+{
+    switch (style) {
+        case kMTTextStyleRoman:      return @"text";
+        case kMTTextStyleBold:       return @"textbf";
+        case kMTTextStyleItalic:     return @"textit";
+        case kMTTextStyleSansSerif:  return @"textsf";
+        case kMTTextStyleTypewriter: return @"texttt";
+    }
+    NSAssert(NO, @"Unknown MTTextStyle %lu", (unsigned long)style);
+    return @"text";
 }
 
 + (NSString *)fontNameForStyle:(MTFontStyle)fontStyle
@@ -1025,29 +1061,25 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     static NSDictionary<NSString*, NSNumber*>* fontStyles = nil;
     if (!fontStyles) {
+        // \text* commands are handled by the parser via the textStyles
+        // dictionary, so they do NOT appear here.
         fontStyles = @{
                        @"mathnormal" : @(kMTFontStyleDefault),
                        @"mathrm": @(kMTFontStyleRoman),
-                       @"textrm": @(kMTFontStyleRoman),
                        @"rm": @(kMTFontStyleRoman),
                        @"mathbf": @(kMTFontStyleBold),
                        @"bf": @(kMTFontStyleBold),
-                       @"textbf": @(kMTFontStyleBold),
                        @"mathcal": @(kMTFontStyleCaligraphic),
                        @"cal": @(kMTFontStyleCaligraphic),
                        @"mathtt": @(kMTFontStyleTypewriter),
-                       @"texttt": @(kMTFontStyleTypewriter),
                        @"mathit": @(kMTFontStyleItalic),
-                       @"textit": @(kMTFontStyleItalic),
                        @"mit": @(kMTFontStyleItalic),
                        @"mathsf": @(kMTFontStyleSansSerif),
-                       @"textsf": @(kMTFontStyleSansSerif),
                        @"mathfrak": @(kMTFontStyleFraktur),
                        @"frak": @(kMTFontStyleFraktur),
                        @"mathbb": @(kMTFontStyleBlackboard),
                        @"mathbfit": @(kMTFontStyleBoldItalic),
                        @"bm": @(kMTFontStyleBoldItalic),
-                       @"text": @(kMTFontStyleRoman),
                    };
     }
     return fontStyles;

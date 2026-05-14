@@ -10,6 +10,7 @@
 
 #import "MTTypesetter.h"
 #import "MTFont+Internal.h"
+#import "MTFontManager.h"
 #import "MTMathListDisplayInternal.h"
 #import "../../lib/MTUnicode.h"
 
@@ -51,6 +52,7 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
         case kMTMathAtomColorbox:
         case kMTMathAtomOrdinary:
         case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
+        case kMTMathAtomText:          // Text blocks are spaced as Ord
             return 0;
         case kMTMathAtomLargeOperator:
             return 1;
@@ -639,14 +641,54 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 }
                 MTMathColorbox* colorboxAtom = (MTMathColorbox*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorboxAtom.innerList font:_font style:_style];
-                
+
                 display.localBackgroundColor = [MTColor colorFromHexString:colorboxAtom.colorString];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
                 break;
             }
-                
+
+            case kMTMathAtomText: {
+                // Flush any pending math run so the text block stands alone.
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Inter-element spacing: kMTMathAtomText maps to the
+                // Ordinary row/column in getInterElementSpaceArrayIndexForType,
+                // so addInterElementSpace works unchanged.
+                [self addInterElementSpace:prevNode currentType:atom.type];
+
+                MTTextAtom* textAtom = (MTTextAtom*) atom;
+                CTFontRef textFont = [MTFontManager textCTFontForStyle:textAtom.textStyle
+                                                                  size:_styleFont.fontSize];
+
+                MTTextDisplay* display = [[MTTextDisplay alloc]
+                                          initWithText:textAtom.text
+                                             textStyle:textAtom.textStyle
+                                                ctFont:textFont
+                                                 range:textAtom.indexRange];
+                // MTTextDisplay's initializer takes its own retain on the
+                // CTFont via the attributed-string attribute dictionary.
+                CFRelease(textFont);
+
+                display.position = _currentPosition;
+                _currentPosition.x += display.width;
+                [_displayAtoms addObject:display];
+
+                // Sub/superscripts attach via the existing makeScripts: path
+                // with delta=0 (no math italic correction for text blocks).
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display
+                                index:atom.indexRange.location delta:0];
+                }
+                // No mutation of atom.type. prevNode bookkeeping at the
+                // bottom of the loop assigns prevNode = atom; on the next
+                // iteration the spacing-index lookup for kMTMathAtomText
+                // resolves to the same index as Ord.
+                break;
+            }
+
             case kMTMathAtomRadical: {
                 // stash the existing layout
                 if (_currentLine.length > 0) {

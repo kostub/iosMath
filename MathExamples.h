@@ -17,7 +17,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-string-concatenation"
 
-/// 23 showcase formulae demonstrating the breadth of what iosMath can render.
+/// Gallery demo formulae: math showcase rows followed by mixed text and style checks.
 static inline NSArray<NSString*>* MathDemoFormulas(void) {
     return @[
         // 0: Quadratic formula
@@ -90,6 +90,23 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
          "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
         // 22: Explicit-sized vs content-sized delimiters
         @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
+        // 23: Mixed text + math — labelled definition with a fraction
+        @"\\text{velocity} = \\frac{d\\vec{x}}{dt}",
+        // 24: Russian-labelled area-of-a-circle formula
+        @"\\text{Площадь круга} = \\pi r^2",
+        // 25: Chinese-labelled area formula
+        @"\\text{面积} = \\pi r^2",
+        // 26: Hindi-labelled area formula (Devanagari conjuncts + top matras)
+        @"\\text{क्षेत्रफल} = \\pi r^2",
+        // 27: Arabic-labelled area formula (RTL run inside an LTR equation)
+        @"\\text{المساحة} = \\pi r^2",
+        // 28: Hebrew-labelled area formula
+        @"\\text{שטח} = \\pi r^2",
+        // 29: Textbook-style definition exercising all five \\text* styles
+        @"\\textbf{Def.}\\textit{ Let } \\textsf{f}: \\textsf{R} \\to \\textsf{R}, "
+         "\\textrm{ where } \\texttt{f}(x) = x^2",
+        // 30: Styled non-Latin theorem label preceding a math statement
+        @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
     ];
 }
 

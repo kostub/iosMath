@@ -183,6 +183,25 @@ NSString *const MTParseError = @"ParseError";
             if ([self applyModifier:command atom:prevAtom]) {
                 continue;
             }
+            // Recognize \text* commands first — they consume their {…}
+            // body raw, so they must be handled before the legacy
+            // font-style dispatch (and before the six \text* keys are
+            // removed from MTMathAtomFactory.fontStyles).
+            MTTextStyle textStyle = [MTMathAtomFactory textStyleWithName:command];
+            if (textStyle != (MTTextStyle)NSNotFound) {
+                NSString* body = [self readTextArgument];
+                if (!body) {
+                    return nil; // error already set
+                }
+                MTTextAtom* textAtom = [[MTTextAtom alloc] initWithText:body
+                                                                  style:textStyle];
+                [list addAtom:textAtom];
+                prevAtom = textAtom;
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
             MTFontStyle fontStyle = [MTMathAtomFactory fontStyleWithName:command];
             if (fontStyle != NSNotFound) {
                 BOOL oldSpacesAllowed = _spacesAllowed;
@@ -315,6 +334,152 @@ NSString *const MTParseError = @"ParseError";
         }
     }
     return mutable;
+}
+
+- (void) skipTextArgumentSpaces
+{
+    static NSCharacterSet* whitespace = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    });
+
+    while ([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (![whitespace characterIsMember:ch]) {
+            [self unlookCharacter];
+            return;
+        }
+    }
+}
+
+- (NSString*) readUnbracedTextTokenStartingWith:(unichar)c
+                                   escapableSet:(NSCharacterSet*)escapable
+{
+    if (c == '\\') {
+        if (![self hasCharacters]) {
+            [self setError:MTParseErrorMismatchBraces
+                   message:@"Trailing \\ after \\text*"];
+            return nil;
+        }
+
+        NSString* command = [self readCommand];
+        if (command.length == 1) {
+            unichar escaped = [command characterAtIndex:0];
+            if (escaped == ' ') {
+                return @" ";
+            }
+            if ([escapable characterIsMember:escaped]) {
+                return command;
+            }
+        }
+
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:command];
+        if (atom && atom.nucleus.length > 0) {
+            return atom.nucleus;
+        }
+
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:
+                        @"Unsupported command \\%@ as \\text* argument",
+                        command]];
+        return nil;
+    }
+
+    if (c == '$') {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"$ is not allowed inside \\text*"];
+        return nil;
+    }
+    if (c == '^' || c == '_' || c == '}' || c == '&') {
+        [self unlookCharacter];
+        [self setError:MTParseErrorCharacterNotFound
+               message:@"Missing argument for \\text*"];
+        return nil;
+    }
+
+    NSMutableString* token = [NSMutableString stringWithCharacters:&c length:1];
+    if (c >= 0xD800 && c <= 0xDBFF && [self hasCharacters]) {
+        unichar low = [self getNextCharacter];
+        if (low >= 0xDC00 && low <= 0xDFFF) {
+            [token appendFormat:@"%C", low];
+        } else {
+            [self unlookCharacter];
+        }
+    }
+    return token;
+}
+
+// Reads the argument following a \text* command.  Braced bodies are
+// captured raw — every code point flows through unchanged except for the
+// backslash escapes accepted by `[MTTextAtom latexEscapableCharacterSet]`,
+// which unescape to their literal character.  Balanced nested {...}
+// groups are accepted as TeX-style grouping (the braces are stripped, the
+// inner content is captured).  Without braces, LaTeX compatibility is
+// preserved by consuming a single following text token.
+- (NSString*) readTextArgument
+{
+    [self skipTextArgumentSpaces];
+    NSCharacterSet* escapable = [MTTextAtom latexEscapableCharacterSet];
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorCharacterNotFound
+               message:@"Missing argument for \\text*"];
+        return nil;
+    }
+
+    unichar first = [self getNextCharacter];
+    if (first != '{') {
+        return [self readUnbracedTextTokenStartingWith:first escapableSet:escapable];
+    }
+
+    NSMutableString* body = [NSMutableString string];
+    NSInteger depth = 0;
+    while ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '\\') {
+            if (![self hasCharacters]) {
+                [self setError:MTParseErrorMismatchBraces
+                       message:@"Trailing \\ inside \\text*"];
+                return nil;
+            }
+            unichar esc = [self getNextCharacter];
+            if (esc == ' ') {
+                // \<space> is a forced literal space in LaTeX text mode.
+                [body appendString:@" "];
+            } else if ([escapable characterIsMember:esc]) {
+                [body appendFormat:@"%C", esc];
+            } else {
+                [self setError:MTParseErrorInvalidCommand
+                       message:[NSString stringWithFormat:
+                                @"Unsupported escape \\%C in \\text* body",
+                                esc]];
+                return nil;
+            }
+            continue;
+        }
+        if (c == '{') {
+            // Balanced group — opening brace is grouping, not content.
+            depth += 1;
+            continue;
+        }
+        if (c == '}') {
+            if (depth == 0) {
+                return body; // matched the outer {
+            }
+            depth -= 1;
+            continue;
+        }
+        if (c == '$') {
+            // Math-in-text is out of scope.
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"$ is not allowed inside \\text*"];
+            return nil;
+        }
+        [body appendFormat:@"%C", c];
+    }
+    [self setError:MTParseErrorMismatchBraces
+           message:@"Unmatched { in \\text* body"];
+    return nil;
 }
 
 - (NSString*) readColor

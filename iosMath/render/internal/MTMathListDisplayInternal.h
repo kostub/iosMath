@@ -48,6 +48,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface MTTextDisplay ()
+
+/**
+ Designated initializer.
+ - `text`: raw body (already escape-processed).
+ - `textStyle`: the requested style — used for introspection only;
+   `ctFont` already encodes traits.
+ - `ctFont`: a CT font owned by the caller; this initializer takes its
+   own retain so the caller may release.
+ - `range`: the source-code character range driving this display.
+ */
+- (instancetype) initWithText:(NSString*) text
+                    textStyle:(MTTextStyle) textStyle
+                       ctFont:(CTFontRef) ctFont
+                        range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+- (instancetype) init NS_UNAVAILABLE;
+
+@end
+
 @interface MTFractionDisplay ()
 
 - (instancetype)initWithNumerator:(MTMathListDisplay*) numerator denominator:(MTMathListDisplay*) denominator position:(CGPoint) position range:(NSRange) range NS_DESIGNATED_INITIALIZER;
