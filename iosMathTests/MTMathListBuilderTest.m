@@ -1640,4 +1640,119 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testPrimes
+{
+    // Per-case shape: @[ input,
+    //                    expected top-level atom types,
+    //                    index-into-top-level of the atom whose superscript holds the primes,
+    //                    expected superscript atom types of that atom,
+    //                    expected round-trip ]
+    NSArray* cases = @[
+        @[ @"f'",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }" ],
+        @[ @"y''",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary)],
+           @"y^{\\prime \\prime }" ],
+        @[ @"f'''(x)",
+           @[@(kMTMathAtomVariable), @(kMTMathAtomOpen),
+             @(kMTMathAtomVariable), @(kMTMathAtomClose)],
+           @0,
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary)],
+           @"f^{\\prime \\prime \\prime }(x)" ],
+        @[ @"'2",
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomNumber)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"{}^{\\prime }2" ],
+        @[ @"f'^2",
+           @[@(kMTMathAtomVariable)],
+           @0,
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomNumber)],
+           @"f^{\\prime 2}" ],
+        @[ @"f'_n",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }_{n}" ],
+        @[ @"f^\\prime",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }" ],
+    ];
+    for (NSArray* c in cases) {
+        NSString* input = c[0];
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"Parse error for %@", input);
+        XCTAssertNotNil(list, @"Nil list for %@", input);
+        [self checkAtomTypes:list types:c[1] desc:input];
+
+        NSUInteger idx = [c[2] unsignedIntegerValue];
+        MTMathAtom* hostAtom = list.atoms[idx];
+        XCTAssertNotNil(hostAtom.superScript, @"Missing superscript for %@", input);
+        [self checkAtomTypes:hostAtom.superScript types:c[3] desc:input];
+
+        // Each Ord atom in the superscript that has nucleus length 1 must be
+        // a prime (U+2032). Number / Variable atoms in the merge case
+        // (f'^2 -> [\prime, 2]) are allowed and skipped.
+        for (MTMathAtom* a in hostAtom.superScript.atoms) {
+            if (a.type == kMTMathAtomOrdinary && a.nucleus.length == 1) {
+                XCTAssertEqualObjects(a.nucleus, @"′", @"%@ prime nucleus", input);
+            }
+        }
+
+        NSString* roundTrip = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(roundTrip, c[4], @"Round-trip mismatch for %@", input);
+    }
+}
+
+- (void) testPrimesDoubleSuperscript
+{
+    // f^2'  ->  f has superscript [2]; the ' triggers double-superscript path,
+    // which mirrors the existing ^^ handling: allocate an empty Ord whose
+    // superscript is the prime list.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"f^2'" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)2);
+    MTMathAtom* f = list.atoms[0];
+    XCTAssertEqual(f.type, kMTMathAtomVariable);
+    XCTAssertEqualObjects(f.nucleus, @"f");
+    XCTAssertNotNil(f.superScript);
+    XCTAssertEqual(f.superScript.atoms.count, (NSUInteger)1);
+
+    MTMathAtom* empty = list.atoms[1];
+    XCTAssertEqual(empty.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(empty.nucleus, @"");
+    XCTAssertNotNil(empty.superScript);
+    XCTAssertEqual(empty.superScript.atoms.count, (NSUInteger)1);
+    MTMathAtom* prime = empty.superScript.atoms[0];
+    XCTAssertEqualObjects(prime.nucleus, @"′");
+
+    NSString* rt = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(rt, @"f^{2}{}^{\\prime }");
+}
+
+- (void) testPrimesInsideBraces
+{
+    // f^{2'}  ->  f has superscript [2]; the inner ' attaches to the inner 2.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"f^{2'}" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathAtom* f = list.atoms[0];
+    XCTAssertNotNil(f.superScript);
+    XCTAssertEqual(f.superScript.atoms.count, (NSUInteger)1);
+    MTMathAtom* two = f.superScript.atoms[0];
+    XCTAssertEqual(two.type, kMTMathAtomNumber);
+    XCTAssertEqualObjects(two.nucleus, @"2");
+    XCTAssertNotNil(two.superScript);
+    XCTAssertEqual(two.superScript.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(two.superScript.atoms[0].nucleus, @"′");
+
+    NSString* rt = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(rt, @"f^{2^{\\prime }}");
+}
+
 @end
