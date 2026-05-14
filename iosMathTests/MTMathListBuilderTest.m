@@ -1789,10 +1789,10 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"nsupset",         @0x2285 ],
         @[ @"nsucc",           @0x2281 ],
         @[ @"nprec",           @0x2280 ],
-        @[ @"nsucceq",         @"\u2AB0\u0338" ],
-        @[ @"npreceq",         @"\u2AAF\u0338" ],
-        @[ @"nsucccurlyeq",    @0x22E1 ],
-        @[ @"npreccurlyeq",    @0x22E0 ],
+        @[ @"nsucceq",         @0x22E1 ],
+        @[ @"npreceq",         @0x22E0 ],
+        @[ @"nsucccurlyeq",    @0x22E1, @"nsucceq" ],
+        @[ @"npreccurlyeq",    @0x22E0, @"npreceq" ],
         @[ @"precneq",         @0x2AB1 ],
         @[ @"succneq",         @0x2AB2 ],
         @[ @"precneqq",        @0x2AB5 ],
@@ -1801,8 +1801,9 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(rows.count, (NSUInteger)37);
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
-        id expectedNucObj = r[1];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
         NSString* input = [@"\\" stringByAppendingString:cmd];
+        NSString* expectedRTName = (r.count > 2) ? r[2] : cmd;
 
         NSError* error = nil;
         MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
@@ -1810,20 +1811,14 @@ static NSArray* getTestDataLargeDelimiters() {
         XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
         MTMathAtom* atom = list.atoms[0];
         XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
-        
-        if ([expectedNucObj isKindOfClass:[NSString class]]) {
-            XCTAssertEqualObjects(atom.nucleus, expectedNucObj, @"%@ nucleus", input);
-        } else {
-            unichar expectedNuc = (unichar)[expectedNucObj unsignedIntegerValue];
-            XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
-            XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
-        }
+        XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
 
         // Round-trip: relation surrounded by variables to keep finalize stable.
         NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
         MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
         XCTAssertNil(error);
-        NSString* expectedRT = [NSString stringWithFormat:@"a%@ b", input];
+        NSString* expectedRT = [NSString stringWithFormat:@"a\\%@ b", expectedRTName];
         XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList], expectedRT, @"round-trip %@", input);
     }
 }
