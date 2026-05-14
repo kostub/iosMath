@@ -1673,6 +1673,40 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testTextSingleCharacterArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf abc"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)3);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"a");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleBold);
+    XCTAssertEqualObjects(list.atoms[1].nucleus, @"b");
+    XCTAssertEqualObjects(list.atoms[2].nucleus, @"c");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\textbf{a}bc");
+}
+
+- (void) testTextSingleEscapedArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textit\\%"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"%");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleItalic);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\textit{\\%}");
+}
+
+- (void) testTextSingleNonLatinArgument {
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\text 你"];
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+
+    MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(atom.text, @"你");
+    XCTAssertEqual(atom.textStyle, kMTTextStyleRoman);
+}
+
 - (void) testTextChinese {
     MTMathList *list = [MTMathListBuilder buildFromString:@"\\text{你好}"];
     MTTextAtom *atom = (MTTextAtom *)list.atoms[0];
@@ -1837,9 +1871,9 @@ static NSArray* getTestDataLargeDelimiters() {
 
 #pragma mark - MTTextAtom parsing — error cases
 
-- (void) testTextMissingOpenBrace {
+- (void) testTextMissingArgument {
     NSError *error = nil;
-    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf abc"
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\textbf"
                                                      error:&error];
     XCTAssertNil(list);
     XCTAssertNotNil(error);

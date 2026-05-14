@@ -699,6 +699,31 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
 }
 
+- (void) testTextAtomFactoryCreatesTextAtom
+{
+    MTMathAtom *atom = [MTMathAtom atomWithType:kMTMathAtomText value:@"abc"];
+    XCTAssertTrue([atom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqual(atom.type, kMTMathAtomText);
+    XCTAssertEqualObjects(atom.nucleus, @"abc");
+    XCTAssertEqualObjects(((MTTextAtom *)atom).text, @"abc");
+    XCTAssertEqual(((MTTextAtom *)atom).textStyle, kMTTextStyleRoman);
+}
+
+- (void) testTextAtomTextAndNucleusStayInSync
+{
+    MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"abc" style:kMTTextStyleRoman];
+    atom.text = @"def";
+    XCTAssertEqualObjects(atom.nucleus, @"def");
+    XCTAssertEqualObjects(atom.stringValue, @"def");
+
+    atom.nucleus = @"ghi";
+    XCTAssertEqualObjects(atom.text, @"ghi");
+
+    NSMutableString *out = [NSMutableString string];
+    [atom appendLaTeXToString:out];
+    XCTAssertEqualObjects(out, @"\\text{ghi}");
+}
+
 - (void) testTextAtomScriptsAllowed
 {
     MTTextAtom *atom = [[MTTextAtom alloc] initWithText:@"x" style:kMTTextStyleBold];

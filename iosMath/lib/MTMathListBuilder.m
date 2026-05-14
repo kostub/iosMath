@@ -290,27 +290,102 @@ NSString *const MTParseError = @"ParseError";
     return mutable;
 }
 
-// Reads the {...} body following a \text* command.  The body is captured
-// raw — every code point flows through unchanged except for the backslash
-// escapes accepted by `[MTTextAtom latexEscapableCharacterSet]`, which
-// unescape to their literal character.  Balanced nested {...} groups are
-// accepted as TeX-style grouping (the braces are stripped, the inner
-// content is captured).  Any other backslash sequence is a parse error,
-// as is `$`, any unmatched brace, or a trailing backslash.
-- (NSString*) readTextArgument
+- (void) skipTextArgumentSpaces
 {
-    [self skipSpaces];
-    if (![self hasCharacters] || [self getNextCharacter] != '{') {
-        // Roll the position back so the error highlights the right spot.
-        if ([self hasCharacters] || _currentChar > 0) {
+    static NSCharacterSet* whitespace = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    });
+
+    while ([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (![whitespace characterIsMember:ch]) {
             [self unlookCharacter];
+            return;
         }
-        [self setError:MTParseErrorCharacterNotFound
-               message:@"Missing { for \\text* argument"];
+    }
+}
+
+- (NSString*) readUnbracedTextTokenStartingWith:(unichar)c
+                                   escapableSet:(NSCharacterSet*)escapable
+{
+    if (c == '\\') {
+        if (![self hasCharacters]) {
+            [self setError:MTParseErrorMismatchBraces
+                   message:@"Trailing \\ after \\text*"];
+            return nil;
+        }
+
+        NSString* command = [self readCommand];
+        if (command.length == 1) {
+            unichar escaped = [command characterAtIndex:0];
+            if (escaped == ' ') {
+                return @" ";
+            }
+            if ([escapable characterIsMember:escaped]) {
+                return command;
+            }
+        }
+
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:command];
+        if (atom && atom.nucleus.length > 0) {
+            return atom.nucleus;
+        }
+
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:
+                        @"Unsupported command \\%@ as \\text* argument",
+                        command]];
         return nil;
     }
 
+    if (c == '$') {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"$ is not allowed inside \\text*"];
+        return nil;
+    }
+    if (c == '^' || c == '_' || c == '}' || c == '&') {
+        [self unlookCharacter];
+        [self setError:MTParseErrorCharacterNotFound
+               message:@"Missing argument for \\text*"];
+        return nil;
+    }
+
+    NSMutableString* token = [NSMutableString stringWithCharacters:&c length:1];
+    if (c >= 0xD800 && c <= 0xDBFF && [self hasCharacters]) {
+        unichar low = [self getNextCharacter];
+        if (low >= 0xDC00 && low <= 0xDFFF) {
+            [token appendFormat:@"%C", low];
+        } else {
+            [self unlookCharacter];
+        }
+    }
+    return token;
+}
+
+// Reads the argument following a \text* command.  Braced bodies are
+// captured raw — every code point flows through unchanged except for the
+// backslash escapes accepted by `[MTTextAtom latexEscapableCharacterSet]`,
+// which unescape to their literal character.  Balanced nested {...}
+// groups are accepted as TeX-style grouping (the braces are stripped, the
+// inner content is captured).  Without braces, LaTeX compatibility is
+// preserved by consuming a single following text token.
+- (NSString*) readTextArgument
+{
+    [self skipTextArgumentSpaces];
     NSCharacterSet* escapable = [MTTextAtom latexEscapableCharacterSet];
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorCharacterNotFound
+               message:@"Missing argument for \\text*"];
+        return nil;
+    }
+
+    unichar first = [self getNextCharacter];
+    if (first != '{') {
+        return [self readUnbracedTextTokenStartingWith:first escapableSet:escapable];
+    }
+
     NSMutableString* body = [NSMutableString string];
     NSInteger depth = 0;
     while ([self hasCharacters]) {

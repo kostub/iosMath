@@ -149,6 +149,10 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         case kMTMathAtomStack:
             return [[MTMathStack alloc] init];
 
+        case kMTMathAtomText:
+            return [[MTTextAtom alloc] initWithText:value ?: @""
+                                             style:kMTTextStyleRoman];
+
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
         
@@ -1274,6 +1278,22 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     @throw [NSException exceptionWithName:@"InvalidMethod"
                                    reason:@"[MTTextAtom initWithType:value:] cannot be called. Use [MTTextAtom initWithText:style:] instead."
                                  userInfo:nil];
+}
+
+- (void)setText:(NSString *)text
+{
+    NSParameterAssert(text);
+    NSString* copiedText = [text copy] ?: @"";
+    _text = copiedText;
+    [super setNucleus:copiedText];
+}
+
+- (void)setNucleus:(NSString *)nucleus
+{
+    NSParameterAssert(nucleus);
+    NSString* copiedNucleus = [nucleus copy] ?: @"";
+    [super setNucleus:copiedNucleus];
+    _text = copiedNucleus;
 }
 
 - (id)copyWithZone:(NSZone *)zone
