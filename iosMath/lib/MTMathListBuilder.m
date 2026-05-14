@@ -322,7 +322,10 @@ NSString *const MTParseError = @"ParseError";
                 return nil;
             }
             unichar esc = [self getNextCharacter];
-            if ([escapable characterIsMember:esc]) {
+            if (esc == ' ') {
+                // \<space> is a forced literal space in LaTeX text mode.
+                [body appendString:@" "];
+            } else if ([escapable characterIsMember:esc]) {
                 [body appendFormat:@"%C", esc];
             } else {
                 [self setError:MTParseErrorInvalidCommand

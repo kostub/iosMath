@@ -1744,6 +1744,23 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(atom.text, @"50% $5 {x} \\");
 }
 
+- (void) testTextBackslashSpace {
+    // \<space> is the canonical LaTeX forced space in text mode. The legacy
+    // parser accepted it via the single-char command table, so existing
+    // inputs like \text{hello\ world} and \textbf{hello\ world} must keep
+    // working under the new \text* path.
+    MTMathList *plain = [MTMathListBuilder buildFromString:@"\\text{hello\\ world}"];
+    MTTextAtom *plainAtom = (MTTextAtom *)plain.atoms[0];
+    XCTAssertTrue([plainAtom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(plainAtom.text, @"hello world");
+
+    MTMathList *bold = [MTMathListBuilder buildFromString:@"\\textbf{hello\\ world}"];
+    MTTextAtom *boldAtom = (MTTextAtom *)bold.atoms[0];
+    XCTAssertTrue([boldAtom isKindOfClass:[MTTextAtom class]]);
+    XCTAssertEqualObjects(boldAtom.text, @"hello world");
+    XCTAssertEqual(boldAtom.textStyle, kMTTextStyleBold);
+}
+
 - (void) testTextUnicodeWhitespace {
     // U+00A0 NBSP must pass through unchanged.
     NSString *src = [NSString stringWithFormat:@"\\text{a%Cb}", (unichar)0x00A0];
