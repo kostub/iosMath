@@ -1218,6 +1218,14 @@ static NSArray* getTestDataParseErrors() {
     XCTAssertEqualObjects(latex, @"\\lcm (a,b)");
 }
 
+- (void) testCustomSymbolDoesNotReplacePreferredReverseName
+{
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u00B1"];
+    [MTMathAtomFactory addLatexSymbol:@"zzpm" value:atom];
+
+    XCTAssertEqualObjects([MTMathAtomFactory latexSymbolNameForAtom:atom], @"pm");
+}
+
 - (void) testFontSingle
 {
     NSString *str = @"\\mathbf x";
@@ -1603,6 +1611,482 @@ static NSArray* getTestDataLargeDelimiters() {
     [list addAtom:stack];
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"x");
+}
+
+- (void) testReverseMapTypeKeyedRoundTrip
+{
+    // Regression guard for Feature 7: re-keying the reverse map by
+    // (nucleus, type) must not break round-tripping of Bin symbols that
+    // become Un at the start of a list via -[MTMathList finalized].
+    NSArray<NSArray*>* cases = @[
+        @[ @"\\pm a",   @"\\pm a" ],
+        @[ @"a\\pm b",  @"a\\pm b" ],
+        @[ @"\\pm",     @"\\pm " ],
+        @[ @"\\cdot a", @"\\cdot a" ],
+        @[ @"a\\cdot b",@"a\\cdot b" ],
+        @[ @"\\leq",    @"\\leq " ],
+        @[ @"\\alpha",  @"\\alpha " ],
+        @[ @"\\to",     @"\\rightarrow " ],   // alias resolves to canonical
+    ];
+    for (NSArray* c in cases) {
+        NSString* input = c[0];
+        NSString* expected = c[1];
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"Parse error for %@", input);
+        XCTAssertNotNil(list, @"Nil list for %@", input);
+        MTMathList* final = [list finalized];
+        NSString* roundTrip = [MTMathListBuilder mathListToString:final];
+        XCTAssertEqualObjects(roundTrip, expected, @"Round-trip mismatch for %@", input);
+    }
+}
+
+- (void) testPrimes
+{
+    // Per-case shape: @[ input,
+    //                    expected top-level atom types,
+    //                    index-into-top-level of the atom whose superscript holds the primes,
+    //                    expected superscript atom types of that atom,
+    //                    expected round-trip ]
+    NSArray* cases = @[
+        @[ @"f'",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }" ],
+        @[ @"y''",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary)],
+           @"y^{\\prime \\prime }" ],
+        @[ @"f'''(x)",
+           @[@(kMTMathAtomVariable), @(kMTMathAtomOpen),
+             @(kMTMathAtomVariable), @(kMTMathAtomClose)],
+           @0,
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary), @(kMTMathAtomOrdinary)],
+           @"f^{\\prime \\prime \\prime }(x)" ],
+        @[ @"'2",
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomNumber)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"{}^{\\prime }2" ],
+        @[ @"f'^2",
+           @[@(kMTMathAtomVariable)],
+           @0,
+           @[@(kMTMathAtomOrdinary), @(kMTMathAtomNumber)],
+           @"f^{\\prime 2}" ],
+        @[ @"f'_n",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }_{n}" ],
+        @[ @"f^\\prime",
+           @[@(kMTMathAtomVariable)],
+           @0, @[@(kMTMathAtomOrdinary)],
+           @"f^{\\prime }" ],
+    ];
+    for (NSArray* c in cases) {
+        NSString* input = c[0];
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"Parse error for %@", input);
+        XCTAssertNotNil(list, @"Nil list for %@", input);
+        [self checkAtomTypes:list types:c[1] desc:input];
+
+        NSUInteger idx = [c[2] unsignedIntegerValue];
+        MTMathAtom* hostAtom = list.atoms[idx];
+        XCTAssertNotNil(hostAtom.superScript, @"Missing superscript for %@", input);
+        [self checkAtomTypes:hostAtom.superScript types:c[3] desc:input];
+
+        // Each Ord atom in the superscript that has nucleus length 1 must be
+        // a prime (U+2032). Number / Variable atoms in the merge case
+        // (f'^2 -> [\prime, 2]) are allowed and skipped.
+        for (MTMathAtom* a in hostAtom.superScript.atoms) {
+            if (a.type == kMTMathAtomOrdinary && a.nucleus.length == 1) {
+                XCTAssertEqualObjects(a.nucleus, @"′", @"%@ prime nucleus", input);
+            }
+        }
+
+        NSString* roundTrip = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(roundTrip, c[4], @"Round-trip mismatch for %@", input);
+    }
+}
+
+- (void) testPrimesDoubleSuperscript
+{
+    // f^2'  ->  f has superscript [2]; the ' triggers double-superscript path,
+    // which mirrors the existing ^^ handling: allocate an empty Ord whose
+    // superscript is the prime list.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"f^2'" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)2);
+    MTMathAtom* f = list.atoms[0];
+    XCTAssertEqual(f.type, kMTMathAtomVariable);
+    XCTAssertEqualObjects(f.nucleus, @"f");
+    XCTAssertNotNil(f.superScript);
+    XCTAssertEqual(f.superScript.atoms.count, (NSUInteger)1);
+
+    MTMathAtom* empty = list.atoms[1];
+    XCTAssertEqual(empty.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(empty.nucleus, @"");
+    XCTAssertNotNil(empty.superScript);
+    XCTAssertEqual(empty.superScript.atoms.count, (NSUInteger)1);
+    MTMathAtom* prime = empty.superScript.atoms[0];
+    XCTAssertEqualObjects(prime.nucleus, @"′");
+
+    NSString* rt = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(rt, @"f^{2}{}^{\\prime }");
+}
+
+- (void) testPrimesInsideBraces
+{
+    // f^{2'}  ->  f has superscript [2]; the inner ' attaches to the inner 2.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"f^{2'}" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathAtom* f = list.atoms[0];
+    XCTAssertNotNil(f.superScript);
+    XCTAssertEqual(f.superScript.atoms.count, (NSUInteger)1);
+    MTMathAtom* two = f.superScript.atoms[0];
+    XCTAssertEqual(two.type, kMTMathAtomNumber);
+    XCTAssertEqualObjects(two.nucleus, @"2");
+    XCTAssertNotNil(two.superScript);
+    XCTAssertEqual(two.superScript.atoms.count, (NSUInteger)1);
+    XCTAssertEqualObjects(two.superScript.atoms[0].nucleus, @"′");
+
+    NSString* rt = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(rt, @"f^{2^{\\prime }}");
+}
+
+- (void) testNegatedRelations
+{
+    // Each row: @[ command (no leading \), expected nucleus (NSNumber for codepoint or NSString) ]
+    NSArray* rows = @[
+        @[ @"nleq",            @0x2270 ],
+        @[ @"ngeq",            @0x2271 ],
+        @[ @"nless",           @0x226E ],
+        @[ @"ngtr",            @0x226F ],
+        @[ @"nsubseteq",       @0x2288 ],
+        @[ @"nsupseteq",       @0x2289 ],
+        @[ @"nmid",            @0x2224 ],
+        @[ @"nparallel",       @0x2226 ],
+        @[ @"nleftarrow",      @0x219A ],
+        @[ @"nrightarrow",     @0x219B ],
+        @[ @"nLeftarrow",      @0x21CD ],
+        @[ @"nRightarrow",     @0x21CF ],
+        @[ @"nleftrightarrow", @0x21AE ],
+        @[ @"nLeftrightarrow", @0x21CE ],
+        @[ @"nvdash",          @0x22AC ],
+        @[ @"nvDash",          @0x22AD ],
+        @[ @"nVdash",          @0x22AE ],
+        @[ @"nVDash",          @0x22AF ],
+        @[ @"ntriangleleft",   @0x22EA ],
+        @[ @"ntriangleright",  @0x22EB ],
+        @[ @"ntrianglelefteq", @0x22EC ],
+        @[ @"ntrianglerighteq",@0x22ED ],
+        @[ @"nsim",            @0x2241 ],
+        @[ @"ncong",           @0x2247 ],
+        @[ @"nequiv",          @0x2262 ],
+        @[ @"nsubset",         @0x2284 ],
+        @[ @"nsupset",         @0x2285 ],
+        @[ @"nsucc",           @0x2281 ],
+        @[ @"nprec",           @0x2280 ],
+        @[ @"nsucceq",         @0x22E1 ],
+        @[ @"npreceq",         @0x22E0 ],
+        @[ @"nsucccurlyeq",    @0x22E1, @"nsucceq" ],
+        @[ @"npreccurlyeq",    @0x22E0, @"npreceq" ],
+        @[ @"nprecsim",        @0x22E8 ],
+        @[ @"nsuccsim",        @0x22E9 ],
+        @[ @"nprecapprox",     @0x2AB9 ],
+        @[ @"nsuccapprox",     @0x2ABA ],
+        @[ @"precneq",         @0x2AB1 ],
+        @[ @"succneq",         @0x2AB2 ],
+        @[ @"precneqq",        @0x2AB5 ],
+        @[ @"succneqq",        @0x2AB6 ],
+        @[ @"precnsim",        @0x22E6 ],
+        @[ @"succnsim",        @0x22E7 ],
+        @[ @"precnapprox",     @0x2AB9, @"nprecapprox" ],
+        @[ @"succnapprox",     @0x2ABA, @"nsuccapprox" ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)45);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+        NSString* expectedRTName = (r.count > 2) ? r[2] : cmd;
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"Parse error for %@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
+        XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        // Round-trip: relation surrounded by variables to keep finalize stable.
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error);
+        NSString* expectedRT = [NSString stringWithFormat:@"a\\%@ b", expectedRTName];
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList], expectedRT, @"round-trip %@", input);
+    }
+}
+
+- (void) testHarpoonsAndExtendedArrows
+{
+    NSArray* rows = @[
+        @[ @"rightleftharpoons", @0x21CC ],
+        @[ @"leftrightharpoons", @0x21CB ],
+        @[ @"upharpoonleft",     @0x21BF ],
+        @[ @"upharpoonright",    @0x21BE ],
+        @[ @"downharpoonleft",   @0x21C3 ],
+        @[ @"downharpoonright",  @0x21C2 ],
+        @[ @"rightharpoonup",    @0x21C0 ],
+        @[ @"leftharpoonup",     @0x21BC ],
+        @[ @"rightharpoondown",  @0x21C1 ],
+        @[ @"leftharpoondown",   @0x21BD ],
+        @[ @"hookleftarrow",     @0x21A9 ],
+        @[ @"hookrightarrow",    @0x21AA ],
+        @[ @"twoheadleftarrow",  @0x219E ],
+        @[ @"twoheadrightarrow", @0x21A0 ],
+        @[ @"rightarrowtail",    @0x21A3 ],
+        @[ @"leftarrowtail",     @0x21A2 ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)16);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testPrecedesSucceeds
+{
+    NSArray* rows = @[
+        @[ @"prec",         @0x227A ],
+        @[ @"succ",         @0x227B ],
+        @[ @"preceq",       @0x2AAF ],
+        @[ @"succeq",       @0x2AB0 ],
+        @[ @"preccurlyeq",  @0x227C ],
+        @[ @"succcurlyeq",  @0x227D ],
+        @[ @"curlyeqprec",  @0x22DE ],
+        @[ @"curlyeqsucc",  @0x22DF ],
+        @[ @"precsim",      @0x227E ],
+        @[ @"succsim",      @0x227F ],
+        @[ @"precapprox",   @0x2AB7 ],
+        @[ @"succapprox",   @0x2AB8 ],
+    ];
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomRelation, @"%@ type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testRestrictionAlias
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\restriction" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathAtom* atom = list.atoms[0];
+    XCTAssertEqual(atom.type, kMTMathAtomRelation);
+    XCTAssertEqualObjects(atom.nucleus, @"↾", @"\\restriction should resolve to \\upharpoonright (U+21BE)");
+
+    // Round-trip emits canonical.
+    MTMathList* probe = [MTMathListBuilder buildFromString:@"a\\restriction b" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:probe], @"a\\upharpoonright b");
+}
+
+- (void) testBoxedCircledOperators
+{
+    NSArray* rows = @[
+        @[ @"boxplus",       @0x229E ],
+        @[ @"boxminus",      @0x229F ],
+        @[ @"boxtimes",      @0x22A0 ],
+        @[ @"boxdot",        @0x22A1 ],
+        @[ @"circledast",    @0x229B ],
+        @[ @"circledcirc",   @0x229A ],
+        @[ @"circleddash",   @0x229D ],
+        @[ @"barwedge",      @0x22BC ],
+        @[ @"veebar",        @0x22BB ],
+        @[ @"triangleleft",  @0x25C1 ],
+        @[ @"triangleright", @0x25B7 ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)11);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomBinaryOperator, @"%@ pre-finalize type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        // Between variables: stays Bin.
+        NSString* middle = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* middleList = [MTMathListBuilder buildFromString:middle error:&error];
+        XCTAssertNil(error);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:middleList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip Bin in middle %@", input);
+
+        // At start of list: finalize reclassifies Bin → Un. Round-trip must
+        // still recover the command name via the Un/Bin retry (PR 1).
+        NSString* start = [NSString stringWithFormat:@"%@ a", input];
+        MTMathList* startList = [MTMathListBuilder buildFromString:start error:&error];
+        XCTAssertNil(error);
+        MTMathList* startFinal = [startList finalized];
+        XCTAssertEqual([startFinal.atoms[0] type], kMTMathAtomUnaryOperator,
+                       @"%@ should finalize to Un at start of list", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:startFinal],
+                              ([NSString stringWithFormat:@"%@ a", input]),
+                              @"round-trip Bin→Un at start %@", input);
+    }
+}
+
+- (void) testMissingRelationsAndOrdinaries
+{
+    NSArray* rows = @[
+        // Relations
+        @[ @"vdash",            @0x22A2, @(kMTMathAtomRelation) ],
+        @[ @"dashv",            @0x22A3, @(kMTMathAtomRelation) ],
+        @[ @"Subset",           @0x22D0, @(kMTMathAtomRelation) ],
+        @[ @"Supset",           @0x22D1, @(kMTMathAtomRelation) ],
+        @[ @"backsim",          @0x223D, @(kMTMathAtomRelation) ],
+        @[ @"backsimeq",        @0x22CD, @(kMTMathAtomRelation) ],
+        @[ @"eqsim",            @0x2242, @(kMTMathAtomRelation) ],
+        @[ @"Bumpeq",           @0x224E, @(kMTMathAtomRelation) ],
+        @[ @"bumpeq",           @0x224F, @(kMTMathAtomRelation) ],
+        @[ @"therefore",        @0x2234, @(kMTMathAtomRelation) ],
+        @[ @"because",          @0x2235, @(kMTMathAtomRelation) ],
+        @[ @"multimap",         @0x22B8, @(kMTMathAtomRelation) ],
+        @[ @"vartriangleleft",  @0x22B2, @(kMTMathAtomRelation) ],
+        @[ @"vartriangleright", @0x22B3, @(kMTMathAtomRelation) ],
+        @[ @"trianglelefteq",   @0x22B4, @(kMTMathAtomRelation) ],
+        @[ @"trianglerighteq",  @0x22B5, @(kMTMathAtomRelation) ],
+        @[ @"triangleq",        @0x225C, @(kMTMathAtomRelation) ],
+        // Ordinaries
+        @[ @"complement",       @0x2201, @(kMTMathAtomOrdinary) ],
+        @[ @"Box",              @0x25A1, @(kMTMathAtomOrdinary) ],
+        @[ @"Diamond",          @0x25C7, @(kMTMathAtomOrdinary) ],
+        @[ @"lozenge",          @0x25CA, @(kMTMathAtomOrdinary) ],
+        @[ @"blacklozenge",     @0x29EB, @(kMTMathAtomOrdinary) ],
+        @[ @"diamondsuit",      @0x2662, @(kMTMathAtomOrdinary) ],
+        @[ @"heartsuit",        @0x2661, @(kMTMathAtomOrdinary) ],
+        @[ @"spadesuit",        @0x2660, @(kMTMathAtomOrdinary) ],
+        @[ @"clubsuit",         @0x2663, @(kMTMathAtomOrdinary) ],
+        @[ @"beth",             @0x2136, @(kMTMathAtomOrdinary) ],
+        @[ @"gimel",            @0x2137, @(kMTMathAtomOrdinary) ],
+        @[ @"daleth",           @0x2138, @(kMTMathAtomOrdinary) ],
+        @[ @"triangledown",     @0x25BD, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangle",    @0x25B2, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangledown",@0x25BC, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangleleft",@0x25C0, @(kMTMathAtomOrdinary) ],
+        @[ @"blacktriangleright",@0x25B6, @(kMTMathAtomOrdinary) ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)34);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        MTMathAtomType expectedType = (MTMathAtomType)[r[2] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, expectedType, @"%@ pre-finalize type", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+    }
+}
+
+- (void) testNewAliases
+{
+    NSArray* rows = @[
+        @[ @"implies",      @"Longrightarrow", @"⟹", @"\\Longrightarrow " ],
+        @[ @"impliedby",    @"Longleftarrow",  @"⟸", @"\\Longleftarrow " ],
+        @[ @"dotsc",        @"ldots",          @"…", @"\\ldots " ],
+        @[ @"dotsb",        @"cdots",          @"⋯", @"\\cdots " ],
+        @[ @"dotsm",        @"cdots",          @"⋯", @"\\cdots " ],
+        @[ @"dotsi",        @"ldots",          @"…", @"\\ldots " ],
+        @[ @"square",       @"Box",            @"□", @"\\Box " ],
+        @[ @"vartriangle",  @"triangle",       @"△", @"\\triangle " ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)8);
+    for (NSArray* r in rows) {
+        NSString* alias = r[0];
+        NSString* expectedNucleus = r[2];
+        NSString* expectedRT = r[3];
+        NSString* input = [@"\\" stringByAppendingString:alias];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqualObjects(atom.nucleus, expectedNucleus, @"%@ nucleus", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], expectedRT,
+                              @"%@ round-trip", input);
+    }
+}
+
+- (void) testSquareBoxParity
+{
+    NSError* error = nil;
+    MTMathList* a = [MTMathListBuilder buildFromString:@"\\square" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(a.atoms.count, (NSUInteger)1);
+    XCTAssertEqual([a.atoms[0] type], kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([a.atoms[0] nucleus], @"□");
+
+    MTMathList* b = [MTMathListBuilder buildFromString:@"\\Box" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(b.atoms.count, (NSUInteger)1);
+    XCTAssertEqual([b.atoms[0] type], kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([b.atoms[0] nucleus], @"□");
+
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:a], @"\\Box ");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:b], @"\\Box ");
+
+    MTMathAtom* p = [MTMathAtomFactory placeholder];
+    XCTAssertEqual(p.type, kMTMathAtomPlaceholder);
+    XCTAssertEqualObjects(p.nucleus, @"□");
 }
 
 #pragma mark - MTTextStyle factory APIs

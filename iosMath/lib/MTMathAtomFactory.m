@@ -184,8 +184,22 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     if (atom.nucleus.length == 0) {
         return nil;
     }
-    NSDictionary* dict = [MTMathAtomFactory textToLatexSymbolNames];
-    return dict[atom.nucleus];
+    NSDictionary<NSString*, NSDictionary<NSNumber*, NSString*>*>* dict = [MTMathAtomFactory textToLatexSymbolNames];
+    NSDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
+    if (!inner) {
+        return nil;
+    }
+    NSString* name = inner[@(atom.type)];
+    if (name) {
+        return name;
+    }
+    // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
+    // forward table only ever registers atoms as Bin, so a (nucleus, Un)
+    // lookup must fall back to the Bin cell to recover the canonical name.
+    if (atom.type == kMTMathAtomUnaryOperator) {
+        return inner[@(kMTMathAtomBinaryOperator)];
+    }
+    return nil;
 }
 
 + (void)addLatexSymbol:(NSString *)name value:(MTMathAtom *)atom
@@ -195,8 +209,18 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     NSMutableDictionary<NSString*, MTMathAtom*>* commands = [self supportedLatexSymbols];
     commands[name] = atom;
     if (atom.nucleus.length != 0) {
-        NSMutableDictionary<NSString*, NSString*>* dict = [self textToLatexSymbolNames];
-        dict[atom.nucleus] = name;
+        NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* dict = [self textToLatexSymbolNames];
+        NSMutableDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
+        if (!inner) {
+            inner = [NSMutableDictionary dictionaryWithCapacity:1];
+            dict[atom.nucleus] = inner;
+        }
+        NSNumber* typeKey = @(atom.type);
+        NSString* existing = inner[typeKey];
+        if (!existing || name.length < existing.length ||
+            (name.length == existing.length && [name compare:existing] != NSOrderedDescending)) {
+            inner[typeKey] = name;
+        }
     }
 }
 
@@ -477,8 +501,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     static NSMutableDictionary<NSString*, MTMathAtom*>* commands = nil;
     if (!commands) {
         commands = [NSMutableDictionary dictionaryWithDictionary:@{
-                     @"square" : [MTMathAtomFactory placeholder],
-                     
                      // Greek characters
                      @"alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B1"],
                      @"beta" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B2"],
@@ -562,8 +584,26 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"Longleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F8"],
                      @"Longrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27F9"],
                      @"Longleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FA"],
-                     
-                     
+
+                     // Harpoons and extended arrows (amssymb)
+                     @"rightleftharpoons" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CC"],
+                     @"leftrightharpoons" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CB"],
+                     @"upharpoonleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BF"],
+                     @"upharpoonright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BE"],
+                     @"downharpoonleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C3"],
+                     @"downharpoonright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C2"],
+                     @"rightharpoonup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C0"],
+                     @"leftharpoonup" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BC"],
+                     @"rightharpoondown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21C1"],
+                     @"leftharpoondown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21BD"],
+                     @"hookleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A9"],
+                     @"hookrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21AA"],
+                     @"twoheadleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u219E"],
+                     @"twoheadrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A0"],
+                     @"rightarrowtail" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A3"],
+                     @"leftarrowtail" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21A2"],
+
+
                      // Relations
                      @"leq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolLessEqual],
                      @"geq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:MTSymbolGreaterEqual],
@@ -585,6 +625,16 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"ll" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226A"],
                      @"prec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227A"],
                      @"succ" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227B"],
+                     @"preceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AAF"],
+                     @"succeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB0"],
+                     @"preccurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227C"],
+                     @"succcurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227D"],
+                     @"curlyeqprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22DE"],
+                     @"curlyeqsucc" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22DF"],
+                     @"precsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227E"],
+                     @"succsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u227F"],
+                     @"precapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB7"],
+                     @"succapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB8"],
                      @"subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2282"],
                      @"supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2283"],
                      @"subseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2286"],
@@ -595,7 +645,88 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"sqsupseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2292"],
                      @"models" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A7"],
                      @"perp" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27C2"],
-                     
+
+                     // Negated relations (amssymb)
+                     @"nleq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2270"],
+                     @"ngeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2271"],
+                     @"nless" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226E"],
+                     @"ngtr" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u226F"],
+                     @"nsubseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2288"],
+                     @"nsupseteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2289"],
+                     @"nmid" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2224"],
+                     @"nparallel" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2226"],
+                     @"nleftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u219A"],
+                     @"nrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u219B"],
+                     @"nLeftarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CD"],
+                     @"nRightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CF"],
+                     @"nleftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21AE"],
+                     @"nLeftrightarrow" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u21CE"],
+                     @"nvdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22AC"],
+                     @"nvDash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22AD"],
+                     @"nVdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22AE"],
+                     @"nVDash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22AF"],
+                     @"ntriangleleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22EA"],
+                     @"ntriangleright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22EB"],
+                     @"ntrianglelefteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22EC"],
+                     @"ntrianglerighteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22ED"],
+                     @"nsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2241"],
+                     @"ncong" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2247"],
+                     @"nequiv" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2262"],
+                     @"nsubset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2284"],
+                     @"nsupset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2285"],
+                     @"nsucc" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2281"],
+                     @"nprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2280"],
+                     @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E1"],
+                     @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E0"],
+                     @"nprecsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E8"],
+                     @"nsuccsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E9"],
+                     @"nprecapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB9"],
+                     @"nsuccapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2ABA"],
+                     @"precneq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB1"],
+                     @"succneq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB2"],
+                     @"precneqq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB5"],
+                     @"succneqq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB6"],
+                     @"precnsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E6"],
+                     @"succnsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E7"],
+
+                     // Missing relations (proof / set theory / amssymb)
+                     @"vdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A2"],
+                     @"dashv" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A3"],
+                     @"Subset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22D0"],
+                     @"Supset" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22D1"],
+                     @"backsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u223D"],
+                     @"backsimeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22CD"],
+                     @"eqsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2242"],
+                     @"Bumpeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224E"],
+                     @"bumpeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u224F"],
+                     @"therefore" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2234"],
+                     @"because" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2235"],
+                     @"multimap" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B8"],
+                     @"vartriangleleft" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B2"],
+                     @"vartriangleright" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B3"],
+                     @"trianglelefteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B4"],
+                     @"trianglerighteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B5"],
+                     @"triangleq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u225C"],
+
+                     // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
+                     @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
+                     @"Box" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
+                     @"Diamond" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C7"],
+                     @"lozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25CA"],
+                     @"blacklozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u29EB"],
+                     @"diamondsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2662"],
+                     @"heartsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2661"],
+                     @"spadesuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2660"],
+                     @"clubsuit" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2663"],
+                     @"beth" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2136"],
+                     @"gimel" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2137"],
+                     @"daleth" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2138"],
+                     @"triangledown" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25BD"],
+                     @"blacktriangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B2"],
+                     @"blacktriangledown" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25BC"],
+                     @"blacktriangleleft" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C0"],
+                     @"blacktriangleright" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B6"],
+
                      // operators
                      @"times" : [MTMathAtomFactory times],
                      @"div"   : [MTMathAtomFactory divide],
@@ -623,7 +754,20 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"star"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C6"],
                      @"cdot"  : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C5"],
                      @"amalg" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2A3F"],
-                     
+
+                     // Boxed / circled binary operators (amssymb)
+                     @"boxplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229E"],
+                     @"boxminus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229F"],
+                     @"boxtimes" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22A0"],
+                     @"boxdot" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22A1"],
+                     @"circledast" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229B"],
+                     @"circledcirc" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229A"],
+                     @"circleddash" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u229D"],
+                     @"barwedge" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BC"],
+                     @"veebar" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BB"],
+                     @"triangleleft" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25C1"],
+                     @"triangleright" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B7"],
+
                      // No limit operators
                      @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
                      @"lg" : [MTMathAtomFactory operatorWithName:@"lg" limits:NO],
@@ -760,14 +904,27 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"to" : @"rightarrow",
                     @"iff" : @"Longleftrightarrow",
                     @"AA" : @"angstrom",
+                    @"restriction" : @"upharpoonright",
+                    @"implies" : @"Longrightarrow",
+                    @"impliedby" : @"Longleftarrow",
+                    @"dotsc" : @"ldots",
+                    @"dotsb" : @"cdots",
+                    @"dotsm" : @"cdots",
+                    @"dotsi" : @"ldots",
+                    @"square" : @"Box",
+                    @"vartriangle" : @"triangle",
+                    @"nsucccurlyeq" : @"nsucceq",
+                    @"npreccurlyeq" : @"npreceq",
+                    @"precnapprox" : @"nprecapprox",
+                    @"succnapprox" : @"nsuccapprox",
                     };
     }
     return aliases;
 }
 
-+ (NSMutableDictionary<NSString*, NSString*>*) textToLatexSymbolNames
++ (NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>*) textToLatexSymbolNames
 {
-    static NSMutableDictionary<NSString*, NSString*>* textToCommands = nil;
+    static NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* textToCommands = nil;
     if (!textToCommands) {
         NSDictionary* commands = [self supportedLatexSymbols];
         textToCommands = [NSMutableDictionary dictionaryWithCapacity:commands.count];
@@ -776,22 +933,27 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             if (atom.nucleus.length == 0) {
                 continue;
             }
-            
-            NSString* existingCommand = textToCommands[atom.nucleus];
+            NSNumber* typeKey = @(atom.type);
+
+            NSMutableDictionary<NSNumber*, NSString*>* inner = textToCommands[atom.nucleus];
+            if (!inner) {
+                inner = [NSMutableDictionary dictionaryWithCapacity:1];
+                textToCommands[atom.nucleus] = inner;
+            }
+
+            NSString* existingCommand = inner[typeKey];
             if (existingCommand) {
-                // If there are 2 commands for the same symbol, choose one deterministically.
+                // If there are 2 commands for the same (nucleus, type), choose
+                // one deterministically: shorter wins, alphabetical ascending breaks ties.
                 if (command.length > existingCommand.length) {
-                    // Keep the shorter command
                     continue;
                 } else if (command.length == existingCommand.length) {
-                    // If the length is the same, keep the alphabetically first
                     if ([command compare:existingCommand] == NSOrderedDescending) {
                         continue;
                     }
                 }
             }
-            // In other cases replace the command.
-            textToCommands[atom.nucleus] = command;
+            inner[typeKey] = command;
         }
     }
     return textToCommands;

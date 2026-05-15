@@ -240,6 +240,54 @@ NSString *const MTParseError = @"ParseError";
                 MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
                 return [MTMathList mathListWithAtoms:table, nil];
             }
+        } else if (ch == '\'') {
+            // Prime shorthand. Mirrors the ^ branch: builds a list of \prime
+            // atoms and attaches them as a superscript on prevAtom.
+            if (oneCharOnly) {
+                // We're filling a single-char slot (^X / _X / \fontStyle{X}).
+                // Emit one \prime atom and let the caller consume it.
+                MTMathAtom* primeAtom = [MTMathAtomFactory atomForLatexSymbolName:@"prime"];
+                NSAssert(primeAtom != nil, @"\\prime must be registered");
+                primeAtom.fontStyle = _currentFontStyle;
+                [list addAtom:primeAtom];
+                return list;
+            }
+            if (!prevAtom || prevAtom.superScript || !prevAtom.scriptsAllowed) {
+                // No host atom, host already has a superscript, or host
+                // forbids scripts: allocate an empty Ord to hang primes on.
+                // Same pattern as the ^ branch above.
+                prevAtom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+                [list addAtom:prevAtom];
+            }
+            MTMathList* primes = [MTMathList new];
+            MTMathAtom* primeAtom = [MTMathAtomFactory atomForLatexSymbolName:@"prime"];
+            NSAssert(primeAtom != nil, @"\\prime must be registered");
+            primeAtom.fontStyle = _currentFontStyle;
+            [primes addAtom:primeAtom];
+            // Greedy collect more consecutive primes.
+            while ([self hasCharacters]) {
+                unichar peek = [self getNextCharacter];
+                if (peek == '\'') {
+                    MTMathAtom* extra = [MTMathAtomFactory atomForLatexSymbolName:@"prime"];
+                    extra.fontStyle = _currentFontStyle;
+                    [primes addAtom:extra];
+                } else {
+                    [self unlookCharacter];
+                    break;
+                }
+            }
+            // \futurelet merge with trailing ^: f'^2  ->  superscript = [\prime, 2]
+            if ([self hasCharacters]) {
+                unichar peek = [self getNextCharacter];
+                if (peek == '^') {
+                    MTMathList* tail = [self buildInternal:true];
+                    [primes append:tail];
+                } else {
+                    [self unlookCharacter];
+                }
+            }
+            prevAtom.superScript = primes;
+            continue;
         } else if (_spacesAllowed && ch == ' ') {
             // If spaces are allowed then spaces do not need escaping with a \ before being used.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
