@@ -1,5 +1,11 @@
 ## Changelog
 
+### v2.2.0 (2026-05-16)
+* Add `\text{}`, `\textrm{}`, `\textbf{}`, `\textit{}`, `\textsf{}`, `\texttt{}` for rendering non-Latin text alongside math — supports CJK, Devanagari, Arabic, Hebrew, Cyrillic, and any other script handled by CoreText system-font cascade.
+* Add prime shorthand: `f'` parses as `f^{\prime}`, `f''` as `f^{\prime\prime}`, etc.
+* Add ~100 new symbols from amssymb: negated relations (`\nleq`, `\ngeq`, `\nmid`, `\nparallel`, …), harpoon and extended arrows (`\rightleftharpoons`, `\upharpoonright`, `\hookleftarrow`, `\twoheadrightarrow`, …), boxed/circled operators (`\boxplus`, `\circledast`, `\barwedge`, …), and logic/set-theory/suit symbols (`\vdash`, `\therefore`, `\because`, `\lozenge`, `\complement`, …).
+* Add aliases: `\implies`, `\impliedby`, `\dotsc`, `\dotsb`, `\dotsm`, `\dotsi`, `\square`, `\vartriangle`, `\restriction`.
+
 ### v2.1.0 (2026-05-10)
 * Add support for explicit-size big delimiters: `\bigl`, `\bigr`, `\Bigl`, `\Bigr`, `\biggl`, `\biggr`, `\Biggl`, `\Biggr`.
 * Add over/under accent commands: `\overrightarrow`, `\overleftarrow`, `\overbrace`, `\underbrace`, and relatives, backed by a new generic `MTMathStack` atom.
