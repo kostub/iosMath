@@ -678,8 +678,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"nprec" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2280"],
                      @"nsucceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E1"],
                      @"npreceq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E0"],
-                     @"nsucccurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E1"],
-                     @"npreccurlyeq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E0"],
                      @"nprecsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E8"],
                      @"nsuccsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E9"],
                      @"nprecapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB9"],
@@ -690,8 +688,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"succneqq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB6"],
                      @"precnsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E6"],
                      @"succnsim" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22E7"],
-                     @"precnapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2AB9"],
-                     @"succnapprox" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2ABA"],
 
                      // Missing relations (proof / set theory / amssymb)
                      @"vdash" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22A2"],
@@ -917,6 +913,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"dotsi" : @"ldots",
                     @"square" : @"Box",
                     @"vartriangle" : @"triangle",
+                    @"nsucccurlyeq" : @"nsucceq",
+                    @"npreccurlyeq" : @"npreceq",
+                    @"precnapprox" : @"nprecapprox",
+                    @"succnapprox" : @"nsuccapprox",
                     };
     }
     return aliases;

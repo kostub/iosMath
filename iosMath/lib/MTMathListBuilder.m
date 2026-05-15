@@ -262,12 +262,14 @@ NSString *const MTParseError = @"ParseError";
             MTMathList* primes = [MTMathList new];
             MTMathAtom* primeAtom = [MTMathAtomFactory atomForLatexSymbolName:@"prime"];
             NSAssert(primeAtom != nil, @"\\prime must be registered");
+            primeAtom.fontStyle = _currentFontStyle;
             [primes addAtom:primeAtom];
             // Greedy collect more consecutive primes.
             while ([self hasCharacters]) {
                 unichar peek = [self getNextCharacter];
                 if (peek == '\'') {
                     MTMathAtom* extra = [MTMathAtomFactory atomForLatexSymbolName:@"prime"];
+                    extra.fontStyle = _currentFontStyle;
                     [primes addAtom:extra];
                 } else {
                     [self unlookCharacter];
