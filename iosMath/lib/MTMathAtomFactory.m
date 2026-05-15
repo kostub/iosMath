@@ -218,7 +218,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         NSNumber* typeKey = @(atom.type);
         NSString* existing = inner[typeKey];
         if (!existing || name.length < existing.length ||
-            (name.length == existing.length && [name compare:existing] == NSOrderedAscending)) {
+            (name.length == existing.length && [name compare:existing] != NSOrderedDescending)) {
             inner[typeKey] = name;
         }
     }
@@ -715,7 +715,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
                      @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
                      @"Box" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
-                     @"square" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25A1"],
                      @"Diamond" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25C7"],
                      @"lozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25CA"],
                      @"blacklozenge" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u29EB"],
@@ -915,7 +914,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"dotsc" : @"ldots",
                     @"dotsb" : @"cdots",
                     @"dotsm" : @"cdots",
-                    @"dotsi" : @"cdots",
+                    @"dotsi" : @"ldots",
                     @"square" : @"Box",
                     @"vartriangle" : @"triangle",
                     };

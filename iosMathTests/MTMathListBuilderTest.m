@@ -2044,7 +2044,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"dotsc",        @"ldots",          @"…", @"\\ldots " ],
         @[ @"dotsb",        @"cdots",          @"⋯", @"\\cdots " ],
         @[ @"dotsm",        @"cdots",          @"⋯", @"\\cdots " ],
-        @[ @"dotsi",        @"cdots",          @"⋯", @"\\cdots " ],
+        @[ @"dotsi",        @"ldots",          @"…", @"\\ldots " ],
         @[ @"square",       @"Box",            @"□", @"\\Box " ],
         @[ @"vartriangle",  @"triangle",       @"△", @"\\triangle " ],
     ];
@@ -2083,7 +2083,6 @@ static NSArray* getTestDataLargeDelimiters() {
 
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:a], @"\\Box ");
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:b], @"\\Box ");
-    XCTAssertTrue([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:@"square"]);
 
     MTMathAtom* p = [MTMathAtomFactory placeholder];
     XCTAssertEqual(p.type, kMTMathAtomPlaceholder);
