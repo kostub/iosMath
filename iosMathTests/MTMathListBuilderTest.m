@@ -1793,12 +1793,20 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"npreceq",         @0x22E0 ],
         @[ @"nsucccurlyeq",    @0x22E1, @"nsucceq" ],
         @[ @"npreccurlyeq",    @0x22E0, @"npreceq" ],
+        @[ @"nprecsim",        @0x22E8 ],
+        @[ @"nsuccsim",        @0x22E9 ],
+        @[ @"nprecapprox",     @0x2AB9 ],
+        @[ @"nsuccapprox",     @0x2ABA ],
         @[ @"precneq",         @0x2AB1 ],
         @[ @"succneq",         @0x2AB2 ],
         @[ @"precneqq",        @0x2AB5 ],
         @[ @"succneqq",        @0x2AB6 ],
+        @[ @"precnsim",        @0x22E6 ],
+        @[ @"succnsim",        @0x22E7 ],
+        @[ @"precnapprox",     @0x2AB9, @"nprecapprox" ],
+        @[ @"succnapprox",     @0x2ABA, @"nsuccapprox" ],
     ];
-    XCTAssertEqual(rows.count, (NSUInteger)37);
+    XCTAssertEqual(rows.count, (NSUInteger)45);
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
         unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
@@ -1875,6 +1883,12 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"succeq",       @0x2AB0 ],
         @[ @"preccurlyeq",  @0x227C ],
         @[ @"succcurlyeq",  @0x227D ],
+        @[ @"curlyeqprec",  @0x22DE ],
+        @[ @"curlyeqsucc",  @0x22DF ],
+        @[ @"precsim",      @0x227E ],
+        @[ @"succsim",      @0x227F ],
+        @[ @"precapprox",   @0x2AB7 ],
+        @[ @"succapprox",   @0x2AB8 ],
     ];
     for (NSArray* r in rows) {
         NSString* cmd = r[0];
