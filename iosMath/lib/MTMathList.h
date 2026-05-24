@@ -331,6 +331,39 @@ typedef NS_ENUM(NSUInteger, MTDelimiterSize) {
     kMTDelimiterSize4 = 4,
 };
 
+/**
+ @typedef MTFractionStyle
+ @brief Explicit math style for a fraction (the AMSMath \genfrac style digit).
+
+ - kMTFractionStyleAuto: Honor the surrounding style via TeX Rule 15a
+   (one step smaller for operands; same style as parent for the bar/metrics).
+   This is the default and corresponds to plain \frac/\binom/\atop/\over.
+ - kMTFractionStyleDisplay: Force display style for this fraction
+   (\dfrac, \dbinom, \cfrac).
+ - kMTFractionStyleText: Force text style (\tfrac, \tbinom).
+ - kMTFractionStyleScript / kMTFractionStyleScriptScript: Reserved for
+   future \genfrac support. Not produced by any command in this LLD's
+   scope, but valid values for forward use.
+ */
+typedef NS_ENUM(NSUInteger, MTFractionStyle) {
+    kMTFractionStyleAuto = 0,
+    kMTFractionStyleDisplay,
+    kMTFractionStyleText,
+    kMTFractionStyleScript,
+    kMTFractionStyleScriptScript,
+};
+
+/**
+ @typedef MTFractionAlignment
+ @brief Horizontal alignment of the numerator within the fraction column.
+ Only \cfrac[l]/[c]/[r] sets a non-center value.
+ */
+typedef NS_ENUM(NSUInteger, MTFractionAlignment) {
+    kMTFractionAlignmentCenter = 0,
+    kMTFractionAlignmentLeft,
+    kMTFractionAlignmentRight,
+};
+
 /** A `MTMathAtom` representing an explicit fixed-size delimiter.
 
  Produced by the parser from the `\big`/`\Big`/`\bigg`/`\Bigg` family (plus
