@@ -365,6 +365,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     frac->_hasRule = self.hasRule;
     frac.leftDelimiter = [self.leftDelimiter copyWithZone:zone];
     frac.rightDelimiter = [self.rightDelimiter copyWithZone:zone];
+    frac.styleOverride = self.styleOverride;
+    frac.isContinuedFraction = self.isContinuedFraction;
+    frac.numeratorAlignment = self.numeratorAlignment;
     return frac;
 }
 

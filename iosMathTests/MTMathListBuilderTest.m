@@ -274,7 +274,7 @@ static NSArray* getTestDataSuperSubScript() {
     NSString *str = @"\\frac1c";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
-    
+
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
     MTFraction* frac = list.atoms[0];
@@ -283,7 +283,10 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertTrue(frac.hasRule);
     XCTAssertNil(frac.rightDelimiter);
     XCTAssertNil(frac.leftDelimiter);
-    
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleAuto);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
     XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
@@ -756,7 +759,7 @@ static NSArray* getTestDataLeftRight() {
     NSString *str = @"\\binom{n}{k}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
-    
+
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
     MTFraction* frac = list.atoms[0];
@@ -765,7 +768,10 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertFalse(frac.hasRule);
     XCTAssertEqualObjects(frac.rightDelimiter, @")");
     XCTAssertEqualObjects(frac.leftDelimiter, @"(");
-    
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleAuto);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
     XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
