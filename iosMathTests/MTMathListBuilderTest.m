@@ -792,6 +792,41 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"{n \\choose k}", @"%@", desc);
 }
 
+- (void) testFractionAppendLaTexWithStyleOverride
+{
+    // Build an MTFraction directly, set styleOverride, then serialize.
+    // (Parser support for \dfrac etc. arrives in item 7.)
+    MTFraction* dfrac = [MTFraction new];
+    dfrac.numerator = [MTMathListBuilder buildFromString:@"a"];
+    dfrac.denominator = [MTMathListBuilder buildFromString:@"b"];
+    dfrac.styleOverride = kMTFractionStyleDisplay;
+    MTMathList* dlist = [MTMathList new];
+    [dlist addAtom:dfrac];
+    NSString* dlatex = [MTMathListBuilder mathListToString:dlist];
+    XCTAssertEqualObjects(dlatex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+
+    MTFraction* tfrac = [MTFraction new];
+    tfrac.numerator = [MTMathListBuilder buildFromString:@"a"];
+    tfrac.denominator = [MTMathListBuilder buildFromString:@"b"];
+    tfrac.styleOverride = kMTFractionStyleText;
+    MTMathList* tlist = [MTMathList new];
+    [tlist addAtom:tfrac];
+    NSString* tlatex = [MTMathListBuilder mathListToString:tlist];
+    XCTAssertEqualObjects(tlatex, @"\\frac{\\textstyle{a}}{\\textstyle{b}}");
+
+    // \dbinom-shaped (hasRule = NO, ( ) delimiters, Display override)
+    MTFraction* dbinom = [[MTFraction alloc] initWithRule:NO];
+    dbinom.numerator = [MTMathListBuilder buildFromString:@"n"];
+    dbinom.denominator = [MTMathListBuilder buildFromString:@"k"];
+    dbinom.leftDelimiter = @"(";
+    dbinom.rightDelimiter = @")";
+    dbinom.styleOverride = kMTFractionStyleDisplay;
+    MTMathList* dblist = [MTMathList new];
+    [dblist addAtom:dbinom];
+    NSString* dblatex = [MTMathListBuilder mathListToString:dblist];
+    XCTAssertEqualObjects(dblatex, @"{\\displaystyle{n} \\choose \\displaystyle{k}}");
+}
+
 - (void) testOverLine
 {
     NSString *str = @"\\overline 2";
