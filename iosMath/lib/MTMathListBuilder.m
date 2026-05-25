@@ -707,25 +707,42 @@ NSString *const MTParseError = @"ParseError";
                                                         mathClass:mathClass
                                                              size:size];
     }
+    NSDictionary<NSString*, NSDictionary*>* fracTable = [MTMathListBuilder fractionMacroCommands];
+    NSDictionary* fracSpec = fracTable[command];
+    if (fracSpec) {
+        BOOL hasRule = [fracSpec[@"hasRule"] boolValue];
+        MTFractionStyle style = (MTFractionStyle)[fracSpec[@"style"] unsignedIntegerValue];
+        MTFraction* frac = hasRule ? [MTFraction new] : [[MTFraction alloc] initWithRule:NO];
+        frac.styleOverride = style;
+        if ([fracSpec[@"acceptsAlign"] boolValue]) {
+            MTFractionAlignment alignment = kMTFractionAlignmentCenter;
+            if ([self readOptionalAlignment:&alignment]) {
+                if (_error) {
+                    return nil;
+                }
+                frac.numeratorAlignment = alignment;
+            }
+        }
+        if ([fracSpec[@"continued"] boolValue]) {
+            frac.isContinuedFraction = YES;
+        }
+        frac.numerator = [self buildInternal:true];
+        frac.denominator = [self buildInternal:true];
+        NSString* leftDelim = fracSpec[@"leftDelim"];
+        NSString* rightDelim = fracSpec[@"rightDelim"];
+        if (leftDelim) {
+            frac.leftDelimiter = leftDelim;
+        }
+        if (rightDelim) {
+            frac.rightDelimiter = rightDelim;
+        }
+        return frac;
+    }
     MTAccent* accent = [MTMathAtomFactory accentWithName:command];
     if (accent) {
         // The command is an accent
         accent.innerList = [self buildInternal:true];
         return accent;
-    } else if ([command isEqualToString:@"frac"]) {
-        // A fraction command has 2 arguments
-        MTFraction* frac = [MTFraction new];
-        frac.numerator = [self buildInternal:true];
-        frac.denominator = [self buildInternal:true];
-        return frac;
-    } else if ([command isEqualToString:@"binom"]) {
-        // A binom command has 2 arguments
-        MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
-        frac.numerator = [self buildInternal:true];
-        frac.denominator = [self buildInternal:true];
-        frac.leftDelimiter = @"(";
-        frac.rightDelimiter = @")";
-        return frac;
     } else if ([command isEqualToString:@"sqrt"]) {
         // A sqrt command with one argument
         MTRadical* rad = [MTRadical new];
