@@ -1216,6 +1216,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                            withHeight:[self targetHeightForLargeDelimiterSize:atom.delimiterSize]];
 }
 
+// Maps an MTFractionStyle to the corresponding MTLineStyle. For
+// kMTFractionStyleAuto, returns the current _style ivar (no override).
+- (MTLineStyle) lineStyleForFractionStyle:(MTFractionStyle) fs
+{
+    switch (fs) {
+        case kMTFractionStyleDisplay:       return kMTLineStyleDisplay;
+        case kMTFractionStyleText:          return kMTLineStyleText;
+        case kMTFractionStyleScript:        return kMTLineStyleScript;
+        case kMTFractionStyleScriptScript:  return kMTLineStyleScriptScript;
+        case kMTFractionStyleAuto:
+        default:                            return _style;
+    }
+}
+
 - (MTLineStyle) fractionStyle
 {
     if (_style == kMTLineStyleScriptScript) {
