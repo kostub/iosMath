@@ -625,6 +625,35 @@
     XCTAssertTrue([fracTop.subDisplays[0] isKindOfClass:[MTFractionDisplay class]]);
 }
 
+- (void) testCfracLeftAlignmentNumeratorOffset
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    // Make the denominator clearly wider than the numerator.
+    MTMathList* leftList = [MTMathListBuilder buildFromString:@"\\cfrac[l]{a}{b+c+d+e}"];
+    MTMathListDisplay* leftTop = [MTTypesetter createLineForMathList:leftList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* leftWrap = (MTMathListDisplay*)leftTop.subDisplays[0];
+    MTFractionDisplay* leftFrac = (MTFractionDisplay*)leftWrap.subDisplays[0];
+    // Left-aligned: numerator's x position relative to the fraction position is 0
+    // (within float tolerance).
+    XCTAssertEqualWithAccuracy(leftFrac.numerator.position.x - leftFrac.position.x, 0.0, 0.001);
+
+    // Right-aligned: numerator is at (width - numWidth)
+    MTMathList* rightList = [MTMathListBuilder buildFromString:@"\\cfrac[r]{a}{b+c+d+e}"];
+    MTMathListDisplay* rightTop = [MTTypesetter createLineForMathList:rightList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* rightWrap = (MTMathListDisplay*)rightTop.subDisplays[0];
+    MTFractionDisplay* rightFrac = (MTFractionDisplay*)rightWrap.subDisplays[0];
+    CGFloat expectedRightOffset = rightFrac.width - rightFrac.numerator.width;
+    XCTAssertEqualWithAccuracy(rightFrac.numerator.position.x - rightFrac.position.x, expectedRightOffset, 0.001);
+
+    // Center (default) reference
+    MTMathList* centerList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b+c+d+e}"];
+    MTMathListDisplay* centerTop = [MTTypesetter createLineForMathList:centerList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* centerWrap = (MTMathListDisplay*)centerTop.subDisplays[0];
+    MTFractionDisplay* centerFrac = (MTFractionDisplay*)centerWrap.subDisplays[0];
+    CGFloat expectedCenterOffset = (centerFrac.width - centerFrac.numerator.width) / 2;
+    XCTAssertEqualWithAccuracy(centerFrac.numerator.position.x - centerFrac.position.x, expectedCenterOffset, 0.001);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
