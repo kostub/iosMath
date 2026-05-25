@@ -598,6 +598,33 @@
     XCTAssertLessThan(plainFrac.numerator.descent, 0.35 * fontSize);
 }
 
+- (void) testCfracThinspaceWrap
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* cfracList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b}"];
+    MTMathListDisplay* cfracTop = [MTTypesetter createLineForMathList:cfracList font:font style:kMTLineStyleText];
+    // Top sub-display for \cfrac should be an MTMathListDisplay wrapper (not the
+    // MTFractionDisplay directly), containing one MTFractionDisplay child.
+    XCTAssertEqual(cfracTop.subDisplays.count, (NSUInteger)1);
+    MTDisplay* wrap = cfracTop.subDisplays[0];
+    XCTAssertTrue([wrap isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* wrapList = (MTMathListDisplay*)wrap;
+    XCTAssertEqual(wrapList.subDisplays.count, (NSUInteger)1);
+    MTFractionDisplay* inner = (MTFractionDisplay*)wrapList.subDisplays[0];
+    XCTAssertTrue([inner isKindOfClass:[MTFractionDisplay class]]);
+
+    // Get the muUnit for the *display* style (cfrac forces Display).
+    MTFont* styleFont = [font copyFontWithSize:font.fontSize];
+    CGFloat thinspace = 3.0 * styleFont.mathTable.muUnit;
+    XCTAssertEqualWithAccuracy(wrapList.width, inner.width + 2.0 * thinspace, 0.001);
+    XCTAssertEqualWithAccuracy(inner.position.x - wrapList.position.x, thinspace, 0.001);
+
+    // By contrast, \frac produces an MTFractionDisplay directly (no wrap).
+    MTMathList* fracList = [MTMathListBuilder buildFromString:@"\\frac{a}{b}"];
+    MTMathListDisplay* fracTop = [MTTypesetter createLineForMathList:fracList font:font style:kMTLineStyleText];
+    XCTAssertTrue([fracTop.subDisplays[0] isKindOfClass:[MTFractionDisplay class]]);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];

@@ -1318,6 +1318,19 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         result = [self addDelimitersToFractionDisplay:display forFraction:frac];
     }
 
+    if (frac.isContinuedFraction) {
+        CGFloat thinspace = 3.0 * _styleFont.mathTable.muUnit;
+        // Position the inner display offset by thinspace within the wrapper.
+        result.position = CGPointMake(thinspace, 0);
+        MTMathListDisplay* wrapped = [[MTMathListDisplay alloc] initWithDisplays:@[result]
+                                                                           range:frac.indexRange];
+        wrapped.position = _currentPosition;
+        wrapped.ascent  = result.ascent;
+        wrapped.descent = result.descent;
+        wrapped.width   = result.width + 2.0 * thinspace;
+        result = wrapped;
+    }
+
     if (didOverrideStyle) {
         [self setStyle:savedStyle];
     }
