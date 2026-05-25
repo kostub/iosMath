@@ -560,6 +560,44 @@
     XCTAssertEqualWithAccuracy(testFrac.lineThickness,   refFrac.lineThickness,   0.001);
 }
 
+- (void) testCfracStrutAppliedToOperands
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* cfracList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b}"];
+    MTMathListDisplay* cfracDisplay = [MTTypesetter createLineForMathList:cfracList font:font style:kMTLineStyleText];
+    // After item 14 the top-level may be wrapped in MTMathListDisplay (3mu wrap),
+    // so first locate the MTFractionDisplay.
+    MTFractionDisplay* cfrac = nil;
+    for (MTDisplay* d in cfracDisplay.subDisplays) {
+        if ([d isKindOfClass:[MTFractionDisplay class]]) {
+            cfrac = (MTFractionDisplay*)d;
+            break;
+        }
+        if ([d isKindOfClass:[MTMathListDisplay class]]) {
+            for (MTDisplay* dd in ((MTMathListDisplay*)d).subDisplays) {
+                if ([dd isKindOfClass:[MTFractionDisplay class]]) {
+                    cfrac = (MTFractionDisplay*)dd;
+                    break;
+                }
+            }
+        }
+        if (cfrac) break;
+    }
+    XCTAssertNotNil(cfrac);
+    CGFloat fontSize = font.fontSize;
+    XCTAssertGreaterThanOrEqual(cfrac.numerator.ascent,   0.85 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.numerator.descent,  0.35 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.denominator.ascent,  0.85 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.denominator.descent, 0.35 * fontSize - 0.001);
+
+    // Confirm plain \frac does NOT have the strut floor applied.
+    MTMathList* fracList = [MTMathListBuilder buildFromString:@"\\frac{a}{b}"];
+    MTMathListDisplay* fracTopDisplay = [MTTypesetter createLineForMathList:fracList font:font style:kMTLineStyleText];
+    MTFractionDisplay* plainFrac = (MTFractionDisplay*)fracTopDisplay.subDisplays[0];
+    // Lower-case 'a' descent in math fonts is typically far below 0.35em — so the natural descent is strictly less than the strut floor.
+    XCTAssertLessThan(plainFrac.numerator.descent, 0.35 * fontSize);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];

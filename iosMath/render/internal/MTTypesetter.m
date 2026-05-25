@@ -1254,6 +1254,15 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
     MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
 
+    if (frac.isContinuedFraction) {
+        CGFloat strutHeight = 0.85 * _styleFont.fontSize;
+        CGFloat strutDepth  = 0.35 * _styleFont.fontSize;
+        if (numeratorDisplay.ascent   < strutHeight) numeratorDisplay.ascent   = strutHeight;
+        if (numeratorDisplay.descent  < strutDepth)  numeratorDisplay.descent  = strutDepth;
+        if (denominatorDisplay.ascent  < strutHeight) denominatorDisplay.ascent  = strutHeight;
+        if (denominatorDisplay.descent < strutDepth)  denominatorDisplay.descent = strutDepth;
+    }
+
     // determine the location of the numerator
     CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
     CGFloat denominatorShiftDown = [self denominatorShiftDown:frac.hasRule];
