@@ -959,6 +959,39 @@ NSString *const MTParseError = @"ParseError";
     return largeDelimiterCommands;
 }
 
++ (NSDictionary<NSString*, NSDictionary*>*) fractionMacroCommands
+{
+    static NSDictionary<NSString*, NSDictionary*>* fractionMacroCommands = nil;
+    static dispatch_once_t fractionOnceToken;
+    dispatch_once(&fractionOnceToken, ^{
+        fractionMacroCommands = @{
+            @"frac"   : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleAuto) },
+            @"binom"  : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleAuto) },
+            @"dfrac"  : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleDisplay) },
+            @"tfrac"  : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleText) },
+            @"dbinom" : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleDisplay) },
+            @"tbinom" : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleText) },
+            @"cfrac"  : @{ @"hasRule":      @YES,
+                           @"style":       @(kMTFractionStyleDisplay),
+                           @"continued":   @YES,
+                           @"acceptsAlign":@YES },
+        };
+    });
+    return fractionMacroCommands;
+}
+
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
