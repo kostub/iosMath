@@ -940,6 +940,25 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
 }
 
+- (void) testDfracInDfrac
+{
+    NSString *str = @"\\dfrac{1}{x+\\dfrac{1}{y}}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* outer = list.atoms[0];
+    XCTAssertEqual(outer.styleOverride, kMTFractionStyleDisplay);
+    // Denominator: x + (inner dfrac)
+    // Find the inner fraction inside the denominator
+    MTFraction* inner = nil;
+    for (MTMathAtom* atom in outer.denominator.atoms) {
+        if (atom.type == kMTMathAtomFraction) {
+            inner = (MTFraction*)atom;
+            break;
+        }
+    }
+    XCTAssertNotNil(inner);
+    XCTAssertEqual(inner.styleOverride, kMTFractionStyleDisplay);
+}
+
 - (void) testOverLine
 {
     NSString *str = @"\\overline 2";
