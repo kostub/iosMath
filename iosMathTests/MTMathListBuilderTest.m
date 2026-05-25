@@ -889,6 +889,57 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"{\\textstyle{n} \\choose \\textstyle{k}}");
 }
 
+- (void) testCfrac
+{
+    NSString *str = @"\\cfrac{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    XCTAssertTrue(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+    // Round-trip is lossy: the cfrac flag and alignment are not emitted.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+}
+
+- (void) testCfracLeftAlign
+{
+    NSString *str = @"\\cfrac[l]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentLeft);
+    XCTAssertTrue(frac.isContinuedFraction);
+}
+
+- (void) testCfracRightAlign
+{
+    NSString *str = @"\\cfrac[r]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentRight);
+}
+
+- (void) testCfracCenterAlignExplicit
+{
+    NSString *str = @"\\cfrac[c]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+}
+
+- (void) testCfracInvalidAlign
+{
+    NSString *str = @"\\cfrac[zzz]{a}{b}";
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 - (void) testOverLine
 {
     NSString *str = @"\\overline 2";
