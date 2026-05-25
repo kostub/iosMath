@@ -542,6 +542,24 @@
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
+- (void) testDfracInlineStylePicksDisplayMetrics
+{
+    // Reference: \frac at display style
+    MTMathList* refList = [MTMathListBuilder buildFromString:@"\\frac{1}{2}"];
+    MTMathListDisplay* refDisplay = [MTTypesetter createLineForMathList:refList font:self.font style:kMTLineStyleDisplay];
+    MTFractionDisplay* refFrac = (MTFractionDisplay*)refDisplay.subDisplays[0];
+
+    // Under test: \dfrac at text style — should match the \frac-at-display metrics
+    MTMathList* testList = [MTMathListBuilder buildFromString:@"\\dfrac{1}{2}"];
+    MTMathListDisplay* testDisplay = [MTTypesetter createLineForMathList:testList font:self.font style:kMTLineStyleText];
+    MTFractionDisplay* testFrac = (MTFractionDisplay*)testDisplay.subDisplays[0];
+
+    XCTAssertEqualWithAccuracy(testFrac.numeratorUp,     refFrac.numeratorUp,     0.001);
+    XCTAssertEqualWithAccuracy(testFrac.denominatorDown, refFrac.denominatorDown, 0.001);
+    XCTAssertEqualWithAccuracy(testFrac.linePosition,    refFrac.linePosition,    0.001);
+    XCTAssertEqualWithAccuracy(testFrac.lineThickness,   refFrac.lineThickness,   0.001);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];

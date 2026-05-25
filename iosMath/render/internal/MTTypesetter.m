@@ -1240,17 +1240,26 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 - (MTDisplay*) makeFraction:(MTFraction*) frac
 {
-    // lay out the parts of the fraction
+    MTLineStyle savedStyle = _style;
+    BOOL didOverrideStyle = NO;
+    if (frac.styleOverride != kMTFractionStyleAuto) {
+        MTLineStyle overrideStyle = [self lineStyleForFractionStyle:frac.styleOverride];
+        if (overrideStyle != _style) {
+            [self setStyle:overrideStyle];
+            didOverrideStyle = YES;
+        }
+    }
+
     MTLineStyle fractionStyle = self.fractionStyle;
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
     MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
-    
+
     // determine the location of the numerator
     CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
     CGFloat denominatorShiftDown = [self denominatorShiftDown:frac.hasRule];
     CGFloat barLocation = _styleFont.mathTable.axisHeight;
     CGFloat barThickness = (frac.hasRule) ? _styleFont.mathTable.fractionRuleThickness : 0;
-    
+
     if (frac.hasRule) {
         // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
         CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
@@ -1261,7 +1270,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             // at least minNumeratorGap.
             numeratorShiftUp += (minNumeratorGap - distanceFromNumeratorToBar);
         }
-        
+
         // Do the same for the denominator
         // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
         CGFloat distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denominatorDisplay.ascent - denominatorShiftDown);
@@ -1282,19 +1291,28 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             denominatorShiftDown += (minGap - clearance)/2;
         }
     }
-    
+
     MTFractionDisplay *display = [[MTFractionDisplay alloc] initWithNumerator:numeratorDisplay denominator:denominatorDisplay
                                                                      position:_currentPosition range:frac.indexRange];
-    
+    // Set numeratorAlignment BEFORE numeratorUp so the first -updateNumeratorPosition
+    // call (triggered by setNumeratorUp:) sees the correct alignment.
+    display.numeratorAlignment = frac.numeratorAlignment;
     display.numeratorUp = numeratorShiftUp;
     display.denominatorDown = denominatorShiftDown;
     display.lineThickness = barThickness;
     display.linePosition = barLocation;
+
+    MTDisplay* result;
     if (!frac.leftDelimiter && !frac.rightDelimiter) {
-        return display;
+        result = display;
     } else {
-        return [self addDelimitersToFractionDisplay:display forFraction:frac];
+        result = [self addDelimitersToFractionDisplay:display forFraction:frac];
     }
+
+    if (didOverrideStyle) {
+        [self setStyle:savedStyle];
+    }
+    return result;
 }
 
 - (MTDisplay*) addDelimitersToFractionDisplay:(MTFractionDisplay*)display forFraction:(MTFraction*) frac
