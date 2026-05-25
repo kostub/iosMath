@@ -84,6 +84,60 @@ NSString *const MTParseError = @"ParseError";
     _currentChar--;
 }
 
+// Reads an optional [l|c|r] argument for \cfrac. If the next character is '[',
+// consumes one letter (l|c|r), then ']', writes the corresponding
+// MTFractionAlignment to *outAlignment, returns YES. If the bracket body is
+// anything else, calls -setError: and still returns YES (consumption happened);
+// the caller should bail on _error. If the next character is not '[', restores
+// the position and returns NO.
+- (BOOL) readOptionalAlignment:(MTFractionAlignment*)outAlignment
+{
+    if (![self hasCharacters]) {
+        return NO;
+    }
+    unichar ch = [self getNextCharacter];
+    if (ch != '[') {
+        [self unlookCharacter];
+        return NO;
+    }
+    // Read one alignment letter
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"Unterminated optional alignment for \\cfrac"];
+        return YES;
+    }
+    unichar letter = [self getNextCharacter];
+    MTFractionAlignment alignment;
+    switch (letter) {
+        case 'l': alignment = kMTFractionAlignmentLeft;   break;
+        case 'c': alignment = kMTFractionAlignmentCenter; break;
+        case 'r': alignment = kMTFractionAlignmentRight;  break;
+        default: {
+            NSString* errorMessage = [NSString stringWithFormat:
+                @"Invalid alignment for \\cfrac: '%C' (expected l, c, or r)", letter];
+            [self setError:MTParseErrorInvalidCommand message:errorMessage];
+            return YES;
+        }
+    }
+    // Require closing ']'
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"Unterminated optional alignment for \\cfrac"];
+        return YES;
+    }
+    unichar close = [self getNextCharacter];
+    if (close != ']') {
+        NSString* errorMessage = [NSString stringWithFormat:
+            @"Expected ']' to close \\cfrac alignment, got '%C'", close];
+        [self setError:MTParseErrorInvalidCommand message:errorMessage];
+        return YES;
+    }
+    if (outAlignment) {
+        *outAlignment = alignment;
+    }
+    return YES;
+}
+
 - (MTMathList *)build
 {
     MTMathList* list = [self buildInternal:false];
