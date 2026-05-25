@@ -382,7 +382,22 @@ static BOOL isIos6Supported(void) {
 
 - (void) updateNumeratorPosition
 {
-    _numerator.position = CGPointMake(self.position.x + (self.width - _numerator.width)/2, self.position.y + self.numeratorUp);
+    CGFloat maxWidth = self.width;
+    CGFloat numWidth = _numerator.width;
+    CGFloat offset;
+    switch (self.numeratorAlignment) {
+        case kMTFractionAlignmentLeft:
+            offset = 0;
+            break;
+        case kMTFractionAlignmentRight:
+            offset = maxWidth - numWidth;
+            break;
+        case kMTFractionAlignmentCenter:
+        default:
+            offset = (maxWidth - numWidth) / 2;
+            break;
+    }
+    _numerator.position = CGPointMake(self.position.x + offset, self.position.y + self.numeratorUp);
 }
 
 - (void) setPosition:(CGPoint)position
