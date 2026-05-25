@@ -827,6 +827,68 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(dblatex, @"{\\displaystyle{n} \\choose \\displaystyle{k}}");
 }
 
+- (void) testDfrac
+{
+    NSString *str = @"\\dfrac1c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction);
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+    XCTAssertNil(frac.leftDelimiter);
+    XCTAssertNil(frac.rightDelimiter);
+    // numerator = "1", denominator = "c"
+    XCTAssertEqualObjects(@(frac.numerator.atoms.count), @1);
+    XCTAssertEqualObjects(((MTMathAtom*)frac.numerator.atoms[0]).nucleus, @"1");
+    XCTAssertEqualObjects(@(frac.denominator.atoms.count), @1);
+    XCTAssertEqualObjects(((MTMathAtom*)frac.denominator.atoms[0]).nucleus, @"c");
+    // Round-trip via the new \displaystyle wrapping
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{1}}{\\displaystyle{c}}");
+}
+
+- (void) testTfrac
+{
+    NSString *str = @"\\tfrac1c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleText);
+    XCTAssertFalse(frac.isContinuedFraction);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\textstyle{1}}{\\textstyle{c}}");
+}
+
+- (void) testDbinom
+{
+    NSString *str = @"\\dbinom{n}{k}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertFalse(frac.hasRule);
+    XCTAssertEqualObjects(frac.leftDelimiter, @"(");
+    XCTAssertEqualObjects(frac.rightDelimiter, @")");
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"{\\displaystyle{n} \\choose \\displaystyle{k}}");
+}
+
+- (void) testTbinom
+{
+    NSString *str = @"\\tbinom{n}{k}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertFalse(frac.hasRule);
+    XCTAssertEqualObjects(frac.leftDelimiter, @"(");
+    XCTAssertEqualObjects(frac.rightDelimiter, @")");
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleText);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"{\\textstyle{n} \\choose \\textstyle{k}}");
+}
+
 - (void) testOverLine
 {
     NSString *str = @"\\overline 2";
