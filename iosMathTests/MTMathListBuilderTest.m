@@ -974,6 +974,61 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(inner.styleOverride, kMTFractionStyleDisplay);
 }
 
+- (void) testMultiIntegrals
+{
+    NSDictionary<NSString*, NSString*>* expected = @{
+        @"iint"             : @"∬",
+        @"iiint"            : @"∭",
+        @"iiiint"           : @"⨌",
+        @"oiint"            : @"∯",
+        @"oiiint"           : @"∰",
+        @"varointclockwise" : @"∲",
+        @"ointctrclockwise" : @"∳",
+    };
+    for (NSString* cmd in expected) {
+        NSString* str = [NSString stringWithFormat:@"\\%@", cmd];
+        MTMathList* list = [MTMathListBuilder buildFromString:str];
+        NSString* desc = [NSString stringWithFormat:@"command \\%@", cmd];
+        XCTAssertNotNil(list, @"%@", desc);
+        XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, kMTMathAtomLargeOperator, @"%@", desc);
+        XCTAssertEqualObjects(atom.nucleus, expected[cmd], @"%@", desc);
+        MTLargeOperator* op = (MTLargeOperator*)atom;
+        XCTAssertFalse(op.limits, @"%@", desc);
+        // Round-trip
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        // appendLaTeXToString: emits "\<cmd> " with a trailing space; strip for comparison.
+        NSString* trimmed = [latex stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        XCTAssertEqualObjects(trimmed, str, @"%@", desc);
+    }
+}
+
+- (void) testIintWithLimitsModifier
+{
+    NSString *str = @"\\iint\\limits_a^b";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTLargeOperator* op = list.atoms[0];
+    XCTAssertEqualObjects(op.nucleus, @"∬");
+    XCTAssertTrue(op.limits);
+    XCTAssertNotNil(op.subScript);
+    XCTAssertNotNil(op.superScript);
+    // Round-trip should include \limits (since default for \iint is NO).
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\iint \\limits ^{b}_{a}");
+}
+
+- (void) testIntStillRoundTripsAsInt
+{
+    // Regression: the existing \int (U+222B) must still serialize as \int, not as
+    // \iint or anything else. The short-command-wins tiebreaker keeps it stable.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\int"];
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    NSString* trimmed = [latex stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    XCTAssertEqualObjects(trimmed, @"\\int");
+}
+
 - (void) testOverLine
 {
     NSString *str = @"\\overline 2";

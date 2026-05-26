@@ -654,6 +654,36 @@
     XCTAssertEqualWithAccuracy(centerFrac.numerator.position.x - centerFrac.position.x, expectedCenterOffset, 0.001);
 }
 
+- (void) testIintRendersAsLargeOperator
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\iint"];
+    MTMathListDisplay* topDisplay = [MTTypesetter createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    // The display must produce something — at minimum one sub-display for the
+    // operator — and must not throw or be empty.
+    XCTAssertEqual(topDisplay.subDisplays.count, (NSUInteger)1);
+    // The sub-display is the operator's glyph display (an MTGlyphDisplay or
+    // MTGlyphConstructionDisplay or similar). Any non-zero width and ascent is fine.
+    MTDisplay* opDisplay = topDisplay.subDisplays[0];
+    XCTAssertGreaterThan(opDisplay.width, 0.0);
+    XCTAssertGreaterThan(opDisplay.ascent, 0.0);
+}
+
+- (void) testIintWithSubscript
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\iint_S"];
+    MTMathListDisplay* topDisplay = [MTTypesetter createLineForMathList:list font:font style:kMTLineStyleDisplay];
+    // \iint_S should produce at least 2 sub-displays: the operator glyph and the subscript.
+    // (With limits=NO the integral places the subscript as an ordinary script, not stacked.)
+    XCTAssertGreaterThanOrEqual(topDisplay.subDisplays.count, (NSUInteger)2);
+    // The overall display must have positive width and ascent.
+    XCTAssertGreaterThan(topDisplay.width, 0.0);
+    XCTAssertGreaterThan(topDisplay.ascent, 0.0);
+    // The descent must be positive (subscript drops below baseline).
+    XCTAssertGreaterThan(topDisplay.descent, 0.0);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
@@ -1449,9 +1479,12 @@
         
         // dimensions
         XCTAssertEqual(display.ascent, sub0.ascent);
-        XCTAssertEqual(display.descent, sub0.descent);
+        // MTMathListDisplay.descent is clamped to max(0, ...) so a glyph with
+        // negative natural descent (entirely above baseline) will yield
+        // display.descent == 0 even though sub0.descent may be negative.
+        XCTAssertEqualWithAccuracy(display.descent, MAX(0, sub0.descent), 0.001, @"Symbol %@", symName);
         XCTAssertEqual(display.width, sub0.width);
-        
+
         // All chars will occupy some space.
         if (![atom.nucleus isEqualToString:@" "]) {
             // all chars except space have height
