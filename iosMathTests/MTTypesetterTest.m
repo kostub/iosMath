@@ -613,9 +613,9 @@
     MTFractionDisplay* inner = (MTFractionDisplay*)wrapList.subDisplays[0];
     XCTAssertTrue([inner isKindOfClass:[MTFractionDisplay class]]);
 
-    // Get the muUnit for the *display* style (cfrac forces Display).
-    MTFont* styleFont = [font copyFontWithSize:font.fontSize];
-    CGFloat thinspace = 3.0 * styleFont.mathTable.muUnit;
+    // muUnit is taken from the font; kMTLineStyleDisplay uses font.fontSize
+    // unchanged, so no per-style copy is needed here.
+    CGFloat thinspace = 3.0 * font.mathTable.muUnit;
     XCTAssertEqualWithAccuracy(wrapList.width, inner.width + 2.0 * thinspace, 0.001);
     XCTAssertEqualWithAccuracy(inner.position.x - wrapList.position.x, thinspace, 0.001);
 

@@ -1244,17 +1244,27 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     BOOL didOverrideStyle = NO;
     if (frac.styleOverride != kMTFractionStyleAuto) {
         MTLineStyle overrideStyle = [self lineStyleForFractionStyle:frac.styleOverride];
+        // Only mutate _style (and _styleFont) when the override actually differs.
+        // When they're equal the frame metrics are already correct, so neither
+        // the -setStyle: nor the matching restore at the end of this method is
+        // needed.
         if (overrideStyle != _style) {
             [self setStyle:overrideStyle];
             didOverrideStyle = YES;
         }
     }
 
-    MTLineStyle fractionStyle = self.fractionStyle;
+    // AMSMath \cfrac: numerator and denominator are always typeset in display
+    // style (not one step down like \frac), and the denominator is not cramped.
+    MTLineStyle fractionStyle = frac.isContinuedFraction ? kMTLineStyleDisplay : self.fractionStyle;
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
-    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
+    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:!frac.isContinuedFraction];
 
     if (frac.isContinuedFraction) {
+        // Apply cfrac strut floors to the operand boxes *before* numeratorShiftUp
+        // and denominatorShiftDown are computed. AMSMath's strut is a floor on
+        // the operand box, not on the shift, so the bar-clearance logic below
+        // must see the inflated extents.
         CGFloat strutHeight = 0.85 * _styleFont.fontSize;
         CGFloat strutDepth  = 0.35 * _styleFont.fontSize;
         if (numeratorDisplay.ascent   < strutHeight) numeratorDisplay.ascent   = strutHeight;
@@ -1320,10 +1330,12 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
     if (frac.isContinuedFraction) {
         CGFloat thinspace = 3.0 * _styleFont.mathTable.muUnit;
-        // Position the inner display offset by thinspace within the wrapper.
-        result.position = CGPointMake(thinspace, 0);
+        // Construct the wrapper first (so recomputeDimensions inside
+        // initWithDisplays runs on a natural {0,0}-positioned child), then set
+        // the child's offset and explicitly override all wrapper metrics.
         MTMathListDisplay* wrapped = [[MTMathListDisplay alloc] initWithDisplays:@[result]
                                                                            range:frac.indexRange];
+        result.position = CGPointMake(thinspace, 0);
         wrapped.position = _currentPosition;
         wrapped.ascent  = result.ascent;
         wrapped.descent = result.descent;
