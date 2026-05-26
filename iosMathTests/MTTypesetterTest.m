@@ -542,6 +542,118 @@
     XCTAssertEqualWithAccuracy(display.width, 10, 0.01);
 }
 
+- (void) testDfracInlineStylePicksDisplayMetrics
+{
+    // Reference: \frac at display style
+    MTMathList* refList = [MTMathListBuilder buildFromString:@"\\frac{1}{2}"];
+    MTMathListDisplay* refDisplay = [MTTypesetter createLineForMathList:refList font:self.font style:kMTLineStyleDisplay];
+    MTFractionDisplay* refFrac = (MTFractionDisplay*)refDisplay.subDisplays[0];
+
+    // Under test: \dfrac at text style — should match the \frac-at-display metrics
+    MTMathList* testList = [MTMathListBuilder buildFromString:@"\\dfrac{1}{2}"];
+    MTMathListDisplay* testDisplay = [MTTypesetter createLineForMathList:testList font:self.font style:kMTLineStyleText];
+    MTFractionDisplay* testFrac = (MTFractionDisplay*)testDisplay.subDisplays[0];
+
+    XCTAssertEqualWithAccuracy(testFrac.numeratorUp,     refFrac.numeratorUp,     0.001);
+    XCTAssertEqualWithAccuracy(testFrac.denominatorDown, refFrac.denominatorDown, 0.001);
+    XCTAssertEqualWithAccuracy(testFrac.linePosition,    refFrac.linePosition,    0.001);
+    XCTAssertEqualWithAccuracy(testFrac.lineThickness,   refFrac.lineThickness,   0.001);
+}
+
+- (void) testCfracStrutAppliedToOperands
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* cfracList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b}"];
+    MTMathListDisplay* cfracDisplay = [MTTypesetter createLineForMathList:cfracList font:font style:kMTLineStyleText];
+    // After item 14 the top-level may be wrapped in MTMathListDisplay (3mu wrap),
+    // so first locate the MTFractionDisplay.
+    MTFractionDisplay* cfrac = nil;
+    for (MTDisplay* d in cfracDisplay.subDisplays) {
+        if ([d isKindOfClass:[MTFractionDisplay class]]) {
+            cfrac = (MTFractionDisplay*)d;
+            break;
+        }
+        if ([d isKindOfClass:[MTMathListDisplay class]]) {
+            for (MTDisplay* dd in ((MTMathListDisplay*)d).subDisplays) {
+                if ([dd isKindOfClass:[MTFractionDisplay class]]) {
+                    cfrac = (MTFractionDisplay*)dd;
+                    break;
+                }
+            }
+        }
+        if (cfrac) break;
+    }
+    XCTAssertNotNil(cfrac);
+    CGFloat fontSize = font.fontSize;
+    XCTAssertGreaterThanOrEqual(cfrac.numerator.ascent,   0.85 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.numerator.descent,  0.35 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.denominator.ascent,  0.85 * fontSize - 0.001);
+    XCTAssertGreaterThanOrEqual(cfrac.denominator.descent, 0.35 * fontSize - 0.001);
+
+    // Confirm plain \frac does NOT have the strut floor applied.
+    MTMathList* fracList = [MTMathListBuilder buildFromString:@"\\frac{a}{b}"];
+    MTMathListDisplay* fracTopDisplay = [MTTypesetter createLineForMathList:fracList font:font style:kMTLineStyleText];
+    MTFractionDisplay* plainFrac = (MTFractionDisplay*)fracTopDisplay.subDisplays[0];
+    // Lower-case 'a' descent in math fonts is typically far below 0.35em — so the natural descent is strictly less than the strut floor.
+    XCTAssertLessThan(plainFrac.numerator.descent, 0.35 * fontSize);
+}
+
+- (void) testCfracThinspaceWrap
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    MTMathList* cfracList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b}"];
+    MTMathListDisplay* cfracTop = [MTTypesetter createLineForMathList:cfracList font:font style:kMTLineStyleText];
+    // Top sub-display for \cfrac should be an MTMathListDisplay wrapper (not the
+    // MTFractionDisplay directly), containing one MTFractionDisplay child.
+    XCTAssertEqual(cfracTop.subDisplays.count, (NSUInteger)1);
+    MTDisplay* wrap = cfracTop.subDisplays[0];
+    XCTAssertTrue([wrap isKindOfClass:[MTMathListDisplay class]]);
+    MTMathListDisplay* wrapList = (MTMathListDisplay*)wrap;
+    XCTAssertEqual(wrapList.subDisplays.count, (NSUInteger)1);
+    MTFractionDisplay* inner = (MTFractionDisplay*)wrapList.subDisplays[0];
+    XCTAssertTrue([inner isKindOfClass:[MTFractionDisplay class]]);
+
+    // muUnit is taken from the font; kMTLineStyleDisplay uses font.fontSize
+    // unchanged, so no per-style copy is needed here.
+    CGFloat thinspace = 3.0 * font.mathTable.muUnit;
+    XCTAssertEqualWithAccuracy(wrapList.width, inner.width + 2.0 * thinspace, 0.001);
+    XCTAssertEqualWithAccuracy(inner.position.x - wrapList.position.x, thinspace, 0.001);
+
+    // By contrast, \frac produces an MTFractionDisplay directly (no wrap).
+    MTMathList* fracList = [MTMathListBuilder buildFromString:@"\\frac{a}{b}"];
+    MTMathListDisplay* fracTop = [MTTypesetter createLineForMathList:fracList font:font style:kMTLineStyleText];
+    XCTAssertTrue([fracTop.subDisplays[0] isKindOfClass:[MTFractionDisplay class]]);
+}
+
+- (void) testCfracLeftAlignmentNumeratorOffset
+{
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    // Make the denominator clearly wider than the numerator.
+    MTMathList* leftList = [MTMathListBuilder buildFromString:@"\\cfrac[l]{a}{b+c+d+e}"];
+    MTMathListDisplay* leftTop = [MTTypesetter createLineForMathList:leftList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* leftWrap = (MTMathListDisplay*)leftTop.subDisplays[0];
+    MTFractionDisplay* leftFrac = (MTFractionDisplay*)leftWrap.subDisplays[0];
+    // Left-aligned: numerator's x position relative to the fraction position is 0
+    // (within float tolerance).
+    XCTAssertEqualWithAccuracy(leftFrac.numerator.position.x - leftFrac.position.x, 0.0, 0.001);
+
+    // Right-aligned: numerator is at (width - numWidth)
+    MTMathList* rightList = [MTMathListBuilder buildFromString:@"\\cfrac[r]{a}{b+c+d+e}"];
+    MTMathListDisplay* rightTop = [MTTypesetter createLineForMathList:rightList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* rightWrap = (MTMathListDisplay*)rightTop.subDisplays[0];
+    MTFractionDisplay* rightFrac = (MTFractionDisplay*)rightWrap.subDisplays[0];
+    CGFloat expectedRightOffset = rightFrac.width - rightFrac.numerator.width;
+    XCTAssertEqualWithAccuracy(rightFrac.numerator.position.x - rightFrac.position.x, expectedRightOffset, 0.001);
+
+    // Center (default) reference
+    MTMathList* centerList = [MTMathListBuilder buildFromString:@"\\cfrac{a}{b+c+d+e}"];
+    MTMathListDisplay* centerTop = [MTTypesetter createLineForMathList:centerList font:font style:kMTLineStyleDisplay];
+    MTMathListDisplay* centerWrap = (MTMathListDisplay*)centerTop.subDisplays[0];
+    MTFractionDisplay* centerFrac = (MTFractionDisplay*)centerWrap.subDisplays[0];
+    CGFloat expectedCenterOffset = (centerFrac.width - centerFrac.numerator.width) / 2;
+    XCTAssertEqualWithAccuracy(centerFrac.numerator.position.x - centerFrac.position.x, expectedCenterOffset, 0.001);
+}
+
 - (void)testAtop {
     MTMathList* mathList = [[MTMathList alloc] init];
     MTFraction* frac = [[MTFraction alloc] initWithRule:NO];

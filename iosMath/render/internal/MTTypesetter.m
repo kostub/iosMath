@@ -1216,6 +1216,20 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                            withHeight:[self targetHeightForLargeDelimiterSize:atom.delimiterSize]];
 }
 
+// Maps an MTFractionStyle to the corresponding MTLineStyle. For
+// kMTFractionStyleAuto, returns the current _style ivar (no override).
+- (MTLineStyle) lineStyleForFractionStyle:(MTFractionStyle) fs
+{
+    switch (fs) {
+        case kMTFractionStyleDisplay:       return kMTLineStyleDisplay;
+        case kMTFractionStyleText:          return kMTLineStyleText;
+        case kMTFractionStyleScript:        return kMTLineStyleScript;
+        case kMTFractionStyleScriptScript:  return kMTLineStyleScriptScript;
+        case kMTFractionStyleAuto:
+        default:                            return _style;
+    }
+}
+
 - (MTLineStyle) fractionStyle
 {
     if (_style == kMTLineStyleScriptScript) {
@@ -1226,17 +1240,45 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 - (MTDisplay*) makeFraction:(MTFraction*) frac
 {
-    // lay out the parts of the fraction
-    MTLineStyle fractionStyle = self.fractionStyle;
+    MTLineStyle savedStyle = _style;
+    BOOL didOverrideStyle = NO;
+    if (frac.styleOverride != kMTFractionStyleAuto) {
+        MTLineStyle overrideStyle = [self lineStyleForFractionStyle:frac.styleOverride];
+        // Only mutate _style (and _styleFont) when the override actually differs.
+        // When they're equal the frame metrics are already correct, so neither
+        // the -setStyle: nor the matching restore at the end of this method is
+        // needed.
+        if (overrideStyle != _style) {
+            [self setStyle:overrideStyle];
+            didOverrideStyle = YES;
+        }
+    }
+
+    // AMSMath \cfrac: numerator and denominator are always typeset in display
+    // style (not one step down like \frac), and the denominator is not cramped.
+    MTLineStyle fractionStyle = frac.isContinuedFraction ? kMTLineStyleDisplay : self.fractionStyle;
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
-    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
-    
+    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:!frac.isContinuedFraction];
+
+    if (frac.isContinuedFraction) {
+        // Apply cfrac strut floors to the operand boxes *before* numeratorShiftUp
+        // and denominatorShiftDown are computed. AMSMath's strut is a floor on
+        // the operand box, not on the shift, so the bar-clearance logic below
+        // must see the inflated extents.
+        CGFloat strutHeight = 0.85 * _styleFont.fontSize;
+        CGFloat strutDepth  = 0.35 * _styleFont.fontSize;
+        if (numeratorDisplay.ascent   < strutHeight) numeratorDisplay.ascent   = strutHeight;
+        if (numeratorDisplay.descent  < strutDepth)  numeratorDisplay.descent  = strutDepth;
+        if (denominatorDisplay.ascent  < strutHeight) denominatorDisplay.ascent  = strutHeight;
+        if (denominatorDisplay.descent < strutDepth)  denominatorDisplay.descent = strutDepth;
+    }
+
     // determine the location of the numerator
     CGFloat numeratorShiftUp = [self numeratorShiftUp:frac.hasRule];
     CGFloat denominatorShiftDown = [self denominatorShiftDown:frac.hasRule];
     CGFloat barLocation = _styleFont.mathTable.axisHeight;
     CGFloat barThickness = (frac.hasRule) ? _styleFont.mathTable.fractionRuleThickness : 0;
-    
+
     if (frac.hasRule) {
         // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
         CGFloat distanceFromNumeratorToBar = (numeratorShiftUp - numeratorDisplay.descent) - (barLocation + barThickness/2);
@@ -1247,7 +1289,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             // at least minNumeratorGap.
             numeratorShiftUp += (minNumeratorGap - distanceFromNumeratorToBar);
         }
-        
+
         // Do the same for the denominator
         // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
         CGFloat distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denominatorDisplay.ascent - denominatorShiftDown);
@@ -1268,19 +1310,43 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             denominatorShiftDown += (minGap - clearance)/2;
         }
     }
-    
+
     MTFractionDisplay *display = [[MTFractionDisplay alloc] initWithNumerator:numeratorDisplay denominator:denominatorDisplay
                                                                      position:_currentPosition range:frac.indexRange];
-    
+    // Set numeratorAlignment BEFORE numeratorUp so the first -updateNumeratorPosition
+    // call (triggered by setNumeratorUp:) sees the correct alignment.
+    display.numeratorAlignment = frac.numeratorAlignment;
     display.numeratorUp = numeratorShiftUp;
     display.denominatorDown = denominatorShiftDown;
     display.lineThickness = barThickness;
     display.linePosition = barLocation;
+
+    MTDisplay* result;
     if (!frac.leftDelimiter && !frac.rightDelimiter) {
-        return display;
+        result = display;
     } else {
-        return [self addDelimitersToFractionDisplay:display forFraction:frac];
+        result = [self addDelimitersToFractionDisplay:display forFraction:frac];
     }
+
+    if (frac.isContinuedFraction) {
+        CGFloat thinspace = 3.0 * _styleFont.mathTable.muUnit;
+        // Construct the wrapper first (so recomputeDimensions inside
+        // initWithDisplays runs on a natural {0,0}-positioned child), then set
+        // the child's offset and explicitly override all wrapper metrics.
+        MTMathListDisplay* wrapped = [[MTMathListDisplay alloc] initWithDisplays:@[result]
+                                                                           range:frac.indexRange];
+        result.position = CGPointMake(thinspace, 0);
+        wrapped.position = _currentPosition;
+        wrapped.ascent  = result.ascent;
+        wrapped.descent = result.descent;
+        wrapped.width   = result.width + 2.0 * thinspace;
+        result = wrapped;
+    }
+
+    if (didOverrideStyle) {
+        [self setStyle:savedStyle];
+    }
+    return result;
 }
 
 - (MTDisplay*) addDelimitersToFractionDisplay:(MTFractionDisplay*)display forFraction:(MTFraction*) frac

@@ -78,6 +78,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) CGFloat denominatorDown;
 @property (nonatomic) CGFloat linePosition;
 @property (nonatomic) CGFloat lineThickness;
+@property (nonatomic) MTFractionAlignment numeratorAlignment;
 
 @end
 
