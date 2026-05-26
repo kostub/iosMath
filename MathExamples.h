@@ -112,6 +112,10 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
         @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
         @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
         @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
+        // AMS multi-integrals
+        @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
+        @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
+        @"\\varointclockwise \\, \\ointctrclockwise \\, \\fint",
     ];
 }
 
@@ -264,6 +268,10 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
         @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
         @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
+        // AMS multi-integrals
+        @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
+        @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
+        @"\\varointclockwise \\, \\ointctrclockwise \\, \\fint",
     ];
 }
 
