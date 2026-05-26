@@ -816,7 +816,6 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"iiiint" : [MTMathAtomFactory operatorWithName:@"\u2A0C" limits:NO],
                      @"oiint" : [MTMathAtomFactory operatorWithName:@"\u222F" limits:NO],
                      @"oiiint" : [MTMathAtomFactory operatorWithName:@"\u2230" limits:NO],
-                     @"fint" : [MTMathAtomFactory operatorWithName:@"\u2A0F" limits:NO],
                      @"varointclockwise" : [MTMathAtomFactory operatorWithName:@"\u2232" limits:NO],
                      @"ointctrclockwise" : [MTMathAtomFactory operatorWithName:@"\u2233" limits:NO],
                      @"bigwedge" : [MTMathAtomFactory operatorWithName:@"\u22C0" limits:YES],

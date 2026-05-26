@@ -982,7 +982,6 @@ static NSArray* getTestDataLeftRight() {
         @"iiiint"           : @"⨌",
         @"oiint"            : @"∯",
         @"oiiint"           : @"∰",
-        @"fint"             : @"⨏",
         @"varointclockwise" : @"∲",
         @"ointctrclockwise" : @"∳",
     };
@@ -1017,8 +1016,7 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertNotNil(op.superScript);
     // Round-trip should include \limits (since default for \iint is NO).
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    XCTAssertTrue([latex containsString:@"\\iint"]);
-    XCTAssertTrue([latex containsString:@"\\limits"]);
+    XCTAssertEqualObjects(latex, @"\\iint \\limits ^{b}_{a}");
 }
 
 - (void) testIntStillRoundTripsAsInt
