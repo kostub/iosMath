@@ -107,6 +107,11 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
          "\\textrm{ where } \\texttt{f}(x) = x^2",
         // 30: Styled non-Latin theorem label preceding a math statement
         @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
+        // AMS fraction macros
+        @"\\tfrac{1}{2} + \\dfrac{1}{2} = \\cfrac{1}{1+\\cfrac{1}{1}}",
+        @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
+        @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
+        @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
     ];
 }
 
@@ -254,6 +259,11 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"\\overrightarrow{x} \\cdot \\overleftarrow{y}",
         // 67: Nested brace over arrow
         @"\\overbrace{\\overrightarrow{AB}}^{\\text{unit}}",
+        // AMS fraction macros
+        @"\\tfrac{1}{2} + \\dfrac{1}{2} = \\cfrac{1}{1+\\cfrac{1}{1}}",
+        @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
+        @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
+        @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
     ];
 }
 
