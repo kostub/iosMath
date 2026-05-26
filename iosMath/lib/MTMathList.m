@@ -365,6 +365,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     frac->_hasRule = self.hasRule;
     frac.leftDelimiter = [self.leftDelimiter copyWithZone:zone];
     frac.rightDelimiter = [self.rightDelimiter copyWithZone:zone];
+    frac.styleOverride = self.styleOverride;
+    frac.isContinuedFraction = self.isContinuedFraction;
+    frac.numeratorAlignment = self.numeratorAlignment;
     return frac;
 }
 
@@ -378,12 +381,31 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
+    NSString* numLatex = [MTMathListBuilder mathListToString:self.numerator];
+    NSString* denLatex = [MTMathListBuilder mathListToString:self.denominator];
+    NSString* (^wrap)(NSString*) = ^NSString*(NSString* inner) {
+        switch (self.styleOverride) {
+            case kMTFractionStyleDisplay:
+                return [NSString stringWithFormat:@"\\displaystyle{%@}", inner];
+            case kMTFractionStyleText:
+                return [NSString stringWithFormat:@"\\textstyle{%@}", inner];
+            case kMTFractionStyleScript:
+                return [NSString stringWithFormat:@"\\scriptstyle{%@}", inner];
+            case kMTFractionStyleScriptScript:
+                return [NSString stringWithFormat:@"\\scriptscriptstyle{%@}", inner];
+            case kMTFractionStyleAuto:
+            default:
+                return inner;
+        }
+    };
+    NSString* numWrapped = wrap(numLatex);
+    NSString* denWrapped = wrap(denLatex);
     if (self.hasRule) {
-        [str appendFormat:@"\\frac{%@}{%@}", [MTMathListBuilder mathListToString:self.numerator], [MTMathListBuilder mathListToString:self.denominator]];
+        [str appendFormat:@"\\frac{%@}{%@}", numWrapped, denWrapped];
         return;
     }
     NSString* command = fractionCommandForDelimiterPair(self.leftDelimiter, self.rightDelimiter);
-    [str appendFormat:@"{%@ \\%@ %@}", [MTMathListBuilder mathListToString:self.numerator], command, [MTMathListBuilder mathListToString:self.denominator]];
+    [str appendFormat:@"{%@ \\%@ %@}", numWrapped, command, denWrapped];
 }
 
 @end

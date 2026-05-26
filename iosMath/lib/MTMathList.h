@@ -205,6 +205,39 @@ typedef NS_ENUM(NSUInteger, MTTextStyle)
 
 @end
 
+/**
+ @typedef MTFractionStyle
+ @brief Explicit math style for a fraction (the AMSMath \genfrac style digit).
+
+ - kMTFractionStyleAuto: Honor the surrounding style via TeX Rule 15a
+   (one step smaller for operands; same style as parent for the bar/metrics).
+   This is the default and corresponds to plain \frac/\binom/\atop/\over.
+ - kMTFractionStyleDisplay: Force display style for this fraction
+   (\dfrac, \dbinom, \cfrac).
+ - kMTFractionStyleText: Force text style (\tfrac, \tbinom).
+ - kMTFractionStyleScript / kMTFractionStyleScriptScript: Reserved for
+   future \genfrac support. Not produced by any command in this LLD's
+   scope, but valid values for forward use.
+ */
+typedef NS_ENUM(NSUInteger, MTFractionStyle) {
+    kMTFractionStyleAuto = 0,
+    kMTFractionStyleDisplay,
+    kMTFractionStyleText,
+    kMTFractionStyleScript,
+    kMTFractionStyleScriptScript,
+};
+
+/**
+ @typedef MTFractionAlignment
+ @brief Horizontal alignment of the numerator within the fraction column.
+ Only \cfrac[l]/[c]/[r] sets a non-center value.
+ */
+typedef NS_ENUM(NSUInteger, MTFractionAlignment) {
+    kMTFractionAlignmentCenter = 0,
+    kMTFractionAlignmentLeft,
+    kMTFractionAlignmentRight,
+};
+
 /** An atom of type fraction. This atom has a numerator and denominator. */
 @interface MTFraction : MTMathAtom
 
@@ -227,6 +260,30 @@ typedef NS_ENUM(NSUInteger, MTTextStyle)
 @property (nonatomic, nullable) NSString* leftDelimiter;
 /** An optional delimiter for a fraction on the right. */
 @property (nonatomic, nullable) NSString* rightDelimiter;
+
+/** Optional explicit style override for this fraction. Default
+ kMTFractionStyleAuto means: honor the surrounding style via TeX Rule 15a.
+ \dfrac and \dbinom set this to kMTFractionStyleDisplay; \tfrac and \tbinom
+ set this to kMTFractionStyleText; \cfrac sets this to kMTFractionStyleDisplay. */
+@property (nonatomic) MTFractionStyle styleOverride;
+
+/** True for \cfrac. The typesetter uses this flag to apply AMSMath's
+ strut equivalents to both operand displays and to wrap the rendered
+ fraction with surrounding 3mu thin space. Does not affect the style
+ decision, which is encoded in styleOverride.
+
+ Not persisted by appendLaTeXToString:/+[MTMathListBuilder mathListToString:]:
+ \cfrac serializes as \frac{\displaystyle{...}}{\displaystyle{...}}, so a
+ latex -> MTMathList -> latex round trip drops this flag. */
+@property (nonatomic) BOOL isContinuedFraction;
+
+/** Numerator alignment within max(numWidth, denWidth). Default
+ kMTFractionAlignmentCenter. Only \cfrac[l]/[r] sets a non-default value.
+
+ Not persisted by appendLaTeXToString:/+[MTMathListBuilder mathListToString:]:
+ the [l]/[r] optional argument is not emitted, so a round trip drops this
+ alignment. */
+@property (nonatomic) MTFractionAlignment numeratorAlignment;
 
 @end
 

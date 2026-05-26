@@ -84,6 +84,60 @@ NSString *const MTParseError = @"ParseError";
     _currentChar--;
 }
 
+// Reads an optional [l|c|r] argument for \cfrac. If the next character is '[',
+// consumes one letter (l|c|r), then ']', writes the corresponding
+// MTFractionAlignment to *outAlignment, returns YES. If the bracket body is
+// anything else, calls -setError: and still returns YES (consumption happened);
+// the caller should bail on _error. If the next character is not '[', restores
+// the position and returns NO.
+- (BOOL) readOptionalAlignment:(MTFractionAlignment*)outAlignment
+{
+    if (![self hasCharacters]) {
+        return NO;
+    }
+    unichar ch = [self getNextCharacter];
+    if (ch != '[') {
+        [self unlookCharacter];
+        return NO;
+    }
+    // Read one alignment letter
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"Unterminated optional alignment for \\cfrac"];
+        return YES;
+    }
+    unichar letter = [self getNextCharacter];
+    MTFractionAlignment alignment;
+    switch (letter) {
+        case 'l': alignment = kMTFractionAlignmentLeft;   break;
+        case 'c': alignment = kMTFractionAlignmentCenter; break;
+        case 'r': alignment = kMTFractionAlignmentRight;  break;
+        default: {
+            NSString* errorMessage = [NSString stringWithFormat:
+                @"Invalid alignment for \\cfrac: '%C' (expected l, c, or r)", letter];
+            [self setError:MTParseErrorInvalidCommand message:errorMessage];
+            return YES;
+        }
+    }
+    // Require closing ']'
+    if (![self hasCharacters]) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"Unterminated optional alignment for \\cfrac"];
+        return YES;
+    }
+    unichar close = [self getNextCharacter];
+    if (close != ']') {
+        NSString* errorMessage = [NSString stringWithFormat:
+            @"Expected ']' to close \\cfrac alignment, got '%C'", close];
+        [self setError:MTParseErrorInvalidCommand message:errorMessage];
+        return YES;
+    }
+    if (outAlignment) {
+        *outAlignment = alignment;
+    }
+    return YES;
+}
+
 - (MTMathList *)build
 {
     MTMathList* list = [self buildInternal:false];
@@ -653,25 +707,42 @@ NSString *const MTParseError = @"ParseError";
                                                         mathClass:mathClass
                                                              size:size];
     }
+    NSDictionary<NSString*, NSDictionary*>* fracTable = [MTMathListBuilder fractionMacroCommands];
+    NSDictionary* fracSpec = fracTable[command];
+    if (fracSpec) {
+        BOOL hasRule = [fracSpec[@"hasRule"] boolValue];
+        MTFractionStyle style = (MTFractionStyle)[fracSpec[@"style"] unsignedIntegerValue];
+        MTFraction* frac = hasRule ? [MTFraction new] : [[MTFraction alloc] initWithRule:NO];
+        frac.styleOverride = style;
+        if ([fracSpec[@"acceptsAlign"] boolValue]) {
+            MTFractionAlignment alignment = kMTFractionAlignmentCenter;
+            if ([self readOptionalAlignment:&alignment]) {
+                if (_error) {
+                    return nil;
+                }
+                frac.numeratorAlignment = alignment;
+            }
+        }
+        if ([fracSpec[@"continued"] boolValue]) {
+            frac.isContinuedFraction = YES;
+        }
+        frac.numerator = [self buildInternal:true];
+        frac.denominator = [self buildInternal:true];
+        NSString* leftDelim = fracSpec[@"leftDelim"];
+        NSString* rightDelim = fracSpec[@"rightDelim"];
+        if (leftDelim) {
+            frac.leftDelimiter = leftDelim;
+        }
+        if (rightDelim) {
+            frac.rightDelimiter = rightDelim;
+        }
+        return frac;
+    }
     MTAccent* accent = [MTMathAtomFactory accentWithName:command];
     if (accent) {
         // The command is an accent
         accent.innerList = [self buildInternal:true];
         return accent;
-    } else if ([command isEqualToString:@"frac"]) {
-        // A fraction command has 2 arguments
-        MTFraction* frac = [MTFraction new];
-        frac.numerator = [self buildInternal:true];
-        frac.denominator = [self buildInternal:true];
-        return frac;
-    } else if ([command isEqualToString:@"binom"]) {
-        // A binom command has 2 arguments
-        MTFraction* frac = [[MTFraction alloc] initWithRule:NO];
-        frac.numerator = [self buildInternal:true];
-        frac.denominator = [self buildInternal:true];
-        frac.leftDelimiter = @"(";
-        frac.rightDelimiter = @")";
-        return frac;
     } else if ([command isEqualToString:@"sqrt"]) {
         // A sqrt command with one argument
         MTRadical* rad = [MTRadical new];
@@ -957,6 +1028,39 @@ NSString *const MTParseError = @"ParseError";
         };
     });
     return largeDelimiterCommands;
+}
+
++ (NSDictionary<NSString*, NSDictionary*>*) fractionMacroCommands
+{
+    static NSDictionary<NSString*, NSDictionary*>* fractionMacroCommands = nil;
+    static dispatch_once_t fractionOnceToken;
+    dispatch_once(&fractionOnceToken, ^{
+        fractionMacroCommands = @{
+            @"frac"   : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleAuto) },
+            @"binom"  : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleAuto) },
+            @"dfrac"  : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleDisplay) },
+            @"tfrac"  : @{ @"hasRule": @YES,
+                           @"style":   @(kMTFractionStyleText) },
+            @"dbinom" : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleDisplay) },
+            @"tbinom" : @{ @"hasRule":    @NO,
+                           @"leftDelim":  @"(",
+                           @"rightDelim": @")",
+                           @"style":      @(kMTFractionStyleText) },
+            @"cfrac"  : @{ @"hasRule":      @YES,
+                           @"style":       @(kMTFractionStyleDisplay),
+                           @"continued":   @YES,
+                           @"acceptsAlign":@YES },
+        };
+    });
+    return fractionMacroCommands;
 }
 
 + (NSDictionary*) styleToCommands

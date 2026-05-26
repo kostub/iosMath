@@ -274,7 +274,7 @@ static NSArray* getTestDataSuperSubScript() {
     NSString *str = @"\\frac1c";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
-    
+
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
     MTFraction* frac = list.atoms[0];
@@ -283,7 +283,10 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertTrue(frac.hasRule);
     XCTAssertNil(frac.rightDelimiter);
     XCTAssertNil(frac.leftDelimiter);
-    
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleAuto);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
     XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
@@ -756,7 +759,7 @@ static NSArray* getTestDataLeftRight() {
     NSString *str = @"\\binom{n}{k}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
-    
+
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
     MTFraction* frac = list.atoms[0];
@@ -765,7 +768,10 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertFalse(frac.hasRule);
     XCTAssertEqualObjects(frac.rightDelimiter, @")");
     XCTAssertEqualObjects(frac.leftDelimiter, @"(");
-    
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleAuto);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+
     MTMathList *subList = frac.numerator;
     XCTAssertNotNil(subList, @"%@", desc);
     XCTAssertEqualObjects(@(subList.atoms.count), @1, @"%@", desc);
@@ -784,6 +790,188 @@ static NSArray* getTestDataLeftRight() {
     // convert it back to latex (binom converts to choose)
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"{n \\choose k}", @"%@", desc);
+}
+
+- (void) testFractionAppendLaTexWithStyleOverride
+{
+    // Build an MTFraction directly, set styleOverride, then serialize.
+    // (Parser support for \dfrac etc. arrives in item 7.)
+    MTFraction* dfrac = [MTFraction new];
+    dfrac.numerator = [MTMathListBuilder buildFromString:@"a"];
+    dfrac.denominator = [MTMathListBuilder buildFromString:@"b"];
+    dfrac.styleOverride = kMTFractionStyleDisplay;
+    MTMathList* dlist = [MTMathList new];
+    [dlist addAtom:dfrac];
+    NSString* dlatex = [MTMathListBuilder mathListToString:dlist];
+    XCTAssertEqualObjects(dlatex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+
+    MTFraction* tfrac = [MTFraction new];
+    tfrac.numerator = [MTMathListBuilder buildFromString:@"a"];
+    tfrac.denominator = [MTMathListBuilder buildFromString:@"b"];
+    tfrac.styleOverride = kMTFractionStyleText;
+    MTMathList* tlist = [MTMathList new];
+    [tlist addAtom:tfrac];
+    NSString* tlatex = [MTMathListBuilder mathListToString:tlist];
+    XCTAssertEqualObjects(tlatex, @"\\frac{\\textstyle{a}}{\\textstyle{b}}");
+
+    // \dbinom-shaped (hasRule = NO, ( ) delimiters, Display override)
+    MTFraction* dbinom = [[MTFraction alloc] initWithRule:NO];
+    dbinom.numerator = [MTMathListBuilder buildFromString:@"n"];
+    dbinom.denominator = [MTMathListBuilder buildFromString:@"k"];
+    dbinom.leftDelimiter = @"(";
+    dbinom.rightDelimiter = @")";
+    dbinom.styleOverride = kMTFractionStyleDisplay;
+    MTMathList* dblist = [MTMathList new];
+    [dblist addAtom:dbinom];
+    NSString* dblatex = [MTMathListBuilder mathListToString:dblist];
+    XCTAssertEqualObjects(dblatex, @"{\\displaystyle{n} \\choose \\displaystyle{k}}");
+}
+
+- (void) testDfrac
+{
+    NSString *str = @"\\dfrac1c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction);
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    XCTAssertFalse(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+    XCTAssertNil(frac.leftDelimiter);
+    XCTAssertNil(frac.rightDelimiter);
+    // numerator = "1", denominator = "c"
+    XCTAssertEqualObjects(@(frac.numerator.atoms.count), @1);
+    XCTAssertEqualObjects(((MTMathAtom*)frac.numerator.atoms[0]).nucleus, @"1");
+    XCTAssertEqualObjects(@(frac.denominator.atoms.count), @1);
+    XCTAssertEqualObjects(((MTMathAtom*)frac.denominator.atoms[0]).nucleus, @"c");
+    // Round-trip wraps each operand in \displaystyle rather than emitting
+    // \dfrac directly. Re-parsing produces MTMathStyle(Display) atoms inside
+    // each operand sub-list and styleOverride = kMTFractionStyleAuto on the
+    // fraction itself (partial-fidelity trade-off per LLD 3.3.5 / 5.1).
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{1}}{\\displaystyle{c}}");
+}
+
+- (void) testTfrac
+{
+    NSString *str = @"\\tfrac1c";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleText);
+    XCTAssertFalse(frac.isContinuedFraction);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\textstyle{1}}{\\textstyle{c}}");
+}
+
+- (void) testDbinom
+{
+    NSString *str = @"\\dbinom{n}{k}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertFalse(frac.hasRule);
+    XCTAssertEqualObjects(frac.leftDelimiter, @"(");
+    XCTAssertEqualObjects(frac.rightDelimiter, @")");
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"{\\displaystyle{n} \\choose \\displaystyle{k}}");
+}
+
+- (void) testTbinom
+{
+    NSString *str = @"\\tbinom{n}{k}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertFalse(frac.hasRule);
+    XCTAssertEqualObjects(frac.leftDelimiter, @"(");
+    XCTAssertEqualObjects(frac.rightDelimiter, @")");
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleText);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"{\\textstyle{n} \\choose \\textstyle{k}}");
+}
+
+- (void) testCfrac
+{
+    NSString *str = @"\\cfrac{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertTrue(frac.hasRule);
+    XCTAssertEqual(frac.styleOverride, kMTFractionStyleDisplay);
+    XCTAssertTrue(frac.isContinuedFraction);
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+    // Round-trip is lossy: the cfrac flag and alignment are not emitted.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+}
+
+- (void) testCfracLeftAlign
+{
+    NSString *str = @"\\cfrac[l]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentLeft);
+    XCTAssertTrue(frac.isContinuedFraction);
+    // Round-trip drops the [l] alignment (and the \cfrac flag); the output
+    // is indistinguishable from \cfrac{a}{b}. Asserting it here pins the
+    // lossy contract so a future serializer change can't silently emit
+    // alignment data in a form the parser can't read back.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+}
+
+- (void) testCfracRightAlign
+{
+    NSString *str = @"\\cfrac[r]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentRight);
+    // Round-trip drops the [r] alignment; same lossy contract as [l].
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
+}
+
+- (void) testCfracCenterAlignExplicit
+{
+    NSString *str = @"\\cfrac[c]{a}{b}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* frac = list.atoms[0];
+    XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentCenter);
+}
+
+- (void) testCfracInvalidAlign
+{
+    NSString *str = @"\\cfrac[zzz]{a}{b}";
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void) testDfracInDfrac
+{
+    NSString *str = @"\\dfrac{1}{x+\\dfrac{1}{y}}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTFraction* outer = list.atoms[0];
+    XCTAssertEqual(outer.styleOverride, kMTFractionStyleDisplay);
+    // Denominator: x + (inner dfrac)
+    // Find the inner fraction inside the denominator
+    MTFraction* inner = nil;
+    for (MTMathAtom* atom in outer.denominator.atoms) {
+        if (atom.type == kMTMathAtomFraction) {
+            inner = (MTFraction*)atom;
+            break;
+        }
+    }
+    XCTAssertNotNil(inner);
+    XCTAssertEqual(inner.styleOverride, kMTFractionStyleDisplay);
 }
 
 - (void) testOverLine
