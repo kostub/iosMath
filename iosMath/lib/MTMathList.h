@@ -270,11 +270,19 @@ typedef NS_ENUM(NSUInteger, MTFractionAlignment) {
 /** True for \cfrac. The typesetter uses this flag to apply AMSMath's
  strut equivalents to both operand displays and to wrap the rendered
  fraction with surrounding 3mu thin space. Does not affect the style
- decision, which is encoded in styleOverride. */
+ decision, which is encoded in styleOverride.
+
+ Not persisted by appendLaTeXToString:/+[MTMathListBuilder mathListToString:]:
+ \cfrac serializes as \frac{\displaystyle{...}}{\displaystyle{...}}, so a
+ latex -> MTMathList -> latex round trip drops this flag. */
 @property (nonatomic) BOOL isContinuedFraction;
 
 /** Numerator alignment within max(numWidth, denWidth). Default
- kMTFractionAlignmentCenter. Only \cfrac[l]/[r] sets a non-default value. */
+ kMTFractionAlignmentCenter. Only \cfrac[l]/[r] sets a non-default value.
+
+ Not persisted by appendLaTeXToString:/+[MTMathListBuilder mathListToString:]:
+ the [l]/[r] optional argument is not emitted, so a round trip drops this
+ alignment. */
 @property (nonatomic) MTFractionAlignment numeratorAlignment;
 
 @end

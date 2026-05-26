@@ -846,7 +846,10 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(((MTMathAtom*)frac.numerator.atoms[0]).nucleus, @"1");
     XCTAssertEqualObjects(@(frac.denominator.atoms.count), @1);
     XCTAssertEqualObjects(((MTMathAtom*)frac.denominator.atoms[0]).nucleus, @"c");
-    // Round-trip via the new \displaystyle wrapping
+    // Round-trip wraps each operand in \displaystyle rather than emitting
+    // \dfrac directly. Re-parsing produces MTMathStyle(Display) atoms inside
+    // each operand sub-list and styleOverride = kMTFractionStyleAuto on the
+    // fraction itself (partial-fidelity trade-off per LLD 3.3.5 / 5.1).
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{1}}{\\displaystyle{c}}");
 }
@@ -855,6 +858,7 @@ static NSArray* getTestDataLeftRight() {
 {
     NSString *str = @"\\tfrac1c";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
     MTFraction* frac = list.atoms[0];
     XCTAssertTrue(frac.hasRule);
     XCTAssertEqual(frac.styleOverride, kMTFractionStyleText);
@@ -867,6 +871,7 @@ static NSArray* getTestDataLeftRight() {
 {
     NSString *str = @"\\dbinom{n}{k}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
     MTFraction* frac = list.atoms[0];
     XCTAssertFalse(frac.hasRule);
     XCTAssertEqualObjects(frac.leftDelimiter, @"(");
@@ -880,6 +885,7 @@ static NSArray* getTestDataLeftRight() {
 {
     NSString *str = @"\\tbinom{n}{k}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
     MTFraction* frac = list.atoms[0];
     XCTAssertFalse(frac.hasRule);
     XCTAssertEqualObjects(frac.leftDelimiter, @"(");
@@ -912,6 +918,12 @@ static NSArray* getTestDataLeftRight() {
     MTFraction* frac = list.atoms[0];
     XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentLeft);
     XCTAssertTrue(frac.isContinuedFraction);
+    // Round-trip drops the [l] alignment (and the \cfrac flag); the output
+    // is indistinguishable from \cfrac{a}{b}. Asserting it here pins the
+    // lossy contract so a future serializer change can't silently emit
+    // alignment data in a form the parser can't read back.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
 }
 
 - (void) testCfracRightAlign
@@ -920,6 +932,9 @@ static NSArray* getTestDataLeftRight() {
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     MTFraction* frac = list.atoms[0];
     XCTAssertEqual(frac.numeratorAlignment, kMTFractionAlignmentRight);
+    // Round-trip drops the [r] alignment; same lossy contract as [l].
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\frac{\\displaystyle{a}}{\\displaystyle{b}}");
 }
 
 - (void) testCfracCenterAlignExplicit
