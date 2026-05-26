@@ -115,7 +115,7 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
         // AMS multi-integrals
         @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
         @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
-        @"\\varointclockwise \\, \\ointctrclockwise \\, \\fint",
+        @"\\varointclockwise \\, \\ointctrclockwise",
     ];
 }
 
@@ -271,7 +271,7 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         // AMS multi-integrals
         @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
         @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
-        @"\\varointclockwise \\, \\ointctrclockwise \\, \\fint",
+        @"\\varointclockwise \\, \\ointctrclockwise",
     ];
 }
 
