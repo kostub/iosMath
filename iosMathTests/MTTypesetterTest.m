@@ -560,6 +560,68 @@
     XCTAssertEqualWithAccuracy(testFrac.lineThickness,   refFrac.lineThickness,   0.001);
 }
 
+- (void) testCfracDenominatorRadicalMatchesDfrac
+{
+    // \cfrac expands to {\displaystyle\frac{\strut N}{D}}, so its numerator and
+    // denominator inherit the standard \frac styling (one step down, denominator
+    // cramped). A nested \sqrt in the denominator must therefore use the smaller
+    // radicalVerticalGap, matching how \dfrac renders. Previously \cfrac forced
+    // displaystyle/non-cramped, which made nested radicals look like top-level
+    // displaystyle ones.
+    MTMathList* dfracList = [MTMathListBuilder buildFromString:@"\\dfrac{1}{\\sqrt{\\sqrt{5}}}"];
+    MTMathList* cfracList = [MTMathListBuilder buildFromString:@"\\cfrac{1}{\\sqrt{\\sqrt{5}}}"];
+    MTMathListDisplay* dDisp = [MTTypesetter createLineForMathList:dfracList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* cDisp = [MTTypesetter createLineForMathList:cfracList font:self.font style:kMTLineStyleDisplay];
+
+    MTFractionDisplay* dFrac = [self firstFractionIn:dDisp];
+    MTFractionDisplay* cFrac = [self firstFractionIn:cDisp];
+    XCTAssertNotNil(dFrac);
+    XCTAssertNotNil(cFrac);
+
+    MTRadicalDisplay* dOuter = nil;
+    for (MTDisplay* sub in dFrac.denominator.subDisplays) {
+        if ([sub isKindOfClass:[MTRadicalDisplay class]]) { dOuter = (MTRadicalDisplay*)sub; break; }
+    }
+    MTRadicalDisplay* cOuter = nil;
+    for (MTDisplay* sub in cFrac.denominator.subDisplays) {
+        if ([sub isKindOfClass:[MTRadicalDisplay class]]) { cOuter = (MTRadicalDisplay*)sub; break; }
+    }
+    XCTAssertNotNil(dOuter);
+    XCTAssertNotNil(cOuter);
+    XCTAssertEqualWithAccuracy(cOuter.ascent,  dOuter.ascent,  0.001);
+    XCTAssertEqualWithAccuracy(cOuter.descent, dOuter.descent, 0.001);
+}
+
+- (void) testFractionDenominatorRadicalUsesTightVariant
+{
+    // A descender in the radicand (here \phi) nudges the required radical height just past a
+    // discrete variant boundary. Demanding a strictly-larger glyph would jump to the next,
+    // much taller, variant and inflate the gap over the radicand (the outer radical's total
+    // height ballooned to ~36.8pt). The shortfall fallback keeps the tighter variant so the
+    // gap matches LaTeX. \frac{1}{\sqrt{\sqrt{5}}} (no descender) already used the tight
+    // variant, so the two denominators' outer radicals should now be close in height.
+    MTMathList* phiList = [MTMathListBuilder buildFromString:@"\\frac{1}{\\sqrt{\\phi\\sqrt{5}}}"];
+    MTMathList* plainList = [MTMathListBuilder buildFromString:@"\\frac{1}{\\sqrt{\\sqrt{5}}}"];
+    MTMathListDisplay* phiDisp = [MTTypesetter createLineForMathList:phiList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* plainDisp = [MTTypesetter createLineForMathList:plainList font:self.font style:kMTLineStyleDisplay];
+
+    MTRadicalDisplay* phiOuter = [self firstRadicalIn:[self firstFractionIn:phiDisp].denominator];
+    MTRadicalDisplay* plainOuter = [self firstRadicalIn:[self firstFractionIn:plainDisp].denominator];
+    XCTAssertNotNil(phiOuter);
+    XCTAssertNotNil(plainOuter);
+
+    // Both denominators' outer radicals should pick the same tight (24pt) variant.
+    // The phi descender redistributes height between ascent and descent (and the
+    // delta/2 radicand centering differs between the two radicands), so the per-side
+    // ascents are not equal — compare total heights instead. Before the fix the phi
+    // case jumped to the next variant, ballooning its total to ~36.8pt.
+    CGFloat phiTotal = phiOuter.ascent + phiOuter.descent;
+    CGFloat plainTotal = plainOuter.ascent + plainOuter.descent;
+    XCTAssertLessThan(phiTotal, 30.0);              // 24pt variant (~24.8), not the 36pt one (~36.8)
+    XCTAssertLessThan(phiTotal, plainTotal + 6.0);  // same variant family as the descender-free case
+    XCTAssertGreaterThan(phiTotal, 20.0);           // sanity: radical did not collapse
+}
+
 - (void) testCfracStrutAppliedToOperands
 {
     MTFont* font = [[MTFontManager fontManager] defaultFont];
@@ -682,6 +744,75 @@
     XCTAssertGreaterThan(topDisplay.ascent, 0.0);
     // The descent must be positive (subscript drops below baseline).
     XCTAssertGreaterThan(topDisplay.descent, 0.0);
+}
+
+- (MTFractionDisplay*)firstFractionIn:(MTMathListDisplay*)display {
+    for (MTDisplay* d in display.subDisplays) {
+        if ([d isKindOfClass:[MTFractionDisplay class]]) return (MTFractionDisplay*)d;
+        if ([d isKindOfClass:[MTMathListDisplay class]]) {
+            MTFractionDisplay* nested = [self firstFractionIn:(MTMathListDisplay*)d];
+            if (nested) return nested;
+        }
+    }
+    return nil;
+}
+
+- (MTRadicalDisplay*)firstRadicalIn:(MTMathListDisplay*)display {
+    for (MTDisplay* d in display.subDisplays) {
+        if ([d isKindOfClass:[MTRadicalDisplay class]]) return (MTRadicalDisplay*)d;
+        if ([d isKindOfClass:[MTMathListDisplay class]]) {
+            MTRadicalDisplay* nested = [self firstRadicalIn:(MTMathListDisplay*)d];
+            if (nested) return nested;
+        }
+    }
+    return nil;
+}
+
+- (MTInnerDisplay*)firstInnerIn:(MTMathListDisplay*)display {
+    for (MTDisplay* d in display.subDisplays) {
+        if ([d isKindOfClass:[MTInnerDisplay class]]) return (MTInnerDisplay*)d;
+        if ([d isKindOfClass:[MTMathListDisplay class]]) {
+            MTInnerDisplay* nested = [self firstInnerIn:(MTMathListDisplay*)d];
+            if (nested) return nested;
+        }
+    }
+    return nil;
+}
+
+- (void)testInnerDisplayBoundsCoverContentOverhang {
+    // When content inside \left...\right is taller than the chosen delimiter
+    // glyph variant (the delimiter shortfall allows this), the MTInnerDisplay
+    // must report ascent/descent that cover the actual content, not just the
+    // delimiter glyph. Otherwise callers (e.g. fraction-bar gap computation)
+    // can place content that visually overlaps the inner.
+    NSString* latex = @"\\frac{1}{\\left(\\sqrt{\\sqrt{\\sqrt{\\sqrt{5}}}}\\right)}";
+    MTMathList* list = [MTMathListBuilder buildFromString:latex];
+    MTMathListDisplay* top = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+
+    MTFractionDisplay* frac = [self firstFractionIn:top];
+    XCTAssertNotNil(frac);
+
+    MTInnerDisplay* inner = [self firstInnerIn:frac.denominator];
+    XCTAssertNotNil(inner);
+    XCTAssertNotNil(inner.leftDelimiter);
+
+    // The inner content (nested sqrt) is taller than the paren glyph variant
+    // because of the delimiter shortfall. The MTInnerDisplay must reflect
+    // that actual extent.
+    XCTAssertGreaterThan(inner.inner.ascent, inner.leftDelimiter.ascent,
+                         @"Test premise: nested sqrt should overhang the paren glyph");
+    XCTAssertEqualWithAccuracy(inner.ascent, inner.inner.ascent, 0.001,
+                               @"MTInnerDisplay.ascent must cover overhanging content");
+    XCTAssertGreaterThanOrEqual(inner.ascent, inner.leftDelimiter.ascent);
+
+    // Fraction bar must clear the inner content by at least the denominator
+    // display-style gap minimum from the font math table. Before the fix the
+    // bar sat ~0.1pt above the sqrt top — visually touching.
+    CGFloat barBottom = frac.linePosition - frac.lineThickness / 2;
+    CGFloat denomTop = frac.denominator.ascent - frac.denominatorDown;
+    CGFloat visualGap = barBottom - denomTop;
+    XCTAssertGreaterThanOrEqual(visualGap,
+                                self.font.mathTable.fractionDenominatorDisplayStyleGapMin - 0.001);
 }
 
 - (void)testAtop {
