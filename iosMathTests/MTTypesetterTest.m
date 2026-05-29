@@ -2001,6 +2001,74 @@
     XCTAssertGreaterThanOrEqual(display.width + 0.01, stack.over.width);
 }
 
+// Regression: XITS encodes the stretchy arrows (U+2190/2192/2194) as assembly-only
+// glyphs — their OpenType MathGlyphConstruction has a GlyphAssembly but zero variant
+// records, so h_variants is an empty list. Typesetting an \overrightarrow with such a
+// font must not trip the "numVariants > 0" assertion; it should fall through to the
+// horizontal glyph assembly.
+- (void)testStretchyArrowAssemblyOnlyFont
+{
+    MTFont* xits = [MTFontManager.fontManager xitsFontWithSize:20];
+    XCTAssertNotNil(xits);
+
+    for (NSString* latex in @[@"\\overrightarrow{x}", @"\\overrightarrow{ABCD}",
+                              @"\\overleftarrow{y}", @"\\overleftrightarrow{ABC}"]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:xits style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"%@", latex);
+        XCTAssertEqual(display.subDisplays.count, 1u, @"%@", latex);
+
+        MTDisplay* sub0 = display.subDisplays[0];
+        XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]], @"%@", latex);
+        MTStackDisplay* stack = (MTStackDisplay*)sub0;
+        XCTAssertNotNil(stack.over, @"%@", latex);
+        XCTAssertNil(stack.under, @"%@", latex);
+        // The over-row must cover the base width.
+        XCTAssertGreaterThanOrEqual(stack.over.width + 0.01, stack.base.width, @"%@", latex);
+    }
+}
+
+// Vertical twin of the regression above. XITS encodes the stretchy vertical arrows
+// (U+2191/2193/2195) as assembly-only glyphs — empty v_variants but a populated
+// v_assembly. These are reachable as \left/\right delimiters (\uparrow, \downarrow,
+// \updownarrow). Unlike the horizontal path, -findGlyph:withHeight: has no assertion
+// guarding numVariants > 0: with an empty list it read glyphs[-1] (out-of-bounds).
+// Treating the empty variant list as absent makes the boundary fall through to the
+// vertical glyph assembly instead.
+- (void)testStretchyVerticalArrowAssemblyOnlyFont
+{
+    MTFont* xits = [MTFontManager.fontManager xitsFontWithSize:20];
+    XCTAssertNotNil(xits);
+
+    // Tall content (a fraction) forces the boundary delimiter to stretch, exercising
+    // the variant lookup and then the glyph assembly.
+    for (NSString* latex in @[@"\\left\\uparrow \\frac{1}{2} \\right\\downarrow",
+                              @"\\left\\updownarrow \\frac{a}{b} \\right\\updownarrow",
+                              @"\\left\\downarrow \\frac{x}{y} \\right\\uparrow"]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:xits style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"%@", latex);
+        XCTAssertEqual(display.subDisplays.count, 1u, @"%@", latex);
+
+        MTDisplay* sub0 = display.subDisplays[0];
+        XCTAssertTrue([sub0 isKindOfClass:[MTInnerDisplay class]], @"%@", latex);
+        MTInnerDisplay* inner = (MTInnerDisplay*)sub0;
+        // No pre-built variant fits the tall content, so the empty variant list must
+        // fall through to the vertical glyph assembly rather than crash.
+        XCTAssertTrue([inner.leftDelimiter isKindOfClass:[MTGlyphConstructionDisplay class]], @"%@", latex);
+        XCTAssertTrue([inner.rightDelimiter isKindOfClass:[MTGlyphConstructionDisplay class]], @"%@", latex);
+        // The stretched delimiters cover the inner content's height, up to the
+        // allowed 5pt delimiter shortfall (kDelimiterShortfallPoints).
+        CGFloat innerHeight = inner.inner.ascent + inner.inner.descent;
+        XCTAssertGreaterThanOrEqual(inner.leftDelimiter.ascent + inner.leftDelimiter.descent + 5.01,
+                                    innerHeight, @"%@", latex);
+        XCTAssertGreaterThanOrEqual(inner.rightDelimiter.ascent + inner.rightDelimiter.descent + 5.01,
+                                    innerHeight, @"%@", latex);
+    }
+}
+
 - (void)testOverrightarrowWide
 {
     MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{ABCD}"];
