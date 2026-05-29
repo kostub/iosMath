@@ -403,6 +403,30 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertEqualObjects(latex, @"\\sqrt{}", @"%@", desc);
 }
 
+- (void) testSqrtInGroup
+{
+    // A \sqrt with no argument inside a group exercises a different path
+    // (empty radicand via the oneCharOnly stop-char guard) than the
+    // end-of-input case, and must also not crash.
+    NSString *str = @"{\\sqrt}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
+
+    XCTAssertNotNil(list, @"%@", desc);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
+    MTRadical* rad = list.atoms[0];
+    XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
+
+    MTMathList *subList = rad.radicand;
+    XCTAssertNotNil(subList, @"%@", desc);
+    XCTAssertEqualObjects(@(subList.atoms.count), @0, @"%@", desc);
+    XCTAssertNil(rad.degree, @"%@", desc);
+
+    // convert it back to latex
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\sqrt{}", @"%@", desc);
+}
+
 - (void) testSqrtInSqrt
 {
     NSString *str = @"\\sqrt\\sqrt2";
