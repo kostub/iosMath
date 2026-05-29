@@ -433,7 +433,6 @@ static NSString* const kHorizVariants = @"h_variants";
         // glyphs whose construction has a GlyphAssembly but zero variant records (an
         // empty array, e.g. XITS's stretchy arrows). In both cases the glyph itself is
         // its only variant, so callers can rely on a non-empty result.
-        CGGlyph glyph = [self.font getGlyphWithName:glyphName];
         [glyphArray addObject:@(glyph)];
         return glyphArray;
     }
