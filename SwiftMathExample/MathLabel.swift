@@ -21,6 +21,8 @@ struct MathLabel: View {
     var highlighted: Bool = false
     var leftInset: CGFloat = 0
     var rightInset: CGFloat = 0
+    /// Math font face. When nil, MTMathUILabel keeps its default (Latin Modern Math).
+    var font: MTFont? = nil
 
     var body: some View {
         _MathLabelRepresentable(
@@ -30,8 +32,27 @@ struct MathLabel: View {
             alignment: alignment,
             highlighted: highlighted,
             leftInset: leftInset,
-            rightInset: rightInset
+            rightInset: rightInset,
+            font: font
         )
+    }
+}
+
+/// The three math fonts bundled with iosMath, exposed for the font switcher.
+enum MathFont: String, CaseIterable, Identifiable {
+    case latinModern = "Latin Modern"
+    case termes = "TeX Gyre Termes"
+    case xits = "XITS"
+
+    var id: String { rawValue }
+
+    func font(size: CGFloat) -> MTFont? {
+        let manager = MTFontManager()
+        switch self {
+        case .latinModern: return manager.latinModernFont(withSize: size)
+        case .termes: return manager.termesFont(withSize: size)
+        case .xits: return manager.xitsFont(withSize: size)
+        }
     }
 }
 
@@ -48,6 +69,7 @@ private struct _MathLabelRepresentable: UIViewRepresentable {
     let highlighted: Bool
     let leftInset: CGFloat
     let rightInset: CGFloat
+    let font: MTFont?
 
     func makeUIView(context: Context) -> MTMathUILabel {
         MTMathUILabel()
@@ -55,6 +77,9 @@ private struct _MathLabelRepresentable: UIViewRepresentable {
 
     func updateUIView(_ label: MTMathUILabel, context: Context) {
         label.latex = latex
+        if let font = font {
+            label.font = font
+        }
         label.fontSize = fontSize
         label.mode = mode
         label.textAlignment = alignment
@@ -62,6 +87,10 @@ private struct _MathLabelRepresentable: UIViewRepresentable {
         label.backgroundColor = highlighted
             ? UIColor(hue: 0.15, saturation: 0.2, brightness: 1.0, alpha: 1.0)
             : .clear
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: MTMathUILabel, context: Context) -> CGSize? {
+        mathSizeThatFits(proposal, intrinsic: uiView.intrinsicContentSize)
     }
 }
 
@@ -76,6 +105,7 @@ private struct _MathLabelRepresentable: NSViewRepresentable {
     let highlighted: Bool
     let leftInset: CGFloat
     let rightInset: CGFloat
+    let font: MTFont?
 
     func makeNSView(context: Context) -> MTMathUILabel {
         MTMathUILabel()
@@ -83,6 +113,9 @@ private struct _MathLabelRepresentable: NSViewRepresentable {
 
     func updateNSView(_ label: MTMathUILabel, context: Context) {
         label.latex = latex
+        if let font = font {
+            label.font = font
+        }
         label.fontSize = fontSize
         label.mode = mode
         label.textAlignment = alignment
@@ -91,5 +124,28 @@ private struct _MathLabelRepresentable: NSViewRepresentable {
             ? NSColor(hue: 0.15, saturation: 0.2, brightness: 1.0, alpha: 1.0)
             : .clear
     }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: MTMathUILabel, context: Context) -> CGSize? {
+        mathSizeThatFits(proposal, intrinsic: nsView.intrinsicContentSize)
+    }
 }
 #endif
+
+/// Width policy shared by both platform representables.
+///
+/// MTMathUILabel's default intrinsic content size is the formula's *natural* width,
+/// and its high compression resistance otherwise refuses to be narrower than that.
+/// A single formula wider than the viewport (e.g. the Rogers–Ramanujan fraction in
+/// Latin Modern, which is wider in that font than in TeX Gyre) would then stretch the
+/// whole column and clip every row. Instead: fill exactly the width we're offered when
+/// that is finite (so the label still fills its row and `.center`/`.right` alignment
+/// works), and only fall back to the natural width when offered unbounded space — e.g.
+/// inside a horizontal ScrollView, where the formula is meant to scroll.
+private func mathSizeThatFits(_ proposal: ProposedViewSize, intrinsic: CGSize) -> CGSize {
+    switch proposal.width {
+    case .some(let width) where width != .infinity:
+        return CGSize(width: width, height: intrinsic.height)
+    default:
+        return intrinsic
+    }
+}
