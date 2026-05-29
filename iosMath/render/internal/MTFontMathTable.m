@@ -427,8 +427,12 @@ static NSString* const kHorizVariants = @"h_variants";
     NSString* glyphName = [self.font getGlyphName:glyph];
     NSArray* variantGlyphs = (NSArray*) variants[glyphName];
     NSMutableArray* glyphArray = [NSMutableArray arrayWithCapacity:variantGlyphs.count];
-    if (!variantGlyphs) {
-        // There are no extra variants, so just add the current glyph to it.
+    if (variantGlyphs.count == 0) {
+        // No sized variants for this glyph. This covers two cases: the glyph has no
+        // MathGlyphConstruction entry at all (variantGlyphs == nil), and assembly-only
+        // glyphs whose construction has a GlyphAssembly but zero variant records (an
+        // empty array, e.g. XITS's stretchy arrows). In both cases the glyph itself is
+        // its only variant, so callers can rely on a non-empty result.
         CGGlyph glyph = [self.font getGlyphWithName:glyphName];
         [glyphArray addObject:@(glyph)];
         return glyphArray;

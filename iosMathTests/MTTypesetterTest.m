@@ -2001,6 +2001,34 @@
     XCTAssertGreaterThanOrEqual(display.width + 0.01, stack.over.width);
 }
 
+// Regression: XITS encodes the stretchy arrows (U+2190/2192/2194) as assembly-only
+// glyphs — their OpenType MathGlyphConstruction has a GlyphAssembly but zero variant
+// records, so h_variants is an empty list. Typesetting an \overrightarrow with such a
+// font must not trip the "numVariants > 0" assertion; it should fall through to the
+// horizontal glyph assembly.
+- (void)testStretchyArrowAssemblyOnlyFont
+{
+    MTFont* xits = [MTFontManager.fontManager xitsFontWithSize:20];
+    XCTAssertNotNil(xits);
+
+    for (NSString* latex in @[@"\\overrightarrow{x}", @"\\overrightarrow{ABCD}",
+                              @"\\overleftarrow{y}", @"\\overleftrightarrow{ABC}"]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:xits style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"%@", latex);
+        XCTAssertEqual(display.subDisplays.count, 1u, @"%@", latex);
+
+        MTDisplay* sub0 = display.subDisplays[0];
+        XCTAssertTrue([sub0 isKindOfClass:[MTStackDisplay class]], @"%@", latex);
+        MTStackDisplay* stack = (MTStackDisplay*)sub0;
+        XCTAssertNotNil(stack.over, @"%@", latex);
+        XCTAssertNil(stack.under, @"%@", latex);
+        // The over-row must cover the base width.
+        XCTAssertGreaterThanOrEqual(stack.over.width + 0.01, stack.base.width, @"%@", latex);
+    }
+}
+
 - (void)testOverrightarrowWide
 {
     MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{ABCD}"];

@@ -350,9 +350,11 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
         case 1:
             [self.controller termesButtonPressed:nil];
+            break;
 
         case 2:
             [self.controller xitsButtonPressed:nil];
+            break;
 
         default:
             break;
