@@ -89,6 +89,16 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
 
 #pragma mark - Font styles
 
+// Discrete-variant radical selection (see -findGlyph:withHeight:allowShortfall:...).
+// When the required radical height lands just above a variant boundary, the strictly-larger
+// variant may be a big jump up (e.g. 24pt -> 36pt) whose excess inflates the gap over the
+// radicand. In that case fall back to the variant that just barely misses, letting the
+// radicand overflow the sign by at most kMTRadicalShortfallFraction of the required height.
+// The fallback only applies when the fitting variant is at least kMTRadicalBigJumpFactor
+// times the smaller one, so closely-spaced variants keep their natural (larger) choice.
+static const CGFloat kMTRadicalShortfallFraction = 0.03;
+static const CGFloat kMTRadicalBigJumpFactor = 1.3;
+
 static const unichar kMTUnicodeGreekLowerStart = 0x03B1;
 static const unichar kMTUnicodeGreekLowerEnd = 0x03C9;
 static const unichar kMTUnicodeGreekCapitalStart = 0x0391;
@@ -1254,11 +1264,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         }
     }
 
-    // AMSMath \cfrac: numerator and denominator are always typeset in display
-    // style (not one step down like \frac), and the denominator is not cramped.
-    MTLineStyle fractionStyle = frac.isContinuedFraction ? kMTLineStyleDisplay : self.fractionStyle;
+    MTLineStyle fractionStyle = self.fractionStyle;
     MTMathListDisplay* numeratorDisplay = [MTTypesetter createLineForMathList:frac.numerator font:_font style:fractionStyle cramped:false];
-    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:!frac.isContinuedFraction];
+    MTMathListDisplay* denominatorDisplay = [MTTypesetter createLineForMathList:frac.denominator font:_font style:fractionStyle cramped:true];
 
     if (frac.isContinuedFraction) {
         // Apply cfrac strut floors to the operand boxes *before* numeratorShiftUp
@@ -1392,13 +1400,16 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 - (MTDisplay<DownShift>*)getRadicalGlyphWithHeight:(CGFloat)radicalHeight
 {
     CGFloat glyphAscent, glyphDescent, glyphWidth;
-    
+
     CGGlyph radicalGlyph = [self findGlyphForCharacterAtIndex:0 inString:@"\u221A"];
-    CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
-    
+    // OpenType MATH fonts supply radical signs only in a few discrete sizes, so allow a small
+    // shortfall to avoid a big-jump variant inflating the gap over the radicand (see findGlyph).
+    CGGlyph glyph = [self findGlyph:radicalGlyph withHeight:radicalHeight allowShortfall:YES glyphAscent:&glyphAscent glyphDescent:&glyphDescent glyphWidth:&glyphWidth];
+
     MTDisplay<DownShift>* glyphDisplay;
-    if (glyphAscent + glyphDescent < radicalHeight) {
-        // the glyphs is not as large as required. A glyph needs to be constructed using the extenders.
+    if (glyphAscent + glyphDescent < radicalHeight * (1 - kMTRadicalShortfallFraction)) {
+        // Even the largest variant is too small (beyond the allowed shortfall). A glyph needs
+        // to be constructed using the extenders.
         glyphDisplay = [self constructGlyph:radicalGlyph withHeight:radicalHeight];
     }
     
@@ -1418,10 +1429,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     CGFloat clearance = self.radicalVerticalGap;
     CGFloat radicalRuleThickness = _styleFont.mathTable.radicalRuleThickness;
     CGFloat radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness;
-    
+
     MTDisplay<DownShift>* glyph = [self getRadicalGlyphWithHeight:radicalHeight];
-    
-    
+
     // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
     // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
     // Latex computes delta as descent - (h(inner) + d(inner) + clearance)
@@ -1454,6 +1464,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 
 - (CGGlyph) findGlyph:(CGGlyph) glyph withHeight:(CGFloat) height glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
 {
+    return [self findGlyph:glyph withHeight:height allowShortfall:NO glyphAscent:glyphAscent glyphDescent:glyphDescent glyphWidth:glyphWidth];
+}
+
+- (CGGlyph) findGlyph:(CGGlyph) glyph withHeight:(CGFloat) height allowShortfall:(BOOL) allowShortfall glyphAscent:(CGFloat*) glyphAscent glyphDescent:(CGFloat*) glyphDescent glyphWidth:(CGFloat*) glyphWidth
+{
     NSArray<NSNumber*>* variants = [_styleFont.mathTable getVerticalVariantsForGlyph:glyph];
     CFIndex numVariants = variants.count;
     CGGlyph glyphs[numVariants];
@@ -1461,19 +1476,34 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         CGGlyph glyph = [variants[i] shortValue];
         glyphs[i] = glyph;
     }
-    
+
     CGRect bboxes[numVariants];
     CGSize advances[numVariants];
     // Get the bounds for these glyphs
     CTFontGetBoundingRectsForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, glyphs, bboxes, numVariants);
     CTFontGetAdvancesForGlyphs(_styleFont.ctFont, kCTFontOrientationDefault, glyphs, advances, numVariants);
     CGFloat ascent = 0.0, descent = 0.0, width = 0.0;
+    CGFloat maxShortfall = allowShortfall ? height * kMTRadicalShortfallFraction : 0;
     for (int i = 0; i < numVariants; i++) {
         CGRect bounds = bboxes[i];
         width = advances[i].width;
         getBboxDetails(bounds, &ascent, &descent);
-        
+
         if (ascent + descent >= height) {
+            // This is the smallest variant that strictly fits. If it is a big jump above the
+            // previous (smaller) variant, and that variant only just misses the required
+            // height, prefer it: the radicand overflows slightly but the gap stays tight.
+            if (allowShortfall && i > 0) {
+                CGFloat prevAscent = 0.0, prevDescent = 0.0;
+                getBboxDetails(bboxes[i - 1], &prevAscent, &prevDescent);
+                CGFloat prevTotal = prevAscent + prevDescent;
+                if (height - prevTotal <= maxShortfall && (ascent + descent) >= prevTotal * kMTRadicalBigJumpFactor) {
+                    *glyphAscent = prevAscent;
+                    *glyphDescent = prevDescent;
+                    *glyphWidth = advances[i - 1].width;
+                    return glyphs[i - 1];
+                }
+            }
             *glyphAscent = ascent;
             *glyphDescent = descent;
             *glyphWidth = width;

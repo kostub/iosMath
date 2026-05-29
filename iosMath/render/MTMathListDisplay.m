@@ -1042,24 +1042,30 @@ static BOOL isIos6Supported(void) {
 
 - (CGFloat)ascent
 {
+  // Delimiters use a shortfall (kDelimiterShortfallPoints) when picking glyph
+  // variants, so the inner content can legitimately extend above the delimiter
+  // glyph's bounding box. Report the max so callers (e.g. fraction bar gap
+  // computation) account for the actual content extent.
+  CGFloat result = _inner ? _inner.ascent : 0;
   if (_leftDelimiter) {
-    return _leftDelimiter.ascent;
+    result = MAX(result, _leftDelimiter.ascent);
   }
   if (_rightDelimiter) {
-    return _rightDelimiter.ascent;
+    result = MAX(result, _rightDelimiter.ascent);
   }
-  return _inner.ascent;
+  return result;
 }
 
 - (CGFloat)descent
 {
+  CGFloat result = _inner ? _inner.descent : 0;
   if (_leftDelimiter) {
-    return _leftDelimiter.descent;
+    result = MAX(result, _leftDelimiter.descent);
   }
   if (_rightDelimiter) {
-    return _rightDelimiter.descent;
+    result = MAX(result, _rightDelimiter.descent);
   }
-  return _inner.descent;
+  return result;
 }
 
 - (CGFloat)width

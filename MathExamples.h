@@ -17,109 +17,77 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-string-concatenation"
 
-/// Gallery demo formulae: math showcase rows followed by mixed text and style checks.
+NS_ASSUME_NONNULL_BEGIN
+
+/// Curated real-world mathematical formulae for the main example gallery.
 static inline NSArray<NSString*>* MathDemoFormulas(void) {
     return @[
         // 0: Quadratic formula
         @"x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}",
-        // 1: Binomial expansion with color
-        @"\\color{#ff3399}{(a_1+a_2)^2}=a_1^2+2a_1a_2+a_2^2",
-        // 2: Cosine addition formula
+        // 1: Cosine addition formula
         @"\\cos(\\theta + \\varphi) = \\cos(\\theta)\\cos(\\varphi) - \\sin(\\theta)\\sin(\\varphi)",
-        // 3: Continued fraction (Rogers–Ramanujan)
-        @"\\frac{1}{\\left(\\sqrt{\\phi \\sqrt{5}}-\\phi\\right) e^{\\frac25 \\pi}} "
-         "= 1+\\frac{e^{-2\\pi}} {1 +\\frac{e^{-4\\pi}} {1+\\frac{e^{-6\\pi}} {1+\\frac{e^{-8\\pi}} {1+\\cdots} } } }",
-        // 4: Standard deviation
+        // 2: Continued fraction (Rogers–Ramanujan)
+        @"\\cfrac{1}{\\left(\\sqrt{\\phi \\sqrt{5}}-\\phi\\right) e^{2\\pi/5}} "
+         "= 1+\\cfrac{e^{-2\\pi}} {1 +\\cfrac{e^{-4\\pi}} {1+\\cfrac{e^{-6\\pi}} {1+\\cfrac{e^{-8\\pi}} {1+\\cdots} } } }",
+        // 3: Standard deviation
         @"\\sigma = \\sqrt{\\frac{1}{N}\\sum_{i=1}^N (x_i - \\mu)^2}",
-        // 5: De Morgan's law
+        // 4: De Morgan's law
         @"\\neg(P\\land Q) \\iff (\\neg P)\\lor(\\neg Q)",
-        // 6: Change of base
+        // 5: Change of base
         @"\\log_b(x) = \\frac{\\log_a(x)}{\\log_a(b)}",
-        // 7: Compound interest limit
+        // 6: Compound interest limit
         @"\\lim_{x\\to\\infty}\\left(1 + \\frac{k}{x}\\right)^x = e^k",
-        // 8: Gaussian integral
+        // 7: Gaussian integral
         @"\\int_{-\\infty}^\\infty \\! e^{-x^2} dx = \\sqrt{\\pi}",
-        // 9: AM-GM inequality
+        // 8: AM-GM inequality
         @"\\frac 1 n \\sum_{i=1}^{n}x_i \\geq \\sqrt[n]{\\prod_{i=1}^{n}x_i}",
-        // 10: Cauchy's integral formula
+        // 9: Cauchy's integral formula
         @"f^{(n)}(z_0) = \\frac{n!}{2\\pi i}\\oint_\\gamma\\frac{f(z)}{(z-z_0)^{n+1}}\\,dz",
-        // 11: Schrödinger equation
+        // 10: Schrödinger equation
         @"i\\hbar\\frac{\\partial}{\\partial t}\\mathbf\\Psi(\\mathbf{x},t) = "
          "-\\frac{\\hbar}{2m}\\nabla^2\\mathbf\\Psi(\\mathbf{x},t) + V(\\mathbf{x})\\mathbf\\Psi(\\mathbf{x},t)",
-        // 12: Cauchy-Schwarz inequality
+        // 11: Cauchy-Schwarz inequality
         @"\\left(\\sum_{k=1}^n a_k b_k \\right)^2 \\le "
          "\\left(\\sum_{k=1}^n a_k^2\\right)\\left(\\sum_{k=1}^n b_k^2\\right)",
-        // 13: Stirling numbers of the second kind
+        // 12: Stirling numbers of the second kind
         @"{n \\brace k} = \\frac{1}{k!}\\sum_{j=0}^k (-1)^{k-j}\\binom{k}{j}(k-j)^n",
-        // 14: Fourier transform
+        // 13: Fourier transform
         @"f(x) = \\int\\limits_{-\\infty}^\\infty\\!\\hat f(\\xi)\\,e^{2 \\pi i \\xi x}\\,\\mathrm{d}\\xi",
-        // 15: Lorenz system
+        // 14: Lorenz system
         @"\\begin{gather}"
          "\\dot{x} = \\sigma(y-x) \\\\"
          "\\dot{y} = \\rho x - y - xz \\\\"
          "\\dot{z} = -\\beta z + xy"
          "\\end{gather}",
-        // 16: Cross product as determinant
+        // 15: Cross product as determinant
         @"\\vec \\bf V_1 \\times \\vec \\bf V_2 =  \\begin{vmatrix}"
          "\\hat \\imath &\\hat \\jmath &\\hat k \\\\"
          "\\frac{\\partial X}{\\partial u} &  \\frac{\\partial Y}{\\partial u} & 0 \\\\"
          "\\frac{\\partial X}{\\partial v} &  \\frac{\\partial Y}{\\partial v} & 0"
          "\\end{vmatrix}",
-        // 17: Maxwell's equations
+        // 16: Maxwell's equations
         @"\\begin{eqalign}"
          "\\nabla \\cdot \\vec{\\bf{E}} & = \\frac {\\rho} {\\varepsilon_0} \\\\"
          "\\nabla \\cdot \\vec{\\bf{B}} & = 0 \\\\"
          "\\nabla \\times \\vec{\\bf{E}} &= - \\frac{\\partial\\vec{\\bf{B}}}{\\partial t} \\\\"
          "\\nabla \\times \\vec{\\bf{B}} & = \\mu_0\\vec{\\bf{J}} + \\mu_0\\varepsilon_0 \\frac{\\partial\\vec{\\bf{E}}}{\\partial t}"
          "\\end{eqalign}",
-        // 18: 2×2 matrix multiplication
+        // 17: 2×2 matrix multiplication
         @"\\begin{pmatrix}a & b\\\\ c & d\\end{pmatrix}"
          "\\begin{pmatrix}\\alpha & \\beta \\\\ \\gamma & \\delta\\end{pmatrix} = "
          "\\begin{pmatrix}a\\alpha + b\\gamma & a\\beta + b \\delta \\\\"
          "c\\alpha + d\\gamma & c\\beta + d \\delta \\end{pmatrix}",
-        // 19: EM algorithm Q-function
+        // 18: EM algorithm Q-function
         @"\\frak Q(\\lambda,\\hat{\\lambda}) = "
          "-\\frac{1}{2} \\mathbb P(O \\mid \\lambda ) \\sum_s \\sum_m \\sum_t \\gamma_m^{(s)} (t) +\\\\ "
          "\\quad \\left( \\log(2 \\pi ) + \\log \\left| \\cal C_m^{(s)} \\right| + "
          "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T \\cal C_m^{(s)-1} \\right) ",
-        // 20: Piecewise function
+        // 19: Piecewise function
         @"f(x) = \\begin{cases}\\frac{e^x}{2} & x \\geq 0 \\\\1 & x < 0\\end{cases}",
-        // 21: Multi-color expression
-        @"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}"
-         "+\\color{#99ff33}{\\frac{\\color{#ff99ff}{o}}{\\color{#990099}{r}}}"
-         "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
-        // 22: Explicit-sized vs content-sized delimiters
-        @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
-        // 23: Mixed text + math — labelled definition with a fraction
-        @"\\text{velocity} = \\frac{d\\vec{x}}{dt}",
-        // 24: Russian-labelled area-of-a-circle formula
-        @"\\text{Площадь круга} = \\pi r^2",
-        // 25: Chinese-labelled area formula
-        @"\\text{面积} = \\pi r^2",
-        // 26: Hindi-labelled area formula (Devanagari conjuncts + top matras)
-        @"\\text{क्षेत्रफल} = \\pi r^2",
-        // 27: Arabic-labelled area formula (RTL run inside an LTR equation)
-        @"\\text{المساحة} = \\pi r^2",
-        // 28: Hebrew-labelled area formula
-        @"\\text{שטח} = \\pi r^2",
-        // 29: Textbook-style definition exercising all five \\text* styles
-        @"\\textbf{Def.}\\textit{ Let } \\textsf{f}: \\textsf{R} \\to \\textsf{R}, "
-         "\\textrm{ where } \\texttt{f}(x) = x^2",
-        // 30: Styled non-Latin theorem label preceding a math statement
-        @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
-        // AMS fraction macros
-        @"\\tfrac{1}{2} + \\dfrac{1}{2} = \\cfrac{1}{1+\\cfrac{1}{1}}",
-        @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
-        @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
-        @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
-        // AMS multi-integrals
-        @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
-        @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
-        @"\\varointclockwise \\, \\ointctrclockwise",
     ];
 }
 
-/// 68 formulae exercising specific typesetter features and edge cases.
+/// Formulae exercising specific typesetter features and edge cases.
 static inline NSArray<NSString*>* MathTestFormulas(void) {
     return @[
         // 0: Basic arithmetic
@@ -263,16 +231,48 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"\\overrightarrow{x} \\cdot \\overleftarrow{y}",
         // 67: Nested brace over arrow
         @"\\overbrace{\\overrightarrow{AB}}^{\\text{unit}}",
-        // AMS fraction macros
+        // 68: AMS fraction macros — \tfrac, \dfrac, \cfrac
         @"\\tfrac{1}{2} + \\dfrac{1}{2} = \\cfrac{1}{1+\\cfrac{1}{1}}",
+        // 69: Nested \cfrac (four levels)
         @"x = \\cfrac{1}{1+\\cfrac{1}{x+\\cfrac{1}{x+\\cfrac{1}{x}}}}",
+        // 70: \cfrac with l/c/r alignment
         @"\\cfrac[l]{1}{1+x} \\quad \\cfrac[c]{1}{1+x} \\quad \\cfrac[r]{1}{1+x}",
+        // 71: \dbinom and \tbinom
         @"\\dbinom{n}{k} \\quad \\tbinom{n}{k}",
-        // AMS multi-integrals
+        // 72: AMS multi-integrals — \iint, \iiint, \iiiint
         @"\\iint_S f \\, dA = \\iiint_V g \\, dV = \\iiiint_{\\mathbb{R}^4} h \\, dV",
+        // 73: \oiint and \iiint
         @"\\oiint_{\\partial V} \\vec{F} \\cdot d\\vec{A} = \\iiint_V (\\nabla\\cdot\\vec{F}) \\, dV",
+        // 74: \varointclockwise and \ointctrclockwise
         @"\\varointclockwise \\, \\ointctrclockwise",
+        // 75: Binomial expansion with color
+        @"\\color{#ff3399}{(a_1+a_2)^2}=a_1^2+2a_1a_2+a_2^2",
+        // 76: Multi-color expression
+        @"\\color{#ff3333}{c}\\color{#9933ff}{o}\\color{#ff0080}{l}"
+         "+\\color{#99ff33}{\\frac{\\color{#ff99ff}{o}}{\\color{#990099}{r}}}"
+         "-\\color{#33ffff}{\\sqrt[\\color{#3399ff}{e}]{\\color{#3333ff}{d}}}",
+        // 77: Explicit-sized vs content-sized delimiters
+        @"\\left( \\frac{a}{b} \\right) \\quad \\text{vs.} \\quad \\bigl( \\frac{a}{b} \\bigr)",
+        // 78: Mixed text + math — labelled definition with a fraction
+        @"\\text{velocity} = \\frac{d\\vec{x}}{dt}",
+        // 79: Russian-labelled area-of-a-circle formula
+        @"\\text{Площадь круга} = \\pi r^2",
+        // 80: Chinese-labelled area formula
+        @"\\text{面积} = \\pi r^2",
+        // 81: Hindi-labelled area formula (Devanagari conjuncts + top matras)
+        @"\\text{क्षेत्रफल} = \\pi r^2",
+        // 82: Arabic-labelled area formula (RTL run inside an LTR equation)
+        @"\\text{المساحة} = \\pi r^2",
+        // 83: Hebrew-labelled area formula
+        @"\\text{שטח} = \\pi r^2",
+        // 84: Textbook-style definition exercising all five \\text* styles
+        @"\\textbf{Def.}\\textit{ Let } \\textsf{f}: \\textsf{R} \\to \\textsf{R}, "
+         "\\textrm{ where } \\texttt{f}(x) = x^2",
+        // 85: Styled non-Latin theorem label preceding a math statement
+        @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
     ];
 }
+
+NS_ASSUME_NONNULL_END
 
 #pragma clang diagnostic pop

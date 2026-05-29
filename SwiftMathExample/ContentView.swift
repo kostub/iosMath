@@ -44,60 +44,47 @@ private struct NamedFormula {
     var height: CGFloat = 60
 }
 
-private let namedExamples: [NamedFormula] = [
-    NamedFormula(
-        title: "Fourier transform",
-        latex: #"f(x) = \int\limits_{-\infty}^\infty\!\hat f(\xi)\,e^{2 \pi i \xi x}\,\mathrm{d}\xi"#,
-        height: 70
-    ),
-    NamedFormula(
-        title: "Standard deviation",
-        latex: #"\sigma = \sqrt{\frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2}"#,
-        height: 70
-    ),
-    NamedFormula(
-        title: "AM-GM inequality",
-        latex: #"\frac{1}{n}\sum_{i=1}^{n}x_i \geq \sqrt[n]{\prod_{i=1}^{n}x_i}"#,
-        height: 80
-    ),
-    NamedFormula(
-        title: "Cauchy-Schwarz inequality",
-        latex: #"\left(\sum_{k=1}^n a_k b_k \right)^2 \le \left(\sum_{k=1}^n a_k^2\right)\left(\sum_{k=1}^n b_k^2\right)"#,
-        height: 80
-    ),
-    NamedFormula(
-        title: "Cauchy integral formula",
-        latex: #"f^{(n)}(z_0) = \frac{n!}{2\pi i}\oint_\gamma\frac{f(z)}{(z-z_0)^{n+1}}dz"#,
-        height: 80
-    ),
-    NamedFormula(
-        title: "Schrödinger's equation",
-        latex: #"i\hbar\frac{\partial}{\partial t}\mathbf\Psi(\mathbf{x},t) = -\frac{\hbar}{2m}\nabla^2\mathbf\Psi(\mathbf{x},t) + V(\mathbf{x})\mathbf\Psi(\mathbf{x},t)"#,
-        height: 80
-    ),
-    NamedFormula(
-        title: "Cross product",
-        latex: #"\vec{\bf V}_1 \times \vec{\bf V}_2 = \begin{vmatrix}\hat\imath & \hat\jmath & \hat k \\\frac{\partial X}{\partial u} & \frac{\partial Y}{\partial u} & 0 \\\frac{\partial X}{\partial v} & \frac{\partial Y}{\partial v} & 0\end{vmatrix}"#,
-        fontSize: 16,
-        height: 140
-    ),
-    NamedFormula(
-        title: "Maxwell's equations",
-        latex: #"\begin{eqalign}\nabla \cdot \vec{\bf E} &= \frac{\rho}{\varepsilon_0} \\\nabla \cdot \vec{\bf B} &= 0 \\\nabla \times \vec{\bf E} &= -\frac{\partial\vec{\bf B}}{\partial t} \\\nabla \times \vec{\bf B} &= \mu_0\vec{\bf J} + \mu_0\varepsilon_0\frac{\partial\vec{\bf E}}{\partial t}\end{eqalign}"#,
-        fontSize: 16,
-        height: 200
-    ),
-    NamedFormula(
-        title: "Piecewise function",
-        latex: #"f(x) = \begin{cases}\frac{e^x}{2} & x \geq 0 \\ 1 & x < 0\end{cases}"#,
-        height: 100
-    ),
-    NamedFormula(
-        title: "Splitting long equations",
-        latex: #"\frak Q(\lambda,\hat{\lambda}) = -\frac{1}{2}\mathbb P(O \mid \lambda)\sum_s\sum_m\sum_t \gamma_m^{(s)}(t) +\\ \quad \left(\log(2\pi) + \log\left|\cal C_m^{(s)}\right| + \left(o_t - \hat{\mu}_m^{(s)}\right)^T \cal C_m^{(s)-1}\right)"#,
-        height: 130
-    ),
+/// Curated examples — keep in sync with MathDemoFormulas() in MathExamples.h.
+/// LaTeX strings are sourced from MathDemoFormulas() so content stays consistent;
+/// titles and per-formula display metadata live here.
+private struct NamedFormulaMeta {
+    let title: String
+    var mode: MTMathUILabelMode = .display
+    var fontSize: CGFloat = 20
+    var height: CGFloat = 60
+}
+
+private let namedExampleMeta: [NamedFormulaMeta] = [
+    NamedFormulaMeta(title: "Quadratic formula", height: 80),
+    NamedFormulaMeta(title: "Cosine addition formula", height: 60),
+    NamedFormulaMeta(title: "Rogers–Ramanujan continued fraction", height: 130),
+    NamedFormulaMeta(title: "Standard deviation", height: 80),
+    NamedFormulaMeta(title: "De Morgan's law", height: 60),
+    NamedFormulaMeta(title: "Change of base", height: 70),
+    NamedFormulaMeta(title: "Compound interest limit", height: 70),
+    NamedFormulaMeta(title: "Gaussian integral", height: 70),
+    NamedFormulaMeta(title: "AM-GM inequality", height: 80),
+    NamedFormulaMeta(title: "Cauchy integral formula", height: 80),
+    NamedFormulaMeta(title: "Schrödinger's equation", fontSize: 16, height: 80),
+    NamedFormulaMeta(title: "Cauchy-Schwarz inequality", height: 80),
+    NamedFormulaMeta(title: "Stirling numbers", height: 80),
+    NamedFormulaMeta(title: "Fourier transform", height: 70),
+    NamedFormulaMeta(title: "Lorenz system", height: 110),
+    NamedFormulaMeta(title: "Cross product", fontSize: 16, height: 140),
+    NamedFormulaMeta(title: "Maxwell's equations", fontSize: 16, height: 200),
+    NamedFormulaMeta(title: "2×2 matrix multiplication", fontSize: 16, height: 90),
+    NamedFormulaMeta(title: "EM algorithm Q-function", height: 130),
+    NamedFormulaMeta(title: "Piecewise function", height: 100),
 ]
+
+private let namedExamples: [NamedFormula] = {
+    let formulas = MathDemoFormulas()
+    precondition(formulas.count == namedExampleMeta.count,
+                 "namedExampleMeta (\(namedExampleMeta.count)) must match MathDemoFormulas (\(formulas.count))")
+    return zip(namedExampleMeta, formulas).map { meta, latex in
+        NamedFormula(title: meta.title, latex: latex, mode: meta.mode, fontSize: meta.fontSize, height: meta.height)
+    }
+}()
 
 /// Curated, named examples — suitable as a quick-start reference.
 private struct ExamplesTab: View {
@@ -142,38 +129,25 @@ private struct ExampleCard: View {
 
 // MARK: - Gallery tab
 
-/// Full rendering test suite — demo formulae then typesetter cases.
+/// Full typesetter test suite. Curated real-math formulae live in the Examples tab.
 private struct GalleryTab: View {
 
-    private static let demoHeights: [CGFloat] = [
-        60, 40, 40, 80, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60, 60, 70,
-        60, 60, 60, 70, 60, 60, 60, 60
-    ]
     private static let testHeights: [CGFloat] = [
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,
         60, 60, 60, 60, 60, 60, 30, 20, 20, 60, 30, 40, 30, 30, 50, 50,
         50, 50, 30, 30, 30, 30, 30, 50, 80, 120, 30, 30, 30, 30, 30, 70,
-        40, 40, 50, 60, 50, 40, 70, 40
+        40, 40, 50, 60, 50, 40, 70, 40,
+        40, 40, 40, 40, 40, 50, 50, 60, 50, 50, 40, 70,
+        80, 150, 60, 60, 50, 60, 50,
+        40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60
     ]
 
-    private let demoFormulas: [String] = MathDemoFormulas()
     private let testFormulas: [String] = MathTestFormulas()
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-
-                    // Demo formulae
-                    ForEach(demoFormulas.indices, id: \.self) { i in
-                        MathLabel(latex: demoFormulas[i], fontSize: 15)
-                            .frame(height: demoHeight(at: i))
-                            .padding(.horizontal, 10)
-                    }
-
-                    Divider().padding(.vertical, 10)
-
-                    // Typesetter test cases
                     ForEach(testFormulas.indices, id: \.self) { i in
                         MathLabel(
                             latex: testFormulas[i],
@@ -207,10 +181,6 @@ private struct GalleryTab: View {
         case 9: return 10
         default: return 15
         }
-    }
-
-    private func demoHeight(at i: Int) -> CGFloat {
-        Self.demoHeights.indices.contains(i) ? Self.demoHeights[i] : 60
     }
 
     private func testHeight(at i: Int) -> CGFloat {
