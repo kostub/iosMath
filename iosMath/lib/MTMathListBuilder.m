@@ -746,15 +746,18 @@ NSString *const MTParseError = @"ParseError";
     } else if ([command isEqualToString:@"sqrt"]) {
         // A sqrt command with one argument
         MTRadical* rad = [MTRadical new];
-        unichar ch = [self getNextCharacter];
-        if (ch == '[') {
-            // special handling for sqrt[degree]{radicand}
-            rad.degree = [self buildInternal:false stopChar:']'];
-            rad.radicand = [self buildInternal:true];
-        } else {
-            [self unlookCharacter];
-            rad.radicand = [self buildInternal:true];
+        // Guard against a lone "\sqrt" at the end of input: only read a
+        // character if one is available.
+        if ([self hasCharacters]) {
+            unichar ch = [self getNextCharacter];
+            if (ch == '[') {
+                // special handling for sqrt[degree]{radicand}
+                rad.degree = [self buildInternal:false stopChar:']'];
+            } else {
+                [self unlookCharacter];
+            }
         }
+        rad.radicand = [self buildInternal:true];
         return rad;
     } else if ([command isEqualToString:@"left"]) {
         // Save the current inner while a new one gets built.
