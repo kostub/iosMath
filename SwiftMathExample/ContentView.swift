@@ -32,14 +32,16 @@ struct ContentView: View {
     /// Selected math font, shared across all tabs — switching it in the
     /// Playground re-renders the Examples and Gallery too, mirroring the ObjC example.
     @State private var font: MathFont = .latinModern
+    /// Global font size, shared across all tabs (range 10–40, default 15).
+    @State private var fontSize: CGFloat = 15
 
     var body: some View {
         TabView {
-            ExamplesTab(font: font)
+            ExamplesTab(font: font, fontSize: fontSize)
                 .tabItem { Label("Examples", systemImage: "function") }
-            PlaygroundTab(font: $font)
+            PlaygroundTab(font: $font, fontSize: $fontSize)
                 .tabItem { Label("Playground", systemImage: "pencil.and.scribble") }
-            GalleryTab(font: font)
+            GalleryTab(font: font, fontSize: fontSize)
                 .tabItem { Label("Gallery", systemImage: "square.grid.2x2") }
         }
     }
@@ -100,13 +102,14 @@ private let namedExamples: [NamedFormula] = {
 /// Curated, named examples — suitable as a quick-start reference.
 private struct ExamplesTab: View {
     let font: MathFont
+    let fontSize: CGFloat
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     ForEach(namedExamples.indices, id: \.self) { i in
-                        ExampleCard(formula: namedExamples[i], font: font)
+                        ExampleCard(formula: namedExamples[i], font: font, fontSize: fontSize)
                     }
                 }
                 .padding()
@@ -125,6 +128,7 @@ private struct ExamplesTab: View {
 private struct ExampleCard: View {
     let formula: NamedFormula
     let font: MathFont
+    let fontSize: CGFloat
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -135,8 +139,8 @@ private struct ExampleCard: View {
             // Rogers–Ramanujan fraction in Latin Modern) scrolls within its card
             // instead of stretching the whole column and clipping every card's left edge.
             ScrollView(.horizontal, showsIndicators: false) {
-                MathLabel(latex: formula.latex, fontSize: formula.fontSize, mode: formula.mode,
-                          font: font.font(size: formula.fontSize))
+                MathLabel(latex: formula.latex, fontSize: fontSize, mode: formula.mode,
+                          font: font.font(size: fontSize))
                     .frame(height: formula.height)
             }
         }
@@ -153,9 +157,8 @@ private struct ExampleCard: View {
 /// live. Mirrors the LaTeX text field and font switcher in the ObjC iosMathExample.
 private struct PlaygroundTab: View {
     @Binding var font: MathFont
+    @Binding var fontSize: CGFloat
     @State private var latex = #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#
-
-    private let fontSize: CGFloat = 24
 
     var body: some View {
         NavigationView {
@@ -176,13 +179,17 @@ private struct PlaygroundTab: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
 
-                // Font switcher.
-                Picker("Font", selection: $font) {
-                    ForEach(MathFont.allCases) { font in
-                        Text(font.rawValue).tag(font)
+                // Font switcher + size slider.
+                HStack {
+                    Picker("Font", selection: $font) {
+                        ForEach(MathFont.allCases) { font in
+                            Text(font.rawValue).tag(font)
+                        }
                     }
+                    .pickerStyle(.menu)
+                    Slider(value: $fontSize, in: 10...40)
+                        .frame(maxWidth: 160)
                 }
-                .pickerStyle(.segmented)
 
                 // LaTeX editor.
                 Text("LaTeX")
@@ -220,6 +227,7 @@ private struct PlaygroundTab: View {
 /// Full typesetter test suite. Curated real-math formulae live in the Examples tab.
 private struct GalleryTab: View {
     let font: MathFont
+    let fontSize: CGFloat
 
     private static let testHeights: [CGFloat] = [
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,
@@ -240,13 +248,13 @@ private struct GalleryTab: View {
                     ForEach(testFormulas.indices, id: \.self) { i in
                         MathLabel(
                             latex: testFormulas[i],
-                            fontSize: testFontSize(at: i),
+                            fontSize: fontSize,
                             mode: testMode(at: i),
                             alignment: testAlignment(at: i),
                             highlighted: [0, 1, 3, 6, 7].contains(i),
                             leftInset: i == 6 ? 20 : 0,
                             rightInset: i == 3 ? 20 : 0,
-                            font: font.font(size: testFontSize(at: i))
+                            font: font.font(size: fontSize)
                         )
                         .frame(height: testHeight(at: i))
                         .padding(.horizontal, 10)
@@ -263,14 +271,6 @@ private struct GalleryTab: View {
         #if os(iOS)
         .navigationViewStyle(.stack)
         #endif
-    }
-
-    private func testFontSize(at i: Int) -> CGFloat {
-        switch i {
-        case 8: return 30
-        case 9: return 10
-        default: return 15
-        }
     }
 
     private func testHeight(at i: Int) -> CGFloat {
