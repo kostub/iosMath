@@ -1638,7 +1638,9 @@
     ];
     for (NSString* key in keys) {
         MTFont* font = [[MTFontManager fontManager] fontWithName:key size:20];
-        XCTAssertNotNil(font, @"Font %@ failed to load", key);
+        // fontWithName:size: always returns a non-nil MTFont, so assert on the
+        // CoreText font to prove the .otf actually loaded.
+        XCTAssertTrue(font.ctFont != NULL, @"Font %@ failed to load CTFont", key);
         XCTAssertNotNil(font.mathTable, @"Font %@ has no math table", key);
     }
 }
