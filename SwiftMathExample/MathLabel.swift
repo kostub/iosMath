@@ -38,7 +38,7 @@ struct MathLabel: View {
     }
 }
 
-/// The three math fonts bundled with iosMath, exposed for the font switcher.
+/// The math fonts bundled with iosMath, exposed for the font switcher.
 enum MathFont: String, CaseIterable, Identifiable {
     case latinModern = "Latin Modern"
     case termes = "TeX Gyre Termes"
@@ -46,13 +46,16 @@ enum MathFont: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    func font(size: CGFloat) -> MTFont? {
-        let manager = MTFontManager.fontManager()
+    var fontName: String {
         switch self {
-        case .latinModern: return manager.latinModernFont(withSize: size)
-        case .termes: return manager.termesFont(withSize: size)
-        case .xits: return manager.xitsFont(withSize: size)
+        case .latinModern: return MTFontNameLatinModern
+        case .termes:      return MTFontNameTermes
+        case .xits:        return MTFontNameXITS
         }
+    }
+
+    func font(size: CGFloat) -> MTFont? {
+        MTFontManager().font(withName: fontName, size: size)
     }
 }
 
