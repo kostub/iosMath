@@ -85,6 +85,42 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
     self.latexField.delegate = self;
 
+    // Add a global font-size slider above the scroll view.
+    // The XIB pins scrollView.top to the Render panel's bottom; find that
+    // constraint, capture the Render panel reference, lower its priority, and
+    // insert the slider between the Render panel and the scroll view.
+    UIView* renderPanelRef = nil;
+    for (NSLayoutConstraint* c in self.view.constraints) {
+        if (c.firstItem == self.scrollView && c.firstAttribute == NSLayoutAttributeTop) {
+            renderPanelRef = c.secondItem;
+            c.priority = UILayoutPriorityDefaultLow;
+            break;
+        } else if (c.secondItem == self.scrollView && c.secondAttribute == NSLayoutAttributeTop) {
+            renderPanelRef = c.firstItem;
+            c.priority = UILayoutPriorityDefaultLow;
+            break;
+        }
+    }
+    UISlider* sizeSlider = [[UISlider alloc] init];
+    sizeSlider.translatesAutoresizingMaskIntoConstraints = NO;
+    sizeSlider.minimumValue = 10;
+    sizeSlider.maximumValue = 40;
+    sizeSlider.value = 15;
+    [sizeSlider addTarget:self action:@selector(sizeChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:sizeSlider];
+    NSMutableArray<NSLayoutConstraint*>* sliderConstraints = [NSMutableArray arrayWithArray:@[
+        [sizeSlider.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:10],
+        [sizeSlider.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-10],
+        [self.scrollView.topAnchor constraintEqualToAnchor:sizeSlider.bottomAnchor constant:4],
+    ]];
+    if (renderPanelRef) {
+        [sliderConstraints addObject:[sizeSlider.topAnchor constraintEqualToAnchor:renderPanelRef.bottomAnchor constant:4]];
+    } else {
+        // Fallback: pin slider to the scroll view's existing top position.
+        [sliderConstraints addObject:[sizeSlider.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:180]];
+    }
+    [NSLayoutConstraint activateConstraints:sliderConstraints];
+
     UIView* contentView = [[UIView alloc] init];
     [self addFullSizeView:contentView to:self.scrollView];
     // set the size of the content view
@@ -157,9 +193,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     self.labels[6].contentInsets = UIEdgeInsetsMake(0, 20, 0, 0);
     self.labels[7].backgroundColor = highlight;
     self.labels[7].labelMode = kMTMathUILabelModeText;
-    self.labels[8].fontSize = 30;
     self.labels[8].textAlignment = kMTTextAlignmentCenter;
-    self.labels[9].fontSize = 10;
     self.labels[9].textAlignment = kMTTextAlignmentCenter;
     self.labels[17].labelMode = kMTMathUILabelModeText;
     self.labels[18].labelMode = kMTMathUILabelModeText;
@@ -254,6 +288,15 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     constraint.active = YES;
 }
 
+#pragma mark Actions
+
+- (void)sizeChanged:(UISlider *)sender
+{
+    CGFloat size = (CGFloat)sender.value;
+    for (MTMathUILabel* label in self.demoLabels) { label.fontSize = size; }
+    for (MTMathUILabel* label in self.labels)     { label.fontSize = size; }
+}
+
 #pragma mark Buttons
 - (void)applyFontWithName:(NSString *)name
 {
@@ -301,7 +344,9 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 {
     self = [super init];
     if (self) {
-        self.fontNames = @[@"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math"];
+        self.fontNames = @[@"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math",
+                           @"New Computer Modern", @"TeX Gyre Pagella", @"STIX Two",
+                           @"Fira Math", @"Noto Sans Math"];
     }
     return self;
 }
@@ -327,6 +372,8 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     // Not static: extern const NSString* values aren't compile-time constants.
     NSString *const kFontKeys[] = {
         MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
+        MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
+        MTFontNameFiraMath, MTFontNameNotoSansMath,
     };
     self.controller.fontField.text = self.fontNames[row];
     [self.controller.fontField resignFirstResponder];
