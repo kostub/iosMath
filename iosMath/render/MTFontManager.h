@@ -45,15 +45,6 @@ extern NSString *const MTFontNameNotoSansMath;
  */
 - (MTFont *) fontWithName:(NSString *)name size:(CGFloat)size;
 
-/** Helper function to return the Xits Math font. */
-- (MTFont *) xitsFontWithSize:(CGFloat)size;
-
-/** Helper function to return the Tex Gyre Termes Math font. */
-- (MTFont *) termesFontWithSize:(CGFloat)size;
-
-/** Helper function to return the Latin Modern Math font. */
-- (MTFont *) latinModernFontWithSize:(CGFloat)size;
-
 /**
  Returns a CoreText font suitable for `\text*` rendering. The caller owns
  the returned reference (CF_RETAINED) and must `CFRelease` it.

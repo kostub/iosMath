@@ -2027,7 +2027,7 @@
 // horizontal glyph assembly.
 - (void)testStretchyArrowAssemblyOnlyFont
 {
-    MTFont* xits = [MTFontManager.fontManager xitsFontWithSize:20];
+    MTFont* xits = [MTFontManager.fontManager fontWithName:MTFontNameXITS size:20];
     XCTAssertNotNil(xits);
 
     for (NSString* latex in @[@"\\overrightarrow{x}", @"\\overrightarrow{ABCD}",
@@ -2057,7 +2057,7 @@
 // vertical glyph assembly instead.
 - (void)testStretchyVerticalArrowAssemblyOnlyFont
 {
-    MTFont* xits = [MTFontManager.fontManager xitsFontWithSize:20];
+    MTFont* xits = [MTFontManager.fontManager fontWithName:MTFontNameXITS size:20];
     XCTAssertNotNil(xits);
 
     // Tall content (a fraction) forces the boundary delimiter to stretch, exercising

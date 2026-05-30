@@ -63,24 +63,9 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
     }
 }
 
-- (MTFont *)latinModernFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"latinmodern-math" size:size];
-}
-
-- (MTFont *)xitsFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"xits-math" size:size];
-}
-
-- (MTFont *)termesFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"texgyretermes-math" size:size];
-}
-
 - (MTFont *)defaultFont
 {
-    return [self latinModernFontWithSize:kDefaultFontSize];
+    return [self fontWithName:MTFontNameLatinModern size:kDefaultFontSize];
 }
 
 + (CTFontRef) textCTFontForStyle:(MTTextStyle) style
