@@ -391,6 +391,13 @@ iosMath is available under the MIT license. See the [LICENSE](./LICENSE) file fo
 
 The following fonts are bundled with this distribution:
 
-* Latin Modern Math: [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt)
-* Tex Gyre Termes: [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt)
-* [XITS Math](https://github.com/khaledhosny/xits-math): [Open Font License](./iosMath/fonts/OFL.txt)
+* [Latin Modern Math](https://www.gust.org.pl/projects/e-foundry/lm-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-Latin-Modern-Math.txt](./iosMath/fonts/README-Latin-Modern-Math.txt)
+* [TeX Gyre Termes Math](https://www.gust.org.pl/projects/e-foundry/tg-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-TeX-Gyre-Termes-Math.txt](./iosMath/fonts/README-TeX-Gyre-Termes-Math.txt)
+* [XITS Math](https://github.com/aliftype/xits) v1.302: [Open Font License](./iosMath/fonts/OFL.txt)
+* [New Computer Modern Math](https://ctan.org/pkg/newcomputermodern): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-New-Computer-Modern-Math.txt](./iosMath/fonts/README-New-Computer-Modern-Math.txt)
+* [TeX Gyre Pagella Math](https://www.gust.org.pl/projects/e-foundry/tg-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-TeX-Gyre-Pagella-Math.txt](./iosMath/fonts/README-TeX-Gyre-Pagella-Math.txt)
+* [STIX Two Math](https://github.com/stipub/stixfonts): [Open Font License](./iosMath/fonts/OFL-STIXTwo.txt)
+* [Fira Math](https://github.com/firamath/firamath): [Open Font License](./iosMath/fonts/OFL-FiraMath.txt)
+* [Noto Sans Math](https://github.com/notofonts/math): [Open Font License](./iosMath/fonts/OFL-NotoSansMath.txt)
+
+**Cambria Math is intentionally not bundled (proprietary Microsoft license).**
