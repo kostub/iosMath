@@ -205,7 +205,7 @@ also use any OTF math font. Select a font using `MTFontName*` constants and
 `font(withName:size:)`:
 
 ```swift
-label.font = MTFontManager().font(withName: MTFontNameTermes, size: 20)
+label.font = MTFontManager.fontManager().font(withName: MTFontNameTermes, size: 20)
 ```
 
 <details>

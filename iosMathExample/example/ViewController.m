@@ -324,8 +324,9 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
     // Display names (self.fontNames) map 1:1 to these loader keys.
-    static NSString *const kFontKeys[] = {
-        @"latinmodern-math", @"texgyretermes-math", @"xits-math",
+    // Not static: extern const NSString* values aren't compile-time constants.
+    NSString *const kFontKeys[] = {
+        MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
     };
     self.controller.fontField.text = self.fontNames[row];
     [self.controller.fontField resignFirstResponder];

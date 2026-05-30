@@ -55,7 +55,7 @@ enum MathFont: String, CaseIterable, Identifiable {
     }
 
     func font(size: CGFloat) -> MTFont? {
-        MTFontManager().font(withName: fontName, size: size)
+        MTFontManager.fontManager().font(withName: fontName, size: size)
     }
 }
 
