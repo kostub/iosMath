@@ -11,6 +11,7 @@
 
 #import "AppDelegate.h"
 #import "MTMathUILabel.h"
+#import "MTFontManager.h"
 #import "../MathExamples.h"
 
 // Flipped NSView so Auto Layout stacks subviews top-to-bottom.
@@ -33,6 +34,18 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     return (index < count) ? heights[index] : fallback;
 }
 
+static NSString *const kMacFontNames[] = {
+    @"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math",
+    @"New Computer Modern", @"TeX Gyre Pagella", @"STIX Two",
+    @"Fira Math", @"Noto Sans Math",
+};
+static NSString *const kMacFontKeys[] = {
+    @"latinmodern-math", @"texgyretermes-math", @"xits-math",
+    @"newcm-math", @"texgyrepagella-math", @"stixtwo-math",
+    @"firamath", @"notosansmath",
+};
+static const NSUInteger kMacFontCount = 8;
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     self.demoLabels = [[NSMutableArray alloc] init];
@@ -40,8 +53,37 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
     NSView* mainView = self.window.contentView;
 
-    // Scroll view fills the window.
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:mainView.bounds];
+    // Header strip: font popup + size slider, pinned to the top of mainView.
+    CGFloat headerHeight = 36;
+    NSRect headerFrame = NSMakeRect(0, mainView.bounds.size.height - headerHeight,
+                                   mainView.bounds.size.width, headerHeight);
+    NSView* headerView = [[NSView alloc] initWithFrame:headerFrame];
+    headerView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+
+    NSPopUpButton* fontPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(8, 4, 220, 28) pullsDown:NO];
+    for (NSUInteger i = 0; i < kMacFontCount; i++) {
+        [fontPopup addItemWithTitle:kMacFontNames[i]];
+    }
+    [fontPopup setTarget:self];
+    [fontPopup setAction:@selector(changeFont:)];
+    fontPopup.autoresizingMask = NSViewMaxXMargin;
+    [headerView addSubview:fontPopup];
+
+    NSSlider* sizeSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(236, 8, 200, 20)];
+    sizeSlider.minValue = 10;
+    sizeSlider.maxValue = 40;
+    sizeSlider.doubleValue = 15;
+    sizeSlider.target = self;
+    sizeSlider.action = @selector(changeSize:);
+    sizeSlider.autoresizingMask = NSViewWidthSizable;
+    [headerView addSubview:sizeSlider];
+
+    [mainView addSubview:headerView];
+
+    // Scroll view fills the window below the header.
+    NSRect scrollFrame = NSMakeRect(0, 0, mainView.bounds.size.width,
+                                    mainView.bounds.size.height - headerHeight);
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:scrollFrame];
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scrollView.hasVerticalScroller = YES;
     scrollView.hasHorizontalScroller = NO;
@@ -123,9 +165,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     self.labels[6].contentInsets = NSEdgeInsetsMake(0, 20, 0, 0);
     self.labels[7].backgroundColor = highlight;
     self.labels[7].labelMode = kMTMathUILabelModeText;
-    self.labels[8].fontSize = 30;
     self.labels[8].textAlignment = kMTTextAlignmentCenter;
-    self.labels[9].fontSize = 10;
     self.labels[9].textAlignment = kMTTextAlignmentCenter;
     self.labels[17].labelMode = kMTMathUILabelModeText;
     self.labels[18].labelMode = kMTMathUILabelModeText;
@@ -141,6 +181,28 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
+}
+
+#pragma mark - Font and size actions
+
+- (void)changeFont:(NSPopUpButton *)sender
+{
+    NSInteger i = sender.indexOfSelectedItem;
+    if (i < 0 || (NSUInteger)i >= kMacFontCount) return;
+    NSString* key = kMacFontKeys[i];
+    for (MTMathUILabel* label in self.demoLabels) {
+        label.font = [[MTFontManager fontManager] fontWithName:key size:label.font.fontSize];
+    }
+    for (MTMathUILabel* label in self.labels) {
+        label.font = [[MTFontManager fontManager] fontWithName:key size:label.font.fontSize];
+    }
+}
+
+- (void)changeSize:(NSSlider *)sender
+{
+    CGFloat size = (CGFloat)sender.doubleValue;
+    for (MTMathUILabel* label in self.demoLabels) { label.fontSize = size; }
+    for (MTMathUILabel* label in self.labels)     { label.fontSize = size; }
 }
 
 #pragma mark - Label creation helpers
