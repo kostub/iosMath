@@ -49,19 +49,16 @@ final class MTFontManagerTests: XCTestCase {
         XCTAssertNotNil(font)
     }
 
-    func testLatinModernFont() {
-        let font = MTFontManager().latinModernFont(withSize: 18)
-        XCTAssertNotNil(font)
-    }
-
-    func testXitsFont() {
-        let font = MTFontManager().xitsFont(withSize: 16)
-        XCTAssertNotNil(font)
-    }
-
-    func testTermesFont() {
-        let font = MTFontManager().termesFont(withSize: 16)
-        XCTAssertNotNil(font)
+    func testFontByName() {
+        let manager = MTFontManager()
+        let names = [
+            MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
+            MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
+            MTFontNameFiraMath, MTFontNameNotoSansMath,
+        ]
+        for name in names {
+            XCTAssertNotNil(manager.font(withName: name, size: 18), "Font \(name) failed to load")
+        }
     }
 }
 
