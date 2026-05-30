@@ -116,8 +116,7 @@ def get_italic_correction(math_table):
     for i in range(count):
         name = glyphs[i]
         record = records[i]
-        if record.DeviceTable is not None:
-            raise "Don't know how to process device table for italic correction."
+        # Device tables provide optical-size fine-tuning; ignore them and use the base Value.
         italic_dict[name] = record.Value
     return italic_dict
 
@@ -136,8 +135,7 @@ def get_accent_attachments(math_table):
     for i in range(count):
         name = glyphs[i]
         record = records[i]
-        if record.DeviceTable is not None:
-            raise "Don't know how to process device table for accent attachment."
+        # Device tables provide optical-size fine-tuning; ignore them and use the base Value.
         attach_dict[name] = record.Value
     return attach_dict
 

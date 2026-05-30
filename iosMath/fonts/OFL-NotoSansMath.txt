@@ -1,13 +1,8 @@
-Copyright (c) 2001-2010, STI Pub Companies, consisting of the American Institute of Physics, the American Chemical Society, the American Mathematical Society, the American Physical Society, Elsevier, Inc., and The Institute of Electrical and Electronic Engineers, Inc. (www.stixfonts.org), with Reserved Font Name STIX Fonts, STIX Fonts (TM) is a trademark of The Institute of Electrical and Electronics Engineers, Inc.
-Copyright (c) 1998-2003, MicroPress, Inc. (www.micropress-inc.com), with Reserved Font Name TM Math.
-Copyright (c) 1990, Elsevier, Inc.
-Copyright (c) 2014, 2015, (URW)++ Design & Development.
-Copyright (c) 2009-2019, Khaled Hosny.
-Copyright (c) 2019, Daniel Benjamin Miller.
+Copyright 2022 The Noto Project Authors (https://github.com/notofonts/math)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
-http://scripts.sil.org/OFL
+https://openfontlicense.org
 
 
 -----------------------------------------------------------
@@ -23,7 +18,7 @@ with others.
 
 The OFL allows the licensed fonts to be used, studied, modified and
 redistributed freely as long as they are not sold by themselves. The
-fonts, including any derivative works, can be bundled, embedded, 
+fonts, including any derivative works, can be bundled, embedded,
 redistributed and/or sold with any software provided that any reserved
 names are not used by derivative works. The fonts and derivatives,
 however, cannot be released under any other type of license. The
@@ -41,15 +36,15 @@ copyright statement(s).
 "Original Version" refers to the collection of Font Software components as
 distributed by the Copyright Holder(s).
 
-"Modified Version" refers to any derivative made by adding to, deleting,
-or substituting -- in part or in whole -- any of the components of the
-Original Version, by changing formats or by porting the Font Software to a
-new environment.
+"Modified Version" refers to any derivative made by adding to, excluding,
+replacing or rearranging -- in part or in whole -- any of the components
+of the Original Version, with the aim of creating a similar typeface design
+with a different name as specified elsewhere in this license.
 
-"Author" refers to any designer, engineer, programmer, technical
-writer or other person who contributed to the Font Software.
+"Author" refers to any designer, engineer, linguist, typographer and any
+other person who contributed to the Font Software.
 
-PERMISSION & CONDITIONS
+PERMISSION AND CONDITIONS
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of the Font Software, to use, study, copy, merge, embed, modify,
 redistribute, and sell modified and unmodified copies of the Font
@@ -73,7 +68,7 @@ presented to the users.
 4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
 Software shall not be used to promote, endorse or advertise any
 Modified Version, except to acknowledge the contribution(s) of the
-Copyright Holder(s) and the Author(s) or with their explicit written
+Copyright Holder(s) and Author(s) or with their explicit written
 permission.
 
 5) The Font Software, modified or unmodified, in part or in whole,
@@ -92,7 +87,7 @@ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
 OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
 COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
-DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
-OTHER DEALINGS IN THE FONT SOFTWARE.
+INCLUDING ANY GENERAL OR DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE FONT
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE FONT SOFTWARE.
