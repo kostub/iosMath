@@ -200,21 +200,40 @@ label.fontSize = 30
 
 ### Font
 
-The default font is *Latin Modern Math*. Three fonts are bundled; you can
-also use any OTF math font:
+The default font is *Latin Modern Math*. Eight fonts are bundled; you can
+also use any OTF math font. Select a font using `MTFontName*` constants and
+`font(withName:size:)`:
 
 ```swift
-label.font = MTFontManager().termesFont(withSize: 20)
+label.font = MTFontManager().font(withName: MTFontNameTermes, size: 20)
 ```
 
 <details>
 <summary>Objective-C</summary>
 
 ```objective-c
-label.font = [[MTFontManager fontManager] termesFontWithSize:20];
+label.font = [MTFontManager.fontManager fontWithName:MTFontNameTermes size:20];
 ```
 
 </details>
+
+The three per-font convenience methods (`latinModernFontWithSize:`,
+`xitsFontWithSize:`, `termesFontWithSize:`) were removed. Use
+`fontWithName:size:` with one of the bundled constants instead.
+`defaultFont` is unchanged and returns Latin Modern Math at 20pt.
+
+Available `MTFontName*` constants:
+
+| Constant | Font |
+|---|---|
+| `MTFontNameLatinModern` | Latin Modern Math |
+| `MTFontNameXITS` | XITS Math |
+| `MTFontNameTermes` | TeX Gyre Termes Math |
+| `MTFontNameNewComputerModern` | New Computer Modern Math |
+| `MTFontNamePagella` | TeX Gyre Pagella Math |
+| `MTFontNameSTIXTwo` | STIX Two Math |
+| `MTFontNameFiraMath` | Fira Math |
+| `MTFontNameNotoSansMath` | Noto Sans Math |
 
 ### Color
 
