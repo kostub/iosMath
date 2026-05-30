@@ -1,5 +1,30 @@
 ## Changelog
 
+### v2.3.0 (unreleased) — Breaking API change
+
+**Breaking:** Removed `latinModernFontWithSize:`, `xitsFontWithSize:`, and
+`termesFontWithSize:` from `MTFontManager`. Migrate to the generic accessor
+with the new public name constants:
+
+```objc
+// Before
+label.font = [[MTFontManager fontManager] termesFontWithSize:20];
+
+// After
+label.font = [[MTFontManager fontManager] fontWithName:MTFontNameTermes size:20];
+```
+
+`defaultFont` is unchanged and returns Latin Modern Math at 20pt.
+
+**New fonts:** Added five new OpenType MATH fonts — New Computer Modern Math,
+TeX Gyre Pagella Math, STIX Two Math, Fira Math, and Noto Sans Math. XITS Math
+updated to v1.302 (final upstream release).
+
+**New public constants** (`MTFontManager.h`): `MTFontNameLatinModern`,
+`MTFontNameXITS`, `MTFontNameTermes`, `MTFontNameNewComputerModern`,
+`MTFontNamePagella`, `MTFontNameSTIXTwo`, `MTFontNameFiraMath`,
+`MTFontNameNotoSansMath`.
+
 ### v2.2.0 (2026-05-16)
 * Add `\text{}`, `\textrm{}`, `\textbf{}`, `\textit{}`, `\textsf{}`, `\texttt{}` for rendering non-Latin text alongside math — supports CJK, Devanagari, Arabic, Hebrew, Cyrillic, and any other script handled by CoreText system-font cascade.
 * Add prime shorthand: `f'` parses as `f^{\prime}`, `f''` as `f^{\prime\prime}`, etc.
