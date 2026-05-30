@@ -47,7 +47,7 @@ enum MathFont: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     func font(size: CGFloat) -> MTFont? {
-        let manager = MTFontManager()
+        let manager = MTFontManager.fontManager()
         switch self {
         case .latinModern: return manager.latinModernFont(withSize: size)
         case .termes: return manager.termesFont(withSize: size)
