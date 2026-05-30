@@ -1626,6 +1626,23 @@
     }
 }
 
+- (void) testAllBundledFontsLoad
+{
+    // Every bundled font must resolve from its <key>.otf + <key>.plist pair
+    // and expose a non-nil math table. Keys are literal here (the public
+    // MTFontName* constants are introduced in a later PR).
+    NSArray<NSString*>* keys = @[
+        @"latinmodern-math", @"xits-math", @"texgyretermes-math",
+        @"newcm-math", @"texgyrepagella-math", @"stixtwo-math",
+        @"firamath", @"notosansmath",
+    ];
+    for (NSString* key in keys) {
+        MTFont* font = [[MTFontManager fontManager] fontWithName:key size:20];
+        XCTAssertNotNil(font, @"Font %@ failed to load", key);
+        XCTAssertNotNil(font.mathTable, @"Font %@ has no math table", key);
+    }
+}
+
 - (void) testAtomWithAllFontStyles:(MTMathAtom*) atom
 {
     NSArray* fontStyles = @[
