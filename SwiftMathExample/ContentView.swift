@@ -53,41 +53,37 @@ private struct NamedFormula {
     let title: String
     let latex: String
     var mode: MTMathUILabelMode = .display
-    var fontSize: CGFloat = 20
-    var height: CGFloat = 60
 }
 
 /// Curated examples — keep in sync with MathDemoFormulas() in MathExamples.h.
 /// LaTeX strings are sourced from MathDemoFormulas() so content stays consistent;
-/// titles and per-formula display metadata live here.
+/// titles live here.
 private struct NamedFormulaMeta {
     let title: String
     var mode: MTMathUILabelMode = .display
-    var fontSize: CGFloat = 20
-    var height: CGFloat = 60
 }
 
 private let namedExampleMeta: [NamedFormulaMeta] = [
-    NamedFormulaMeta(title: "Quadratic formula", height: 80),
-    NamedFormulaMeta(title: "Cosine addition formula", height: 60),
-    NamedFormulaMeta(title: "Rogers–Ramanujan continued fraction", height: 130),
-    NamedFormulaMeta(title: "Standard deviation", height: 80),
-    NamedFormulaMeta(title: "De Morgan's law", height: 60),
-    NamedFormulaMeta(title: "Change of base", height: 70),
-    NamedFormulaMeta(title: "Compound interest limit", height: 70),
-    NamedFormulaMeta(title: "Gaussian integral", height: 70),
-    NamedFormulaMeta(title: "AM-GM inequality", height: 80),
-    NamedFormulaMeta(title: "Cauchy integral formula", height: 80),
-    NamedFormulaMeta(title: "Schrödinger's equation", fontSize: 16, height: 80),
-    NamedFormulaMeta(title: "Cauchy-Schwarz inequality", height: 80),
-    NamedFormulaMeta(title: "Stirling numbers", height: 80),
-    NamedFormulaMeta(title: "Fourier transform", height: 70),
-    NamedFormulaMeta(title: "Lorenz system", height: 110),
-    NamedFormulaMeta(title: "Cross product", fontSize: 16, height: 140),
-    NamedFormulaMeta(title: "Maxwell's equations", fontSize: 16, height: 200),
-    NamedFormulaMeta(title: "2×2 matrix multiplication", fontSize: 16, height: 90),
-    NamedFormulaMeta(title: "EM algorithm Q-function", height: 130),
-    NamedFormulaMeta(title: "Piecewise function", height: 100),
+    NamedFormulaMeta(title: "Quadratic formula"),
+    NamedFormulaMeta(title: "Cosine addition formula"),
+    NamedFormulaMeta(title: "Rogers–Ramanujan continued fraction"),
+    NamedFormulaMeta(title: "Standard deviation"),
+    NamedFormulaMeta(title: "De Morgan's law"),
+    NamedFormulaMeta(title: "Change of base"),
+    NamedFormulaMeta(title: "Compound interest limit"),
+    NamedFormulaMeta(title: "Gaussian integral"),
+    NamedFormulaMeta(title: "AM-GM inequality"),
+    NamedFormulaMeta(title: "Cauchy integral formula"),
+    NamedFormulaMeta(title: "Schrödinger's equation"),
+    NamedFormulaMeta(title: "Cauchy-Schwarz inequality"),
+    NamedFormulaMeta(title: "Stirling numbers"),
+    NamedFormulaMeta(title: "Fourier transform"),
+    NamedFormulaMeta(title: "Lorenz system"),
+    NamedFormulaMeta(title: "Cross product"),
+    NamedFormulaMeta(title: "Maxwell's equations"),
+    NamedFormulaMeta(title: "2×2 matrix multiplication"),
+    NamedFormulaMeta(title: "EM algorithm Q-function"),
+    NamedFormulaMeta(title: "Piecewise function"),
 ]
 
 private let namedExamples: [NamedFormula] = {
@@ -95,7 +91,7 @@ private let namedExamples: [NamedFormula] = {
     precondition(formulas.count == namedExampleMeta.count,
                  "namedExampleMeta (\(namedExampleMeta.count)) must match MathDemoFormulas (\(formulas.count))")
     return zip(namedExampleMeta, formulas).map { meta, latex in
-        NamedFormula(title: meta.title, latex: latex, mode: meta.mode, fontSize: meta.fontSize, height: meta.height)
+        NamedFormula(title: meta.title, latex: latex, mode: meta.mode)
     }
 }()
 
@@ -138,11 +134,12 @@ private struct ExampleCard: View {
             // Horizontal scroll so a formula wider than the screen (e.g. the
             // Rogers–Ramanujan fraction in Latin Modern) scrolls within its card
             // instead of stretching the whole column and clipping every card's left edge.
+            // No fixed height: the label reports its intrinsic content height (see
+            // MathLabel.sizeThatFits), so tall formulae aren't vertically clipped at
+            // any font size.
             ScrollView(.horizontal, showsIndicators: false) {
                 MathLabel(latex: formula.latex, fontSize: fontSize, mode: formula.mode,
                           font: font.font(size: fontSize))
-                    // Scale the card height with the font so larger sizes aren't clipped.
-                    .frame(height: formula.height * (fontSize / formula.fontSize))
             }
         }
         .padding()
@@ -180,7 +177,9 @@ private struct PlaygroundTab: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
 
-                // Font switcher + size slider.
+                // Font switcher + size stepper. Spacer + fixedSize keep the
+                // stepper pinned to the trailing edge so it doesn't shift as the
+                // font picker's width changes with the selected font's name.
                 HStack {
                     Picker("Font", selection: $font) {
                         ForEach(MathFont.allCases) { font in
@@ -188,8 +187,9 @@ private struct PlaygroundTab: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    Slider(value: $fontSize, in: 10...40)
-                        .frame(maxWidth: 160)
+                    Spacer()
+                    Stepper("Size: \(Int(fontSize))", value: $fontSize, in: 10...40)
+                        .fixedSize()
                 }
 
                 // LaTeX editor.
