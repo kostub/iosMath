@@ -44,6 +44,7 @@
 @property (nonatomic) FontPickerDelegate* pickerDelegate;
 @property (weak, nonatomic) IBOutlet UITextField *colorField;
 @property (nonatomic) ColorPickerDelegate* colorPickerDelegate;
+@property (nonatomic) UILabel* sizeLabel;
 @property (weak, nonatomic) IBOutlet MTMathUILabel *mathLabel;
 @property (weak, nonatomic) IBOutlet UITextField *latexField;
 
@@ -97,54 +98,50 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
     self.latexField.delegate = self;
 
-    // Add a global font-size slider above the scroll view.
-    // The XIB pins scrollView.top to the Render panel's bottom; find that
-    // constraint, capture the Render panel reference, deactivate it, and insert
-    // the slider between the Render panel and the scroll view. (Deactivating
-    // rather than lowering priority: XIB constraints are required (1000), and
-    // mutating an active constraint's priority to/from required throws.)
-    UIView* renderPanelRef = nil;
-    for (NSLayoutConstraint* c in self.view.constraints) {
-        // Match only scrollView.top == <renderPanel>.bottom. Checking the other
-        // end's attribute avoids accidentally matching scrollView.top anchored to
-        // the safe area layout guide's top, which would pin the slider off-screen.
-        if (c.firstItem == self.scrollView && c.firstAttribute == NSLayoutAttributeTop
-            && c.secondAttribute == NSLayoutAttributeBottom) {
-            renderPanelRef = c.secondItem;
-            c.active = NO;
-            break;
-        } else if (c.secondItem == self.scrollView && c.secondAttribute == NSLayoutAttributeTop
-                   && c.firstAttribute == NSLayoutAttributeBottom) {
-            renderPanelRef = c.firstItem;
-            c.active = NO;
-            break;
-        }
-    }
-    UISlider* sizeSlider = [[UISlider alloc] init];
-    sizeSlider.translatesAutoresizingMaskIntoConstraints = NO;
-    sizeSlider.minimumValue = 10;
-    sizeSlider.maximumValue = 40;
-    sizeSlider.value = 15;
-    [sizeSlider addTarget:self action:@selector(sizeChanged:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:sizeSlider];
-    NSMutableArray<NSLayoutConstraint*>* sliderConstraints = [NSMutableArray arrayWithArray:@[
-        [sizeSlider.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:10],
-        [sizeSlider.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-10],
-        [self.scrollView.topAnchor constraintEqualToAnchor:sizeSlider.bottomAnchor constant:4],
+    // Global font-size control in the top row, beside the font + colour fields.
+    // A stepper (rather than a slider) shows the exact point size and keeps a
+    // fixed footprint, so it doesn't drift as the selected font name changes.
+    UIView* fontsPanel = self.fontField.superview;
+    self.sizeLabel = [[UILabel alloc] init];
+    self.sizeLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.sizeLabel.font = [UIFont systemFontOfSize:14];
+    [fontsPanel addSubview:self.sizeLabel];
+
+    UIStepper* sizeStepper = [[UIStepper alloc] init];
+    sizeStepper.translatesAutoresizingMaskIntoConstraints = NO;
+    sizeStepper.minimumValue = 10;
+    sizeStepper.maximumValue = 40;
+    sizeStepper.stepValue = 1;
+    sizeStepper.value = 15;
+    [sizeStepper addTarget:self action:@selector(sizeChanged:) forControlEvents:UIControlEventValueChanged];
+    [fontsPanel addSubview:sizeStepper];
+    // Row order: font field → colour field → size label → stepper. The stepper is
+    // anchored to the trailing safe area and the colour/size controls have fixed
+    // (intrinsic) widths, so the font field — which had its fixed width removed in
+    // the XIB — absorbs the remaining space. Everything stays on-screen and
+    // tappable at any width (iPhone 16 Pro included).
+    [NSLayoutConstraint activateConstraints:@[
+        [self.sizeLabel.leadingAnchor constraintEqualToAnchor:self.colorField.trailingAnchor constant:12],
+        [self.sizeLabel.centerYAnchor constraintEqualToAnchor:self.colorField.centerYAnchor],
+        [sizeStepper.leadingAnchor constraintEqualToAnchor:self.sizeLabel.trailingAnchor constant:8],
+        [sizeStepper.centerYAnchor constraintEqualToAnchor:self.colorField.centerYAnchor],
+        [sizeStepper.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-12],
     ]];
-    if (renderPanelRef) {
-        [sliderConstraints addObject:[sizeSlider.topAnchor constraintEqualToAnchor:renderPanelRef.bottomAnchor constant:4]];
-    } else {
-        // Fallback: pin slider to the scroll view's existing top position.
-        [sliderConstraints addObject:[sizeSlider.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:180]];
-    }
-    [NSLayoutConstraint activateConstraints:sliderConstraints];
+    // Let the font field shrink to fit the row rather than the size controls.
+    [self.fontField setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+    [self.fontField setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
+    [self updateSizeLabel:sizeStepper.value];
 
     UIView* contentView = [[UIView alloc] init];
     [self addFullSizeView:contentView to:self.scrollView];
-    // set the size of the content view
-    // Disable horizontal scrolling.
-    [self setEqualWidths:contentView andView:self.scrollView];
+    // Let the content view grow wider than the viewport so wide formulae (e.g.
+    // Rogers–Ramanujan in Latin Modern, or any formula at a large font size) can
+    // be reached by scrolling horizontally instead of being clipped. It still
+    // fills the viewport when every formula is narrower (low-priority equal width).
+    [contentView.widthAnchor constraintGreaterThanOrEqualToAnchor:self.scrollView.widthAnchor].active = YES;
+    NSLayoutConstraint* contentFillsWidth = [contentView.widthAnchor constraintEqualToAnchor:self.scrollView.widthAnchor];
+    contentFillsWidth.priority = UILayoutPriorityDefaultLow;
+    contentFillsWidth.active = YES;
     // Demo formulae — LaTeX strings from MathExamples.h
     static const CGFloat demoHeights[] = {
         60, 40, 120, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60
@@ -276,21 +273,15 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     return constraint;
 }
 
-- (void) setEqualWidths:(UIView*) view1 andView:(UIView*) view2
-{
-    NSLayoutConstraint* constraint = [NSLayoutConstraint constraintWithItem:view1
-                                                                  attribute:NSLayoutAttributeWidth
-                                                                  relatedBy:NSLayoutRelationEqual toItem:view2
-                                                                  attribute:NSLayoutAttributeWidth multiplier:1 constant:0];
-    constraint.active = YES;
-}
-
 - (void) addLabelAsSubview:(UIView*) label to:(UIView*) parent
 {
     label.translatesAutoresizingMaskIntoConstraints = NO;
     NSDictionary *views = NSDictionaryOfVariableBindings(label);
     [parent addSubview:label];
-    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(10)-[label]-(10)-|"
+    // Pin the label's leading edge; leave the trailing as a >= gap so the label
+    // keeps its natural (intrinsic) width and pushes the content view wider than
+    // the viewport when needed, enabling horizontal scrolling instead of clipping.
+    [NSLayoutConstraint activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(10)-[label]-(>=10)-|"
                                                                                     options:0
                                                                                     metrics:nil
                                                                                       views:views]];
@@ -309,9 +300,15 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
 #pragma mark Actions
 
-- (void)sizeChanged:(UISlider *)sender
+- (void)updateSizeLabel:(CGFloat)size
+{
+    self.sizeLabel.text = [NSString stringWithFormat:@"%dpt", (int)size];
+}
+
+- (void)sizeChanged:(UIStepper *)sender
 {
     CGFloat size = (CGFloat)sender.value;
+    [self updateSizeLabel:size];
     // Scale each label's height from its startup baseline so formulas grow with
     // the font instead of being clipped by the fixed startup heights.
     CGFloat total = 10; // top inset

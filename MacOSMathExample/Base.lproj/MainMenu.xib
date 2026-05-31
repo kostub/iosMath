@@ -15,8 +15,6 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
-                <outlet property="inputTextField" destination="3eF-aq-wq7" id="ZaO-Km-dmc"/>
-                <outlet property="screen" destination="JGc-8F-Tcp" id="k46-7h-xbX"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -690,29 +688,6 @@
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                 <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rQu-NO-fcw">
-                        <rect key="frame" x="200" y="13" width="81" height="32"/>
-                        <buttonCell key="cell" type="push" title="Update!" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="q3o-Jo-ri0">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="clickUpdateButton:" target="Voe-Tx-rLC" id="pNr-c5-o7t"/>
-                        </connections>
-                    </button>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3eF-aq-wq7">
-                        <rect key="frame" x="20" y="49" width="440" height="22"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Enter LaTeX here..." drawsBackground="YES" id="w3t-RT-Vy0">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JGc-8F-Tcp" customClass="MTMathUILabel">
-                        <rect key="frame" x="20" y="79" width="440" height="261"/>
-                    </customView>
-                </subviews>
             </view>
         </window>
     </objects>

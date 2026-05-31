@@ -22,17 +22,10 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="TgX-F7-Ft9" userLabel="Fonts">
                     <rect key="frame" x="0.0" y="20" width="320" height="55"/>
                     <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Font" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jX6-20-7Ej" userLabel="Font">
-                            <rect key="frame" x="20" y="17" width="35" height="21"/>
-                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                            <nil key="highlightedColor"/>
-                        </label>
                         <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Select Font" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="1Dd-7L-RPK">
                             <rect key="frame" x="75" y="10" width="150" height="35"/>
                             <color key="tintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             <constraints>
-                                <constraint firstAttribute="width" constant="150" id="CyA-dv-DuT"/>
                                 <constraint firstAttribute="height" constant="35" id="g0P-wJ-SDj"/>
                             </constraints>
                             <color key="textColor" white="0.10119452957923596" alpha="1" colorSpace="calibratedWhite"/>
@@ -60,11 +53,9 @@
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <constraints>
                         <constraint firstItem="1HJ-UO-PhD" firstAttribute="leading" secondItem="1Dd-7L-RPK" secondAttribute="trailing" constant="20" id="0Rl-Fc-egH"/>
-                        <constraint firstItem="1Dd-7L-RPK" firstAttribute="centerY" secondItem="jX6-20-7Ej" secondAttribute="centerY" id="8v1-zn-J5U"/>
                         <constraint firstAttribute="bottom" secondItem="rTW-h3-GpQ" secondAttribute="bottom" id="UrJ-3Q-LUk"/>
                         <constraint firstAttribute="trailing" secondItem="rTW-h3-GpQ" secondAttribute="trailing" id="V4c-mL-jDf"/>
-                        <constraint firstItem="jX6-20-7Ej" firstAttribute="leading" secondItem="TgX-F7-Ft9" secondAttribute="leading" constant="20" id="ZaS-xG-iMP"/>
-                        <constraint firstItem="1Dd-7L-RPK" firstAttribute="leading" secondItem="jX6-20-7Ej" secondAttribute="trailing" constant="20" id="irc-C9-y2q"/>
+                        <constraint firstItem="1Dd-7L-RPK" firstAttribute="leading" secondItem="TgX-F7-Ft9" secondAttribute="leading" constant="20" id="irc-C9-y2q"/>
                         <constraint firstItem="1Dd-7L-RPK" firstAttribute="top" secondItem="TgX-F7-Ft9" secondAttribute="top" constant="10" id="k2c-EJ-vB4"/>
                         <constraint firstItem="rTW-h3-GpQ" firstAttribute="leading" secondItem="TgX-F7-Ft9" secondAttribute="leading" id="kM0-FE-TvF"/>
                         <constraint firstAttribute="bottom" secondItem="1Dd-7L-RPK" secondAttribute="bottom" constant="10" id="nVe-HW-eXq"/>
