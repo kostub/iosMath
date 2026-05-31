@@ -47,11 +47,6 @@ static NSString *const kMacFontNames[] = {
     @"New Computer Modern", @"TeX Gyre Pagella", @"STIX Two",
     @"Fira Math", @"Noto Sans Math",
 };
-static NSString *const kMacFontKeys[] = {
-    @"latinmodern-math", @"texgyretermes-math", @"xits-math",
-    @"newcm-math", @"texgyrepagella-math", @"stixtwo-math",
-    @"firamath", @"notosansmath",
-};
 static const NSUInteger kMacFontCount = 8;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -209,6 +204,14 @@ static const NSUInteger kMacFontCount = 8;
 {
     NSInteger i = sender.indexOfSelectedItem;
     if (i < 0 || (NSUInteger)i >= kMacFontCount) return;
+    // Local (non-static) array: the public MTFontName* constants are runtime
+    // `extern NSString *const` values, not compile-time constants, so they can't
+    // initialize a file-scope static array.
+    NSString *const kMacFontKeys[] = {
+        MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
+        MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
+        MTFontNameFiraMath, MTFontNameNotoSansMath,
+    };
     NSString* key = kMacFontKeys[i];
     for (MTMathUILabel* label in self.demoLabels) {
         label.font = [[MTFontManager fontManager] fontWithName:key size:label.font.fontSize];

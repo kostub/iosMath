@@ -99,8 +99,10 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
     // Add a global font-size slider above the scroll view.
     // The XIB pins scrollView.top to the Render panel's bottom; find that
-    // constraint, capture the Render panel reference, lower its priority, and
-    // insert the slider between the Render panel and the scroll view.
+    // constraint, capture the Render panel reference, deactivate it, and insert
+    // the slider between the Render panel and the scroll view. (Deactivating
+    // rather than lowering priority: XIB constraints are required (1000), and
+    // mutating an active constraint's priority to/from required throws.)
     UIView* renderPanelRef = nil;
     for (NSLayoutConstraint* c in self.view.constraints) {
         // Match only scrollView.top == <renderPanel>.bottom. Checking the other
@@ -109,12 +111,12 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         if (c.firstItem == self.scrollView && c.firstAttribute == NSLayoutAttributeTop
             && c.secondAttribute == NSLayoutAttributeBottom) {
             renderPanelRef = c.secondItem;
-            c.priority = UILayoutPriorityDefaultLow;
+            c.active = NO;
             break;
         } else if (c.secondItem == self.scrollView && c.secondAttribute == NSLayoutAttributeTop
                    && c.firstAttribute == NSLayoutAttributeBottom) {
             renderPanelRef = c.firstItem;
-            c.priority = UILayoutPriorityDefaultLow;
+            c.active = NO;
             break;
         }
     }
