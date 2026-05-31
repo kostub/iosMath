@@ -14,6 +14,15 @@
 
 const int kDefaultFontSize = 20;
 
+NSString *const MTFontNameLatinModern       = @"latinmodern-math";
+NSString *const MTFontNameXITS              = @"xits-math";
+NSString *const MTFontNameTermes            = @"texgyretermes-math";
+NSString *const MTFontNameNewComputerModern = @"newcm-math";
+NSString *const MTFontNamePagella           = @"texgyrepagella-math";
+NSString *const MTFontNameSTIXTwo           = @"stixtwo-math";
+NSString *const MTFontNameFiraMath          = @"firamath";
+NSString *const MTFontNameNotoSansMath      = @"notosansmath";
+
 @interface MTFontManager ()
 
 @property (nonatomic, nonnull) NSMutableDictionary<NSString*, MTFont*>* nameToFontMap;
@@ -22,16 +31,19 @@ const int kDefaultFontSize = 20;
 
 @implementation MTFontManager
 
-+ (instancetype) fontManager
++ (MTFontManager *) fontManager
 {
     static MTFontManager* manager = nil;
-    if (manager == nil) {
-        manager = [MTFontManager new];
-    }
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        manager = [[self alloc] initPrivate];
+    });
     return manager;
 }
 
-- (instancetype)init
+// init/new are NS_UNAVAILABLE so callers can't bypass the singleton; the
+// shared instance is built through this private initializer instead.
+- (instancetype)initPrivate
 {
     self = [super init];
     if (self) {
@@ -54,24 +66,9 @@ const int kDefaultFontSize = 20;
     }
 }
 
-- (MTFont *)latinModernFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"latinmodern-math" size:size];
-}
-
-- (MTFont *)xitsFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"xits-math" size:size];
-}
-
-- (MTFont *)termesFontWithSize:(CGFloat)size
-{
-    return [self fontWithName:@"texgyretermes-math" size:size];
-}
-
 - (MTFont *)defaultFont
 {
-    return [self latinModernFontWithSize:kDefaultFontSize];
+    return [self fontWithName:MTFontNameLatinModern size:kDefaultFontSize];
 }
 
 + (CTFontRef) textCTFontForStyle:(MTTextStyle) style

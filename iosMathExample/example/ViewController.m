@@ -39,6 +39,8 @@
 @property (weak, nonatomic) IBOutlet MTMathUILabel *mathLabel;
 @property (weak, nonatomic) IBOutlet UITextField *latexField;
 
+- (void)applyFontWithName:(NSString *)name;
+
 @end
 
 @implementation ViewController
@@ -253,33 +255,13 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 }
 
 #pragma mark Buttons
-- (void)latinButtonPressed:(id)sender
+- (void)applyFontWithName:(NSString *)name
 {
     for (MTMathUILabel* label in self.demoLabels) {
-        label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
+        label.font = [[MTFontManager fontManager] fontWithName:name size:label.font.fontSize];
     }
     for (MTMathUILabel* label in self.labels) {
-        label.font = [[MTFontManager fontManager] latinModernFontWithSize:label.font.fontSize];
-    }
-}
-
-- (void)termesButtonPressed:(id)sender
-{
-    for (MTMathUILabel* label in self.demoLabels) {
-        label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
-    }
-    for (MTMathUILabel* label in self.labels) {
-        label.font = [[MTFontManager fontManager] termesFontWithSize:label.font.fontSize];
-    }
-}
-
-- (void)xitsButtonPressed:(id)sender
-{
-    for (MTMathUILabel* label in self.demoLabels) {
-        label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
-    }
-    for (MTMathUILabel* label in self.labels) {
-        label.font = [[MTFontManager fontManager] xitsFontWithSize:label.font.fontSize];
+        label.font = [[MTFontManager fontManager] fontWithName:name size:label.font.fontSize];
     }
 }
 
@@ -341,24 +323,14 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
+    // Display names (self.fontNames) map 1:1 to these loader keys.
+    // Not static: extern const NSString* values aren't compile-time constants.
+    NSString *const kFontKeys[] = {
+        MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
+    };
     self.controller.fontField.text = self.fontNames[row];
     [self.controller.fontField resignFirstResponder];
-    switch (row) {
-        case 0:
-            [self.controller latinButtonPressed:nil];
-            break;
-
-        case 1:
-            [self.controller termesButtonPressed:nil];
-            break;
-
-        case 2:
-            [self.controller xitsButtonPressed:nil];
-            break;
-
-        default:
-            break;
-    }
+    [self.controller applyFontWithName:kFontKeys[row]];
 }
 
 @end

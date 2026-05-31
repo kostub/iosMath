@@ -17,12 +17,31 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString *const MTFontNameLatinModern;
+extern NSString *const MTFontNameXITS;
+extern NSString *const MTFontNameTermes;
+extern NSString *const MTFontNameNewComputerModern;
+extern NSString *const MTFontNamePagella;
+extern NSString *const MTFontNameSTIXTwo;
+extern NSString *const MTFontNameFiraMath;
+extern NSString *const MTFontNameNotoSansMath;
+
 /** A manager to load font files from disc and keep them
  in memory. */
 @interface MTFontManager : NSObject
 
-/** Get the singleton instance of MTFontManager. */
-+ (instancetype) fontManager;
+/** The shared font manager.
+
+ Declared as a class property (not a `+fontManager` factory method) so that
+ Swift imports it as `MTFontManager.fontManager` instead of collapsing it into
+ `init()`. In Objective-C it is still reached via `[MTFontManager fontManager]`
+ or `MTFontManager.fontManager`. */
+@property (class, readonly, strong) MTFontManager *fontManager;
+
+/** MTFontManager is a singleton; use +fontManager. Constructing your own
+ instance bypasses the shared font cache, so init/new are unavailable. */
++ (instancetype) new NS_UNAVAILABLE;
+- (instancetype) init NS_UNAVAILABLE;
 
 /** Returns the default font, which is Latin Modern Math with 20pt */
 - (MTFont *) defaultFont;
@@ -35,15 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
  @param size The size of the font to return.
  */
 - (MTFont *) fontWithName:(NSString *)name size:(CGFloat)size;
-
-/** Helper function to return the Xits Math font. */
-- (MTFont *) xitsFontWithSize:(CGFloat)size;
-
-/** Helper function to return the Tex Gyre Termes Math font. */
-- (MTFont *) termesFontWithSize:(CGFloat)size;
-
-/** Helper function to return the Latin Modern Math font. */
-- (MTFont *) latinModernFontWithSize:(CGFloat)size;
 
 /**
  Returns a CoreText font suitable for `\text*` rendering. The caller owns

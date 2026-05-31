@@ -39,29 +39,27 @@ final class MTMathUILabelTests: XCTestCase {
 }
 
 final class MTFontManagerTests: XCTestCase {
-    func testFontManagerInit() {
-        let mgr = MTFontManager()
-        XCTAssertNotNil(mgr)
+    func testFontManagerSingleton() {
+        // fontManager is a class property, so repeated access returns the same
+        // shared instance (and there is no MTFontManager() to bypass it).
+        XCTAssertTrue(MTFontManager.fontManager === MTFontManager.fontManager)
     }
 
     func testDefaultFont() {
-        let font = MTFontManager().defaultFont()
+        let font = MTFontManager.fontManager.defaultFont()
         XCTAssertNotNil(font)
     }
 
-    func testLatinModernFont() {
-        let font = MTFontManager().latinModernFont(withSize: 18)
-        XCTAssertNotNil(font)
-    }
-
-    func testXitsFont() {
-        let font = MTFontManager().xitsFont(withSize: 16)
-        XCTAssertNotNil(font)
-    }
-
-    func testTermesFont() {
-        let font = MTFontManager().termesFont(withSize: 16)
-        XCTAssertNotNil(font)
+    func testFontByName() {
+        let manager = MTFontManager.fontManager
+        let names = [
+            MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
+            MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
+            MTFontNameFiraMath, MTFontNameNotoSansMath,
+        ]
+        for name in names {
+            XCTAssertNotNil(manager.font(withName: name, size: 18), "Font \(name) failed to load")
+        }
     }
 }
 
