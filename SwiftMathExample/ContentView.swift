@@ -32,14 +32,16 @@ struct ContentView: View {
     /// Selected math font, shared across all tabs — switching it in the
     /// Playground re-renders the Examples and Gallery too, mirroring the ObjC example.
     @State private var font: MathFont = .latinModern
+    /// Global font size, shared across all tabs (range 10–40, default 15).
+    @State private var fontSize: CGFloat = 15
 
     var body: some View {
         TabView {
-            ExamplesTab(font: font)
+            ExamplesTab(font: font, fontSize: fontSize)
                 .tabItem { Label("Examples", systemImage: "function") }
-            PlaygroundTab(font: $font)
+            PlaygroundTab(font: $font, fontSize: $fontSize)
                 .tabItem { Label("Playground", systemImage: "pencil.and.scribble") }
-            GalleryTab(font: font)
+            GalleryTab(font: font, fontSize: fontSize)
                 .tabItem { Label("Gallery", systemImage: "square.grid.2x2") }
         }
     }
@@ -51,41 +53,37 @@ private struct NamedFormula {
     let title: String
     let latex: String
     var mode: MTMathUILabelMode = .display
-    var fontSize: CGFloat = 20
-    var height: CGFloat = 60
 }
 
 /// Curated examples — keep in sync with MathDemoFormulas() in MathExamples.h.
 /// LaTeX strings are sourced from MathDemoFormulas() so content stays consistent;
-/// titles and per-formula display metadata live here.
+/// titles live here.
 private struct NamedFormulaMeta {
     let title: String
     var mode: MTMathUILabelMode = .display
-    var fontSize: CGFloat = 20
-    var height: CGFloat = 60
 }
 
 private let namedExampleMeta: [NamedFormulaMeta] = [
-    NamedFormulaMeta(title: "Quadratic formula", height: 80),
-    NamedFormulaMeta(title: "Cosine addition formula", height: 60),
-    NamedFormulaMeta(title: "Rogers–Ramanujan continued fraction", height: 130),
-    NamedFormulaMeta(title: "Standard deviation", height: 80),
-    NamedFormulaMeta(title: "De Morgan's law", height: 60),
-    NamedFormulaMeta(title: "Change of base", height: 70),
-    NamedFormulaMeta(title: "Compound interest limit", height: 70),
-    NamedFormulaMeta(title: "Gaussian integral", height: 70),
-    NamedFormulaMeta(title: "AM-GM inequality", height: 80),
-    NamedFormulaMeta(title: "Cauchy integral formula", height: 80),
-    NamedFormulaMeta(title: "Schrödinger's equation", fontSize: 16, height: 80),
-    NamedFormulaMeta(title: "Cauchy-Schwarz inequality", height: 80),
-    NamedFormulaMeta(title: "Stirling numbers", height: 80),
-    NamedFormulaMeta(title: "Fourier transform", height: 70),
-    NamedFormulaMeta(title: "Lorenz system", height: 110),
-    NamedFormulaMeta(title: "Cross product", fontSize: 16, height: 140),
-    NamedFormulaMeta(title: "Maxwell's equations", fontSize: 16, height: 200),
-    NamedFormulaMeta(title: "2×2 matrix multiplication", fontSize: 16, height: 90),
-    NamedFormulaMeta(title: "EM algorithm Q-function", height: 130),
-    NamedFormulaMeta(title: "Piecewise function", height: 100),
+    NamedFormulaMeta(title: "Quadratic formula"),
+    NamedFormulaMeta(title: "Cosine addition formula"),
+    NamedFormulaMeta(title: "Rogers–Ramanujan continued fraction"),
+    NamedFormulaMeta(title: "Standard deviation"),
+    NamedFormulaMeta(title: "De Morgan's law"),
+    NamedFormulaMeta(title: "Change of base"),
+    NamedFormulaMeta(title: "Compound interest limit"),
+    NamedFormulaMeta(title: "Gaussian integral"),
+    NamedFormulaMeta(title: "AM-GM inequality"),
+    NamedFormulaMeta(title: "Cauchy integral formula"),
+    NamedFormulaMeta(title: "Schrödinger's equation"),
+    NamedFormulaMeta(title: "Cauchy-Schwarz inequality"),
+    NamedFormulaMeta(title: "Stirling numbers"),
+    NamedFormulaMeta(title: "Fourier transform"),
+    NamedFormulaMeta(title: "Lorenz system"),
+    NamedFormulaMeta(title: "Cross product"),
+    NamedFormulaMeta(title: "Maxwell's equations"),
+    NamedFormulaMeta(title: "2×2 matrix multiplication"),
+    NamedFormulaMeta(title: "EM algorithm Q-function"),
+    NamedFormulaMeta(title: "Piecewise function"),
 ]
 
 private let namedExamples: [NamedFormula] = {
@@ -93,20 +91,21 @@ private let namedExamples: [NamedFormula] = {
     precondition(formulas.count == namedExampleMeta.count,
                  "namedExampleMeta (\(namedExampleMeta.count)) must match MathDemoFormulas (\(formulas.count))")
     return zip(namedExampleMeta, formulas).map { meta, latex in
-        NamedFormula(title: meta.title, latex: latex, mode: meta.mode, fontSize: meta.fontSize, height: meta.height)
+        NamedFormula(title: meta.title, latex: latex, mode: meta.mode)
     }
 }()
 
 /// Curated, named examples — suitable as a quick-start reference.
 private struct ExamplesTab: View {
     let font: MathFont
+    let fontSize: CGFloat
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     ForEach(namedExamples.indices, id: \.self) { i in
-                        ExampleCard(formula: namedExamples[i], font: font)
+                        ExampleCard(formula: namedExamples[i], font: font, fontSize: fontSize)
                     }
                 }
                 .padding()
@@ -125,6 +124,7 @@ private struct ExamplesTab: View {
 private struct ExampleCard: View {
     let formula: NamedFormula
     let font: MathFont
+    let fontSize: CGFloat
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -134,10 +134,12 @@ private struct ExampleCard: View {
             // Horizontal scroll so a formula wider than the screen (e.g. the
             // Rogers–Ramanujan fraction in Latin Modern) scrolls within its card
             // instead of stretching the whole column and clipping every card's left edge.
+            // No fixed height: the label reports its intrinsic content height (see
+            // MathLabel.sizeThatFits), so tall formulae aren't vertically clipped at
+            // any font size.
             ScrollView(.horizontal, showsIndicators: false) {
-                MathLabel(latex: formula.latex, fontSize: formula.fontSize, mode: formula.mode,
-                          font: font.font(size: formula.fontSize))
-                    .frame(height: formula.height)
+                MathLabel(latex: formula.latex, fontSize: fontSize, mode: formula.mode,
+                          font: font.font(size: fontSize))
             }
         }
         .padding()
@@ -153,9 +155,8 @@ private struct ExampleCard: View {
 /// live. Mirrors the LaTeX text field and font switcher in the ObjC iosMathExample.
 private struct PlaygroundTab: View {
     @Binding var font: MathFont
+    @Binding var fontSize: CGFloat
     @State private var latex = #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#
-
-    private let fontSize: CGFloat = 24
 
     var body: some View {
         NavigationView {
@@ -176,13 +177,20 @@ private struct PlaygroundTab: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
 
-                // Font switcher.
-                Picker("Font", selection: $font) {
-                    ForEach(MathFont.allCases) { font in
-                        Text(font.rawValue).tag(font)
+                // Font switcher + size stepper. Spacer + fixedSize keep the
+                // stepper pinned to the trailing edge so it doesn't shift as the
+                // font picker's width changes with the selected font's name.
+                HStack {
+                    Picker("Font", selection: $font) {
+                        ForEach(MathFont.allCases) { font in
+                            Text(font.rawValue).tag(font)
+                        }
                     }
+                    .pickerStyle(.menu)
+                    Spacer()
+                    Stepper("Size: \(Int(fontSize))", value: $fontSize, in: 10...40)
+                        .fixedSize()
                 }
-                .pickerStyle(.segmented)
 
                 // LaTeX editor.
                 Text("LaTeX")
@@ -220,6 +228,7 @@ private struct PlaygroundTab: View {
 /// Full typesetter test suite. Curated real-math formulae live in the Examples tab.
 private struct GalleryTab: View {
     let font: MathFont
+    let fontSize: CGFloat
 
     private static let testHeights: [CGFloat] = [
         40, 40, 40, 40, 40, 60, 60, 60, 90, 30, 40, 90, 40, 60, 60, 60,
@@ -240,15 +249,17 @@ private struct GalleryTab: View {
                     ForEach(testFormulas.indices, id: \.self) { i in
                         MathLabel(
                             latex: testFormulas[i],
-                            fontSize: testFontSize(at: i),
+                            fontSize: fontSize,
                             mode: testMode(at: i),
                             alignment: testAlignment(at: i),
                             highlighted: [0, 1, 3, 6, 7].contains(i),
                             leftInset: i == 6 ? 20 : 0,
                             rightInset: i == 3 ? 20 : 0,
-                            font: font.font(size: testFontSize(at: i))
+                            font: font.font(size: fontSize)
                         )
-                        .frame(height: testHeight(at: i))
+                        // Scale the row height with the font, relative to the size
+                        // each entry's height was tuned for, so nothing clips.
+                        .frame(height: testHeight(at: i) * (fontSize / testBaselineFontSize(at: i)))
                         .padding(.horizontal, 10)
                     }
                 }
@@ -265,16 +276,18 @@ private struct GalleryTab: View {
         #endif
     }
 
-    private func testFontSize(at i: Int) -> CGFloat {
+    private func testHeight(at i: Int) -> CGFloat {
+        Self.testHeights.indices.contains(i) ? Self.testHeights[i] : 40
+    }
+
+    /// Font size each entry's tuned height assumes, used to scale heights with
+    /// the slider. Indices 8 and 9 were originally shown larger/smaller.
+    private func testBaselineFontSize(at i: Int) -> CGFloat {
         switch i {
         case 8: return 30
         case 9: return 10
         default: return 15
         }
-    }
-
-    private func testHeight(at i: Int) -> CGFloat {
-        Self.testHeights.indices.contains(i) ? Self.testHeights[i] : 40
     }
 
     private func testMode(at i: Int) -> MTMathUILabelMode {
