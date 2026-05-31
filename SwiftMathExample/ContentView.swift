@@ -141,7 +141,8 @@ private struct ExampleCard: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 MathLabel(latex: formula.latex, fontSize: fontSize, mode: formula.mode,
                           font: font.font(size: fontSize))
-                    .frame(height: formula.height)
+                    // Scale the card height with the font so larger sizes aren't clipped.
+                    .frame(height: formula.height * (fontSize / formula.fontSize))
             }
         }
         .padding()
@@ -256,7 +257,9 @@ private struct GalleryTab: View {
                             rightInset: i == 3 ? 20 : 0,
                             font: font.font(size: fontSize)
                         )
-                        .frame(height: testHeight(at: i))
+                        // Scale the row height with the font, relative to the size
+                        // each entry's height was tuned for, so nothing clips.
+                        .frame(height: testHeight(at: i) * (fontSize / testBaselineFontSize(at: i)))
                         .padding(.horizontal, 10)
                     }
                 }
@@ -275,6 +278,16 @@ private struct GalleryTab: View {
 
     private func testHeight(at i: Int) -> CGFloat {
         Self.testHeights.indices.contains(i) ? Self.testHeights[i] : 40
+    }
+
+    /// Font size each entry's tuned height assumes, used to scale heights with
+    /// the slider. Indices 8 and 9 were originally shown larger/smaller.
+    private func testBaselineFontSize(at i: Int) -> CGFloat {
+        switch i {
+        case 8: return 30
+        case 9: return 10
+        default: return 15
+        }
     }
 
     private func testMode(at i: Int) -> MTMathUILabelMode {

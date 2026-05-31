@@ -32,6 +32,14 @@
 
 @property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* demoLabels;
 @property (nonatomic, nonnull) NSMutableArray<MTMathUILabel*>* labels;
+// Height constraints + their startup constants, so the size slider can rescale
+// each label (and the content view) instead of clipping at larger font sizes.
+// Demo labels render at fontSize 15; test labels at the default 20.
+@property (nonatomic, nonnull) NSMutableArray<NSLayoutConstraint*>* demoHeightConstraints;
+@property (nonatomic, nonnull) NSMutableArray<NSLayoutConstraint*>* testHeightConstraints;
+@property (nonatomic, nonnull) NSMutableArray<NSNumber*>* demoBaseHeights;
+@property (nonatomic, nonnull) NSMutableArray<NSNumber*>* testBaseHeights;
+@property (nonatomic) NSLayoutConstraint* contentHeightConstraint;
 @property (weak, nonatomic) IBOutlet UITextField *fontField;
 @property (nonatomic) FontPickerDelegate* pickerDelegate;
 @property (weak, nonatomic) IBOutlet UITextField *colorField;
@@ -56,6 +64,10 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     if (self) {
         self.demoLabels = [[NSMutableArray alloc] init];
         self.labels = [[NSMutableArray alloc] init];
+        self.demoHeightConstraints = [[NSMutableArray alloc] init];
+        self.testHeightConstraints = [[NSMutableArray alloc] init];
+        self.demoBaseHeights = [[NSMutableArray alloc] init];
+        self.testBaseHeights = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -91,11 +103,16 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     // insert the slider between the Render panel and the scroll view.
     UIView* renderPanelRef = nil;
     for (NSLayoutConstraint* c in self.view.constraints) {
-        if (c.firstItem == self.scrollView && c.firstAttribute == NSLayoutAttributeTop) {
+        // Match only scrollView.top == <renderPanel>.bottom. Checking the other
+        // end's attribute avoids accidentally matching scrollView.top anchored to
+        // the safe area layout guide's top, which would pin the slider off-screen.
+        if (c.firstItem == self.scrollView && c.firstAttribute == NSLayoutAttributeTop
+            && c.secondAttribute == NSLayoutAttributeBottom) {
             renderPanelRef = c.secondItem;
             c.priority = UILayoutPriorityDefaultLow;
             break;
-        } else if (c.secondItem == self.scrollView && c.secondAttribute == NSLayoutAttributeTop) {
+        } else if (c.secondItem == self.scrollView && c.secondAttribute == NSLayoutAttributeTop
+                   && c.firstAttribute == NSLayoutAttributeBottom) {
             renderPanelRef = c.firstItem;
             c.priority = UILayoutPriorityDefaultLow;
             break;
@@ -133,9 +150,12 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {
         CGFloat height = HeightAtIndex(demoHeights, sizeof(demoHeights)/sizeof(CGFloat), i, 60);
-        MTMathUILabel* label = [self createMathLabel:demoFormulas[i] withHeight:height];
+        MTMathUILabel* label = [[MTMathUILabel alloc] init];
+        label.latex = demoFormulas[i];
         label.fontSize = 15;
         [self.demoLabels addObject:label];
+        [self.demoHeightConstraints addObject:[self setHeight:height forView:label]];
+        [self.demoBaseHeights addObject:@(height)];
     }
 
     [self addLabelAsSubview:self.demoLabels[0] to:contentView];
@@ -165,7 +185,11 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     NSArray<NSString*>* testFormulas = MathTestFormulas();
     for (NSUInteger i = 0; i < testFormulas.count; i++) {
         CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
-        [self.labels addObject:[self createMathLabel:testFormulas[i] withHeight:height]];
+        MTMathUILabel* label = [[MTMathUILabel alloc] init];
+        label.latex = testFormulas[i];
+        [self.labels addObject:label];
+        [self.testHeightConstraints addObject:[self setHeight:height forView:label]];
+        [self.testBaseHeights addObject:@(height)];
     }
 
     CGFloat totalHeight = 10; // top inset
@@ -178,7 +202,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         totalHeight += HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
         totalHeight += 10;
     }
-    [self setHeight:totalHeight forView:contentView];
+    self.contentHeightConstraint = [self setHeight:totalHeight forView:contentView];
 
     // Rendering properties that are not shared (alignment, mode, color, insets, fontSize).
     UIColor* highlight = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
@@ -221,14 +245,6 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     [self setVerticalGap:10 between:array[idx - 1] and:array[idx]];
 }
 
--(MTMathUILabel*) createMathLabel:(NSString*) latex withHeight:(CGFloat) height
-{
-    MTMathUILabel* label = [[MTMathUILabel alloc] init];
-    [self setHeight:height forView:label];
-    label.latex = latex;
-    return label;
-}
-
 #pragma mark Constraints
 - (void)addFullSizeView:(UIView *)view to:(UIView*) parent
 {
@@ -245,7 +261,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
                                                                      views:views]];
 }
 
-- (void) setHeight:(CGFloat) height forView:(UIView*) view
+- (NSLayoutConstraint*) setHeight:(CGFloat) height forView:(UIView*) view
 {
     view.translatesAutoresizingMaskIntoConstraints = false;
     // Add height constraint
@@ -255,6 +271,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
                                                                   attribute:NSLayoutAttributeNotAnAttribute multiplier:1
                                                                    constant:height];
     constraint.active = YES;
+    return constraint;
 }
 
 - (void) setEqualWidths:(UIView*) view1 andView:(UIView*) view2
@@ -293,8 +310,23 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 - (void)sizeChanged:(UISlider *)sender
 {
     CGFloat size = (CGFloat)sender.value;
-    for (MTMathUILabel* label in self.demoLabels) { label.fontSize = size; }
-    for (MTMathUILabel* label in self.labels)     { label.fontSize = size; }
+    // Scale each label's height from its startup baseline so formulas grow with
+    // the font instead of being clipped by the fixed startup heights.
+    CGFloat total = 10; // top inset
+    for (NSUInteger i = 0; i < self.demoLabels.count; i++) {
+        self.demoLabels[i].fontSize = size;
+        CGFloat h = self.demoBaseHeights[i].doubleValue * (size / 15.0);
+        self.demoHeightConstraints[i].constant = h;
+        total += h + 10;
+    }
+    total += 30; // gap between sections
+    for (NSUInteger i = 0; i < self.labels.count; i++) {
+        self.labels[i].fontSize = size;
+        CGFloat h = self.testBaseHeights[i].doubleValue * (size / 20.0);
+        self.testHeightConstraints[i].constant = h;
+        total += h + 10;
+    }
+    self.contentHeightConstraint.constant = total;
 }
 
 #pragma mark Buttons

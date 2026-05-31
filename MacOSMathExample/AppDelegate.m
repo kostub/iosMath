@@ -25,6 +25,14 @@
 @property (weak) IBOutlet NSWindow *window;
 @property (nonatomic, strong) NSMutableArray<MTMathUILabel*>* demoLabels;
 @property (nonatomic, strong) NSMutableArray<MTMathUILabel*>* labels;
+// Height constraints + their startup constants, so the size slider can rescale
+// each label (and the document view) instead of clipping at larger font sizes.
+// Demo labels render at fontSize 15; test labels at the default 20.
+@property (nonatomic, strong) NSMutableArray<NSLayoutConstraint*>* demoHeightConstraints;
+@property (nonatomic, strong) NSMutableArray<NSLayoutConstraint*>* testHeightConstraints;
+@property (nonatomic, strong) NSMutableArray<NSNumber*>* demoBaseHeights;
+@property (nonatomic, strong) NSMutableArray<NSNumber*>* testBaseHeights;
+@property (nonatomic, weak) NSView* documentContentView;
 @end
 
 @implementation AppDelegate
@@ -50,6 +58,10 @@ static const NSUInteger kMacFontCount = 8;
 {
     self.demoLabels = [[NSMutableArray alloc] init];
     self.labels = [[NSMutableArray alloc] init];
+    self.demoHeightConstraints = [[NSMutableArray alloc] init];
+    self.testHeightConstraints = [[NSMutableArray alloc] init];
+    self.demoBaseHeights = [[NSMutableArray alloc] init];
+    self.testBaseHeights = [[NSMutableArray alloc] init];
 
     NSView* mainView = self.window.contentView;
 
@@ -97,6 +109,7 @@ static const NSUInteger kMacFontCount = 8;
     contentView.autoresizingMask = NSViewWidthSizable;
     contentView.backgroundColor = NSColor.whiteColor;
     scrollView.documentView = contentView;
+    self.documentContentView = contentView;
 
     // --- Demo formulae — LaTeX strings from MathExamples.h ---
     static const CGFloat demoHeights[] = {
@@ -105,9 +118,12 @@ static const NSUInteger kMacFontCount = 8;
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {
         CGFloat height = HeightAtIndex(demoHeights, sizeof(demoHeights)/sizeof(CGFloat), i, 60);
-        MTMathUILabel* label = [self createMathLabel:demoFormulas[i] withHeight:height];
+        MTMathUILabel* label = [[MTMathUILabel alloc] init];
+        label.latex = demoFormulas[i];
         label.fontSize = 15;
         [self.demoLabels addObject:label];
+        [self.demoHeightConstraints addObject:[self setHeight:height forView:label]];
+        [self.demoBaseHeights addObject:@(height)];
     }
 
     [self addLabelAsSubview:self.demoLabels[0] to:contentView];
@@ -137,7 +153,11 @@ static const NSUInteger kMacFontCount = 8;
     NSArray<NSString*>* testFormulas = MathTestFormulas();
     for (NSUInteger i = 0; i < testFormulas.count; i++) {
         CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
-        [self.labels addObject:[self createMathLabel:testFormulas[i] withHeight:height]];
+        MTMathUILabel* label = [[MTMathUILabel alloc] init];
+        label.latex = testFormulas[i];
+        [self.labels addObject:label];
+        [self.testHeightConstraints addObject:[self setHeight:height forView:label]];
+        [self.testBaseHeights addObject:@(height)];
     }
 
     CGFloat documentHeight = 10;
@@ -201,19 +221,29 @@ static const NSUInteger kMacFontCount = 8;
 - (void)changeSize:(NSSlider *)sender
 {
     CGFloat size = (CGFloat)sender.doubleValue;
-    for (MTMathUILabel* label in self.demoLabels) { label.fontSize = size; }
-    for (MTMathUILabel* label in self.labels)     { label.fontSize = size; }
+    // Scale each label's height from its startup baseline (demo 15, test 20) and
+    // grow the document view to match so formulas aren't clipped at larger sizes.
+    CGFloat documentHeight = 10; // top inset
+    for (NSUInteger i = 0; i < self.demoLabels.count; i++) {
+        self.demoLabels[i].fontSize = size;
+        CGFloat h = self.demoBaseHeights[i].doubleValue * (size / 15.0);
+        self.demoHeightConstraints[i].constant = h;
+        documentHeight += h + 10;
+    }
+    documentHeight += 30; // gap between sections
+    for (NSUInteger i = 0; i < self.labels.count; i++) {
+        self.labels[i].fontSize = size;
+        CGFloat h = self.testBaseHeights[i].doubleValue * (size / 20.0);
+        self.testHeightConstraints[i].constant = h;
+        documentHeight += h + 10;
+    }
+    NSView* contentView = self.documentContentView;
+    NSRect frame = contentView.frame;
+    frame.size.height = documentHeight;
+    contentView.frame = frame;
 }
 
 #pragma mark - Label creation helpers
-
-- (MTMathUILabel*)createMathLabel:(NSString*)latex withHeight:(CGFloat)height
-{
-    MTMathUILabel* label = [[MTMathUILabel alloc] init];
-    [self setHeight:height forView:label];
-    label.latex = latex;
-    return label;
-}
 
 - (void)addLabelWithIndex:(NSUInteger)idx inArray:(NSArray<MTMathUILabel*>*)array toView:(NSView*)contentView
 {
@@ -234,15 +264,17 @@ static const NSUInteger kMacFontCount = 8;
                                              options:0 metrics:nil views:views]];
 }
 
-- (void)setHeight:(CGFloat)height forView:(NSView*)view
+- (NSLayoutConstraint*)setHeight:(CGFloat)height forView:(NSView*)view
 {
     view.translatesAutoresizingMaskIntoConstraints = NO;
-    [NSLayoutConstraint constraintWithItem:view
+    NSLayoutConstraint* constraint = [NSLayoutConstraint constraintWithItem:view
                                  attribute:NSLayoutAttributeHeight
                                  relatedBy:NSLayoutRelationEqual
                                     toItem:nil
                                  attribute:NSLayoutAttributeNotAnAttribute
-                                multiplier:1 constant:height].active = YES;
+                                multiplier:1 constant:height];
+    constraint.active = YES;
+    return constraint;
 }
 
 - (void)setVerticalGap:(CGFloat)gap between:(NSView*)view1 and:(NSView*)view2
