@@ -30,8 +30,18 @@ extern NSString *const MTFontNameNotoSansMath;
  in memory. */
 @interface MTFontManager : NSObject
 
-/** Get the singleton instance of MTFontManager. */
-+ (instancetype) fontManager;
+/** The shared font manager.
+
+ Declared as a class property (not a `+fontManager` factory method) so that
+ Swift imports it as `MTFontManager.fontManager` instead of collapsing it into
+ `init()`. In Objective-C it is still reached via `[MTFontManager fontManager]`
+ or `MTFontManager.fontManager`. */
+@property (class, readonly, strong) MTFontManager *fontManager;
+
+/** MTFontManager is a singleton; use +fontManager. Constructing your own
+ instance bypasses the shared font cache, so init/new are unavailable. */
++ (instancetype) new NS_UNAVAILABLE;
+- (instancetype) init NS_UNAVAILABLE;
 
 /** Returns the default font, which is Latin Modern Math with 20pt */
 - (MTFont *) defaultFont;

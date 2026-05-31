@@ -31,16 +31,19 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 
 @implementation MTFontManager
 
-+ (instancetype) fontManager
++ (MTFontManager *) fontManager
 {
     static MTFontManager* manager = nil;
-    if (manager == nil) {
-        manager = [MTFontManager new];
-    }
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        manager = [[self alloc] initPrivate];
+    });
     return manager;
 }
 
-- (instancetype)init
+// init/new are NS_UNAVAILABLE so callers can't bypass the singleton; the
+// shared instance is built through this private initializer instead.
+- (instancetype)initPrivate
 {
     self = [super init];
     if (self) {

@@ -39,18 +39,19 @@ final class MTMathUILabelTests: XCTestCase {
 }
 
 final class MTFontManagerTests: XCTestCase {
-    func testFontManagerInit() {
-        let mgr = MTFontManager()
-        XCTAssertNotNil(mgr)
+    func testFontManagerSingleton() {
+        // fontManager is a class property, so repeated access returns the same
+        // shared instance (and there is no MTFontManager() to bypass it).
+        XCTAssertTrue(MTFontManager.fontManager === MTFontManager.fontManager)
     }
 
     func testDefaultFont() {
-        let font = MTFontManager().defaultFont()
+        let font = MTFontManager.fontManager.defaultFont()
         XCTAssertNotNil(font)
     }
 
     func testFontByName() {
-        let manager = MTFontManager()
+        let manager = MTFontManager.fontManager
         let names = [
             MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
             MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
