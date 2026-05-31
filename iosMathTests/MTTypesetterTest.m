@@ -1563,6 +1563,26 @@
     }
 }
 
+- (void) assertAllSymbolsRenderInFont:(MTFont *)font name:(NSString *)fontName
+{
+    NSArray<NSString*>* allSymbols = [MTMathAtomFactory supportedLatexSymbolNames];
+    for (NSString* symName in allSymbols) {
+        MTMathList* list = [[MTMathList alloc] init];
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:symName];
+        XCTAssertNotNil(atom);
+        if (atom.type >= kMTMathAtomBoundary) { continue; }
+        [list addAtom:atom];
+        MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:font style:kMTLineStyleDisplay];
+        XCTAssertNotNil(display, @"%@: symbol %@", fontName, symName);
+        MTDisplay* sub0 = display.subDisplays.firstObject;
+        XCTAssertNotNil(sub0, @"%@: symbol %@", fontName, symName);
+        if (![atom.nucleus isEqualToString:@" "]) {
+            XCTAssertGreaterThan(display.ascent + display.descent, 0, @"%@: symbol %@", fontName, symName);
+        }
+        XCTAssertGreaterThan(display.width, 0, @"%@: symbol %@", fontName, symName);
+    }
+}
+
 - (void) testLatexSymbols
 {
     // Test all latex symbols
@@ -1623,6 +1643,19 @@
         }
         // all chars have a width.
         XCTAssertGreaterThan(display.width, 0);
+    }
+}
+
+- (void) testLatexSymbolsAllFonts {
+    NSArray<NSString*>* fontNames = @[
+        MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
+        MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
+        MTFontNameFiraMath, MTFontNameNotoSansMath,
+    ];
+    for (NSString* fontName in fontNames) {
+        MTFont* font = [[MTFontManager fontManager] fontWithName:fontName size:self.font.fontSize];
+        XCTAssertNotNil(font, @"%@", fontName);
+        [self assertAllSymbolsRenderInFont:font name:fontName];
     }
 }
 
