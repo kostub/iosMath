@@ -2712,4 +2712,52 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(((MTTextAtom *)list.atoms[0]).text, @"Привет");
 }
 
+- (void)testStackCommandSpecArgRoles
+{
+    MTMathStackCommandSpec* overset = [MTMathAtomFactory stackCommandSpec:@"overset"];
+    XCTAssertNotNil(overset);
+    XCTAssertEqualObjects(overset.argRoles, (@[@(kMTStackArgOver), @(kMTStackArgBase)]));
+    XCTAssertTrue(overset.inheritsClass);
+
+    MTMathStackCommandSpec* underset = [MTMathAtomFactory stackCommandSpec:@"underset"];
+    XCTAssertEqualObjects(underset.argRoles, (@[@(kMTStackArgUnder), @(kMTStackArgBase)]));
+    XCTAssertTrue(underset.inheritsClass);
+
+    MTMathStackCommandSpec* stackrel = [MTMathAtomFactory stackCommandSpec:@"stackrel"];
+    XCTAssertFalse(stackrel.inheritsClass);
+    XCTAssertEqual(stackrel.displayClass, kMTMathAtomRelation);
+
+    MTMathStackCommandSpec* stackbin = [MTMathAtomFactory stackCommandSpec:@"stackbin"];
+    XCTAssertEqual(stackbin.displayClass, kMTMathAtomBinaryOperator);
+
+    // Existing stretchy command keeps a base-only role list.
+    MTMathStackCommandSpec* over = [MTMathAtomFactory stackCommandSpec:@"overrightarrow"];
+    XCTAssertEqualObjects(over.argRoles, (@[@(kMTStackArgBase)]));
+    XCTAssertFalse(over.inheritsClass);
+
+    XCTAssertNil([MTMathAtomFactory stackCommandSpec:@"overfoo"]);
+}
+
+- (void)testInheritedDisplayClassForBase
+{
+    MTMathList* (^one)(unichar) = ^MTMathList*(unichar ch) {
+        MTMathList* l = [MTMathList new];
+        [l addAtom:[MTMathAtomFactory atomForCharacter:ch]];
+        return l;
+    };
+    // Lone relation '=' -> Relation; lone binary '+' -> Binary (intrinsic, pre-finalize).
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('=')], kMTMathAtomRelation);
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('+')], kMTMathAtomBinaryOperator);
+    // Lone ordinary letter -> Ordinary.
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('x')], kMTMathAtomOrdinary);
+    // Multi-atom base -> Ordinary.
+    MTMathList* multi = [MTMathList new];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'+']];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:multi], kMTMathAtomOrdinary);
+    // Empty base -> Ordinary.
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:[MTMathList new]], kMTMathAtomOrdinary);
+}
+
 @end

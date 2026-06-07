@@ -26,25 +26,19 @@ NSString *const MTSymbolInfinity = @"\u221E"; // \infty
 NSString *const MTSymbolAngle = @"\u2220"; // \angle
 NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
-/// File-private value type carrying the over/under spec and displayClass for one command.
-@interface MTMathStackCommandSpec : NSObject
-@property (nonatomic, readonly, nullable) MTMathStackConstruction* overConstruction;
-@property (nonatomic, readonly, nullable) MTMathStackConstruction* underConstruction;
-@property (nonatomic, readonly) MTMathAtomType displayClass;
-- (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
-                       under:(nullable MTMathStackConstruction*)under
-                displayClass:(MTMathAtomType)displayClass;
-@end
-
 @implementation MTMathStackCommandSpec
 - (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
                        under:(nullable MTMathStackConstruction*)under
-                displayClass:(MTMathAtomType)displayClass {
+                displayClass:(MTMathAtomType)displayClass
+                    argRoles:(NSArray<NSNumber*>*)argRoles
+               inheritsClass:(BOOL)inheritsClass {
     self = [super init];
     if (self) {
         _overConstruction = over;
         _underConstruction = under;
         _displayClass = displayClass;
+        _argRoles = [argRoles copy];
+        _inheritsClass = inheritsClass;
     }
     return self;
 }
@@ -1133,15 +1127,20 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         MTMathStackConstruction* overBrace      = [MTMathStackConstruction extensibleWithGlyph:@"\u23DE"];
         MTMathStackConstruction* underBrace     = [MTMathStackConstruction extensibleWithGlyph:@"\u23DF"];
 
+        NSArray* baseOnly = @[@(kMTStackArgBase)];
         stackCommands = @{
-            @"overrightarrow":     [[MTMathStackCommandSpec alloc] initWithOver:rightArrow     under:nil       displayClass:kMTMathAtomOrdinary],
-            @"overleftarrow":      [[MTMathStackCommandSpec alloc] initWithOver:leftArrow      under:nil       displayClass:kMTMathAtomOrdinary],
-            @"overleftrightarrow": [[MTMathStackCommandSpec alloc] initWithOver:leftRightArrow under:nil       displayClass:kMTMathAtomOrdinary],
-            @"underrightarrow":    [[MTMathStackCommandSpec alloc] initWithOver:nil            under:rightArrow     displayClass:kMTMathAtomOrdinary],
-            @"underleftarrow":     [[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftArrow      displayClass:kMTMathAtomOrdinary],
-            @"underleftrightarrow":[[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftRightArrow displayClass:kMTMathAtomOrdinary],
-            @"overbrace":          [[MTMathStackCommandSpec alloc] initWithOver:overBrace      under:nil       displayClass:kMTMathAtomOrdinary],
-            @"underbrace":         [[MTMathStackCommandSpec alloc] initWithOver:nil            under:underBrace     displayClass:kMTMathAtomOrdinary],
+            @"overrightarrow":     [[MTMathStackCommandSpec alloc] initWithOver:rightArrow     under:nil            displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"overleftarrow":      [[MTMathStackCommandSpec alloc] initWithOver:leftArrow      under:nil            displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"overleftrightarrow": [[MTMathStackCommandSpec alloc] initWithOver:leftRightArrow under:nil            displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"underrightarrow":    [[MTMathStackCommandSpec alloc] initWithOver:nil            under:rightArrow     displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"underleftarrow":     [[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftArrow      displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"underleftrightarrow":[[MTMathStackCommandSpec alloc] initWithOver:nil            under:leftRightArrow displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"overbrace":          [[MTMathStackCommandSpec alloc] initWithOver:overBrace      under:nil            displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"underbrace":         [[MTMathStackCommandSpec alloc] initWithOver:nil            under:underBrace     displayClass:kMTMathAtomOrdinary argRoles:baseOnly inheritsClass:NO],
+            @"overset":            [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomOrdinary       argRoles:@[@(kMTStackArgOver),  @(kMTStackArgBase)] inheritsClass:YES],
+            @"underset":           [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomOrdinary       argRoles:@[@(kMTStackArgUnder), @(kMTStackArgBase)] inheritsClass:YES],
+            @"stackrel":           [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomRelation       argRoles:@[@(kMTStackArgOver),  @(kMTStackArgBase)] inheritsClass:NO],
+            @"stackbin":           [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomBinaryOperator argRoles:@[@(kMTStackArgOver),  @(kMTStackArgBase)] inheritsClass:NO],
         };
     }
     return stackCommands;
@@ -1158,6 +1157,24 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     stack.under = spec.underConstruction;
     stack.displayClass = spec.displayClass;
     return stack;
+}
+
++ (nullable MTMathStackCommandSpec*) stackCommandSpec:(NSString*)command
+{
+    return [self stackCommands][command];
+}
+
++ (MTMathAtomType) inheritedDisplayClassForBase:(MTMathList*)base
+{
+    // Option I: inherit a lone Bin/Rel base atom's INTRINSIC class (read before
+    // finalize's Bin->Ord reclassification, matching amsmath \binrel@); else Ordinary.
+    if (base.atoms.count == 1) {
+        MTMathAtomType t = ((MTMathAtom*)base.atoms[0]).type;
+        if (t == kMTMathAtomBinaryOperator || t == kMTMathAtomRelation) {
+            return t;
+        }
+    }
+    return kMTMathAtomOrdinary;
 }
 
 /// Returns a canonical key string encoding the over/under glyphs plus displayClass.
