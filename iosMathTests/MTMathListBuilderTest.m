@@ -2827,4 +2827,43 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertNil(inner.under);
 }
 
+- (void)testOversetRoundTrip
+{
+    NSArray<NSArray*>* cases = @[
+        @[@"\\stackrel{?}{=}", @"\\stackrel{?}{=}"],
+        @[@"\\stackbin{x}{+}", @"\\stackbin{x}{+}"],
+        @[@"\\underset{b}{x}", @"\\underset{b}{x}"],
+        @[@"\\overset{a}{x}",  @"\\overset{a}{x}"],
+        @[@"\\overset{a}{+}",  @"\\stackbin{a}{+}"],  // inherited Binary canonicalizes to \stackbin
+        @[@"\\overset{!}{=}",  @"\\stackrel{!}{=}"],  // inherited Relation canonicalizes to \stackrel
+    ];
+    for (NSArray* c in cases) {
+        MTMathList* list = [MTMathListBuilder buildFromString:c[0]];
+        XCTAssertNotNil(list, @"%@", c[0]);
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, c[1], @"%@", c[0]);
+        // Round-trip is at least an equivalent fixed point (re-parse + re-serialize stable).
+        NSString* latex2 = [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:latex]];
+        XCTAssertEqualObjects(latex2, c[1], @"%@", c[0]);
+    }
+}
+
+- (void)testProgrammaticBothRowsSerializeNested
+{
+    // A stack carrying both over and under MathList rows emits nested commands.
+    MTMathStack* stack = [MTMathStack new];
+    MTMathList* base = [MTMathList new];
+    [base addAtom:[MTMathAtomFactory atomForCharacter:'X']];
+    MTMathList* top = [MTMathList new];
+    [top addAtom:[MTMathAtomFactory atomForCharacter:'a']];
+    MTMathList* bot = [MTMathList new];
+    [bot addAtom:[MTMathAtomFactory atomForCharacter:'b']];
+    stack.innerList = base;
+    stack.over = [MTMathStackConstruction mathListWithList:top];
+    stack.under = [MTMathStackConstruction mathListWithList:bot];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:stack];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
+}
+
 @end

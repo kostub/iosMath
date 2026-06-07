@@ -1207,8 +1207,21 @@ static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
 
 + (nullable NSString*) stackCommandForStack:(MTMathStack*)stack
 {
-    // Only Extensible constructions are in the Phase-1 table; non-Extensible
-    // (MathList / Rule) or constructions with non-canonical field values won't match.
+    BOOL overML  = stack.over  && stack.over.kind  == kMTMathStackConstructionMathList;
+    BOOL underML = stack.under && stack.under.kind == kMTMathStackConstructionMathList;
+    if (overML || underML) {
+        // Realizes the LLD reverse-map table: under->\underset (any class);
+        // over+Relation->\stackrel; over+Binary->\stackbin; over+else->\overset.
+        if (underML) {
+            return @"underset";
+        }
+        switch (stack.displayClass) {
+            case kMTMathAtomRelation:       return @"stackrel";
+            case kMTMathAtomBinaryOperator: return @"stackbin";
+            default:                        return @"overset";
+        }
+    }
+    // Existing Extensible path (unchanged).
     if (stack.over && stack.over.kind != kMTMathStackConstructionExtensible) {
         return nil;
     }
