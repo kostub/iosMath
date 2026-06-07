@@ -15,7 +15,7 @@
 #import "MTConfig.h"
 
 #import "MTFont.h"
-#import "MTMathList.h"
+#import "lib/MTMathList.h"
 #import "MTMathListDisplay.h"
 
 /**
