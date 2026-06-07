@@ -2760,4 +2760,71 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:[MTMathList new]], kMTMathAtomOrdinary);
 }
 
+- (void)testOversetParsesStructureAndClass
+{
+    NSArray<NSArray*>* cases = @[
+        // latex, expected displayClass, hasOver, hasUnder
+        @[@"\\stackrel{?}{=}", @(kMTMathAtomRelation),       @YES, @NO],
+        @[@"\\stackbin{x}{+}", @(kMTMathAtomBinaryOperator), @YES, @NO],
+        @[@"\\overset{!}{=}",  @(kMTMathAtomRelation),       @YES, @NO],
+        @[@"\\overset{a}{+}",  @(kMTMathAtomBinaryOperator), @YES, @NO],
+        @[@"\\overset{a}{x}",  @(kMTMathAtomOrdinary),       @YES, @NO],
+        @[@"\\overset{a}{x+y}",@(kMTMathAtomOrdinary),       @YES, @NO],
+        @[@"\\underset{b}{=}", @(kMTMathAtomRelation),       @NO,  @YES],
+        @[@"\\underset{b}{x}", @(kMTMathAtomOrdinary),       @NO,  @YES],
+    ];
+    for (NSArray* c in cases) {
+        NSString* latex = c[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        XCTAssertEqual(list.atoms.count, 1u, @"%@", latex);
+        MTMathStack* stack = list.atoms[0];
+        XCTAssertEqual(stack.type, kMTMathAtomStack, @"%@", latex);
+        XCTAssertEqual(stack.displayClass, [c[1] unsignedIntegerValue], @"%@", latex);
+        XCTAssertNotNil(stack.innerList, @"%@", latex);
+        if ([c[2] boolValue]) {
+            XCTAssertNotNil(stack.over, @"%@", latex);
+            XCTAssertEqual(stack.over.kind, kMTMathStackConstructionMathList, @"%@", latex);
+        } else {
+            XCTAssertNil(stack.over, @"%@", latex);
+        }
+        if ([c[3] boolValue]) {
+            XCTAssertNotNil(stack.under, @"%@", latex);
+            XCTAssertEqual(stack.under.kind, kMTMathStackConstructionMathList, @"%@", latex);
+        } else {
+            XCTAssertNil(stack.under, @"%@", latex);
+        }
+    }
+}
+
+- (void)testOversetMissingArgsAreGraceful
+{
+    // Matches \frac: missing args at EOF produce empty rows, no crash, no parse error.
+    for (NSString* latex in @[@"\\overset", @"\\overset{a}", @"\\underset", @"\\stackrel{a}"]) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:latex error:&error];
+        XCTAssertNotNil(list, @"%@", latex);
+        XCTAssertNil(error, @"%@", latex);
+        XCTAssertEqual(list.atoms.count, 1u, @"%@", latex);
+        XCTAssertEqual(((MTMathAtom*)list.atoms[0]).type, kMTMathAtomStack, @"%@", latex);
+    }
+}
+
+- (void)testOversetNestingParse
+{
+    // \underset{b}{\overset{a}{X}} -> outer under-stack whose base is an inner over-stack.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\underset{b}{\\overset{a}{X}}"];
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, 1u);
+    MTMathStack* outer = list.atoms[0];
+    XCTAssertEqual(outer.type, kMTMathAtomStack);
+    XCTAssertNotNil(outer.under);
+    XCTAssertNil(outer.over);
+    XCTAssertEqual(outer.innerList.atoms.count, 1u);
+    MTMathStack* inner = outer.innerList.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomStack);
+    XCTAssertNotNil(inner.over);
+    XCTAssertNil(inner.under);
+}
+
 @end
