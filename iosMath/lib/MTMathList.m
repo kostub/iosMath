@@ -1173,15 +1173,11 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 }
 
 + (instancetype)mathListWithList:(MTMathList*)list
-                           style:(MTLineStyle)style
-                         cramped:(BOOL)cramped
 {
     NSParameterAssert(list);
     MTMathStackConstruction* c = [[self alloc] init];
     c->_kind = kMTMathStackConstructionMathList;
     c->_list = [list copy];
-    c->_listStyle = style;
-    c->_listCramped = cramped;
     return c;
 }
 
@@ -1199,8 +1195,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     copy->_kind = _kind;
     copy->_glyph = [_glyph copyWithZone:zone];
     copy->_list = [_list copyWithZone:zone];
-    copy->_listStyle = _listStyle;
-    copy->_listCramped = _listCramped;
     copy->_ruleThickness = _ruleThickness;
     return copy;
 }
@@ -1245,16 +1239,10 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathStack* newStack = [super finalized];
     newStack.innerList = newStack.innerList.finalized;
     if (newStack.over && newStack.over.kind == kMTMathStackConstructionMathList) {
-        MTMathStackConstruction* overConst = newStack.over;
-        newStack.over = [MTMathStackConstruction mathListWithList:overConst.list.finalized
-                                                           style:overConst.listStyle
-                                                         cramped:overConst.listCramped];
+        newStack.over = [MTMathStackConstruction mathListWithList:newStack.over.list.finalized];
     }
     if (newStack.under && newStack.under.kind == kMTMathStackConstructionMathList) {
-        MTMathStackConstruction* underConst = newStack.under;
-        newStack.under = [MTMathStackConstruction mathListWithList:underConst.list.finalized
-                                                            style:underConst.listStyle
-                                                          cramped:underConst.listCramped];
+        newStack.under = [MTMathStackConstruction mathListWithList:newStack.under.list.finalized];
     }
     return newStack;
 }

@@ -1707,6 +1707,18 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
     }
 }
 
+- (CGFloat) upperLimitGapFor:(MTDisplay*)limit
+{
+    return MAX(_styleFont.mathTable.upperLimitGapMin,
+               _styleFont.mathTable.upperLimitBaselineRiseMin - limit.descent);
+}
+
+- (CGFloat) lowerLimitGapFor:(MTDisplay*)limit
+{
+    return MAX(_styleFont.mathTable.lowerLimitGapMin,
+               _styleFont.mathTable.lowerLimitBaselineDropMin - limit.ascent);
+}
+
 - (MTDisplay*) addLimitsToDisplay:(MTDisplay*) display forOperator:(MTLargeOperator*) op delta:(CGFloat)delta
 {
     // If there is no subscript or superscript, just return the current display
@@ -1726,12 +1738,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         NSAssert(superScript || subScript, @"Atleast one of superscript or subscript should have been present.");
         MTLargeOpLimitsDisplay* opsDisplay = [[MTLargeOpLimitsDisplay alloc] initWithNucleus:display upperLimit:superScript lowerLimit:subScript limitShift:delta/2 extraPadding:0];
         if (superScript) {
-            CGFloat upperLimitGap = MAX(_styleFont.mathTable.upperLimitGapMin, _styleFont.mathTable.upperLimitBaselineRiseMin - superScript.descent);
-            opsDisplay.upperLimitGap = upperLimitGap;
+            opsDisplay.upperLimitGap = [self upperLimitGapFor:superScript];
         }
         if (subScript) {
-            CGFloat lowerLimitGap = MAX(_styleFont.mathTable.lowerLimitGapMin, _styleFont.mathTable.lowerLimitBaselineDropMin - subScript.ascent);
-            opsDisplay.lowerLimitGap = lowerLimitGap;
+            opsDisplay.lowerLimitGap = [self lowerLimitGapFor:subScript];
         }
         opsDisplay.position = _currentPosition;
         opsDisplay.range = op.indexRange;
@@ -2042,9 +2052,10 @@ typedef NS_ENUM(NSUInteger, MTStackRole) {
 
         case kMTMathStackConstructionMathList: {
             return [MTTypesetter createLineForMathList:construction.list
-                                                 font:_font
-                                                style:construction.listStyle
-                                              cramped:construction.listCramped];
+                                                  font:_font
+                                                 style:self.scriptStyle
+                                               cramped:(role == kMTStackRoleOver ? self.superScriptCramped
+                                                                                 : self.subscriptCramped)];
         }
 
         case kMTMathStackConstructionRule:

@@ -2598,4 +2598,28 @@
     XCTAssertEqualWithAccuracy(text.position.y, math.position.y, 0.001);
 }
 
+- (void)testStackMathListRowRendersAtScriptStyle
+{
+    // 6.2-a: a MathList over-row is typeset at script style derived from the live
+    // style, so for the same glyph it is smaller than the display-style base.
+    MTMathList* baseList = [MTMathList new];
+    [baseList addAtom:[MTMathAtomFactory atomForCharacter:'X']];
+    MTMathList* overList = [MTMathList new];
+    [overList addAtom:[MTMathAtomFactory atomForCharacter:'X']];
+
+    MTMathStack* stack = [MTMathStack new];
+    stack.innerList = baseList;
+    stack.over = [MTMathStackConstruction mathListWithList:overList];
+
+    MTMathList* list = [MTMathList new];
+    [list addAtom:stack];
+
+    MTMathListDisplay* display =
+        [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, 1u);
+    MTStackDisplay* sd = (MTStackDisplay*)display.subDisplays[0];
+    XCTAssertTrue([sd.over isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertLessThan(sd.over.ascent, sd.base.ascent);
+}
+
 @end
