@@ -22,6 +22,7 @@ let package = Package(
             ],
             publicHeadersPath: ".",
             cSettings: [
+                .headerSearchPath("."),
                 .headerSearchPath("lib"),
                 .headerSearchPath("render"),
                 .headerSearchPath("render/internal"),
@@ -33,6 +34,7 @@ let package = Package(
             path: "iosMathTests",
             exclude: ["en.lproj"],
             cSettings: [
+                .headerSearchPath("../iosMath"),
                 .headerSearchPath("../iosMath/lib"),
                 .headerSearchPath("../iosMath/render"),
                 .headerSearchPath("../iosMath/render/internal"),
@@ -43,6 +45,7 @@ let package = Package(
             dependencies: ["iosMath"],
             path: "iosMathSwiftTests",
             cSettings: [
+                .headerSearchPath("../iosMath"),
                 .headerSearchPath("../iosMath/lib"),
                 .headerSearchPath("../iosMath/render"),
                 .headerSearchPath("../iosMath/render/internal"),
@@ -50,6 +53,15 @@ let package = Package(
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ]
+        ),
+        // Regression guard for issue #215. Imports `iosMath` purely as a Clang
+        // module with NO header search paths, reproducing how an external SPM
+        // consumer builds the module. If a public header reintroduces a bare
+        // cross-directory `#import`, this target fails to compile.
+        .testTarget(
+            name: "iosMathConsumerTests",
+            dependencies: ["iosMath"],
+            path: "iosMathConsumerTests"
         ),
     ]
 )

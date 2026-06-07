@@ -13,7 +13,7 @@
 @import CoreText;
 
 #import "MTFont.h"
-#import "MTMathList.h"
+#import "lib/MTMathList.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
