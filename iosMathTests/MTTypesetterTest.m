@@ -2622,4 +2622,50 @@
     XCTAssertLessThan(sd.over.ascent, sd.base.ascent);
 }
 
+- (void)testOversetUsesLimitGapAndCentering
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overset{a}{X}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    XCTAssertTrue([stack isKindOfClass:[MTStackDisplay class]]);
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+    XCTAssertTrue([stack.over isKindOfClass:[MTMathListDisplay class]]);
+
+    // 6.4-b: over-row uses the operator-limit gap, NOT stretchStackGapAboveMin.
+    CGFloat limitGap = MAX(self.font.mathTable.upperLimitGapMin,
+                           self.font.mathTable.upperLimitBaselineRiseMin - stack.over.descent);
+    CGFloat expectedOverY = stack.base.ascent + limitGap + stack.over.descent;
+    XCTAssertEqualWithAccuracy(stack.over.position.y, expectedOverY, 0.01);
+
+    // total width = max(base, over); narrower row is centered.
+    CGFloat totalWidth = MAX(stack.base.width, stack.over.width);
+    XCTAssertEqualWithAccuracy(display.width, totalWidth, 0.01);
+    XCTAssertEqualWithAccuracy(stack.over.position.x, (totalWidth - stack.over.width) / 2.0, 0.01);
+    XCTAssertEqualWithAccuracy(stack.base.position.x, (totalWidth - stack.base.width) / 2.0, 0.01);
+}
+
+- (void)testUndersetUsesLowerLimitGap
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\underset{b}{X}"];
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    XCTAssertNotNil(stack.under);
+    XCTAssertNil(stack.over);
+    CGFloat limitGap = MAX(self.font.mathTable.lowerLimitGapMin,
+                           self.font.mathTable.lowerLimitBaselineDropMin - stack.under.ascent);
+    CGFloat expectedUnderY = -(stack.base.descent + limitGap + stack.under.ascent);
+    XCTAssertEqualWithAccuracy(stack.under.position.y, expectedUnderY, 0.01);
+}
+
+- (void)testStretchyOverrightarrowStillUsesStretchGap
+{
+    // Regression: the stretchy path keeps stretchStackGapAboveMin (unchanged by 6.4-b).
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{x}"];
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    CGFloat gapAbove = self.font.mathTable.stretchStackGapAboveMin;
+    CGFloat expectedAscent = stack.base.ascent + gapAbove + stack.over.ascent + stack.over.descent;
+    XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
+}
+
 @end
