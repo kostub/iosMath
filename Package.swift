@@ -4,8 +4,8 @@ import PackageDescription
 let package = Package(
     name: "iosMath",
     platforms: [
-        .iOS(.v18),
-        .macOS(.v15),
+        .iOS(.v13),
+        .macOS(.v10_15),
     ],
     products: [
         .library(
