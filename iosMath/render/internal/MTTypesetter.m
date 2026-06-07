@@ -2042,9 +2042,10 @@ typedef NS_ENUM(NSUInteger, MTStackRole) {
 
         case kMTMathStackConstructionMathList: {
             return [MTTypesetter createLineForMathList:construction.list
-                                                 font:_font
-                                                style:construction.listStyle
-                                              cramped:construction.listCramped];
+                                                  font:_font
+                                                 style:self.scriptStyle
+                                               cramped:(role == kMTStackRoleOver ? self.superScriptCramped
+                                                                                 : self.subscriptCramped)];
         }
 
         case kMTMathStackConstructionRule:

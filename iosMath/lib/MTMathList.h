@@ -499,17 +499,13 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 
 // MathList fields (kind == kMTMathStackConstructionMathList)
 @property (nonatomic, readonly, nullable) MTMathList* list;
-@property (nonatomic, readonly) MTLineStyle listStyle;
-@property (nonatomic, readonly) BOOL listCramped;
 
 // Rule fields (kind == kMTMathStackConstructionRule)
 /// Rule thickness in points. 0 means use the font's default.
 @property (nonatomic, readonly) CGFloat ruleThickness;
 
 + (instancetype)extensibleWithGlyph:(NSString*)glyph;
-+ (instancetype)mathListWithList:(MTMathList*)list
-                           style:(MTLineStyle)style
-                         cramped:(BOOL)cramped;
++ (instancetype)mathListWithList:(MTMathList*)list;
 + (instancetype)ruleWithThickness:(CGFloat)thickness;
 
 @end
