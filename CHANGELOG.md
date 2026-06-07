@@ -1,5 +1,9 @@
 ## Changelog
 
+### v2.3.1 (2026-06-07)
+* Fix SPM consumer build: public headers in `render/` used bare `#import` of siblings in `lib/`, which only resolved via target-internal header search paths and failed when downstream packages built the `iosMath` Clang module. Qualify the cross-directory imports so the module builds in consumer projects (#215).
+* Lower deployment targets from iOS 18+ / macOS 15+ back down to **iOS 13+ / macOS 10.15+**. The earlier raise was a toolchain-cleanup pass, not driven by any actual API requirement (#214).
+
 ### v2.3.0 (2026-05-31)
 * **Breaking:** Removed `latinModernFontWithSize:`, `xitsFontWithSize:`, and `termesFontWithSize:` from `MTFontManager`. Use `fontWithName:size:` with the new `MTFontName*` constants instead (`defaultFont` is unchanged — Latin Modern Math at 20pt).
 * Add five new OpenType MATH fonts: New Computer Modern Math, TeX Gyre Pagella Math, STIX Two Math, Fira Math, and Noto Sans Math; update XITS Math to v1.302.
