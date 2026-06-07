@@ -25,7 +25,7 @@ The [EXAMPLES.md](./EXAMPLES.md) file contains more examples.
 
 ## Requirements
 
-`iosMath` requires **iOS 18+** or **macOS 15+**. It depends on the following
+`iosMath` requires **iOS 13+** or **macOS 10.15+**. It depends on the following
 Apple frameworks: Foundation, CoreGraphics, QuartzCore, CoreText, and
 UIKit (iOS) or AppKit (macOS).
 
@@ -390,7 +390,7 @@ let alpha     = MTMathAtomFactory.atom(forLatexSymbol: "alpha")
 Version 2.0.0 is a **breaking release**. The following changes are required
 when upgrading from 0.9.x:
 
-- **Deployment targets raised**: iOS 18+ and macOS 15+ are now required
+- **Deployment targets raised**: iOS 13+ and macOS 10.15+ are now required
   (previously iOS 9+ / macOS 10.12+).
 - **CocoaPods support removed**: distribution is via Swift Package Manager
   only.
