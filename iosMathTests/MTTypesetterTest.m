@@ -2668,4 +2668,61 @@
     XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
 }
 
+// Helper for the spacing tests below. For `a Z b` where Z renders as its own
+// MTStackDisplay, isolates the inter-element space (left + right) around Z by
+// subtracting Z's width from the gap between the surrounding `a` and `b` lines.
+- (CGFloat)gapAroundStackInLaTeX:(NSString*)latex
+{
+    MTMathListDisplay* display = [self displayForLaTeX:latex];
+    XCTAssertEqual(display.subDisplays.count, 3u, @"%@: expected [line(a), stack, line(b)]", latex);
+    MTDisplay* a = display.subDisplays[0];
+    MTStackDisplay* z = (MTStackDisplay*)display.subDisplays[1];
+    MTDisplay* b = display.subDisplays[2];
+    XCTAssertTrue([z isKindOfClass:[MTStackDisplay class]], @"%@: middle is not a stack", latex);
+    return (b.position.x - (a.position.x + a.width)) - z.width;
+}
+
+- (void)testStackrelForcesRelationSpacing
+{
+    // 6.3: \stackrel forces Relation class regardless of base; spacing must match.
+    CGFloat stackrelGap = [self gapAroundStackInLaTeX:@"a\\stackrel{?}{=}b"];
+    CGFloat oversetOrdGap = [self gapAroundStackInLaTeX:@"a\\overset{?}{c}b"];
+    // Relation -> Ord and Ord -> Relation are both NSThick; Ord -> Ord is None.
+    // So the relation case must have strictly more space than the ordinary case.
+    XCTAssertGreaterThan(stackrelGap, oversetOrdGap + 0.5);
+}
+
+- (void)testOversetInheritsBinaryClassForSpacing
+{
+    // 6.3 inheritance: \overset over a lone Binary base inherits Binary class.
+    CGFloat binGap = [self gapAroundStackInLaTeX:@"a\\overset{x}{+}b"];
+    CGFloat ordGap = [self gapAroundStackInLaTeX:@"a\\overset{x}{c}b"];
+    CGFloat relGap = [self gapAroundStackInLaTeX:@"a\\stackrel{x}{=}b"];
+    // Binary -> Ord is NSMedium, larger than Ord-Ord (None) and smaller than Relation (NSThick).
+    XCTAssertGreaterThan(binGap, ordGap + 0.5);
+    XCTAssertLessThan(binGap, relGap - 0.5);
+}
+
+- (void)testOversetRowRendersAtScriptScriptWhenNestedInSuperscript
+{
+    // 6.2-a: stack rows derive their style live from the surrounding style.
+    // At display style the over-row is script; inside a superscript (script) the
+    // over-row must drop further to scriptScript and be visibly smaller.
+    MTMathListDisplay* baseline = [self displayForLaTeX:@"\\overset{a}{=}"];
+    XCTAssertEqual(baseline.subDisplays.count, 1u);
+    MTStackDisplay* baselineStack = (MTStackDisplay*)baseline.subDisplays[0];
+    XCTAssertTrue([baselineStack isKindOfClass:[MTStackDisplay class]]);
+
+    MTMathListDisplay* nested = [self displayForLaTeX:@"x^{\\overset{a}{=}}"];
+    XCTAssertEqual(nested.subDisplays.count, 2u);
+    MTMathListDisplay* superscript = (MTMathListDisplay*)nested.subDisplays[1];
+    XCTAssertTrue([superscript isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertEqual(superscript.type, kMTLinePositionSuperscript);
+    XCTAssertEqual(superscript.subDisplays.count, 1u);
+    MTStackDisplay* nestedStack = (MTStackDisplay*)superscript.subDisplays[0];
+    XCTAssertTrue([nestedStack isKindOfClass:[MTStackDisplay class]]);
+
+    XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
+}
+
 @end

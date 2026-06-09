@@ -1209,6 +1209,10 @@ static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
 {
     BOOL overML  = stack.over  && stack.over.kind  == kMTMathStackConstructionMathList;
     BOOL underML = stack.under && stack.under.kind == kMTMathStackConstructionMathList;
+    if (overML && underML) {
+        // Composite programmatic stack — no single LaTeX command covers it.
+        return nil;
+    }
     if (overML || underML) {
         // Realizes the LLD reverse-map table: under->\underset (any class);
         // over+Relation->\stackrel; over+Binary->\stackbin; over+else->\overset.

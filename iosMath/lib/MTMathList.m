@@ -1249,17 +1249,21 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
-    NSString* cmd = [MTMathAtomFactory stackCommandForStack:self];
     BOOL overIsMathList  = self.over  && self.over.kind  == kMTMathStackConstructionMathList;
     BOOL underIsMathList = self.under && self.under.kind == kMTMathStackConstructionMathList;
     NSString* inner = [MTMathListBuilder mathListToString:self.innerList];
     if (overIsMathList && underIsMathList) {
-        // Programmatic stack with both rows: nested \underset{under}{\overset{over}{base}}.
+        // Programmatic both-rows stack: no single command exists, so emit nested
+        // \underset{under}{\overset{over}{base}}. Reparses to two nested stacks
+        // (equivalent, not byte-identical — see LLD §6.5).
         [str appendFormat:@"\\underset{%@}{\\overset{%@}{%@}}",
              [MTMathListBuilder mathListToString:self.under.list],
              [MTMathListBuilder mathListToString:self.over.list],
              inner];
-    } else if (cmd && (overIsMathList || underIsMathList)) {
+        return;
+    }
+    NSString* cmd = [MTMathAtomFactory stackCommandForStack:self];
+    if (cmd && (overIsMathList || underIsMathList)) {
         MTMathList* row = overIsMathList ? self.over.list : self.under.list;
         [str appendFormat:@"\\%@{%@}{%@}", cmd, [MTMathListBuilder mathListToString:row], inner];
     } else if (cmd) {
