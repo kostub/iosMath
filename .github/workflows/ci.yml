@@ -39,6 +39,9 @@ jobs:
             exit 1
           fi
           echo "Using simulator $UDID"
+          # Boot it now so it stays eligible/available across later xcodebuild
+          # steps (the destination is otherwise occasionally not matched).
+          xcrun simctl boot "$UDID" || true
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       # ── Swift Package Manager ──────────────────────────────────────────────
@@ -78,10 +81,15 @@ jobs:
       # ── SwiftMathExample.xcodeproj (Swift example — build only, no test target)
       - name: Xcode build – Swift example (iOS)
         run: |
+          # Resolve the local Swift package first; without this the scheme can
+          # expose no destinations on the runner ("Found no destinations").
+          xcodebuild -resolvePackageDependencies \
+            -project SwiftMathExample.xcodeproj \
+            -scheme SwiftMathExample
           xcodebuild build \
             -project SwiftMathExample.xcodeproj \
             -scheme SwiftMathExample \
-            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -sdk iphonesimulator \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
 
