@@ -819,3 +819,79 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
 }
 
 @end
+
+// ---------------------------------------------------------------------------
+// MTMathListRangeTest — unit tests for MTMathListRange, especially +unionRanges:
+// ---------------------------------------------------------------------------
+
+#import "MTMathListIndex.h"
+
+@interface MTMathListRangeTest : XCTestCase
+@end
+
+@implementation MTMathListRangeTest
+
+// FUN-1: unionRanges: with two adjacent ranges must span both, not return ranges[0].
+- (void)testUnionRangesTwoRangesSpansBoth
+{
+    // r1 covers atoms 0–2 (start=0, length=3), r2 covers atoms 3–4 (start=3, length=2)
+    MTMathListIndex* i0 = [MTMathListIndex level0Index:0];
+    MTMathListIndex* i3 = [MTMathListIndex level0Index:3];
+    MTMathListRange* r1 = [MTMathListRange makeRange:i0 length:3];
+    MTMathListRange* r2 = [MTMathListRange makeRange:i3 length:2];
+
+    MTMathListRange* result = [MTMathListRange unionRanges:@[r1, r2]];
+
+    // Expected: start=0, length=5
+    XCTAssertEqual(result.start.atomIndex, (NSUInteger)0, @"start should be 0");
+    XCTAssertEqual(result.length, (NSUInteger)5, @"length should span both ranges (5)");
+}
+
+// FUN-1: unionRanges: with three ranges must accumulate across all iterations.
+- (void)testUnionRangesThreeRangesSpansAll
+{
+    MTMathListIndex* i0 = [MTMathListIndex level0Index:0];
+    MTMathListIndex* i2 = [MTMathListIndex level0Index:2];
+    MTMathListIndex* i5 = [MTMathListIndex level0Index:5];
+    MTMathListRange* r1 = [MTMathListRange makeRange:i0 length:2];  // 0–1
+    MTMathListRange* r2 = [MTMathListRange makeRange:i2 length:2];  // 2–3
+    MTMathListRange* r3 = [MTMathListRange makeRange:i5 length:3];  // 5–7
+
+    MTMathListRange* result = [MTMathListRange unionRanges:@[r1, r2, r3]];
+
+    // Expected: start=0, length=8 (union of 0–1, 2–3, 5–7 → NSUnionRange gives 0–7 → length=8)
+    XCTAssertEqual(result.start.atomIndex, (NSUInteger)0, @"start should be 0");
+    XCTAssertEqual(result.length, (NSUInteger)8, @"length should span all three ranges (8)");
+}
+
+// Single-range edge case: must return an equivalent range.
+- (void)testUnionRangesSingleRangeReturnsSelf
+{
+    MTMathListIndex* i2 = [MTMathListIndex level0Index:2];
+    MTMathListRange* r = [MTMathListRange makeRange:i2 length:4];
+
+    MTMathListRange* result = [MTMathListRange unionRanges:@[r]];
+
+    XCTAssertEqual(result.start.atomIndex, (NSUInteger)2, @"start should be 2");
+    XCTAssertEqual(result.length, (NSUInteger)4, @"length should be 4");
+}
+
+// Order independence: [r1, r2] and [r2, r1] must produce the same span.
+- (void)testUnionRangesOrderIndependence
+{
+    MTMathListIndex* i1 = [MTMathListIndex level0Index:1];
+    MTMathListIndex* i4 = [MTMathListIndex level0Index:4];
+    MTMathListRange* r1 = [MTMathListRange makeRange:i1 length:2];  // 1–2
+    MTMathListRange* r2 = [MTMathListRange makeRange:i4 length:3];  // 4–6
+
+    MTMathListRange* fwd = [MTMathListRange unionRanges:@[r1, r2]];
+    MTMathListRange* rev = [MTMathListRange unionRanges:@[r2, r1]];
+
+    XCTAssertEqual(fwd.start.atomIndex, rev.start.atomIndex, @"start should be equal");
+    XCTAssertEqual(fwd.length, rev.length, @"length should be equal");
+    // Both should span from index 1 to 6 → start=1, length=6
+    XCTAssertEqual(fwd.start.atomIndex, (NSUInteger)1, @"start should be 1");
+    XCTAssertEqual(fwd.length, (NSUInteger)6, @"length should be 6");
+}
+
+@end
