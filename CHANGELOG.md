@@ -1,5 +1,8 @@
 ## Changelog
 
+### v2.3.2 (2026-06-10)
+* Fix: `MTFontManager fontWithName:size:` now returns `nil` for unknown or unloadable font names instead of crashing (`CFRelease(NULL)`) or throwing. The Swift signature is now correctly `MTFont?` (#223).
+
 ### v2.3.1 (2026-06-07)
 * Fix SPM consumer build: public headers in `render/` used bare `#import` of siblings in `lib/`, which only resolved via target-internal header search paths and failed when downstream packages built the `iosMath` Clang module. Qualify the cross-directory imports so the module builds in consumer projects (#215).
 * Lower deployment targets from iOS 18+ / macOS 15+ back down to **iOS 13+ / macOS 10.15+**. The earlier raise was a toolchain-cleanup pass, not driven by any actual API requirement (#214).
