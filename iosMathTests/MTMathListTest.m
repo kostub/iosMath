@@ -13,6 +13,7 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMathListIndex.h"
 
 @interface MTMathListTest : XCTestCase
 
@@ -823,8 +824,6 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
 // ---------------------------------------------------------------------------
 // MTMathListRangeTest — unit tests for MTMathListRange, especially +unionRanges:
 // ---------------------------------------------------------------------------
-
-#import "MTMathListIndex.h"
 
 @interface MTMathListRangeTest : XCTestCase
 @end
