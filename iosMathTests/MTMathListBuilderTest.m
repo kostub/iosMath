@@ -2712,4 +2712,158 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(((MTTextAtom *)list.atoms[0]).text, @"Привет");
 }
 
+- (void)testStackCommandSpecArgRoles
+{
+    MTMathStackCommandSpec* overset = [MTMathAtomFactory stackCommandSpec:@"overset"];
+    XCTAssertNotNil(overset);
+    XCTAssertEqualObjects(overset.argRoles, (@[@(kMTStackArgOver), @(kMTStackArgBase)]));
+    XCTAssertTrue(overset.inheritsClass);
+
+    MTMathStackCommandSpec* underset = [MTMathAtomFactory stackCommandSpec:@"underset"];
+    XCTAssertEqualObjects(underset.argRoles, (@[@(kMTStackArgUnder), @(kMTStackArgBase)]));
+    XCTAssertTrue(underset.inheritsClass);
+
+    MTMathStackCommandSpec* stackrel = [MTMathAtomFactory stackCommandSpec:@"stackrel"];
+    XCTAssertFalse(stackrel.inheritsClass);
+    XCTAssertEqual(stackrel.displayClass, kMTMathAtomRelation);
+
+    MTMathStackCommandSpec* stackbin = [MTMathAtomFactory stackCommandSpec:@"stackbin"];
+    XCTAssertEqual(stackbin.displayClass, kMTMathAtomBinaryOperator);
+
+    // Existing stretchy command keeps a base-only role list.
+    MTMathStackCommandSpec* over = [MTMathAtomFactory stackCommandSpec:@"overrightarrow"];
+    XCTAssertEqualObjects(over.argRoles, (@[@(kMTStackArgBase)]));
+    XCTAssertFalse(over.inheritsClass);
+
+    XCTAssertNil([MTMathAtomFactory stackCommandSpec:@"overfoo"]);
+}
+
+- (void)testInheritedDisplayClassForBase
+{
+    MTMathList* (^one)(unichar) = ^MTMathList*(unichar ch) {
+        MTMathList* l = [MTMathList new];
+        [l addAtom:[MTMathAtomFactory atomForCharacter:ch]];
+        return l;
+    };
+    // Lone relation '=' -> Relation; lone binary '+' -> Binary (intrinsic, pre-finalize).
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('=')], kMTMathAtomRelation);
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('+')], kMTMathAtomBinaryOperator);
+    // Lone ordinary letter -> Ordinary.
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:one('x')], kMTMathAtomOrdinary);
+    // Multi-atom base -> Ordinary.
+    MTMathList* multi = [MTMathList new];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'+']];
+    [multi addAtom:[MTMathAtomFactory atomForCharacter:'y']];
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:multi], kMTMathAtomOrdinary);
+    // Empty base -> Ordinary.
+    XCTAssertEqual([MTMathAtomFactory inheritedDisplayClassForBase:[MTMathList new]], kMTMathAtomOrdinary);
+}
+
+- (void)testOversetParsesStructureAndClass
+{
+    NSArray<NSArray*>* cases = @[
+        // latex, expected displayClass, hasOver, hasUnder
+        @[@"\\stackrel{?}{=}", @(kMTMathAtomRelation),       @YES, @NO],
+        @[@"\\stackbin{x}{+}", @(kMTMathAtomBinaryOperator), @YES, @NO],
+        @[@"\\overset{!}{=}",  @(kMTMathAtomRelation),       @YES, @NO],
+        @[@"\\overset{a}{+}",  @(kMTMathAtomBinaryOperator), @YES, @NO],
+        @[@"\\overset{a}{x}",  @(kMTMathAtomOrdinary),       @YES, @NO],
+        @[@"\\overset{a}{x+y}",@(kMTMathAtomOrdinary),       @YES, @NO],
+        @[@"\\underset{b}{=}", @(kMTMathAtomRelation),       @NO,  @YES],
+        @[@"\\underset{b}{x}", @(kMTMathAtomOrdinary),       @NO,  @YES],
+    ];
+    for (NSArray* c in cases) {
+        NSString* latex = c[0];
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        XCTAssertEqual(list.atoms.count, 1u, @"%@", latex);
+        MTMathStack* stack = list.atoms[0];
+        XCTAssertEqual(stack.type, kMTMathAtomStack, @"%@", latex);
+        XCTAssertEqual(stack.displayClass, [c[1] unsignedIntegerValue], @"%@", latex);
+        XCTAssertNotNil(stack.innerList, @"%@", latex);
+        if ([c[2] boolValue]) {
+            XCTAssertNotNil(stack.over, @"%@", latex);
+            XCTAssertEqual(stack.over.kind, kMTMathStackConstructionMathList, @"%@", latex);
+        } else {
+            XCTAssertNil(stack.over, @"%@", latex);
+        }
+        if ([c[3] boolValue]) {
+            XCTAssertNotNil(stack.under, @"%@", latex);
+            XCTAssertEqual(stack.under.kind, kMTMathStackConstructionMathList, @"%@", latex);
+        } else {
+            XCTAssertNil(stack.under, @"%@", latex);
+        }
+    }
+}
+
+- (void)testOversetMissingArgsAreGraceful
+{
+    // Matches \frac: missing args at EOF produce empty rows, no crash, no parse error.
+    for (NSString* latex in @[@"\\overset", @"\\overset{a}", @"\\underset", @"\\stackrel{a}"]) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:latex error:&error];
+        XCTAssertNotNil(list, @"%@", latex);
+        XCTAssertNil(error, @"%@", latex);
+        XCTAssertEqual(list.atoms.count, 1u, @"%@", latex);
+        XCTAssertEqual(((MTMathAtom*)list.atoms[0]).type, kMTMathAtomStack, @"%@", latex);
+    }
+}
+
+- (void)testOversetNestingParse
+{
+    // \underset{b}{\overset{a}{X}} -> outer under-stack whose base is an inner over-stack.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\underset{b}{\\overset{a}{X}}"];
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, 1u);
+    MTMathStack* outer = list.atoms[0];
+    XCTAssertEqual(outer.type, kMTMathAtomStack);
+    XCTAssertNotNil(outer.under);
+    XCTAssertNil(outer.over);
+    XCTAssertEqual(outer.innerList.atoms.count, 1u);
+    MTMathStack* inner = outer.innerList.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomStack);
+    XCTAssertNotNil(inner.over);
+    XCTAssertNil(inner.under);
+}
+
+- (void)testOversetRoundTrip
+{
+    NSArray<NSArray*>* cases = @[
+        @[@"\\stackrel{?}{=}", @"\\stackrel{?}{=}"],
+        @[@"\\stackbin{x}{+}", @"\\stackbin{x}{+}"],
+        @[@"\\underset{b}{x}", @"\\underset{b}{x}"],
+        @[@"\\overset{a}{x}",  @"\\overset{a}{x}"],
+        @[@"\\overset{a}{+}",  @"\\stackbin{a}{+}"],  // inherited Binary canonicalizes to \stackbin
+        @[@"\\overset{!}{=}",  @"\\stackrel{!}{=}"],  // inherited Relation canonicalizes to \stackrel
+    ];
+    for (NSArray* c in cases) {
+        MTMathList* list = [MTMathListBuilder buildFromString:c[0]];
+        XCTAssertNotNil(list, @"%@", c[0]);
+        NSString* latex = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(latex, c[1], @"%@", c[0]);
+        // Round-trip is at least an equivalent fixed point (re-parse + re-serialize stable).
+        NSString* latex2 = [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:latex]];
+        XCTAssertEqualObjects(latex2, c[1], @"%@", c[0]);
+    }
+}
+
+- (void)testProgrammaticBothRowsSerializeNested
+{
+    // A stack carrying both over and under MathList rows emits nested commands.
+    MTMathStack* stack = [MTMathStack new];
+    MTMathList* base = [MTMathList new];
+    [base addAtom:[MTMathAtomFactory atomForCharacter:'X']];
+    MTMathList* top = [MTMathList new];
+    [top addAtom:[MTMathAtomFactory atomForCharacter:'a']];
+    MTMathList* bot = [MTMathList new];
+    [bot addAtom:[MTMathAtomFactory atomForCharacter:'b']];
+    stack.innerList = base;
+    stack.over = [MTMathStackConstruction mathListWithList:top];
+    stack.under = [MTMathStackConstruction mathListWithList:bot];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:stack];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
+}
+
 @end

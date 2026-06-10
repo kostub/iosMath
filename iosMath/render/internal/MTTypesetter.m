@@ -2078,8 +2078,12 @@ typedef NS_ENUM(NSUInteger, MTStackRole) {
     MTDisplay* overDisp  = stack.over  ? [self buildStackConstruction:stack.over  forWidth:targetWidth role:kMTStackRoleOver  range:stack.indexRange] : nil;
     MTDisplay* underDisp = stack.under ? [self buildStackConstruction:stack.under forWidth:targetWidth role:kMTStackRoleUnder range:stack.indexRange] : nil;
 
-    CGFloat overGap  = _styleFont.mathTable.stretchStackGapAboveMin;
-    CGFloat underGap = _styleFont.mathTable.stretchStackGapBelowMin;
+    CGFloat overGap  = (stack.over.kind  == kMTMathStackConstructionMathList)
+                       ? [self upperLimitGapFor:overDisp]
+                       : _styleFont.mathTable.stretchStackGapAboveMin;
+    CGFloat underGap = (stack.under.kind == kMTMathStackConstructionMathList)
+                       ? [self lowerLimitGapFor:underDisp]
+                       : _styleFont.mathTable.stretchStackGapBelowMin;
 
     CGFloat totalWidth = MAX(baseDisplay.width,
                          MAX(overDisp  ? overDisp.width  : 0,

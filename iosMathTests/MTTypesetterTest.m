@@ -2622,4 +2622,107 @@
     XCTAssertLessThan(sd.over.ascent, sd.base.ascent);
 }
 
+- (void)testOversetUsesLimitGapAndCentering
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overset{a}{X}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 1u);
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    XCTAssertTrue([stack isKindOfClass:[MTStackDisplay class]]);
+    XCTAssertNotNil(stack.over);
+    XCTAssertNil(stack.under);
+    XCTAssertTrue([stack.over isKindOfClass:[MTMathListDisplay class]]);
+
+    // 6.4-b: over-row uses the operator-limit gap, NOT stretchStackGapAboveMin.
+    CGFloat limitGap = MAX(self.font.mathTable.upperLimitGapMin,
+                           self.font.mathTable.upperLimitBaselineRiseMin - stack.over.descent);
+    CGFloat expectedOverY = stack.base.ascent + limitGap + stack.over.descent;
+    XCTAssertEqualWithAccuracy(stack.over.position.y, expectedOverY, 0.01);
+
+    // total width = max(base, over); narrower row is centered.
+    CGFloat totalWidth = MAX(stack.base.width, stack.over.width);
+    XCTAssertEqualWithAccuracy(display.width, totalWidth, 0.01);
+    XCTAssertEqualWithAccuracy(stack.over.position.x, (totalWidth - stack.over.width) / 2.0, 0.01);
+    XCTAssertEqualWithAccuracy(stack.base.position.x, (totalWidth - stack.base.width) / 2.0, 0.01);
+}
+
+- (void)testUndersetUsesLowerLimitGap
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\underset{b}{X}"];
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    XCTAssertNotNil(stack.under);
+    XCTAssertNil(stack.over);
+    CGFloat limitGap = MAX(self.font.mathTable.lowerLimitGapMin,
+                           self.font.mathTable.lowerLimitBaselineDropMin - stack.under.ascent);
+    CGFloat expectedUnderY = -(stack.base.descent + limitGap + stack.under.ascent);
+    XCTAssertEqualWithAccuracy(stack.under.position.y, expectedUnderY, 0.01);
+}
+
+- (void)testStretchyOverrightarrowStillUsesStretchGap
+{
+    // Regression: the stretchy path keeps stretchStackGapAboveMin (unchanged by 6.4-b).
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\overrightarrow{x}"];
+    MTStackDisplay* stack = (MTStackDisplay*)display.subDisplays[0];
+    CGFloat gapAbove = self.font.mathTable.stretchStackGapAboveMin;
+    CGFloat expectedAscent = stack.base.ascent + gapAbove + stack.over.ascent + stack.over.descent;
+    XCTAssertEqualWithAccuracy(display.ascent, expectedAscent, 0.01);
+}
+
+// Helper for the spacing tests below. For `a Z b` where Z renders as its own
+// MTStackDisplay, isolates the inter-element space (left + right) around Z by
+// subtracting Z's width from the gap between the surrounding `a` and `b` lines.
+- (CGFloat)gapAroundStackInLaTeX:(NSString*)latex
+{
+    MTMathListDisplay* display = [self displayForLaTeX:latex];
+    XCTAssertEqual(display.subDisplays.count, 3u, @"%@: expected [line(a), stack, line(b)]", latex);
+    MTDisplay* a = display.subDisplays[0];
+    MTStackDisplay* z = (MTStackDisplay*)display.subDisplays[1];
+    MTDisplay* b = display.subDisplays[2];
+    XCTAssertTrue([z isKindOfClass:[MTStackDisplay class]], @"%@: middle is not a stack", latex);
+    return (b.position.x - (a.position.x + a.width)) - z.width;
+}
+
+- (void)testStackrelForcesRelationSpacing
+{
+    // 6.3: \stackrel forces Relation class regardless of base; spacing must match.
+    CGFloat stackrelGap = [self gapAroundStackInLaTeX:@"a\\stackrel{?}{=}b"];
+    CGFloat oversetOrdGap = [self gapAroundStackInLaTeX:@"a\\overset{?}{c}b"];
+    // Relation -> Ord and Ord -> Relation are both NSThick; Ord -> Ord is None.
+    // So the relation case must have strictly more space than the ordinary case.
+    XCTAssertGreaterThan(stackrelGap, oversetOrdGap + 0.5);
+}
+
+- (void)testOversetInheritsBinaryClassForSpacing
+{
+    // 6.3 inheritance: \overset over a lone Binary base inherits Binary class.
+    CGFloat binGap = [self gapAroundStackInLaTeX:@"a\\overset{x}{+}b"];
+    CGFloat ordGap = [self gapAroundStackInLaTeX:@"a\\overset{x}{c}b"];
+    CGFloat relGap = [self gapAroundStackInLaTeX:@"a\\stackrel{x}{=}b"];
+    // Binary -> Ord is NSMedium, larger than Ord-Ord (None) and smaller than Relation (NSThick).
+    XCTAssertGreaterThan(binGap, ordGap + 0.5);
+    XCTAssertLessThan(binGap, relGap - 0.5);
+}
+
+- (void)testOversetRowRendersAtScriptScriptWhenNestedInSuperscript
+{
+    // 6.2-a: stack rows derive their style live from the surrounding style.
+    // At display style the over-row is script; inside a superscript (script) the
+    // over-row must drop further to scriptScript and be visibly smaller.
+    MTMathListDisplay* baseline = [self displayForLaTeX:@"\\overset{a}{=}"];
+    XCTAssertEqual(baseline.subDisplays.count, 1u);
+    MTStackDisplay* baselineStack = (MTStackDisplay*)baseline.subDisplays[0];
+    XCTAssertTrue([baselineStack isKindOfClass:[MTStackDisplay class]]);
+
+    MTMathListDisplay* nested = [self displayForLaTeX:@"x^{\\overset{a}{=}}"];
+    XCTAssertEqual(nested.subDisplays.count, 2u);
+    MTMathListDisplay* superscript = (MTMathListDisplay*)nested.subDisplays[1];
+    XCTAssertTrue([superscript isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertEqual(superscript.type, kMTLinePositionSuperscript);
+    XCTAssertEqual(superscript.subDisplays.count, 1u);
+    MTStackDisplay* nestedStack = (MTStackDisplay*)superscript.subDisplays[0];
+    XCTAssertTrue([nestedStack isKindOfClass:[MTStackDisplay class]]);
+
+    XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
+}
+
 @end

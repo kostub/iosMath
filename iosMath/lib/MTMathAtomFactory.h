@@ -15,6 +15,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// The role a parsed argument plays when the builder assembles an over/under stack.
+typedef NS_ENUM(NSUInteger, MTStackArgRole) {
+    kMTStackArgBase,
+    kMTStackArgOver,
+    kMTStackArgUnder,
+};
+
+/// Describes one over/under stack command: its static (Extensible) rows, the ordered
+/// argument roles the builder reads, the math class it forces, and whether it instead
+/// inherits the class from a lone Bin/Rel base atom.
+@interface MTMathStackCommandSpec : NSObject
+@property (nonatomic, readonly, nullable) MTMathStackConstruction* overConstruction;
+@property (nonatomic, readonly, nullable) MTMathStackConstruction* underConstruction;
+@property (nonatomic, readonly) MTMathAtomType displayClass;
+@property (nonatomic, readonly) NSArray<NSNumber*>* argRoles;
+@property (nonatomic, readonly) BOOL inheritsClass;
+- (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
+                       under:(nullable MTMathStackConstruction*)under
+                displayClass:(MTMathAtomType)displayClass
+                    argRoles:(NSArray<NSNumber*>*)argRoles
+               inheritsClass:(BOOL)inheritsClass;
+@end
+
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
@@ -125,6 +148,17 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  non-canonical constructions). This is the inverse of stackAtomForCommand:. */
 + (nullable NSString*) stackCommandForStack:(MTMathStack*)stack
     NS_SWIFT_NAME(stackCommand(for:));
+
+/** Returns the MTMathStackCommandSpec for the given LaTeX command name, or nil if the
+ command is not a known stack command. Includes all eight stretchy commands and the four
+ two-argument MathList commands: overset, underset, stackrel, stackbin. */
++ (nullable MTMathStackCommandSpec*) stackCommandSpec:(NSString*)command;
+
+/** Returns the math class to inherit from the base list for \overset / \underset.
+ Option I: if the base list is a single atom of type BinaryOperator or Relation, that
+ type is returned (intrinsic class, read before finalize's Bin->Ord reclassification).
+ In all other cases returns kMTMathAtomOrdinary. */
++ (MTMathAtomType) inheritedDisplayClassForBase:(MTMathList*)base;
 
 /** Creates a new boundary atom for the given delimiter name. If the delimiter name
  is not recognized it returns nil. A delimiter name can be a single character such

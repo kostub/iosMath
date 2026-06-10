@@ -1249,12 +1249,29 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
+    BOOL overIsMathList  = self.over  && self.over.kind  == kMTMathStackConstructionMathList;
+    BOOL underIsMathList = self.under && self.under.kind == kMTMathStackConstructionMathList;
+    NSString* inner = [MTMathListBuilder mathListToString:self.innerList];
+    if (overIsMathList && underIsMathList) {
+        // Programmatic both-rows stack: no single command exists, so emit nested
+        // \underset{under}{\overset{over}{base}}. Reparses to two nested stacks
+        // (equivalent, not byte-identical — see LLD §6.5).
+        [str appendFormat:@"\\underset{%@}{\\overset{%@}{%@}}",
+             [MTMathListBuilder mathListToString:self.under.list],
+             [MTMathListBuilder mathListToString:self.over.list],
+             inner];
+        return;
+    }
     NSString* cmd = [MTMathAtomFactory stackCommandForStack:self];
-    if (cmd) {
-        [str appendFormat:@"\\%@{%@}", cmd, [MTMathListBuilder mathListToString:self.innerList]];
+    if (cmd && (overIsMathList || underIsMathList)) {
+        MTMathList* row = overIsMathList ? self.over.list : self.under.list;
+        [str appendFormat:@"\\%@{%@}{%@}", cmd, [MTMathListBuilder mathListToString:row], inner];
+    } else if (cmd) {
+        // Extensible (single-arg) commands, unchanged.
+        [str appendFormat:@"\\%@{%@}", cmd, inner];
     } else {
         // Programmatically-built stack with non-canonical constructions — emit only the inner list.
-        [str appendString:[MTMathListBuilder mathListToString:self.innerList]];
+        [str appendString:inner];
     }
 }
 

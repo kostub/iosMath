@@ -789,9 +789,33 @@ NSString *const MTParseError = @"ParseError";
         under.innerList = [self buildInternal:true];
         return under;
     } else {
-        MTMathStack* stack = [MTMathAtomFactory stackAtomForCommand:command];
-        if (stack) {
-            stack.innerList = [self buildInternal:true];
+        MTMathStackCommandSpec* spec = [MTMathAtomFactory stackCommandSpec:command];
+        if (spec) {
+            MTMathStack* stack = [MTMathStack new];
+            stack.over  = spec.overConstruction;   // static glyph row or nil
+            stack.under = spec.underConstruction;
+            MTMathList* base = nil;
+            for (NSNumber* role in spec.argRoles) {
+                MTMathList* arg = [self buildInternal:true];
+                if (_error) {
+                    return nil;
+                }
+                switch (role.unsignedIntegerValue) {
+                    case kMTStackArgBase:
+                        base = arg;
+                        stack.innerList = arg;
+                        break;
+                    case kMTStackArgOver:
+                        stack.over = [MTMathStackConstruction mathListWithList:arg];
+                        break;
+                    case kMTStackArgUnder:
+                        stack.under = [MTMathStackConstruction mathListWithList:arg];
+                        break;
+                }
+            }
+            stack.displayClass = spec.inheritsClass
+                ? [MTMathAtomFactory inheritedDisplayClassForBase:base]
+                : spec.displayClass;
             return stack;
         }
     }
