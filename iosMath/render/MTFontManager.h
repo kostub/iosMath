@@ -52,8 +52,10 @@ extern NSString *const MTFontNameNotoSansMath;
  python script.
  @param name The name of the font file.
  @param size The size of the font to return.
+ @return A valid MTFont on success, or nil if the named font's .otf or .plist
+         resources cannot be loaded (e.g. the name does not match any bundled font).
  */
-- (MTFont *) fontWithName:(NSString *)name size:(CGFloat)size;
+- (nullable MTFont *) fontWithName:(NSString *)name size:(CGFloat)size;
 
 /**
  Returns a CoreText font suitable for `\text*` rendering. The caller owns
