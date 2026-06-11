@@ -84,6 +84,7 @@ private let namedExampleMeta: [NamedFormulaMeta] = [
     NamedFormulaMeta(title: "2×2 matrix multiplication"),
     NamedFormulaMeta(title: "EM algorithm Q-function"),
     NamedFormulaMeta(title: "Piecewise function"),
+    NamedFormulaMeta(title: "Ridge regression"),
 ]
 
 private let namedExamples: [NamedFormula] = {
