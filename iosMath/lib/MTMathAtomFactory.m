@@ -141,7 +141,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSParameterAssert(chars);
     NSInteger len = chars.length;
-    unichar buff[len];
+    unichar *buff = malloc(sizeof(unichar) * (size_t)len);
     [chars getCharacters:buff range:NSMakeRange(0, len)];
     MTMathList* list = [[MTMathList alloc] init];
     for (NSInteger i = 0; i < len; i++) {
@@ -150,6 +150,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             [list addAtom:atom];
         }
     }
+    free(buff);
     return list;
 }
 

@@ -2725,4 +2725,59 @@
     XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
 }
 
+// SEC-2 regression tests: heap-allocate input-sized buffers (VLA → malloc/free)
+// These verify that the three fixed sites correctly handle larger inputs without
+// crashing or producing wrong results.
+
+- (void)testMathListForCharactersLargeInput_SEC2
+{
+    // Site 1: +[MTMathAtomFactory mathListForCharacters:]
+    // Build a 10,000-character digit string. The old VLA would put 20 KB on the
+    // stack; with the heap fix it should succeed and return exactly 10,000 atoms.
+    NSMutableString* digits = [NSMutableString stringWithCapacity:10000];
+    for (int i = 0; i < 10000; i++) {
+        [digits appendString:@"1"];
+    }
+    MTMathList* list = [MTMathAtomFactory mathListForCharacters:digits];
+    XCTAssertNotNil(list, @"mathListForCharacters: should not return nil for a 10k-digit string");
+    XCTAssertEqual(list.atoms.count, (NSUInteger)10000, @"Each character should produce exactly one atom");
+}
+
+- (void)testChangeFontLargeNucleus_SEC2
+{
+    // Site 2: changeFont() in MTTypesetter (exercised via rendering a long
+    // variable/number run). Build a math list with a single ordinary atom whose
+    // nucleus is 10,000 'x' characters. The typesetter calls changeFont on it
+    // which would stack-overflow with a VLA; with the heap fix it should
+    // produce a non-nil display.
+    NSMutableString* longNucleus = [NSMutableString stringWithCapacity:10000];
+    for (int i = 0; i < 10000; i++) {
+        [longNucleus appendString:@"x"];
+    }
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomVariable value:longNucleus];
+    MTMathList* list = [[MTMathList alloc] init];
+    [list addAtom:atom];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Rendering a 10k-char nucleus should produce a display (not crash)");
+    XCTAssertGreaterThan(display.ascent, 0, @"Display should have positive ascent");
+}
+
+- (void)testMathTableManyColumns_SEC2
+{
+    // Site 3: -[MTTypesetter makeTable:] columnWidths VLA.
+    // Build a table with 500 columns (all empty cells). The old VLA would put
+    // 500*8 = 4 KB on the stack; with the heap fix it should succeed and return
+    // a non-nil display.
+    MTMathTable* table = [[MTMathTable alloc] init];
+    NSUInteger numCols = 500;
+    for (NSUInteger col = 0; col < numCols; col++) {
+        MTMathList* cell = [[MTMathList alloc] init];
+        [table setCell:cell forRow:0 column:col];
+    }
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:table];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Rendering a 500-column table should produce a display");
+}
+
 @end

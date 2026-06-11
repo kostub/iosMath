@@ -424,16 +424,18 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
 }
 
 static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
-    NSMutableString* retval = [NSMutableString stringWithCapacity:str.length];
-    unichar charBuffer[str.length];
-    [str getCharacters:charBuffer range:NSMakeRange(0, str.length)];
-    for (int i = 0; i < str.length; ++i) {
+    NSUInteger length = str.length;
+    NSMutableString* retval = [NSMutableString stringWithCapacity:length];
+    unichar *charBuffer = malloc(sizeof(unichar) * (size_t)length);
+    [str getCharacters:charBuffer range:NSMakeRange(0, length)];
+    for (NSUInteger i = 0; i < length; ++i) {
         unichar ch = charBuffer[i];
         UTF32Char unicode = styleCharacter(ch, fontStyle);
         unicode = NSSwapHostIntToLittle(unicode);
         NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
         [retval appendString:charStr];
     }
+    free(charBuffer);
     return retval;
 }
 
@@ -2127,24 +2129,21 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
     }
     
-    CGFloat columnWidths[numColumns];
-    // NOTE: Using memset to initialize columnWidths array avoids
-    // Xcode Analyze "Assigned value is garbage or undefined".
-    // https://stackoverflow.com/questions/21191194/analyzer-warning-assigned-value-is-garbage-or-undefined
-    memset(columnWidths, 0, sizeof(columnWidths));
+    CGFloat *columnWidths = calloc(numColumns, sizeof(CGFloat));
     NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
-    
+
     // Position all the columns in each row
     NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
     for (NSArray<MTDisplay*>* row in displays) {
         MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
         [rowDisplays addObject:rowDisplay];
     }
-    
+
     // Position all the rows
     [self positionRows:rowDisplays forTable:table];
     MTMathListDisplay* tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
     tableDisplay.position = _currentPosition;
+    free(columnWidths);
     return tableDisplay;
 }
 
