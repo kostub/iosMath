@@ -2745,4 +2745,20 @@
                          @"Display must contain at least one sub-display");
 }
 
+// SEC-4: the same getDefaultStyle() crash applied to Number atoms with an
+// unmapped nucleus (the code path is shared via changeFont). Cover it explicitly.
+- (void)testSEC4_nonDigitNumberNucleusDoesNotCrash {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomNumber value:@"@"];
+    [mathList addAtom:atom];
+
+    // Must not throw; must return a non-nil display object.
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList
+                                                               font:self.font
+                                                              style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Render of non-digit Number atom must not crash");
+    XCTAssertGreaterThan(display.subDisplays.count, (NSUInteger)0,
+                         @"Display must contain at least one sub-display");
+}
+
 @end
