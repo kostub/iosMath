@@ -109,7 +109,7 @@ static const NSUInteger kMacFontCount = 8;
     // --- Demo formulae — LaTeX strings from MathExamples.h ---
     static const CGFloat demoHeights[] = {
         60, 40, 120, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60,
-        50
+        60
     };
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {

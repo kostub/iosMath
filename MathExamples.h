@@ -274,13 +274,14 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
         // 86: \stackrel — Taylor series with a "by definition" relation
         @"f(x) \\stackrel{\\text{def}}{=} \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(0)}{n!} x^n",
-        // 87: \stackbin — decorated plus, forced Binary class spacing
-        @"a \\stackbin{\\Delta}{+} b",
+        // 87: \stackbin — decorated plus keeps Binary-class spacing (contrast with bare +)
+        @"a + b \\quad a \\stackbin{\\Delta}{+} b",
         // 88: \overset — class inherits from base (Relation, Binary, Ordinary)
         @"a \\overset{!}{=} b \\quad x \\overset{?}{+} y \\quad \\overset{*}{A}",
-        // 89: \underset — alternative limit notation under a named operator
-        @"\\underset{x \\to 0}{\\lim}\\, \\frac{\\sin x}{x} = 1",
-        // 90: Spacing contrast — \stackrel (Relation) vs \overset (Ordinary) on the same Ord base
+        // 89: \underset — under-stack on an operator that has no natural limits subscript
+        @"\\underset{x \\in \\mathbb{R}}{\\sup}\\, f(x)",
+        // 90: Spacing contrast — Relation atoms get more horizontal padding than Ord.
+        //     \stackrel forces Relation class; \overset inherits Ord from base `c`.
         @"a \\stackrel{?}{c} b \\quad a \\overset{?}{c} b",
         // 91: Nested stacks — \overset inside the over-arg of \stackrel
         @"a \\stackrel{\\overset{n}{\\to}}{=} b",
