@@ -339,9 +339,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     NSMutableString* str = [[NSMutableString alloc] init];
     if (self.hasRule) {
-        [str appendString:@"\\atop"];
-    } else {
         [str appendString:@"\\frac"];
+    } else {
+        [str appendString:@"\\atop"];
     }
     if (self.leftDelimiter || self.rightDelimiter) {
         [str appendFormat:@"[%@][%@]", self.leftDelimiter, self.rightDelimiter];

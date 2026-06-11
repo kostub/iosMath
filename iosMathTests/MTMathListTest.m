@@ -818,4 +818,33 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     }
 }
 
+// Regression test for FUN-3: MTFraction.stringValue had \frac and \atop swapped.
+- (void) testFractionStringValueRuledUsesFrac
+{
+    // A fraction created with hasRule:YES is the standard ruled \frac form.
+    MTFraction *frac = [[MTFraction alloc] initWithRule:YES];
+    frac.numerator = [MTMathList new];
+    frac.denominator = [MTMathList new];
+
+    NSString *sv = frac.stringValue;
+    XCTAssertTrue([sv containsString:@"\\frac"],
+                  @"ruled fraction stringValue should contain \\frac, got: %@", sv);
+    XCTAssertFalse([sv containsString:@"\\atop"],
+                   @"ruled fraction stringValue must not contain \\atop, got: %@", sv);
+}
+
+- (void) testFractionStringValueRulelessUsesAtop
+{
+    // A fraction created with hasRule:NO is the rule-less \atop form.
+    MTFraction *frac = [[MTFraction alloc] initWithRule:NO];
+    frac.numerator = [MTMathList new];
+    frac.denominator = [MTMathList new];
+
+    NSString *sv = frac.stringValue;
+    XCTAssertTrue([sv containsString:@"\\atop"],
+                  @"rule-less fraction stringValue should contain \\atop, got: %@", sv);
+    XCTAssertFalse([sv containsString:@"\\frac"],
+                   @"rule-less fraction stringValue must not contain \\frac, got: %@", sv);
+}
+
 @end
