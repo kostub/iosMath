@@ -37,6 +37,11 @@ NSString *const MTParseError = @"ParseError";
 
 @end
 
+// Maximum recursion depth for -buildInternal:oneCharOnly:stopChar:.
+// 150 is comfortably deeper than any realistic human-authored expression yet
+// far below the thousands of frames needed to overflow a 1 MB stack.
+static const NSInteger kMTMaxRecursionDepth = 150;
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
@@ -45,6 +50,7 @@ NSString *const MTParseError = @"ParseError";
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
+    NSInteger _recursionDepth;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -159,6 +165,12 @@ NSString *const MTParseError = @"ParseError";
 
 - (MTMathList*)buildInternal:(BOOL) oneCharOnly stopChar:(unichar) stop
 {
+    if (_recursionDepth >= kMTMaxRecursionDepth) {
+        [self setError:MTParseErrorNestingTooDeep message:@"LaTeX nesting too deep"];
+        return nil;
+    }
+    _recursionDepth++;
+    @try {
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
     MTMathAtom* prevAtom = nil;
@@ -373,6 +385,9 @@ NSString *const MTParseError = @"ParseError";
         }
     }
     return list;
+    } @finally {
+        _recursionDepth--;
+    }
 }
 
 - (NSString*) readString
