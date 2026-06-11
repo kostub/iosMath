@@ -52,11 +52,13 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
     return self;
 }
 
-- (MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
+- (nullable MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
+    if (!name) { return nil; }            // nil name cannot key the cache dictionary
     MTFont* f = self.nameToFontMap[name];
     if (!f) {
         f = [[MTFont alloc] initFontWithName:name size:size];
+        if (!f) { return nil; }           // unknown/unloadable font — do not cache
         self.nameToFontMap[name] = f;
     }
     if (f.fontSize == size) {

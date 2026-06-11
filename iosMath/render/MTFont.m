@@ -32,14 +32,18 @@
 
         NSBundle* bundle = [MTFont fontBundle];
         NSString* fontPath = [bundle pathForResource:name ofType:@"otf" inDirectory:@"fonts"];
+        if (!fontPath) { return nil; }
         CGDataProviderRef fontDataProvider = CGDataProviderCreateWithFilename(fontPath.UTF8String);
+        if (!fontDataProvider) { return nil; }
         _defaultCGFont = CGFontCreateWithDataProvider(fontDataProvider);
         CFRelease(fontDataProvider);
+        if (!_defaultCGFont) { return nil; }
 
         _ctFont = CTFontCreateWithGraphicsFont(self.defaultCGFont, size, nil, nil);
 
         NSString* mathTablePlist = [bundle pathForResource:name ofType:@"plist" inDirectory:@"fonts"];
-        NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:mathTablePlist];
+        NSDictionary* dict = mathTablePlist ? [NSDictionary dictionaryWithContentsOfFile:mathTablePlist] : nil;
+        if (!dict) { return nil; }
         self.rawMathTable = dict;
         self.mathTable = [[MTFontMathTable alloc] initWithFont:self mathTable:_rawMathTable];
     }

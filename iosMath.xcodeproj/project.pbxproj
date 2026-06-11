@@ -15,6 +15,7 @@
 		AA000033000000000000AA33 /* NSView+backgroundColor.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000AA23 /* NSView+backgroundColor.m */; };
 		AA000034000000000000AA34 /* MTLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000AA24 /* MTLabel.m */; };
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
+		490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465C01D23DA8400F82033 /* MTFontManagerTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
 		492EED0A17DAEDD200939107 /* MTMathListDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF617DAED9000939107 /* MTMathListDisplay.m */; };
@@ -73,6 +74,7 @@
 
 /* Begin PBXFileReference section */
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
+		490465C01D23DA8400F82033 /* MTFontManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManagerTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
 		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
 		492EECF517DAED9000939107 /* MTMathUILabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathUILabel.m; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 				49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
+				490465C01D23DA8400F82033 /* MTFontManagerTest.m */,
 				49965F2417CBBA2700A555C5 /* Supporting Files */,
 			);
 			path = iosMathTests;
@@ -512,6 +515,7 @@
 				498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
 				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
+				490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
