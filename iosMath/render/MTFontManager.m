@@ -54,6 +54,7 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 
 - (nullable MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
+    if (!name) { return nil; }            // nil name cannot key the cache dictionary
     MTFont* f = self.nameToFontMap[name];
     if (!f) {
         f = [[MTFont alloc] initFontWithName:name size:size];

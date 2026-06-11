@@ -38,7 +38,17 @@
                                @"Known font should have the requested size");
 }
 
-// Test 3: All 8 declared font constants load successfully (regression guard).
+// Test 3: A nil font name returns nil instead of throwing.
+// Without the guard, self.nameToFontMap[name] raises NSInvalidArgumentException
+// (NSDictionary keys cannot be nil).
+- (void)testNilFontNameReturnsNil
+{
+    NSString *nilName = nil;
+    MTFont *font = [MTFontManager.fontManager fontWithName:nilName size:20];
+    XCTAssertNil(font, @"Nil font name should return nil, not throw");
+}
+
+// Test 4: All 8 declared font constants load successfully (regression guard).
 - (void)testAllDeclaredFontConstantsLoadNonNil
 {
     NSArray<NSString *> *fontNames = @[
@@ -59,7 +69,7 @@
     }
 }
 
-// Test 4: Size-variant path still works.
+// Test 5: Size-variant path still works.
 // Load a known font at a non-default size; exercises the copyFontWithSize: branch
 // with the nil-guard in place.
 - (void)testSizeVariantPathReturnsCorrectSize
