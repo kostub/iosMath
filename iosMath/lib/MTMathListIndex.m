@@ -259,7 +259,7 @@
     MTMathListRange* unioned = ranges[0];
     for (int i = 1; i < ranges.count; i++) {
         MTMathListRange* next = ranges[i];
-        [unioned unionRange:next];
+        unioned = [unioned unionRange:next];
     }
     return unioned;
 }
