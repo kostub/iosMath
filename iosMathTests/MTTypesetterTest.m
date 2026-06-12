@@ -2804,11 +2804,8 @@
                   @"Second sub-display should be CTLine for '+z'");
     MTCTLineDisplay* plusZLine = (MTCTLineDisplay*)sub1;
 
-    // The gap between end of the color group and the start of "+z" is the
-    // binary-operator gap (4 mu) because the typesetter sees color (Ord) then BinOp.
-    // But because + is a BinaryOperator and z is Ordinary, the actual inter-element
-    // space between color (Ord) and + (BinOp, left of the line) is medium (4mu).
-    // The "+z" CTLine starts at the position where the typesetter placed it.
+    // The color group is Ord and '+' is a BinaryOperator, so the gap between them
+    // is the Ord->BinOp inter-element space: medium (4 mu).
     CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
     CGFloat actualGap = plusZLine.position.x - (colorSub.position.x + colorSub.width);
     XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
