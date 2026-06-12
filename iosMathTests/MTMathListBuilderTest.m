@@ -1726,7 +1726,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"\\bigm|",    @(kMTMathAtomRelation), @(kMTDelimiterSize1), @"|" ],
         @[ @"\\Bigm\\|",  @(kMTMathAtomRelation), @(kMTDelimiterSize2), @"\u2016" ],
         @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016", @"\\biggm\\|" ],
-        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u27e8", @"\\Biggm<" ],
+        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u27E8", @"\\Biggm<" ],
         // Null delimiter.
         @[ @"\\bigl.",    @(kMTMathAtomOpen),     @(kMTDelimiterSize1), @"" ],
         @[ @"\\bigr.",    @(kMTMathAtomClose),    @(kMTDelimiterSize1), @"" ],
