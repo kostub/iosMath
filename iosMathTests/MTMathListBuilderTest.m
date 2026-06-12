@@ -1471,6 +1471,10 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
               @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
+              // REN-5: non-ASCII literal characters should produce MTParseErrorInvalidCharacter
+              @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
+              @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
+              @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
               ];
 };
 
