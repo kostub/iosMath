@@ -87,6 +87,8 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorInternalError,
     /// Limit control applied incorrectly
     MTParseErrorInvalidLimits,
+    /// The LaTeX nesting depth exceeded the safe parsing limit.
+    MTParseErrorNestingTooDeep,
 };
 
 @end
