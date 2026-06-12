@@ -2725,4 +2725,92 @@
     XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
 }
 
+// REN-3: \color atoms must receive inter-element spacing before the colored sub-display.
+// Before the fix, the colored group abutted the preceding binary operator with no gap.
+// After the fix, the medium binary-operator→ordinary gap (4 mu) separates them.
+
+- (void)testColorReceivesInterElementSpacingBeforeIt {
+    // x + \color{red}y  — the colored sub-display follows the binary operator +.
+    // The gap between the end of "x+" and the start of the colored group must equal
+    // the medium space (4mu = 4 * font.mathTable.muUnit) at display style.
+    MTMathListDisplay* display = [self displayForLaTeX:@"x+\\color{#ff0000}{y}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected CTLine for 'x+' and a colored sub-display");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]],
+                  @"First sub-display should be a CTLine for 'x+'");
+    MTCTLineDisplay* xPlusLine = (MTCTLineDisplay*)sub0;
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTMathListDisplay class]],
+                  @"Second sub-display should be the colored MTMathListDisplay");
+    MTMathListDisplay* colorSub = (MTMathListDisplay*)sub1;
+    XCTAssertNotNil(colorSub.localTextColor, @"Colored display must carry a localTextColor");
+
+    // The medium binary-operator gap is 4 mu = 4 * muUnit (display style, non-script).
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = colorSub.position.x - (xPlusLine.position.x + xPlusLine.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Expected medium binary-op gap of %.4f pt before \\color, got %.4f pt",
+                               expectedGap, actualGap);
+}
+
+- (void)testColorboxReceivesInterElementSpacingBeforeIt {
+    // x + \colorbox{red}y — same as testColorReceivesInterElementSpacingBeforeIt
+    // but for \colorbox (kMTMathAtomColorbox).
+    MTMathListDisplay* display = [self displayForLaTeX:@"x+\\colorbox{#ff0000}{y}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected CTLine for 'x+' and a colorbox sub-display");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]],
+                  @"First sub-display should be a CTLine for 'x+'");
+    MTCTLineDisplay* xPlusLine = (MTCTLineDisplay*)sub0;
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTMathListDisplay class]],
+                  @"Second sub-display should be the colorbox MTMathListDisplay");
+    MTMathListDisplay* colorboxSub = (MTMathListDisplay*)sub1;
+    XCTAssertNotNil(colorboxSub.localBackgroundColor,
+                    @"Colorbox display must carry a localBackgroundColor");
+
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = colorboxSub.position.x - (xPlusLine.position.x + xPlusLine.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Expected medium binary-op gap of %.4f pt before \\colorbox, got %.4f pt",
+                               expectedGap, actualGap);
+}
+
+- (void)testSpacingAfterColorGroupIsPreserved {
+    // Regression guard: spacing AFTER a \color group already worked via the spacing table.
+    // \color{red}{x} + z — the binary-operator gap after the colored group must still be present.
+    // The display structure is: [colored MTMathListDisplay, CTLine for "+z"].
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\color{#ff0000}{x}+z"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected colored sub-display and a CTLine for '+z'");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]],
+                  @"First sub-display should be the colored MTMathListDisplay");
+    MTMathListDisplay* colorSub = (MTMathListDisplay*)sub0;
+    XCTAssertNotNil(colorSub.localTextColor);
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]],
+                  @"Second sub-display should be CTLine for '+z'");
+    MTCTLineDisplay* plusZLine = (MTCTLineDisplay*)sub1;
+
+    // The color group is Ord and '+' is a BinaryOperator, so the gap between them
+    // is the Ord->BinOp inter-element space: medium (4 mu).
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = plusZLine.position.x - (colorSub.position.x + colorSub.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Spacing after \\color group must be preserved (%.4f pt), got %.4f pt",
+                               expectedGap, actualGap);
+}
+
 @end
