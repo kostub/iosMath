@@ -512,6 +512,11 @@ static NSArray* getTestDataLeftRight() {
              @[@"\\left(^2 \\right )", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomOrdinary)], @"(", @")", @"\\left( {}^{2}\\right) "],
              // Dot
              @[@"\\left( 2 \\right.", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomNumber)], @"(", @"", @"\\left( 2\\right. "],
+             // Double arrows (REN-1): Uparrow/Downarrow nuclei must be the actual Unicode glyphs, not the literal strings "21D1"/"21D3"
+             @[@"\\left\\Uparrow x \\right\\Downarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"⇑", @"⇓",
+               @"\\left\\Uparrow x\\right\\Downarrow "],
         ];
 }
 
