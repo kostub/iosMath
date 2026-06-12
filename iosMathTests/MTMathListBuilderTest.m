@@ -1488,6 +1488,10 @@ static NSArray* getTestDataParseErrors() {
               @[@"x^\\choose y", @(MTParseErrorInvalidCommand)],
               @[@"x^\\brack y",  @(MTParseErrorInvalidCommand)],
               @[@"x^\\brace y",  @(MTParseErrorInvalidCommand)],
+              // REN-5: non-ASCII literal characters should produce MTParseErrorInvalidCharacter
+              @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
+              @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
+              @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
               ];
 };
 
