@@ -545,28 +545,71 @@ NSString *const MTParseError = @"ParseError";
         [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
         return nil;
     }
-    
+
     // Ignore spaces and nonascii.
     [self skipSpaces];
 
-    // a string of all upper and lower case characters.
+    // Read the entire token up to the closing brace or whitespace.
+    // We deliberately do NOT restrict the charset here so that invalid
+    // inputs (e.g. named colors like "red") are captured whole and can
+    // produce a clear validation error instead of a confusing "Missing }".
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
-            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
-        } else {
-            // we went too far
+        if (ch == '}') {
+            // Put the closing brace back; expectCharacter below will consume it.
             [self unlookCharacter];
             break;
         }
+        if (ch < 0x21 || ch > 0x7E) {
+            // Treat whitespace / non-ASCII as end of token (skip over it).
+            break;
+        }
+        [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
     }
 
     if (![self expectCharacter:'}']) {
-        // We didn't find an closing brace, so invalid format.
+        // We didn't find a closing brace, so invalid format.
         [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
         return nil;
     }
+
+    // Validate: color must be '#' followed by exactly 3 or 6 hex digits.
+    // This keeps the grammar consistent with colorFromHexString: which requires
+    // a leading '#'.  Named colors and bare hex strings are not supported.
+    //
+    // NOTE: 3-digit #RGB is accepted here at parse time, but correct *rendering*
+    // of #RGB depends on colorFromHexString: handling the 3-digit shorthand.
+    // The current decoder is 6-digit-only (scanHexInt on "f00" yields 0xF00 and
+    // is masked as if it were #000F00), so #RGB currently renders the wrong
+    // color until that decoder fix (REN-7) lands.  We deliberately keep
+    // accepting #RGB rather than rejecting it: the previous parser also
+    // accepted and mis-rendered #RGB identically, so this is parse-correct /
+    // render-deferred, not a regression.
+    BOOL valid = NO;
+    NSUInteger len = mutable.length;
+    if (len == 4 || len == 7) {
+        unichar first = [mutable characterAtIndex:0];
+        if (first == '#') {
+            valid = YES;
+            for (NSUInteger i = 1; i < len && valid; i++) {
+                unichar c = [mutable characterAtIndex:i];
+                BOOL isHex = ((c >= '0' && c <= '9') ||
+                              (c >= 'a' && c <= 'f') ||
+                              (c >= 'A' && c <= 'F'));
+                if (!isHex) {
+                    valid = NO;
+                }
+            }
+        }
+    }
+
+    if (!valid) {
+        NSString* msg = [NSString stringWithFormat:@"Invalid color: %@", mutable];
+        [self setError:MTParseErrorInvalidCommand message:msg];
+        return nil;
+    }
+
     return mutable;
 }
 
@@ -828,14 +871,24 @@ NSString *const MTParseError = @"ParseError";
         return table;
     } else if ([command isEqualToString:@"color"]) {
         // A color command has 2 arguments
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColor* mathColor = [[MTMathColor alloc] init];
-        mathColor.colorString = [self readColor];
+        mathColor.colorString = colorStr;
         mathColor.innerList = [self buildInternal:true];
         return mathColor;
     } else if ([command isEqualToString:@"colorbox"]) {
-        // A color command has 2 arguments
+        // A colorbox command has 2 arguments
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColorbox* mathColorbox = [[MTMathColorbox alloc] init];
-        mathColorbox.colorString = [self readColor];
+        mathColorbox.colorString = colorStr;
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
     } else {

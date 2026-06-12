@@ -2866,4 +2866,100 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
 }
 
+#pragma mark - \color and \colorbox tests
+
+- (void)testColorValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff0000}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#ff0000");
+    XCTAssertNotNil(colorAtom.innerList);
+    XCTAssertEqual(colorAtom.innerList.atoms.count, (NSUInteger)1);
+    // stringValue round-trip (mathListToString uses appendLaTeXToString: which MTMathColor
+    // inherits from the base class; stringValue is the color-specific round-trip method).
+    XCTAssertEqualObjects(colorAtom.stringValue, @"\\color{#ff0000}{x}");
+}
+
+- (void)testColorValidHexThree
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#f00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#f00");
+}
+
+- (void)testColorboxValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{#00ff00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColorbox* colorboxAtom = (MTMathColorbox*)list.atoms[0];
+    XCTAssertEqual(colorboxAtom.type, kMTMathAtomColorbox);
+    XCTAssertEqualObjects(colorboxAtom.colorString, @"#00ff00");
+}
+
+- (void)testColorInvalidNamedColorIsParseError
+{
+    // Named colors like "red" must be a parse error (not a silent no-op).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidMissingHashIsParseError
+{
+    // "ff0000" without leading # must be a parse error (silent failure bug).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{ff0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color missing #");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonHexDigitIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#gg0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for non-hex color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidWrongLengthIsParseError
+{
+    // 4-digit hex is neither #RGB nor #RRGGBB.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for wrong-length color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorboxInvalidNamedColorIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid colorbox color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 @end
