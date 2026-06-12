@@ -2977,4 +2977,53 @@ static NSArray* getTestDataLargeDelimiters() {
                    @"Expected %ld atoms, got %lu", (long)count, (unsigned long)list.atoms.count);
 }
 
+// SEC-1 Test 6: Deeply nested \left..\right groups are an independent re-entry
+// point into the chokepoint (buildInternal stopChar) and must also be capped.
+- (void)testDeeplyNestedLeftRightReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: \left(\left(...1...\right)\right)
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\left("];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\right)"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld \\left..\\right nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// SEC-1 Test 7: Deeply nested environments (\begin{matrix}..\end{matrix}) reach
+// the chokepoint via buildTable -> buildInternal, so the table path is also
+// charged against the depth cap.
+- (void)testDeeplyNestedEnvironmentsReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: \begin{matrix}\begin{matrix}...1...\end{matrix}\end{matrix}
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\begin{matrix}"];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\end{matrix}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld nested-environment nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
 @end

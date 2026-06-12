@@ -63,6 +63,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
         _currentFontStyle = kMTFontStyleDefault;
+        _recursionDepth = 0;
     }
     return self;
 }
