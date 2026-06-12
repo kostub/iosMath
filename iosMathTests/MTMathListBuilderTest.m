@@ -2866,4 +2866,17 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
 }
 
+// FUN-6: Verify that parsing an empty string yields an empty MTMathList with no error.
+// This exercises the _length == 0 branch end-to-end and locks in the "degrade to empty"
+// contract that the malloc-failure fallback in initWithString: also produces.
+// (The actual malloc-NULL paths are verified by code inspection; deterministically forcing
+// malloc failure in XCTest is impractical without a malloc interposer.)
+- (void)testEmptyInputParsesToEmptyList {
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"" error:&error];
+    XCTAssertNotNil(list, @"buildFromString:@\"\" should return a non-nil list");
+    XCTAssertEqual(list.atoms.count, (NSUInteger)0, @"empty input should produce zero atoms");
+    XCTAssertNil(error, @"empty input should produce no parse error");
+}
+
 @end

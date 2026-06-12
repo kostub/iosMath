@@ -613,6 +613,11 @@ static BOOL isIos6Supported(void) {
         _numGlyphs = glyphs.count;
         _glyphs = malloc(sizeof(CGGlyph) * _numGlyphs);
         _positions = malloc(sizeof(CGPoint) * _numGlyphs);
+        if (_numGlyphs > 0 && (!_glyphs || !_positions)) {
+            free(_glyphs); _glyphs = NULL;
+            free(_positions); _positions = NULL;
+            _numGlyphs = 0;  // nothing to draw; CTFontDrawGlyphs is a no-op for count 0
+        }
         for (int i = 0; i < _numGlyphs; i++) {
             _glyphs[i] = glyphs[i].shortValue;
             _positions[i] = CGPointMake(0, offsets[i].floatValue);
@@ -952,6 +957,11 @@ static BOOL isIos6Supported(void) {
         _numGlyphs = glyphs.count;
         _glyphs = malloc(sizeof(CGGlyph) * _numGlyphs);
         _positions = malloc(sizeof(CGPoint) * _numGlyphs);
+        if (_numGlyphs > 0 && (!_glyphs || !_positions)) {
+            free(_glyphs); _glyphs = NULL;
+            free(_positions); _positions = NULL;
+            _numGlyphs = 0;  // nothing to draw; CTFontDrawGlyphs is a no-op for count 0
+        }
         for (int i = 0; i < _numGlyphs; i++) {
             _glyphs[i] = glyphs[i].shortValue;
             CGPoint pt;
