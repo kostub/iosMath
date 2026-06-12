@@ -517,6 +517,11 @@ static NSArray* getTestDataLeftRight() {
                @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
                @"⇑", @"⇓",
                @"\\left\\Uparrow x\\right\\Downarrow "],
+             // Updownarrow (REN-1): nucleus must be the actual Unicode glyph ⇕ (U+21D5), not the literal string "21D5"
+             @[@"\\left\\Updownarrow x \\right\\Updownarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"⇕", @"⇕",
+               @"\\left\\Updownarrow x\\right\\Updownarrow "],
         ];
 }
 
