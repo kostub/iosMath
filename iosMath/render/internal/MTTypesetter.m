@@ -1582,16 +1582,51 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 {
     NSParameterAssert(glyphs);
     NSParameterAssert(offsets);
-    
-    for (int numExtenders = 0; true; numExtenders++) {
+
+    // Guard against malformed font MATH data (FUN-4): if extender parts have a
+    // zero or degenerate fullAdvance, adding more copies never increases the
+    // assembled height and the loop would spin forever on the UI thread.
+    //
+    // Two complementary defenses:
+    //   1. No-progress guard: after both normal exit branches fail, if neither
+    //      minHeight nor maxHeight increased by at least kMinHeightProgress over
+    //      the previous iteration, the font data is degenerate — stop and return
+    //      the best-effort assembly built so far.
+    //      NOTE: checking only minHeight is insufficient.  Some valid fonts have
+    //      extenders where endConnector == startConnector == fullAdvance (e.g.
+    //      arrowright in Latin Modern Math), causing each extender-to-extender
+    //      joint to contribute zero to minOffset.  minHeight stays flat across
+    //      iterations for those fonts, but maxHeight grows normally and branch B
+    //      eventually fires.  The guard must require BOTH to stall.
+    //   2. Hard iteration cap (belt-and-suspenders): stop after kMaxExtenders
+    //      regardless, covering any degenerate arithmetic the progress check
+    //      might miss.
+    //
+    // Well-formed fonts are unaffected: a valid extender produces either growing
+    // minHeight (branch A path) or growing maxHeight (branch B path), so neither
+    // guard is ever reached.
+    static const int kMaxExtenders = 10000;
+    static const CGFloat kMinHeightProgress = 0.01;  // pt; far below any real extender advance
+
+    // Track heights from the previous iteration to detect non-progress.
+    CGFloat prevMinHeight = -CGFLOAT_MAX;
+    CGFloat prevMaxHeight = -CGFLOAT_MAX;
+
+    // Hoist last-built arrays so the hard-cap fallback (after the loop) can
+    // return them.  They are nil until the first iteration with a non-nil prev.
+    NSArray<NSNumber*>* lastGlyphs   = nil;
+    NSArray<NSNumber*>* lastOffsets  = nil;
+    CGFloat             lastMinHeight = 0;
+
+    for (int numExtenders = 0; numExtenders <= kMaxExtenders; numExtenders++) {
         NSMutableArray<NSNumber*>* glyphsRv = [NSMutableArray array];
         NSMutableArray<NSNumber*>* offsetsRv = [NSMutableArray array];
-        
+
         MTGlyphPart* prev = nil;
         CGFloat minDistance = _styleFont.mathTable.minConnectorOverlap;
         CGFloat minOffset = 0;
         CGFloat maxDelta = CGFLOAT_MAX;  // the maximum amount we can increase the offsets by
-        
+
         for (MTGlyphPart* part in parts) {
             int repeats = 1;
             if (part.isExtender) {
@@ -1614,7 +1649,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 prev = part;
             }
         }
-        
+
         NSAssert(glyphsRv.count == offsetsRv.count, @"Offsets should match the glyphs");
         if (!prev) {
             continue;   // maybe only extenders
@@ -1643,6 +1678,34 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             *height = lastOffset + prev.fullAdvance;
             return;
         }
+
+        // Neither exit branch fired.  Save this iteration's assembly as the
+        // best effort built so far, then apply the no-progress guard.
+        lastGlyphs    = glyphsRv;
+        lastOffsets   = offsetsRv;
+        lastMinHeight = minHeight;
+
+        if (numExtenders > 0
+                && minHeight - prevMinHeight < kMinHeightProgress
+                && maxHeight - prevMaxHeight < kMinHeightProgress) {
+            // Adding more extenders is growing neither the minimum nor the
+            // maximum assembled height — degenerate font data.  Return the
+            // best-effort assembly rather than looping forever.
+            *glyphs  = lastGlyphs;
+            *offsets = lastOffsets;
+            *height  = lastMinHeight;
+            return;
+        }
+        prevMinHeight = minHeight;
+        prevMaxHeight = maxHeight;
+    }
+
+    // Hit the hard iteration cap (extremely degenerate font data).
+    // Return the last assembly we successfully built.
+    if (lastGlyphs) {
+        *glyphs  = lastGlyphs;
+        *offsets = lastOffsets;
+        *height  = lastMinHeight;
     }
 }
 
