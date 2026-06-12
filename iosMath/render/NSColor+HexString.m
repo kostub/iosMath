@@ -20,13 +20,19 @@
         return nil;
     }
     
-    unsigned rgbValue = 0;
-    
-    NSScanner *scanner = [NSScanner scannerWithString:hexString];
-    if ([hexString characterAtIndex:0] == '#') {
-        [scanner setScanLocation:1];
+    // Drop the leading '#'.
+    NSString *hex = [hexString substringFromIndex:1];
+
+    // Expand CSS 3-digit shorthand #RGB → #RRGGBB (e.g. "f00" → "ff0000").
+    if (hex.length == 3) {
+        unichar r = [hex characterAtIndex:0];
+        unichar g = [hex characterAtIndex:1];
+        unichar b = [hex characterAtIndex:2];
+        hex = [NSString stringWithFormat:@"%C%C%C%C%C%C", r, r, g, g, b, b];
     }
-    
+
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hex];
     [scanner scanHexInt:&rgbValue];
     // NOTE: red:green:blue:alpha: in AppKit/NSColor.h is NS_AVAILABLE_MAC(10_9), unavailable for macOS 10.8 .
     // Older method name colorWithSRGBRed::green:blue:alpha: works.
