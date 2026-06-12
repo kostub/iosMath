@@ -577,6 +577,15 @@ NSString *const MTParseError = @"ParseError";
     // Validate: color must be '#' followed by exactly 3 or 6 hex digits.
     // This keeps the grammar consistent with colorFromHexString: which requires
     // a leading '#'.  Named colors and bare hex strings are not supported.
+    //
+    // NOTE: 3-digit #RGB is accepted here at parse time, but correct *rendering*
+    // of #RGB depends on colorFromHexString: handling the 3-digit shorthand.
+    // The current decoder is 6-digit-only (scanHexInt on "f00" yields 0xF00 and
+    // is masked as if it were #000F00), so #RGB currently renders the wrong
+    // color until that decoder fix (REN-7) lands.  We deliberately keep
+    // accepting #RGB rather than rejecting it: the previous parser also
+    // accepted and mis-rendered #RGB identically, so this is parse-correct /
+    // render-deferred, not a regression.
     BOOL valid = NO;
     NSUInteger len = mutable.length;
     if (len == 4 || len == 7) {
