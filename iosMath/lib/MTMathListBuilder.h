@@ -87,6 +87,8 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorInternalError,
     /// Limit control applied incorrectly
     MTParseErrorInvalidLimits,
+    /// A character in the string is not recognized (e.g. a non-ASCII literal).
+    MTParseErrorInvalidCharacter,
 };
 
 @end

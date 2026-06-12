@@ -348,7 +348,15 @@ NSString *const MTParseError = @"ParseError";
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
-                // Not a recognized character
+                if (ch > 0x7E) {
+                    // Non-ASCII literal characters are not supported — report an error instead of
+                    // silently dropping the character. Callers should use the corresponding LaTeX
+                    // command (e.g. \pi instead of π, \times instead of ×).
+                    [self setError:MTParseErrorInvalidCharacter
+                           message:[NSString stringWithFormat:@"Unknown character U+%04X ('%C') is not a recognized LaTeX input character. Use the corresponding LaTeX command instead.", ch, ch]];
+                    return nil;
+                }
+                // Other unrecognized characters (e.g. space, $ % #) are silently ignored.
                 continue;
             }
         }
