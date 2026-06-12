@@ -1404,7 +1404,7 @@ static NSArray* getTestDataLeftRight() {
 
 // FUN-8: Regression — tableWithEnvironment:rows:error: must insert a distinct atom copy
 // into each cell rather than aliasing the same object across cells. If the bug is present,
-// all cells share one atom object and the three XCTAssertNotEqual calls below fail.
+// all cells share one atom object and the XCTAssertNotIdentical calls below fail.
 - (void) testTableCellsHaveIndependentLeadingAtoms
 {
     // matrix: every cell gets an MTMathStyle inserted at index 0.
@@ -1417,9 +1417,9 @@ static NSArray* getTestDataLeftRight() {
         MTMathAtom *atom01 = table.cells[0][1].atoms[0];
         MTMathAtom *atom10 = table.cells[1][0].atoms[0];
         // Each cell must own a distinct object — not the same shared instance.
-        XCTAssertNotEqual(atom00, atom01, @"matrix row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotEqual(atom00, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotEqual(atom01, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom00, atom01, @"matrix row0 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom00, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom01, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
     }
 
     // cases: every cell also gets an MTMathStyle inserted at index 0.
@@ -1434,9 +1434,9 @@ static NSArray* getTestDataLeftRight() {
         MTMathAtom *atom00 = table.cells[0][0].atoms[0];
         MTMathAtom *atom01 = table.cells[0][1].atoms[0];
         MTMathAtom *atom10 = table.cells[1][0].atoms[0];
-        XCTAssertNotEqual(atom00, atom01, @"cases row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotEqual(atom00, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotEqual(atom01, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom00, atom01, @"cases row0 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom00, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
+        XCTAssertNotIdentical(atom01, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
     }
 
     // aligned: every second-column cell gets an ordinary spacer atom inserted at index 0.
@@ -1448,7 +1448,7 @@ static NSArray* getTestDataLeftRight() {
         // Column 1 cells (index 1 in each row) carry the spacer at atoms[0].
         MTMathAtom *spacer0 = table.cells[0][1].atoms[0];
         MTMathAtom *spacer1 = table.cells[1][1].atoms[0];
-        XCTAssertNotEqual(spacer0, spacer1, @"aligned col-1 cells share the same spacer atom (FUN-8)");
+        XCTAssertNotIdentical(spacer0, spacer1, @"aligned col-1 cells share the same spacer atom (FUN-8)");
     }
 }
 
