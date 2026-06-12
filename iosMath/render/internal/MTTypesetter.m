@@ -427,15 +427,22 @@ static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
     NSUInteger length = str.length;
     NSMutableString* retval = [NSMutableString stringWithCapacity:length];
     unichar *charBuffer = malloc(sizeof(unichar) * (size_t)length);
-    [str getCharacters:charBuffer range:NSMakeRange(0, length)];
-    for (NSUInteger i = 0; i < length; ++i) {
-        unichar ch = charBuffer[i];
-        UTF32Char unicode = styleCharacter(ch, fontStyle);
-        unicode = NSSwapHostIntToLittle(unicode);
-        NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
-        [retval appendString:charStr];
+    NSCAssert(length == 0 || charBuffer != NULL, @"Failed to allocate charBuffer");
+    // Wrap in @try/@finally so charBuffer is released on all exit paths,
+    // including the IllegalCharacter / Invalid style exceptions that
+    // styleCharacter can @throw from inside the loop.
+    @try {
+        [str getCharacters:charBuffer range:NSMakeRange(0, length)];
+        for (NSUInteger i = 0; i < length; ++i) {
+            unichar ch = charBuffer[i];
+            UTF32Char unicode = styleCharacter(ch, fontStyle);
+            unicode = NSSwapHostIntToLittle(unicode);
+            NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
+            [retval appendString:charStr];
+        }
+    } @finally {
+        free(charBuffer);
     }
-    free(charBuffer);
     return retval;
 }
 
@@ -2130,20 +2137,28 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     }
     
     CGFloat *columnWidths = calloc(numColumns, sizeof(CGFloat));
-    NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
+    NSAssert(columnWidths != NULL, @"Failed to allocate columnWidths");
+    // Wrap in @try/@finally so columnWidths is released on all exit paths.
+    // typesetCells:/makeRowWithColumns: eventually call changeFont, which can
+    // @throw IllegalCharacter / Invalid style; those would otherwise leak the buffer.
+    MTMathListDisplay* tableDisplay = nil;
+    @try {
+        NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
 
-    // Position all the columns in each row
-    NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
-    for (NSArray<MTDisplay*>* row in displays) {
-        MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
-        [rowDisplays addObject:rowDisplay];
+        // Position all the columns in each row
+        NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
+        for (NSArray<MTDisplay*>* row in displays) {
+            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
+            [rowDisplays addObject:rowDisplay];
+        }
+
+        // Position all the rows
+        [self positionRows:rowDisplays forTable:table];
+        tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
+        tableDisplay.position = _currentPosition;
+    } @finally {
+        free(columnWidths);
     }
-
-    // Position all the rows
-    [self positionRows:rowDisplays forTable:table];
-    MTMathListDisplay* tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
-    tableDisplay.position = _currentPosition;
-    free(columnWidths);
     return tableDisplay;
 }
 

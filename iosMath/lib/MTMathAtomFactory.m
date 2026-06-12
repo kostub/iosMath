@@ -142,6 +142,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     NSParameterAssert(chars);
     NSInteger len = chars.length;
     unichar *buff = malloc(sizeof(unichar) * (size_t)len);
+    NSAssert(len == 0 || buff != NULL, @"Failed to allocate buff");
     [chars getCharacters:buff range:NSMakeRange(0, len)];
     MTMathList* list = [[MTMathList alloc] init];
     for (NSInteger i = 0; i < len; i++) {
