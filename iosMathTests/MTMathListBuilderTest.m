@@ -1471,6 +1471,13 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
               @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
+              // REN-6: generalized-fraction commands are illegal in one-char script slots
+              @[@"x^\\over y",   @(MTParseErrorInvalidCommand)],
+              @[@"x_\\over y",   @(MTParseErrorInvalidCommand)],
+              @[@"x^\\atop y",   @(MTParseErrorInvalidCommand)],
+              @[@"x^\\choose y", @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brack y",  @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brace y",  @(MTParseErrorInvalidCommand)],
               ];
 };
 
@@ -1489,6 +1496,18 @@ static NSArray* getTestDataParseErrors() {
             NSInteger code = [num integerValue];
             XCTAssertEqual(error.code, code, @"%@", desc);
         }
+}
+
+// REN-6: \over inside an explicit-brace script group must still parse correctly.
+- (void) testOverInScriptBraces
+{
+    NSString* str = @"x^{1 \\over y}";
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNotNil(list, @"x^{1 \\over y} should parse without error");
+    XCTAssertNil(error, @"x^{1 \\over y} should not produce an error");
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"x^{\\frac{1}{y}}", @"round-trip for x^{1 \\over y}");
 }
 
 - (void) testCustom
