@@ -385,7 +385,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];
             for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
+                [row[j] insertAtom:[style copy] atIndex:0];
             }
         }
         // Add delimiters
@@ -421,7 +421,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];
             if (row.count > 1) {
-                [row[1] insertAtom:spacer atIndex:0];
+                [row[1] insertAtom:[spacer copy] atIndex:0];
             }
         }
         table.interRowAdditionalSpacing = 1;
@@ -472,7 +472,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];
             for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
+                [row[j] insertAtom:[style copy] atIndex:0];
             }
         }
         // Add delimiters
