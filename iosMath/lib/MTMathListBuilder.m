@@ -52,9 +52,18 @@ NSString *const MTParseError = @"ParseError";
     self = [super init];
     if (self) {
         _error = nil;
-        _chars = malloc(sizeof(unichar)*str.length);
         _length = str.length;
-        [str getCharacters:_chars range:NSMakeRange(0, str.length)];
+        _chars = NULL;
+        if (_length > 0) {
+            _chars = malloc(sizeof(unichar) * _length);
+            if (_chars) {
+                [str getCharacters:_chars range:NSMakeRange(0, _length)];
+            } else {
+                // Allocation failed (e.g. huge input under memory pressure):
+                // degrade to empty input instead of dereferencing NULL.
+                _length = 0;
+            }
+        }
         _currentChar = 0;
         _currentFontStyle = kMTFontStyleDefault;
     }
