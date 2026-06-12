@@ -426,7 +426,12 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
 static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
     NSUInteger length = str.length;
     NSMutableString* retval = [NSMutableString stringWithCapacity:length];
-    unichar *charBuffer = malloc(sizeof(unichar) * (size_t)length);
+    // Hot path: almost every nucleus is a single character (length == 1).
+    // Use a fixed-size stack buffer for the common small case to avoid a
+    // malloc/free per call.  Inputs longer than 256 unichars still fall back
+    // to the heap so the SEC-2 fix (no unbounded VLA) remains intact.
+    unichar stackBuf[256];
+    unichar *charBuffer = (length <= 256) ? stackBuf : malloc(sizeof(unichar) * (size_t)length);
     NSCAssert(length == 0 || charBuffer != NULL, @"Failed to allocate charBuffer");
     // Wrap in @try/@finally so charBuffer is released on all exit paths,
     // including the IllegalCharacter / Invalid style exceptions that
@@ -441,7 +446,9 @@ static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
             [retval appendString:charStr];
         }
     } @finally {
-        free(charBuffer);
+        if (charBuffer != stackBuf) {
+            free(charBuffer);
+        }
     }
     return retval;
 }
