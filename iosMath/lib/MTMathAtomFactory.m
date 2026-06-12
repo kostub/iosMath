@@ -188,26 +188,28 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     if (atom.nucleus.length == 0) {
         return nil;
     }
-    // textToLatexSymbolNames is a genuinely-mutable dict (addLatexSymbol: writes it), so guard.
+    // textToLatexSymbolNames is a genuinely-mutable dict (addLatexSymbol: writes it), and the
+    // per-nucleus `inner` dict is mutated in place by addLatexSymbol:, so the lock must cover the
+    // FULL read — both the outer dict[...] lookup and the inner[...] lookups (incl. the Bin
+    // fallback). Resolve `name` to a local under the lock, then copy it out before unlocking.
     NSMutableDictionary* dict = [MTMathAtomFactory textToLatexSymbolNames];
-    NSDictionary<NSNumber*, NSString*>* inner = nil;
+    NSString* name = nil;
     os_unfair_lock_lock(&gSymbolTableLock);
-    inner = dict[atom.nucleus];
+    NSDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
+    if (inner) {
+        name = inner[@(atom.type)];
+        // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
+        // forward table only ever registers atoms as Bin, so a (nucleus, Un)
+        // lookup must fall back to the Bin cell to recover the canonical name.
+        if (!name && atom.type == kMTMathAtomUnaryOperator) {
+            name = inner[@(kMTMathAtomBinaryOperator)];
+        }
+    }
+    // `name` is an immutable NSString stored in the dict; copy guarantees we don't hold a
+    // reference into the mutable container after unlocking.
+    NSString* result = [name copy];
     os_unfair_lock_unlock(&gSymbolTableLock);
-    if (!inner) {
-        return nil;
-    }
-    NSString* name = inner[@(atom.type)];
-    if (name) {
-        return name;
-    }
-    // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
-    // forward table only ever registers atoms as Bin, so a (nucleus, Un)
-    // lookup must fall back to the Bin cell to recover the canonical name.
-    if (atom.type == kMTMathAtomUnaryOperator) {
-        return inner[@(kMTMathAtomBinaryOperator)];
-    }
-    return nil;
+    return result;
 }
 
 + (void)addLatexSymbol:(NSString *)name value:(MTMathAtom *)atom

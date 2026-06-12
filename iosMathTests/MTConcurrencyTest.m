@@ -75,13 +75,27 @@ static const NSUInteger kIterationsPerWorker = 200;
     NSUInteger writerCount = kConcurrencyDegree / 4;
     NSUInteger readerCount = kConcurrencyDegree - writerCount;
 
-    // Writer threads: add unique symbols
+    // A nucleus shared by both the writers and the reverse-lookup reader. The writers below
+    // register names whose atoms all carry this nucleus, so -addLatexSymbol: mutates the SAME
+    // per-nucleus `inner` NSMutableDictionary that latexSymbolNameForAtom: reads. This is what
+    // exercises the inner read/write race in latexSymbolNameForAtom: — querying a different
+    // nucleus (e.g. "→") would touch a different inner dict and never collide. Under TSan the
+    // pre-fix code (which read inner[...] after unlocking) flags here.
+    NSString* const sharedNucleus = @"__testSharedNucleus";
+
+    // Writer threads. All writers share one nucleus + type (kMTMathAtomRelation), so they all
+    // mutate the SAME inner-dict cell `inner[@(kMTMathAtomRelation)]`. The names alternate
+    // between two equal-length, low-sorting strings: equal-length + non-descending compare makes
+    // -addLatexSymbol: actually execute the in-place `inner[typeKey] = name` write on every
+    // iteration (so the writer genuinely mutates the cell the reader is reading), maximizing the
+    // race window the early-unlock bug would expose.
+    NSString* const writeA = @"__a";
+    NSString* const writeB = @"__b";
     for (NSUInteger i = 0; i < writerCount; i++) {
-        NSUInteger idx = i;
         dispatch_group_async(group, q, ^{
             for (NSUInteger j = 0; j < kIterationsPerWorker; j++) {
-                NSString* name = [NSString stringWithFormat:@"__testSym_%lu_%lu", (unsigned long)idx, (unsigned long)j];
-                MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"X"];
+                NSString* name = (j & 1) ? writeA : writeB;
+                MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:sharedNucleus];
                 [MTMathAtomFactory addLatexSymbol:name value:atom];
             }
         });
@@ -99,8 +113,10 @@ static const NSUInteger kIterationsPerWorker = 200;
                 NSArray* names = [MTMathAtomFactory supportedLatexSymbolNames];
                 XCTAssertGreaterThan(names.count, 0u);
 
-                // Reverse lookup
-                MTMathAtom* rel = [MTMathAtom atomWithType:kMTMathAtomRelation value:@"→"];
+                // Reverse lookup on the SAME nucleus the writers mutate — concurrent read of the
+                // inner dict that addLatexSymbol: is mutating in place. This is the case that the
+                // earlier "→" reader missed.
+                MTMathAtom* rel = [MTMathAtom atomWithType:kMTMathAtomRelation value:sharedNucleus];
                 (void)[MTMathAtomFactory latexSymbolNameForAtom:rel];
             }
         });
