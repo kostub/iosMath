@@ -74,7 +74,15 @@ NSString *const MTParseError = @"ParseError";
 // gets the next character and moves the pointer ahead
 - (unichar) getNextCharacter
 {
-    NSAssert([self hasCharacters], @"Retrieving character at index %d beyond length %lu", _currentChar, (unsigned long)_length);
+    if (![self hasCharacters]) {
+        // Defense-in-depth: all current call sites pre-check hasCharacters,
+        // but guard unconditionally so a future missed check cannot produce
+        // an out-of-bounds heap read in release builds (NS_BLOCK_ASSERTIONS
+        // compiled out NSAssert, leaving the old code unprotected).
+        [self setError:MTParseErrorInternalError
+               message:@"Retrieving character beyond the end of the input"];
+        return 0;
+    }
     return _chars[_currentChar++];
 }
 
