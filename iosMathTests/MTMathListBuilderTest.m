@@ -2866,4 +2866,26 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
 }
 
+// FUN-5: getNextCharacter bounds check (defense-in-depth)
+//
+// The fix in FUN-5 replaces the NSAssert in getNextCharacter with an
+// unconditional guard. Because every call site already pre-checks
+// hasCharacters before calling getNextCharacter, the new guard is dead code
+// on any currently-reachable path — there is no public API input that
+// exercises the past-end branch. This test therefore serves as a regression
+// check: it exercises the hot path of getNextCharacter heavily (via \frac
+// parsing, which calls getNextCharacter many times) and confirms that the
+// unconditional guard does not alter normal parsing behavior.
+- (void)testGetNextCharacterBoundsGuardDoesNotAffectValidParsing
+{
+    // A multi-token expression that forces getNextCharacter through many
+    // iterations, including inside nested fraction arguments.
+    NSError *error = nil;
+    MTMathList *list = [MTMathListBuilder buildFromString:@"\\frac{1+x}{2}" error:&error];
+    XCTAssertNil(error, @"Valid \\frac expression must parse without error");
+    XCTAssertNotNil(list, @"Valid \\frac expression must produce a non-nil list");
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    XCTAssertEqual(((MTMathAtom *)list.atoms[0]).type, kMTMathAtomFraction);
+}
+
 @end
