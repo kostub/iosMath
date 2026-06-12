@@ -977,6 +977,7 @@ NSString *const MTParseError = @"ParseError";
         MTMathList* list = [self buildInternal:NO];
         if (!list) {
             // If there is an error building the list, bail out early.
+            _currentEnv = oldEnv;
             return nil;
         }
         rows[currentRow][currentCol] = list;
@@ -993,12 +994,14 @@ NSString *const MTParseError = @"ParseError";
     }
     if (!_currentEnv.ended && _currentEnv.envName) {
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
+        _currentEnv = oldEnv;
         return nil;
     }
     NSError* error;
     MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
     if (!table && !_error) {
         _error = error;
+        _currentEnv = oldEnv;
         return nil;
     }
     // reinstate the old env.
