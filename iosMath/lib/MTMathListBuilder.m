@@ -607,10 +607,11 @@ NSString *const MTParseError = @"ParseError";
 - (NSString*) readCommand
 {
     static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
         singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
+    });
     if ([self hasCharacters]) {
         // Check if we have a single character command.
         unichar ch = [self getNextCharacter];
@@ -848,13 +849,14 @@ NSString *const MTParseError = @"ParseError";
 - (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
 {
     static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
-    if (!fractionCommands) {
+    static dispatch_once_t fractionCommandsOnce;
+    dispatch_once(&fractionCommandsOnce, ^{
         fractionCommands = @{ @"over" : @[],
                               @"atop" : @[],
                               @"choose" : @[ @"(", @")"],
                               @"brack" : @[ @"[", @"]"],
                               @"brace" : @[ @"{", @"}"]};
-    }
+    });
     if ([command isEqualToString:@"right"]) {
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
@@ -1009,7 +1011,8 @@ NSString *const MTParseError = @"ParseError";
 + (NSDictionary*) spaceToCommands
 {
     static NSDictionary* spaceToCommands = nil;
-    if (!spaceToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         spaceToCommands = @{
                             @3 : @",",
                             @4 : @">",
@@ -1018,7 +1021,7 @@ NSString *const MTParseError = @"ParseError";
                             @18 : @"quad",
                             @36 : @"qquad",
                     };
-    }
+    });
     return spaceToCommands;
 }
 
@@ -1093,14 +1096,15 @@ NSString *const MTParseError = @"ParseError";
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
-    if (!styleToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         styleToCommands = @{
                             @(kMTLineStyleDisplay) : @"displaystyle",
                             @(kMTLineStyleText) : @"textstyle",
                             @(kMTLineStyleScript) : @"scriptstyle",
                             @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
                             };
-    }
+    });
     return styleToCommands;
 }
 
