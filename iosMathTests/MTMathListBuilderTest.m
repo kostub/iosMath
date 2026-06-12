@@ -497,7 +497,7 @@ static NSArray* getTestDataLeftRight() {
              // commands
              @[@"\\left\\{ 2 \\right\\}", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber)], @"{", @"}", @"\\left\\{ 2\\right\\} "],
              // complex commands
-             @[@"\\left\\langle x \\right\\rangle", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"\u2329", @"\u232A", @"\\left< x\\right> "],
+             @[@"\\left\\langle x \\right\\rangle", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"\u27E8", @"\u27E9", @"\\left< x\\right> "],
              // bars
              @[@"\\left| x \\right\\|", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"|", @"\u2016", @"\\left| x\\right\\| "],
              // inner in between
@@ -1716,7 +1716,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"\\bigm|",    @(kMTMathAtomRelation), @(kMTDelimiterSize1), @"|" ],
         @[ @"\\Bigm\\|",  @(kMTMathAtomRelation), @(kMTDelimiterSize2), @"\u2016" ],
         @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016", @"\\biggm\\|" ],
-        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u2329", @"\\Biggm<" ],
+        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u27E8", @"\\Biggm<" ],
         // Null delimiter.
         @[ @"\\bigl.",    @(kMTMathAtomOpen),     @(kMTDelimiterSize1), @"" ],
         @[ @"\\bigr.",    @(kMTMathAtomClose),    @(kMTDelimiterSize1), @"" ],
@@ -2864,6 +2864,51 @@ static NSArray* getTestDataLargeDelimiters() {
     MTMathList* list = [MTMathList new];
     [list addAtom:stack];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
+}
+
+// REN-4: delimiter-table angle brackets must use U+27E8/U+27E9, matching the symbol table.
+- (void)testAngleBracketDelimiterConsistency
+{
+    // Build \langle x \rangle (plain open/close atoms — goes through the symbol table)
+    NSError* error = nil;
+    MTMathList* plainList = [MTMathListBuilder buildFromString:@"\\langle x \\rangle" error:&error];
+    XCTAssertNotNil(plainList, @"\\langle x \\rangle");
+    XCTAssertNil(error, @"\\langle x \\rangle");
+    XCTAssertEqual(plainList.atoms.count, (NSUInteger)3, @"\\langle x \\rangle");
+    MTMathAtom* plainOpen  = plainList.atoms[0];
+    MTMathAtom* plainClose = plainList.atoms[2];
+    XCTAssertEqual(plainOpen.type,  kMTMathAtomOpen,  @"\\langle x \\rangle open type");
+    XCTAssertEqual(plainClose.type, kMTMathAtomClose, @"\\langle x \\rangle close type");
+
+    // Build \left\langle x \right\rangle (goes through the delimiter table)
+    MTMathList* leftRightList = [MTMathListBuilder buildFromString:@"\\left\\langle x \\right\\rangle" error:&error];
+    XCTAssertNotNil(leftRightList, @"\\left\\langle x \\right\\rangle");
+    XCTAssertNil(error, @"\\left\\langle x \\right\\rangle");
+    XCTAssertEqual(leftRightList.atoms.count, (NSUInteger)1, @"\\left\\langle x \\right\\rangle");
+    MTInner* inner = (MTInner*)leftRightList.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomInner, @"inner type");
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus,  plainOpen.nucleus,
+                          @"\\left\\langle boundary nucleus must equal \\langle symbol nucleus");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, plainClose.nucleus,
+                          @"\\right\\rangle boundary nucleus must equal \\rangle symbol nucleus");
+
+    // The nuclei must be U+27E8 / U+27E9 specifically
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus,  @"⟨", @"left boundary should be U+27E8");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, @"⟩", @"right boundary should be U+27E9");
+
+    // Build \left< x \right> (shorthand) — covers the "<"/">" delimiter-table entries
+    MTMathList* angleShortList = [MTMathListBuilder buildFromString:@"\\left< x \\right>" error:&error];
+    XCTAssertNotNil(angleShortList, @"\\left< x \\right>");
+    XCTAssertNil(error, @"\\left< x \\right>");
+    MTInner* innerShort = (MTInner*)angleShortList.atoms[0];
+    XCTAssertEqualObjects(innerShort.leftBoundary.nucleus,  @"⟨",
+                          @"\\left< boundary should be U+27E8");
+    XCTAssertEqualObjects(innerShort.rightBoundary.nucleus, @"⟩",
+                          @"\\right> boundary should be U+27E9");
+
+    // Serialization must stay \left< x\right>  (unchanged round-trip)
+    NSString* serialized = [MTMathListBuilder mathListToString:leftRightList];
+    XCTAssertEqualObjects(serialized, @"\\left< x\\right> ", @"serialized LaTeX unchanged");
 }
 
 @end
