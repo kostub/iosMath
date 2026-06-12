@@ -1476,6 +1476,8 @@ static NSArray* getTestDataParseErrors() {
               @[@"x_\\over y",   @(MTParseErrorInvalidCommand)],
               @[@"x^\\atop y",   @(MTParseErrorInvalidCommand)],
               @[@"x^\\choose y", @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brack y",  @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brace y",  @(MTParseErrorInvalidCommand)],
               ];
 };
 
