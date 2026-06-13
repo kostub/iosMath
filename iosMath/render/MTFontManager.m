@@ -11,6 +11,7 @@
 
 #import "MTFontManager.h"
 #import "MTFont+Internal.h"
+#import <os/lock.h>
 
 const int kDefaultFontSize = 20;
 
@@ -23,7 +24,9 @@ NSString *const MTFontNameSTIXTwo           = @"stixtwo-math";
 NSString *const MTFontNameFiraMath          = @"firamath";
 NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 
-@interface MTFontManager ()
+@interface MTFontManager () {
+    os_unfair_lock _cacheLock;
+}
 
 @property (nonatomic, nonnull) NSMutableDictionary<NSString*, MTFont*>* nameToFontMap;
 
@@ -48,6 +51,7 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
     self = [super init];
     if (self) {
         self.nameToFontMap = [[NSMutableDictionary alloc] init];
+        _cacheLock = OS_UNFAIR_LOCK_INIT;
     }
     return self;
 }
@@ -55,12 +59,14 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 - (nullable MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
     if (!name) { return nil; }            // nil name cannot key the cache dictionary
+    os_unfair_lock_lock(&_cacheLock);
     MTFont* f = self.nameToFontMap[name];
     if (!f) {
         f = [[MTFont alloc] initFontWithName:name size:size];
-        if (!f) { return nil; }           // unknown/unloadable font — do not cache
-        self.nameToFontMap[name] = f;
+        if (f) { self.nameToFontMap[name] = f; }
     }
+    os_unfair_lock_unlock(&_cacheLock);
+    if (!f) { return nil; }               // unknown/unloadable font — do not cache
     if (f.fontSize == size) {
         return f;
     } else {

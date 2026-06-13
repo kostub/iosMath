@@ -623,10 +623,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 - (NSString*) readCommand
 {
     static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
         singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
+    });
     if ([self hasCharacters]) {
         // Check if we have a single character command.
         unichar ch = [self getNextCharacter];
@@ -864,13 +865,14 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 - (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
 {
     static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
-    if (!fractionCommands) {
+    static dispatch_once_t fractionCommandsOnce;
+    dispatch_once(&fractionCommandsOnce, ^{
         fractionCommands = @{ @"over" : @[],
                               @"atop" : @[],
                               @"choose" : @[ @"(", @")"],
                               @"brack" : @[ @"[", @"]"],
                               @"brace" : @[ @"{", @"}"]};
-    }
+    });
     if ([command isEqualToString:@"right"]) {
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
@@ -1025,7 +1027,8 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 + (NSDictionary*) spaceToCommands
 {
     static NSDictionary* spaceToCommands = nil;
-    if (!spaceToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         spaceToCommands = @{
                             @3 : @",",
                             @4 : @">",
@@ -1034,7 +1037,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                             @18 : @"quad",
                             @36 : @"qquad",
                     };
-    }
+    });
     return spaceToCommands;
 }
 
@@ -1109,14 +1112,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
-    if (!styleToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         styleToCommands = @{
                             @(kMTLineStyleDisplay) : @"displaystyle",
                             @(kMTLineStyleText) : @"textstyle",
                             @(kMTLineStyleScript) : @"scriptstyle",
                             @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
                             };
-    }
+    });
     return styleToCommands;
 }
 
