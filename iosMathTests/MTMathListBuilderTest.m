@@ -515,12 +515,12 @@ static NSArray* getTestDataLeftRight() {
              // Double arrows (REN-1): Uparrow/Downarrow nuclei must be the actual Unicode glyphs, not the literal strings "21D1"/"21D3"
              @[@"\\left\\Uparrow x \\right\\Downarrow",
                @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
-               @"⇑", @"⇓",
+               @"\u21D1", @"\u21D3",
                @"\\left\\Uparrow x\\right\\Downarrow "],
-             // Updownarrow (REN-1): nucleus must be the actual Unicode glyph ⇕ (U+21D5), not the literal string "21D5"
+             // Updownarrow (REN-1): nucleus must be the Unicode glyph U+21D5, not the literal string "21D5"
              @[@"\\left\\Updownarrow x \\right\\Updownarrow",
                @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
-               @"⇕", @"⇕",
+               @"\u21D5", @"\u21D5",
                @"\\left\\Updownarrow x\\right\\Updownarrow "],
         ];
 }
