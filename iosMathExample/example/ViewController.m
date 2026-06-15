@@ -95,7 +95,11 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     picker.dataSource = self.colorPickerDelegate;
     self.colorField.inputView = picker;
     self.colorField.delegate = self;
-
+    self.colorField.backgroundColor = UIColor.labelColor;
+    
+    // For night mode compatibility we use .labelColor
+    self.mathLabel.textColor = UIColor.labelColor;
+    
     self.latexField.delegate = self;
 
     // Global font-size control in the top row, beside the font + colour fields.
@@ -153,6 +157,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = demoFormulas[i];
         label.fontSize = 15;
+        label.textColor = UIColor.labelColor;
         [self.demoLabels addObject:label];
         [self.demoHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.demoBaseHeights addObject:@(height)];
@@ -421,7 +426,17 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 {
     self = [super init];
     if (self) {
-        self.colors = @[UIColor.blackColor, UIColor.blueColor, UIColor.redColor, UIColor.greenColor];
+        self.colors = @[
+            UIColor.labelColor,
+            UIColor.systemPurpleColor,
+            UIColor.systemBlueColor,
+            UIColor.systemTealColor,
+            UIColor.systemGreenColor,
+            UIColor.systemYellowColor,
+            UIColor.systemOrangeColor,
+            UIColor.systemRedColor,
+            UIColor.systemPinkColor,
+        ];
     }
     return self;
 }
