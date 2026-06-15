@@ -40,9 +40,6 @@
 		49B83EF317CE74620014B739 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
 		49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF917CF2AE90014B739 /* AppDelegate.m */; };
 		49B83F0217CF2AE90014B739 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EFC17CF2AE90014B739 /* main.m */; };
-		49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */; };
-		49B83F0417CF2AE90014B739 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFE17CF2AE90014B739 /* Default.png */; };
-		49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFF17CF2AE90014B739 /* Default@2x.png */; };
 		49B83F0817CF2B420014B739 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83F0717CF2B420014B739 /* ViewController.m */; };
 		49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DA6BC619A062A30086B19F /* MTUnicode.m */; };
 		49DEC8061CED71C3000053CD /* MTFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8041CED71C3000053CD /* MTFont.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -106,9 +103,6 @@
 		49B83EF817CF2AE90014B739 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = example/AppDelegate.h; sourceTree = "<group>"; };
 		49B83EF917CF2AE90014B739 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = example/AppDelegate.m; sourceTree = "<group>"; };
 		49B83EFC17CF2AE90014B739 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = example/main.m; sourceTree = "<group>"; };
-		49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "example/Default-568h@2x.png"; sourceTree = "<group>"; };
-		49B83EFE17CF2AE90014B739 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = example/Default.png; sourceTree = "<group>"; };
-		49B83EFF17CF2AE90014B739 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "example/Default@2x.png"; sourceTree = "<group>"; };
 		49B83F0617CF2B420014B739 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewController.h; path = example/ViewController.h; sourceTree = "<group>"; };
 		49B83F0717CF2B420014B739 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = example/ViewController.m; sourceTree = "<group>"; };
 		49B83F0917CF2EC30014B739 /* iosMath-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iosMath-Info.plist"; sourceTree = "<group>"; };
@@ -235,9 +229,6 @@
 			children = (
 				49B83F0917CF2EC30014B739 /* iosMath-Info.plist */,
 				49B83EFC17CF2AE90014B739 /* main.m */,
-				49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */,
-				49B83EFE17CF2AE90014B739 /* Default.png */,
-				49B83EFF17CF2AE90014B739 /* Default@2x.png */,
 				49965F0817CBBA2700A555C5 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
@@ -456,9 +447,6 @@
 			files = (
 				49965F0A17CBBA2700A555C5 /* InfoPlist.strings in Resources */,
 				49DEC81C1CF3CD72000053CD /* View.xib in Resources */,
-				49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */,
-				49B83F0417CF2AE90014B739 /* Default.png in Resources */,
-				49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */,
 				AA000011000000000000AA11 /* fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
