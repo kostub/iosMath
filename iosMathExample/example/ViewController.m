@@ -193,6 +193,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = testFormulas[i];
+        label.textColor = UIColor.labelColor;
         [self.labels addObject:label];
         [self.testHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.testBaseHeights addObject:@(height)];
@@ -211,7 +212,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     self.contentHeightConstraint = [self setHeight:totalHeight forView:contentView];
 
     // Rendering properties that are not shared (alignment, mode, color, insets, fontSize).
-    UIColor* highlight = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    UIColor* highlight = [UIColor colorWithHue:0.15 saturation:0.5 brightness:1.0 alpha:0.5];
     self.labels[0].backgroundColor = highlight;
     self.labels[1].backgroundColor = highlight;
     self.labels[1].textAlignment = kMTTextAlignmentCenter;
