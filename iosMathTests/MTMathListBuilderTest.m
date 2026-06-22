@@ -512,6 +512,16 @@ static NSArray* getTestDataLeftRight() {
              @[@"\\left(^2 \\right )", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomOrdinary)], @"(", @")", @"\\left( {}^{2}\\right) "],
              // Dot
              @[@"\\left( 2 \\right.", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomNumber)], @"(", @"", @"\\left( 2\\right. "],
+             // Double arrows (REN-1): Uparrow/Downarrow nuclei must be the actual Unicode glyphs, not the literal strings "21D1"/"21D3"
+             @[@"\\left\\Uparrow x \\right\\Downarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"\u21D1", @"\u21D3",
+               @"\\left\\Uparrow x\\right\\Downarrow "],
+             // Updownarrow (REN-1): nucleus must be the Unicode glyph U+21D5, not the literal string "21D5"
+             @[@"\\left\\Updownarrow x \\right\\Updownarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"\u21D5", @"\u21D5",
+               @"\\left\\Updownarrow x\\right\\Updownarrow "],
         ];
 }
 
@@ -2864,6 +2874,286 @@ static NSArray* getTestDataLargeDelimiters() {
     MTMathList* list = [MTMathList new];
     [list addAtom:stack];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
+}
+
+#pragma mark - \color and \colorbox tests
+
+- (void)testColorValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff0000}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#ff0000");
+    XCTAssertNotNil(colorAtom.innerList);
+    XCTAssertEqual(colorAtom.innerList.atoms.count, (NSUInteger)1);
+    // stringValue round-trip (mathListToString uses appendLaTeXToString: which MTMathColor
+    // inherits from the base class; stringValue is the color-specific round-trip method).
+    XCTAssertEqualObjects(colorAtom.stringValue, @"\\color{#ff0000}{x}");
+}
+
+- (void)testColorValidHexThree
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#f00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#f00");
+}
+
+- (void)testColorboxValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{#00ff00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColorbox* colorboxAtom = (MTMathColorbox*)list.atoms[0];
+    XCTAssertEqual(colorboxAtom.type, kMTMathAtomColorbox);
+    XCTAssertEqualObjects(colorboxAtom.colorString, @"#00ff00");
+}
+
+- (void)testColorInvalidNamedColorIsParseError
+{
+    // Named colors like "red" must be a parse error (not a silent no-op).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidMissingHashIsParseError
+{
+    // "ff0000" without leading # must be a parse error (silent failure bug).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{ff0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color missing #");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonHexDigitIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#gg0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for non-hex color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidWrongLengthIsParseError
+{
+    // 4-digit hex is neither #RGB nor #RRGGBB.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for wrong-length color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorboxInvalidNamedColorIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid colorbox color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidEmbeddedWhitespaceIsParseError
+{
+    // An embedded space must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff 00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with embedded whitespace");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonASCIIIsParseError
+{
+    // A non-ASCII character must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00é}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with non-ASCII character");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+#pragma mark - SEC-1: Recursion depth cap
+
+// SEC-1 Test 1: Thousands of nested braces must surface as a parse error,
+// not a stack-overflow crash. The test passing at all proves the process
+// did not crash.
+- (void)testDeeplyNestedBracesReturnsParseError
+{
+    const NSInteger depth = 1000;
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"{"];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld nesting", (long)depth);
+    XCTAssertNotNil(error, @"Expected error for depth-%ld nesting", (long)depth);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// SEC-1 Test 2: Thousands of nested superscripts must surface as a parse error.
+- (void)testDeeplyNestedSuperscriptsReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: x^{x^{x^{...}}}
+    NSMutableString* str = [NSMutableString stringWithString:@"x"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"^{x"];
+    }
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld superscript nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// SEC-1 Test 3: Thousands of nested \frac commands must surface as a parse error.
+- (void)testDeeplyNestedFracReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: \frac{1}{\frac{1}{\frac{...}}}
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\frac{1}{"];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld \\frac nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// SEC-1 Test 4: Moderate nesting (well under the cap) must still parse successfully.
+- (void)testModerateNestingStillParses
+{
+    // 20 nested brace groups — should be far below the 150-frame cap.
+    const NSInteger depth = 20;
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"{"];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNotNil(list, @"Expected successful parse for depth-%ld nesting", (long)depth);
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+}
+
+// SEC-1 Test 5: Many sibling groups (wide-not-deep) must not trigger the cap.
+// This confirms the cap measures recursion depth, not the total number of groups
+// (i.e. the counter is correctly decremented on return).
+- (void)testManySiblingGroupsDoNotTriggerDepthCap
+{
+    // 500 single-character brace groups: {a}{b}{c}...
+    const NSInteger count = 500;
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < count; i++) {
+        [str appendString:@"{a}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNotNil(list, @"Expected successful parse for %ld sibling groups", (long)count);
+    XCTAssertNil(error, @"Unexpected error for sibling groups: %@", error);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)count,
+                   @"Expected %ld atoms, got %lu", (long)count, (unsigned long)list.atoms.count);
+}
+
+// SEC-1 Test 6: Deeply nested \left..\right groups are an independent re-entry
+// point into the chokepoint (buildInternal stopChar) and must also be capped.
+- (void)testDeeplyNestedLeftRightReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: \left(\left(...1...\right)\right)
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\left("];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\right)"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld \\left..\\right nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// SEC-1 Test 7: Deeply nested environments (\begin{matrix}..\end{matrix}) reach
+// the chokepoint via buildTable -> buildInternal, so the table path is also
+// charged against the depth cap.
+- (void)testDeeplyNestedEnvironmentsReturnsParseError
+{
+    const NSInteger depth = 1000;
+    // Produces: \begin{matrix}\begin{matrix}...1...\end{matrix}\end{matrix}
+    NSMutableString* str = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\begin{matrix}"];
+    }
+    [str appendString:@"1"];
+    for (NSInteger i = 0; i < depth; i++) {
+        [str appendString:@"\\end{matrix}"];
+    }
+
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNil(list, @"Expected nil for depth-%ld nested-environment nesting", (long)depth);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
+                   @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
 }
 
 @end

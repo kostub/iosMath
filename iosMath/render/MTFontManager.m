@@ -55,12 +55,17 @@ NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 - (nullable MTFont *)fontWithName:(NSString *)name size:(CGFloat)size
 {
     if (!name) { return nil; }            // nil name cannot key the cache dictionary
-    MTFont* f = self.nameToFontMap[name];
-    if (!f) {
-        f = [[MTFont alloc] initFontWithName:name size:size];
-        if (!f) { return nil; }           // unknown/unloadable font — do not cache
-        self.nameToFontMap[name] = f;
+    MTFont* f;
+    @synchronized (self) {                // serialize the cache miss against concurrent
+                                          // off-main pre-rendering (expert use); the standard
+                                          // MTMathUILabel path is main-thread only
+        f = self.nameToFontMap[name];
+        if (!f) {
+            f = [[MTFont alloc] initFontWithName:name size:size];
+            if (f) { self.nameToFontMap[name] = f; }   // unknown/unloadable font — do not cache
+        }
     }
+    if (!f) { return nil; }
     if (f.fontSize == size) {
         return f;
     } else {

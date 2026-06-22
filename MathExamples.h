@@ -84,6 +84,8 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
          "\\left( o_t - \\hat{\\mu}_m^{(s)} \\right) ^T \\cal C_m^{(s)-1} \\right) ",
         // 19: Piecewise function
         @"f(x) = \\begin{cases}\\frac{e^x}{2} & x \\geq 0 \\\\1 & x < 0\\end{cases}",
+        // 20: Ridge regression — argmin via \underset
+        @"\\hat\\theta = \\underset{\\theta}{\\arg\\min}\\, \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|^2",
     ];
 }
 
@@ -270,6 +272,19 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
          "\\textrm{ where } \\texttt{f}(x) = x^2",
         // 85: Styled non-Latin theorem label preceding a math statement
         @"\\textbf{Теорема:} \\; a^2 + b^2 = c^2 \\quad (\\textit{Пифагор})",
+        // 86: \stackrel — Taylor series with a "by definition" relation
+        @"f(x) \\stackrel{\\text{def}}{=} \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(0)}{n!} x^n",
+        // 87: \stackbin — decorated plus keeps Binary-class spacing (contrast with bare +)
+        @"a + b \\quad a \\stackbin{\\Delta}{+} b",
+        // 88: \overset — class inherits from base (Relation, Binary, Ordinary)
+        @"a \\overset{!}{=} b \\quad x \\overset{?}{+} y \\quad \\overset{*}{A}",
+        // 89: \underset — under-stack on an operator that has no natural limits subscript
+        @"\\underset{x \\in \\mathbb{R}}{\\sup}\\, f(x)",
+        // 90: Spacing contrast — Relation atoms get more horizontal padding than Ord.
+        //     \stackrel forces Relation class; \overset inherits Ord from base `c`.
+        @"a \\stackrel{?}{c} b \\quad a \\overset{?}{c} b",
+        // 91: Nested stacks — \overset inside the over-arg of \stackrel
+        @"a \\stackrel{\\overset{n}{\\to}}{=} b",
     ];
 }
 
