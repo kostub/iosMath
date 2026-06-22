@@ -223,11 +223,11 @@ UTF32Char getDefaultStyle(unichar ch) {
         // . is treated as a number in our code, but it doesn't change fonts.
         return ch;
     } else {
-        @throw [NSException exceptionWithName:@"IllegalCharacter"
-                                       reason:[NSString stringWithFormat:@"Unknown character %d for default style.", ch]
-                                     userInfo:nil];
+        // Unknown character for the default style (e.g. a symbol placed in a
+        // Variable/Number atom via the public API). Fall back to the character
+        // as-is rather than crashing the render path. (SEC-4)
+        return ch;
     }
-    return ch;
 }
 
 static const UTF32Char kMTUnicodeMathCapitalScriptStart = 0x1D49C;

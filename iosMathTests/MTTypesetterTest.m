@@ -2780,4 +2780,40 @@
     XCTAssertNotNil(display, @"Rendering a 500-column table should produce a display");
 }
 
+// SEC-4: getDefaultStyle() formerly threw IllegalCharacter for non-Latin/digit/Greek
+// nuclei, crashing the host app on the render path. Verify the fallback is safe.
+- (void)testSEC4_nonLatinVariableNucleusDoesNotCrash {
+    // Build a math list with a Variable atom whose nucleus is '@' — a character
+    // outside Latin letters, digits, Greek letters, and '.'.
+    // Previously this caused an IllegalCharacter NSException in getDefaultStyle()
+    // which propagated uncaught through the render path and crashed the host app.
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomVariable value:@"@"];
+    [mathList addAtom:atom];
+
+    // Must not throw; must return a non-nil display object.
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList
+                                                               font:self.font
+                                                              style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Render of non-Latin/Greek Variable atom must not crash");
+    XCTAssertGreaterThan(display.subDisplays.count, (NSUInteger)0,
+                         @"Display must contain at least one sub-display");
+}
+
+// SEC-4: the same getDefaultStyle() crash applied to Number atoms with an
+// unmapped nucleus (the code path is shared via changeFont). Cover it explicitly.
+- (void)testSEC4_nonDigitNumberNucleusDoesNotCrash {
+    MTMathList* mathList = [[MTMathList alloc] init];
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomNumber value:@"@"];
+    [mathList addAtom:atom];
+
+    // Must not throw; must return a non-nil display object.
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList
+                                                               font:self.font
+                                                              style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Render of non-digit Number atom must not crash");
+    XCTAssertGreaterThan(display.subDisplays.count, (NSUInteger)0,
+                         @"Display must contain at least one sub-display");
+}
+
 @end

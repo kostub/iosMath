@@ -84,6 +84,7 @@ private let namedExampleMeta: [NamedFormulaMeta] = [
     NamedFormulaMeta(title: "2×2 matrix multiplication"),
     NamedFormulaMeta(title: "EM algorithm Q-function"),
     NamedFormulaMeta(title: "Piecewise function"),
+    NamedFormulaMeta(title: "Ridge regression"),
 ]
 
 private let namedExamples: [NamedFormula] = {
@@ -237,18 +238,24 @@ private struct GalleryTab: View {
         40, 40, 50, 60, 50, 40, 70, 40,
         40, 40, 40, 40, 40, 50, 50, 60, 50, 50, 40, 70,
         80, 150, 60, 60, 50, 60, 50,
-        40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60
+        40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60,
+        70, 40, 40, 50, 40, 50
     ]
 
-    private let testFormulas: [String] = MathTestFormulas()
+    private static let testFormulas: [String] = {
+        let formulas = MathTestFormulas()
+        precondition(formulas.count == testHeights.count,
+                     "testHeights (\(testHeights.count)) must match MathTestFormulas (\(formulas.count))")
+        return formulas
+    }()
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(testFormulas.indices, id: \.self) { i in
+                    ForEach(Self.testFormulas.indices, id: \.self) { i in
                         MathLabel(
-                            latex: testFormulas[i],
+                            latex: Self.testFormulas[i],
                             fontSize: fontSize,
                             mode: testMode(at: i),
                             alignment: testAlignment(at: i),
