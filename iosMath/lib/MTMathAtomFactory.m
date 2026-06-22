@@ -141,7 +141,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSParameterAssert(chars);
     NSInteger len = chars.length;
-    unichar buff[len];
+    unichar *buff = malloc(sizeof(unichar) * (size_t)len);
+    NSAssert(len == 0 || buff != NULL, @"Failed to allocate buff");
     [chars getCharacters:buff range:NSMakeRange(0, len)];
     MTMathList* list = [[MTMathList alloc] init];
     for (NSInteger i = 0; i < len; i++) {
@@ -150,6 +151,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             [list addAtom:atom];
         }
     }
+    free(buff);
     return list;
 }
 
@@ -1034,9 +1036,9 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                    @"uparrow" : @"\u2191",
                    @"downarrow" : @"\u2193",
                    @"updownarrow" : @"\u2195",
-                   @"Uparrow" : @"21D1",
-                   @"Downarrow" : @"21D3",
-                   @"Updownarrow" : @"21D5",
+                   @"Uparrow" : @"\u21D1",
+                   @"Downarrow" : @"\u21D3",
+                   @"Updownarrow" : @"\u21D5",
                    @"backslash" : @"\\",
                    @"rangle" : @"\u232A",
                    @"langle" : @"\u2329",
