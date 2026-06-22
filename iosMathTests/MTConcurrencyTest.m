@@ -3,8 +3,11 @@
 //  iosMath
 //
 //  SEC-3: Thread-safety tests for symbol/lookup tables and font cache.
-//  Verifies: dispatch_once lazy inits, guarded mutable symbol tables,
-//  copy-on-write in +addLatexSymbol:value:, and guarded font cache.
+//  Verifies: dispatch_once lazy inits (safe concurrent first-touch + reads),
+//  copy-on-write in +addLatexSymbol:value:, and the @synchronized font cache.
+//
+//  Note: +addLatexSymbol:value: is a setup-time API and is NOT expected to be
+//  called concurrently with parsing/reads, so there is no concurrent-write test.
 //
 
 #import <XCTest/XCTest.h>
@@ -61,76 +64,11 @@ static const NSUInteger kIterationsPerWorker = 200;
 }
 
 // ---------------------------------------------------------------------------
-// Test 2: Concurrent reads + addLatexSymbol writes.
+// Test 2: Added symbols are resolvable after insertion.
 // ---------------------------------------------------------------------------
-// Writers call +addLatexSymbol:value: with unique names; readers call
-// atomForLatexSymbolName:, latexSymbolNameForAtom:, and supportedLatexSymbolNames
-// concurrently. Without the lock, NSMutableDictionary mutate+read is a data race
-// (undefined behavior, crash on corrupt internal state). After the fix it is safe.
-- (void)testConcurrentAddAndLookupSymbol
-{
-    dispatch_group_t group = dispatch_group_create();
-    dispatch_queue_t q = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
-
-    NSUInteger writerCount = kConcurrencyDegree / 4;
-    NSUInteger readerCount = kConcurrencyDegree - writerCount;
-
-    // A nucleus shared by both the writers and the reverse-lookup reader. The writers below
-    // register names whose atoms all carry this nucleus, so -addLatexSymbol: mutates the SAME
-    // per-nucleus `inner` NSMutableDictionary that latexSymbolNameForAtom: reads. This is what
-    // exercises the inner read/write race in latexSymbolNameForAtom: — querying a different
-    // nucleus (e.g. "→") would touch a different inner dict and never collide. Under TSan the
-    // pre-fix code (which read inner[...] after unlocking) flags here.
-    NSString* const sharedNucleus = @"__testSharedNucleus";
-
-    // Writer threads. All writers share one nucleus + type (kMTMathAtomRelation), so they all
-    // mutate the SAME inner-dict cell `inner[@(kMTMathAtomRelation)]`. The names alternate
-    // between two equal-length, low-sorting strings: equal-length + non-descending compare makes
-    // -addLatexSymbol: actually execute the in-place `inner[typeKey] = name` write on every
-    // iteration (so the writer genuinely mutates the cell the reader is reading), maximizing the
-    // race window the early-unlock bug would expose.
-    NSString* const writeA = @"__a";
-    NSString* const writeB = @"__b";
-    for (NSUInteger i = 0; i < writerCount; i++) {
-        dispatch_group_async(group, q, ^{
-            for (NSUInteger j = 0; j < kIterationsPerWorker; j++) {
-                NSString* name = (j & 1) ? writeA : writeB;
-                MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomRelation value:sharedNucleus];
-                [MTMathAtomFactory addLatexSymbol:name value:atom];
-            }
-        });
-    }
-
-    // Reader threads: lookup existing and possibly newly-added symbols
-    for (NSUInteger i = 0; i < readerCount; i++) {
-        dispatch_group_async(group, q, ^{
-            for (NSUInteger j = 0; j < kIterationsPerWorker; j++) {
-                // Lookup a well-known symbol (always present)
-                MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:@"alpha"];
-                XCTAssertNotNil(atom, @"Known symbol 'alpha' must be resolvable during concurrent mutation");
-
-                // Enumerate all known symbol names (touches the live dict)
-                NSArray* names = [MTMathAtomFactory supportedLatexSymbolNames];
-                XCTAssertGreaterThan(names.count, 0u);
-
-                // Reverse lookup on the SAME nucleus the writers mutate — concurrent read of the
-                // inner dict that addLatexSymbol: is mutating in place. This is the case that the
-                // earlier "→" reader missed.
-                MTMathAtom* rel = [MTMathAtom atomWithType:kMTMathAtomRelation value:sharedNucleus];
-                (void)[MTMathAtomFactory latexSymbolNameForAtom:rel];
-            }
-        });
-    }
-
-    long result = dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 30LL * NSEC_PER_SEC));
-    XCTAssertEqual(result, 0, @"Concurrent addLatexSymbol + lookup must not crash");
-}
-
-// ---------------------------------------------------------------------------
-// Test 3: Added symbols are resolvable after concurrent insertion.
-// ---------------------------------------------------------------------------
-// Verifies that every symbol added in test 2's writers can actually be found
-// afterward (proves the write was durable, not lost due to a clobber).
+// Verifies that every symbol added via +addLatexSymbol: can actually be found
+// afterward (proves the write is durable). +addLatexSymbol: is setup-time only,
+// so this is exercised single-threaded by design.
 - (void)testAddedSymbolsAreResolvable
 {
     NSMutableArray<NSString*>* names = [NSMutableArray array];
@@ -150,7 +88,7 @@ static const NSUInteger kIterationsPerWorker = 200;
 }
 
 // ---------------------------------------------------------------------------
-// Test 4: Copy-on-write regression.
+// Test 3: Copy-on-write regression.
 // ---------------------------------------------------------------------------
 // +addLatexSymbol:value: must copy the atom on write so that a subsequent
 // mutation of the caller's atom does NOT affect the stored table entry.
@@ -172,7 +110,7 @@ static const NSUInteger kIterationsPerWorker = 200;
 }
 
 // ---------------------------------------------------------------------------
-// Test 5: Concurrent font cache access.
+// Test 4: Concurrent font cache access.
 // ---------------------------------------------------------------------------
 // Many threads call -fontWithName:size: simultaneously. Before the fix, the
 // check-then-act on nameToFontMap is a data race. After the fix it is guarded.
@@ -203,7 +141,7 @@ static const NSUInteger kIterationsPerWorker = 200;
 }
 
 // ---------------------------------------------------------------------------
-// Test 6: Concurrent parser invocations (exercises builder tables end-to-end).
+// Test 5: Concurrent parser invocations (exercises builder tables end-to-end).
 // ---------------------------------------------------------------------------
 - (void)testConcurrentParsing
 {

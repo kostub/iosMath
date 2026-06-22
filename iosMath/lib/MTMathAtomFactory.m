@@ -11,12 +11,6 @@
 
 #import "MTMathAtomFactory.h"
 #import "MTMathListBuilder.h"
-#import <os/lock.h>
-
-// Lock protecting the two genuinely-mutable symbol tables: `commands` (in
-// +supportedLatexSymbols) and `textToCommands` (in +textToLatexSymbolNames).
-// Read-only tables are guarded only by dispatch_once and need no run-time lock.
-static os_unfair_lock gSymbolTableLock = OS_UNFAIR_LOCK_INIT;
 
 NSString *const MTSymbolMultiplication = @"\u00D7";
 NSString *const MTSymbolDivision = @"\u00F7";
@@ -170,12 +164,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         symbolName = canonicalName;
     }
 
-    // commands is a genuinely-mutable dict (addLatexSymbol: writes it), so guard.
-    NSMutableDictionary* commands = [self supportedLatexSymbols];
-    MTMathAtom* atom = nil;
-    os_unfair_lock_lock(&gSymbolTableLock);
-    atom = commands[symbolName];
-    os_unfair_lock_unlock(&gSymbolTableLock);
+    NSDictionary* commands = [self supportedLatexSymbols];
+    MTMathAtom* atom = commands[symbolName];
     if (atom) {
         // Return a copy of the atom since atoms are mutable.
         return [atom copy];
@@ -188,43 +178,38 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
     if (atom.nucleus.length == 0) {
         return nil;
     }
-    // textToLatexSymbolNames is a genuinely-mutable dict (addLatexSymbol: writes it), and the
-    // per-nucleus `inner` dict is mutated in place by addLatexSymbol:, so the lock must cover the
-    // FULL read — both the outer dict[...] lookup and the inner[...] lookups (incl. the Bin
-    // fallback). Resolve `name` to a local under the lock, then copy it out before unlocking.
-    NSMutableDictionary* dict = [MTMathAtomFactory textToLatexSymbolNames];
-    NSString* name = nil;
-    os_unfair_lock_lock(&gSymbolTableLock);
+    NSDictionary<NSString*, NSDictionary<NSNumber*, NSString*>*>* dict = [MTMathAtomFactory textToLatexSymbolNames];
     NSDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
-    if (inner) {
-        name = inner[@(atom.type)];
-        // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
-        // forward table only ever registers atoms as Bin, so a (nucleus, Un)
-        // lookup must fall back to the Bin cell to recover the canonical name.
-        if (!name && atom.type == kMTMathAtomUnaryOperator) {
-            name = inner[@(kMTMathAtomBinaryOperator)];
-        }
+    if (!inner) {
+        return nil;
     }
-    // `name` is an immutable NSString stored in the dict; copy guarantees we don't hold a
-    // reference into the mutable container after unlocking.
-    NSString* result = [name copy];
-    os_unfair_lock_unlock(&gSymbolTableLock);
-    return result;
+    NSString* name = inner[@(atom.type)];
+    if (name) {
+        return name;
+    }
+    // -[MTMathList finalized] reclassifies leading/orphan/trailing Bin atoms to Un. The
+    // forward table only ever registers atoms as Bin, so a (nucleus, Un)
+    // lookup must fall back to the Bin cell to recover the canonical name.
+    if (atom.type == kMTMathAtomUnaryOperator) {
+        return inner[@(kMTMathAtomBinaryOperator)];
+    }
+    return nil;
 }
 
 + (void)addLatexSymbol:(NSString *)name value:(MTMathAtom *)atom
 {
     NSParameterAssert(name);
     NSParameterAssert(atom);
-    // Ensure both tables are initialized before taking the lock (dispatch_once
-    // inside each accessor guarantees a single init; no deadlock since the tokens
-    // are method-local and the lock is not held during the once-block).
+    // Custom symbols are expected to be registered at setup time, before any
+    // concurrent parsing/rendering begins. The symbol tables are therefore not
+    // guarded at run time: once initialized (via dispatch_once in each accessor)
+    // they are only read, and concurrent reads of an unmutated dictionary are
+    // safe. Do not call this while parsing on another thread.
     NSMutableDictionary<NSString*, MTMathAtom*>* commands = [self supportedLatexSymbols];
-    NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* dict = [self textToLatexSymbolNames];
-
-    os_unfair_lock_lock(&gSymbolTableLock);
-    commands[name] = [atom copy];   // copy on write — symmetric with the read side
+    commands[name] = [atom copy];   // copy on write — symmetric with the read side, which
+                                    // copies because atoms are mutable
     if (atom.nucleus.length != 0) {
+        NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* dict = [self textToLatexSymbolNames];
         NSMutableDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
         if (!inner) {
             inner = [NSMutableDictionary dictionaryWithCapacity:1];
@@ -237,16 +222,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             inner[typeKey] = name;
         }
     }
-    os_unfair_lock_unlock(&gSymbolTableLock);
 }
 
 + (NSArray<NSString *> *)supportedLatexSymbolNames
 {
-    NSMutableDictionary<NSString*, MTMathAtom*>* commands = [MTMathAtomFactory supportedLatexSymbols];
-    os_unfair_lock_lock(&gSymbolTableLock);
-    NSArray* keys = commands.allKeys;
-    os_unfair_lock_unlock(&gSymbolTableLock);
-    return keys;
+    NSDictionary<NSString*, MTMathAtom*>* commands = [MTMathAtomFactory supportedLatexSymbols];
+    return commands.allKeys;
 }
 
 + (nullable MTAccent*) accentWithName:(NSString*) accentName
