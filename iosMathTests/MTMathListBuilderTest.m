@@ -2962,4 +2962,28 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
 }
 
+- (void)testColorInvalidEmbeddedWhitespaceIsParseError
+{
+    // An embedded space must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff 00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with embedded whitespace");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonASCIIIsParseError
+{
+    // A non-ASCII character must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00é}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with non-ASCII character");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 @end
