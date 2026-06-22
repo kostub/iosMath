@@ -561,10 +561,6 @@ NSString *const MTParseError = @"ParseError";
             [self unlookCharacter];
             break;
         }
-        if (ch < 0x21 || ch > 0x7E) {
-            // Treat whitespace / non-ASCII as end of token (skip over it).
-            break;
-        }
         [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
     }
 
