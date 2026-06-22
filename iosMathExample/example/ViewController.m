@@ -95,10 +95,10 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     picker.dataSource = self.colorPickerDelegate;
     self.colorField.inputView = picker;
     self.colorField.delegate = self;
-    self.colorField.backgroundColor = UIColor.labelColor;
+    UIColor* initialColor = self.colorPickerDelegate.colors[0];
+    self.colorField.backgroundColor = initialColor;
     
-    // For night mode compatibility we use .labelColor
-    self.mathLabel.textColor = UIColor.labelColor;
+    self.mathLabel.textColor = initialColor;
     
     self.latexField.delegate = self;
 
@@ -157,7 +157,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = demoFormulas[i];
         label.fontSize = 15;
-        label.textColor = UIColor.labelColor;
+        label.textColor = initialColor;
         [self.demoLabels addObject:label];
         [self.demoHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.demoBaseHeights addObject:@(height)];
@@ -193,7 +193,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = testFormulas[i];
-        label.textColor = UIColor.labelColor;
+        label.textColor = initialColor;
         [self.labels addObject:label];
         [self.testHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.testBaseHeights addObject:@(height)];
@@ -428,7 +428,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     self = [super init];
     if (self) {
         self.colors = @[
-            UIColor.labelColor,
+            UIColor.labelColor, // Initial color: black in light mode, white in dark mode.
             UIColor.systemPurpleColor,
             UIColor.systemBlueColor,
             UIColor.systemTealColor,
