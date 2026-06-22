@@ -651,6 +651,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (_currentLine.length > 0) {
                     [self addDisplayLine];
                 }
+                // Color is spaced as Ord (see getInterElementSpaceArrayIndexForType).
+                [self addInterElementSpace:prevNode currentType:atom.type];
                 MTMathColor* colorAtom = (MTMathColor*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
                 display.localTextColor = [MTColor colorFromHexString:colorAtom.colorString];
@@ -665,6 +667,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (_currentLine.length > 0) {
                     [self addDisplayLine];
                 }
+                // Colorbox is spaced as Ord (see getInterElementSpaceArrayIndexForType).
+                [self addInterElementSpace:prevNode currentType:atom.type];
                 MTMathColorbox* colorboxAtom = (MTMathColorbox*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorboxAtom.innerList font:_font style:_style];
 
