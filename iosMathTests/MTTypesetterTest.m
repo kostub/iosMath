@@ -2730,10 +2730,10 @@
 // A glyph assembly whose extender part has a non-positive fullAdvance is
 // degenerate: adding more copies of the extender never increases the assembled
 // height, which would make MTTypesetter's assembly loop spin forever. The font
-// math table must reject such an assembly at load time (returning nil) so the
-// typesetter falls back to the largest discrete variant instead of hanging.
-// The bundled fonts contain no such assembly, so these tests build a synthetic
-// math table to exercise the guard.
+// math table must reject such a plist at load time by throwing, the same way it
+// already throws for an invalid plist version, rather than silently mis-rendering
+// the glyph. The bundled fonts contain no such assembly, so these tests build a
+// synthetic math table to exercise the guard.
 
 // Returns a real glyph from the bundled font (and its round-tripped name) so the
 // synthetic assembly is keyed exactly as -getGlyphAssemblyFromTable: looks it up.
@@ -2762,23 +2762,21 @@
 - (void)testVerticalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
 {
     NSString* glyphName = nil;
-    CGGlyph glyph = [self glyphForCharacter:'(' name:&glyphName];
+    [self glyphForCharacter:'(' name:&glyphName];
     XCTAssertNotNil(glyphName);
 
-    MTFontMathTable* table = [self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:0];
-    NSArray<MTGlyphPart*>* parts = [table getVerticalGlyphAssemblyForGlyph:glyph];
-    XCTAssertNil(parts, @"a vertical assembly with a zero-advance extender must be rejected");
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a vertical assembly with a zero-advance extender must be rejected at load");
 }
 
 - (void)testHorizontalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
 {
     NSString* glyphName = nil;
-    CGGlyph glyph = [self glyphForCharacter:'(' name:&glyphName];
+    [self glyphForCharacter:'(' name:&glyphName];
     XCTAssertNotNil(glyphName);
 
-    MTFontMathTable* table = [self mathTableWithAssemblyKey:@"h_assembly" glyphName:glyphName extenderAdvance:0];
-    NSArray<MTGlyphPart*>* parts = [table getHorizontalGlyphAssemblyForGlyph:glyph];
-    XCTAssertNil(parts, @"a horizontal assembly with a zero-advance extender must be rejected");
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"h_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a horizontal assembly with a zero-advance extender must be rejected at load");
 }
 
 - (void)testValidGlyphAssemblyIsAccepted

@@ -58,6 +58,7 @@
                                            reason:[NSString stringWithFormat:@"Invalid version of math table plist: %@", _mathTable[@"version"]]
                                          userInfo:nil];
         }
+        [self validateGlyphAssemblies];
     }
     return self;
 }
@@ -505,6 +506,31 @@ static NSString* const kVertAssembly = @"v_assembly";
 static NSString* const kHorizAssembly = @"h_assembly";
 static NSString* const kAssemblyParts = @"parts";
 
+// Reject malformed glyph-assembly data at load time (FUN-4). An extender part
+// with a non-positive advance never increases the assembled height, so the
+// typesetter's assembly loop would spin forever trying to reach the requested
+// size. We throw here — mirroring the invalid-version check in init and the
+// math_table_to_plist.py generator's own check — so a bad plist fails loudly and
+// deterministically at load rather than mis-rendering or hanging mid-typeset.
+- (void) validateGlyphAssemblies
+{
+    for (NSString* tableKey in @[kVertAssembly, kHorizAssembly]) {
+        NSDictionary* assemblyTable = (NSDictionary*) _mathTable[tableKey];
+        for (NSString* glyphName in assemblyTable) {
+            NSArray* parts = (NSArray*) assemblyTable[glyphName][kAssemblyParts];
+            for (NSDictionary* partInfo in parts) {
+                BOOL isExtender = [(NSNumber*) partInfo[@"extender"] boolValue];
+                int advance = [(NSNumber*) partInfo[@"advance"] intValue];
+                if (isExtender && advance <= 0) {
+                    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                                   reason:[NSString stringWithFormat:@"Glyph assembly for '%@' has an extender part with non-positive advance (%d); this would hang the renderer.", glyphName, advance]
+                                                 userInfo:nil];
+                }
+            }
+        }
+    }
+}
+
 - (NSArray<MTGlyphPart *> *)getGlyphAssemblyFromTable:(NSString*)tableKey forGlyph:(CGGlyph)glyph
 {
     NSDictionary* assemblyTable = (NSDictionary*) _mathTable[tableKey];
@@ -530,16 +556,6 @@ static NSString* const kAssemblyParts = @"parts";
         part.isExtender = ext.boolValue;
         NSString* partGlyphName = (NSString*) partInfo[@"glyph"];
         part.glyph = [self.font getGlyphWithName:partGlyphName];
-
-        // Guard against malformed MATH data (FUN-4): an extender with a
-        // non-positive fullAdvance never increases the assembled height, so the
-        // typesetter's assembly loop would spin forever. Reject the whole
-        // assembly so the caller falls back to the largest discrete variant.
-        // The math_table_to_plist.py generator rejects such fonts up front; this
-        // is the runtime guard for plists not produced by that script.
-        if (part.isExtender && part.fullAdvance <= 0) {
-            return nil;
-        }
 
         [rv addObject:part];
     }
