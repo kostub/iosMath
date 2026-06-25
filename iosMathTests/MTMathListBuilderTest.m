@@ -1403,8 +1403,9 @@ static NSArray* getTestDataLeftRight() {
 }
 
 // FUN-8: Regression — tableWithEnvironment:rows:error: must insert a distinct atom copy
-// into each cell rather than aliasing the same object across cells. If the bug is present,
-// all cells share one atom object and the XCTAssertNotIdentical calls below fail.
+// into each cell rather than aliasing the same object across cells. We exercise the actual
+// failure mode: mutating one cell's leading atom must NOT bleed into the other cells. If the
+// bug is present every cell shares one atom object, so mutating it changes them all at once.
 - (void) testTableCellsHaveIndependentLeadingAtoms
 {
     // matrix: every cell gets an MTMathStyle inserted at index 0.
@@ -1416,10 +1417,11 @@ static NSArray* getTestDataLeftRight() {
         MTMathAtom *atom00 = table.cells[0][0].atoms[0];
         MTMathAtom *atom01 = table.cells[0][1].atoms[0];
         MTMathAtom *atom10 = table.cells[1][0].atoms[0];
-        // Each cell must own a distinct object — not the same shared instance.
-        XCTAssertNotIdentical(atom00, atom01, @"matrix row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom00, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom01, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
+        // Mutate the leading atom of cell (0,0). The others must be untouched.
+        atom00.nucleus = @"MUTATED";
+        XCTAssertEqualObjects(atom00.nucleus, @"MUTATED");
+        XCTAssertNotEqualObjects(atom01.nucleus, @"MUTATED", @"matrix: mutating cell (0,0) leaked into (0,1) — shared style atom (FUN-8)");
+        XCTAssertNotEqualObjects(atom10.nucleus, @"MUTATED", @"matrix: mutating cell (0,0) leaked into (1,0) — shared style atom (FUN-8)");
     }
 
     // cases: every cell also gets an MTMathStyle inserted at index 0.
@@ -1434,9 +1436,10 @@ static NSArray* getTestDataLeftRight() {
         MTMathAtom *atom00 = table.cells[0][0].atoms[0];
         MTMathAtom *atom01 = table.cells[0][1].atoms[0];
         MTMathAtom *atom10 = table.cells[1][0].atoms[0];
-        XCTAssertNotIdentical(atom00, atom01, @"cases row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom00, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom01, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
+        atom00.nucleus = @"MUTATED";
+        XCTAssertEqualObjects(atom00.nucleus, @"MUTATED");
+        XCTAssertNotEqualObjects(atom01.nucleus, @"MUTATED", @"cases: mutating cell (0,0) leaked into (0,1) — shared style atom (FUN-8)");
+        XCTAssertNotEqualObjects(atom10.nucleus, @"MUTATED", @"cases: mutating cell (0,0) leaked into (1,0) — shared style atom (FUN-8)");
     }
 
     // aligned: every second-column cell gets an ordinary spacer atom inserted at index 0.
@@ -1448,7 +1451,9 @@ static NSArray* getTestDataLeftRight() {
         // Column 1 cells (index 1 in each row) carry the spacer at atoms[0].
         MTMathAtom *spacer0 = table.cells[0][1].atoms[0];
         MTMathAtom *spacer1 = table.cells[1][1].atoms[0];
-        XCTAssertNotIdentical(spacer0, spacer1, @"aligned col-1 cells share the same spacer atom (FUN-8)");
+        spacer0.nucleus = @"MUTATED";
+        XCTAssertEqualObjects(spacer0.nucleus, @"MUTATED");
+        XCTAssertNotEqualObjects(spacer1.nucleus, @"MUTATED", @"aligned: mutating row0 spacer leaked into row1 — shared spacer atom (FUN-8)");
     }
 }
 
