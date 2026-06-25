@@ -69,6 +69,8 @@ static NSArray* getTestData() {
              @[ @"x \\ y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              // spacing
              @[ @"x \\quad y \\; z \\! q", @[  @(kMTMathAtomVariable), @(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable)], @"x\\quad y\\; z\\! q"],
+             // tilde is a non-breaking space (renders as an ordinary space, same as a literal space)
+             @[ @"x~y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              ];
 }
 
@@ -1492,6 +1494,11 @@ static NSArray* getTestDataParseErrors() {
               @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
               @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
               @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
+              // Special characters with no meaning in math mode are errors (match LaTeX:
+              // % is a comment, # is a macro parameter, $ toggles math mode - none valid here).
+              @[@"a % b", @(MTParseErrorInvalidCharacter)],
+              @[@"a # b", @(MTParseErrorInvalidCharacter)],
+              @[@"a $ b", @(MTParseErrorInvalidCharacter)],
               ];
 };
 

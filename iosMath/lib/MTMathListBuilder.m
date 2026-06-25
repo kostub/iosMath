@@ -358,19 +358,23 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (_spacesAllowed && ch == ' ') {
             // If spaces are allowed then spaces do not need escaping with a \ before being used.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
+        } else if (ch == '~') {
+            // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
+            atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
-                if (ch > 0x7E) {
-                    // Non-ASCII literal characters are not supported — report an error instead of
-                    // silently dropping the character. Callers should use the corresponding LaTeX
-                    // command (e.g. \pi instead of π, \times instead of ×).
-                    [self setError:MTParseErrorInvalidCharacter
-                           message:[NSString stringWithFormat:@"Unknown character U+%04X ('%C') is not a recognized LaTeX input character. Use the corresponding LaTeX command instead.", ch, ch]];
-                    return nil;
+                // Whitespace is insignificant in math mode and is silently ignored.
+                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+                    continue;
                 }
-                // Other unrecognized characters (e.g. space, $ % #) are silently ignored.
-                continue;
+                // Any other unrecognized character is an error: a non-ASCII literal
+                // (e.g. π, ×, ≤) or a special character with no meaning in math mode
+                // (% is a comment, # a macro parameter, $ toggles math mode). Callers
+                // should use the corresponding LaTeX command (e.g. \pi, \%, \#).
+                [self setError:MTParseErrorInvalidCharacter
+                       message:[NSString stringWithFormat:@"Unknown character U+%04X ('%C') is not a valid LaTeX input character in math mode. Use the corresponding LaTeX command instead.", ch, ch]];
+                return nil;
             }
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");
