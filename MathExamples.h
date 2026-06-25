@@ -190,8 +190,8 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"\\text{Mary has }\\$500 + \\$200.",
         // 47: Colorbox wrapping a matrix
         @"\\colorbox{#888888}{\\begin{pmatrix}"
-         "\\colorbox{#ff0000}{a} & \\colorbox{#00ff00}{b} \\\\"
-         "\\colorbox{#00aaff}{c} & \\colorbox{#f0f0f0}{d}"
+         "\\colorbox{#ee0000}{a} & \\colorbox{#00ee00}{b} \\\\"
+         "\\colorbox{#00aaee}{c} & \\colorbox{#eeee00}{d}"
          "\\end{pmatrix}}",
         // 48: Explicit delimiter sizes
         @"\\big( \\Big( \\bigg( \\Bigg(",

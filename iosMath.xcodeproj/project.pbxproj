@@ -7,13 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA000011000000000000AA11 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
-		AA000012000000000000AA12 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
-		AA000030000000000000AA30 /* UIColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA20 /* UIColor+HexString.m */; };
-		AA000031000000000000AA31 /* NSColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000021000000000000AA21 /* NSColor+HexString.m */; };
-		AA000032000000000000AA32 /* NSBezierPath+addLineToPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000022000000000000AA22 /* NSBezierPath+addLineToPoint.m */; };
-		AA000033000000000000AA33 /* NSView+backgroundColor.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000AA23 /* NSView+backgroundColor.m */; };
-		AA000034000000000000AA34 /* MTLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000AA24 /* MTLabel.m */; };
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
 		490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465C01D23DA8400F82033 /* MTFontManagerTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
@@ -41,9 +34,6 @@
 		49B83EF317CE74620014B739 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
 		49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF917CF2AE90014B739 /* AppDelegate.m */; };
 		49B83F0217CF2AE90014B739 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EFC17CF2AE90014B739 /* main.m */; };
-		49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */; };
-		49B83F0417CF2AE90014B739 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFE17CF2AE90014B739 /* Default.png */; };
-		49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 49B83EFF17CF2AE90014B739 /* Default@2x.png */; };
 		49B83F0817CF2B420014B739 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83F0717CF2B420014B739 /* ViewController.m */; };
 		49DA6BC719A062A30086B19F /* MTUnicode.m in Sources */ = {isa = PBXBuildFile; fileRef = 49DA6BC619A062A30086B19F /* MTUnicode.m */; };
 		49DEC8061CED71C3000053CD /* MTFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8041CED71C3000053CD /* MTFont.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -53,8 +43,17 @@
 		49DEC8B81CF77B00000053CD /* MTMathListIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 49DEC8B61CF77B00000053CD /* MTMathListIndex.h */; };
 		49EEFD7C1D19B664002D15C4 /* MTTypesetter.h in Headers */ = {isa = PBXBuildFile; fileRef = 49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		49EEFD7D1D19B664002D15C4 /* MTTypesetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */; };
+		94CE45182FE960D300CB4C3B /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 94CE45172FE960D300CB4C3B /* Launch Screen.storyboard */; };
+		94CE451E2FE9655A00CB4C3B /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 94CE451D2FE9655A00CB4C3B /* SceneDelegate.m */; };
 		AA000004000000000000AA04 /* libIosMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4987307517D546800041B02B /* libIosMath.a */; };
 		AA000005000000000000AA05 /* libIosMath.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4987307517D546800041B02B /* libIosMath.a */; };
+		AA000011000000000000AA11 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
+		AA000012000000000000AA12 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AA000010000000000000AA10 /* fonts */; };
+		AA000030000000000000AA30 /* UIColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA20 /* UIColor+HexString.m */; };
+		AA000031000000000000AA31 /* NSColor+HexString.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000021000000000000AA21 /* NSColor+HexString.m */; };
+		AA000032000000000000AA32 /* NSBezierPath+addLineToPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000022000000000000AA22 /* NSBezierPath+addLineToPoint.m */; };
+		AA000033000000000000AA33 /* NSView+backgroundColor.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000023000000000000AA23 /* NSView+backgroundColor.m */; };
+		AA000034000000000000AA34 /* MTLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000024000000000000AA24 /* MTLabel.m */; };
 		D94FE3531B90DD29002D11E2 /* MTMathUILabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF417DAED9000939107 /* MTMathUILabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D94FE3541B90DE46002D11E2 /* MTMathListDisplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EECF317DAED9000939107 /* MTMathListDisplay.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D94FE3551B90DE5B002D11E2 /* MTMathList.h in Headers */ = {isa = PBXBuildFile; fileRef = 492EED0217DAEDB500939107 /* MTMathList.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -108,9 +107,6 @@
 		49B83EF817CF2AE90014B739 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = example/AppDelegate.h; sourceTree = "<group>"; };
 		49B83EF917CF2AE90014B739 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = example/AppDelegate.m; sourceTree = "<group>"; };
 		49B83EFC17CF2AE90014B739 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = example/main.m; sourceTree = "<group>"; };
-		49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "example/Default-568h@2x.png"; sourceTree = "<group>"; };
-		49B83EFE17CF2AE90014B739 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = example/Default.png; sourceTree = "<group>"; };
-		49B83EFF17CF2AE90014B739 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "example/Default@2x.png"; sourceTree = "<group>"; };
 		49B83F0617CF2B420014B739 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewController.h; path = example/ViewController.h; sourceTree = "<group>"; };
 		49B83F0717CF2B420014B739 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = example/ViewController.m; sourceTree = "<group>"; };
 		49B83F0917CF2EC30014B739 /* iosMath-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iosMath-Info.plist"; sourceTree = "<group>"; };
@@ -125,6 +121,9 @@
 		49EEFD7A1D19B664002D15C4 /* MTTypesetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTypesetter.h; sourceTree = "<group>"; };
 		49EEFD7B1D19B664002D15C4 /* MTTypesetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetter.m; sourceTree = "<group>"; };
 		49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplayInternal.h; sourceTree = "<group>"; };
+		94CE45172FE960D300CB4C3B /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		94CE451C2FE9655A00CB4C3B /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SceneDelegate.h; path = example/SceneDelegate.h; sourceTree = "<group>"; };
+		94CE451D2FE9655A00CB4C3B /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SceneDelegate.m; path = example/SceneDelegate.m; sourceTree = "<group>"; };
 		AA000010000000000000AA10 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = iosMath/fonts; sourceTree = "<group>"; };
 		AA000020000000000000AA20 /* UIColor+HexString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+HexString.m"; sourceTree = "<group>"; };
 		AA000021000000000000AA21 /* NSColor+HexString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+HexString.m"; sourceTree = "<group>"; };
@@ -198,6 +197,7 @@
 				49965F2317CBBA2700A555C5 /* iosMathTests */,
 				49965EFE17CBBA2700A555C5 /* Frameworks */,
 				49965EFD17CBBA2700A555C5 /* Products */,
+				94CE45162FE309F100CB4C3B /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -237,10 +237,8 @@
 			children = (
 				49B83F0917CF2EC30014B739 /* iosMath-Info.plist */,
 				49B83EFC17CF2AE90014B739 /* main.m */,
-				49B83EFD17CF2AE90014B739 /* Default-568h@2x.png */,
-				49B83EFE17CF2AE90014B739 /* Default.png */,
-				49B83EFF17CF2AE90014B739 /* Default@2x.png */,
 				49965F0817CBBA2700A555C5 /* InfoPlist.strings */,
+				94CE45172FE960D300CB4C3B /* Launch Screen.storyboard */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -307,6 +305,8 @@
 			children = (
 				49B83EF817CF2AE90014B739 /* AppDelegate.h */,
 				49B83EF917CF2AE90014B739 /* AppDelegate.m */,
+				94CE451C2FE9655A00CB4C3B /* SceneDelegate.h */,
+				94CE451D2FE9655A00CB4C3B /* SceneDelegate.m */,
 				49B83F0617CF2B420014B739 /* ViewController.h */,
 				49B83F0717CF2B420014B739 /* ViewController.m */,
 				49DEC81B1CF3CD72000053CD /* View.xib */,
@@ -343,6 +343,14 @@
 				49EEFD7E1D19B94C002D15C4 /* MTMathListDisplayInternal.h */,
 			);
 			path = internal;
+			sourceTree = "<group>";
+		};
+		94CE45162FE309F100CB4C3B /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				AA000010000000000000AA10 /* fonts */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -459,9 +467,7 @@
 			files = (
 				49965F0A17CBBA2700A555C5 /* InfoPlist.strings in Resources */,
 				49DEC81C1CF3CD72000053CD /* View.xib in Resources */,
-				49B83F0317CF2AE90014B739 /* Default-568h@2x.png in Resources */,
-				49B83F0417CF2AE90014B739 /* Default.png in Resources */,
-				49B83F0517CF2AE90014B739 /* Default@2x.png in Resources */,
+				94CE45182FE960D300CB4C3B /* Launch Screen.storyboard in Resources */,
 				AA000011000000000000AA11 /* fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -508,6 +514,7 @@
 				49B83F0017CF2AE90014B739 /* AppDelegate.m in Sources */,
 				49B83F0217CF2AE90014B739 /* main.m in Sources */,
 				49B83F0817CF2B420014B739 /* ViewController.m in Sources */,
+				94CE451E2FE9655A00CB4C3B /* SceneDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -619,11 +626,11 @@
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
-				USE_HEADERMAP = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USE_HEADERMAP = NO;
 			};
 			name = Debug;
 		};
@@ -671,11 +678,11 @@
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
-				USE_HEADERMAP = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USE_HEADERMAP = NO;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
