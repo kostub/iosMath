@@ -531,6 +531,16 @@ static NSString* const kAssemblyParts = @"parts";
         NSString* partGlyphName = (NSString*) partInfo[@"glyph"];
         part.glyph = [self.font getGlyphWithName:partGlyphName];
 
+        // Guard against malformed MATH data (FUN-4): an extender with a
+        // non-positive fullAdvance never increases the assembled height, so the
+        // typesetter's assembly loop would spin forever. Reject the whole
+        // assembly so the caller falls back to the largest discrete variant.
+        // The math_table_to_plist.py generator rejects such fonts up front; this
+        // is the runtime guard for plists not produced by that script.
+        if (part.isExtender && part.fullAdvance <= 0) {
+            return nil;
+        }
+
         [rv addObject:part];
     }
     return rv;

@@ -167,6 +167,20 @@ def get_h_variants(math_table):
         variant_dict[name] = glyph_variants
     return variant_dict
 
+def validate_parts(glyph_name, parts):
+    # A glyph assembly stretches by repeating its extender part(s). An extender
+    # whose FullAdvance is non-positive never increases the assembled height, so
+    # the renderer's assembly loop would spin forever trying to reach the target
+    # size. Refuse to emit such a plist rather than ship font data that hangs the
+    # app (FUN-4). MTFontMathTable applies the same check at load time for plists
+    # not produced by this script.
+    for part in parts:
+        if part["extender"] and part["advance"] <= 0:
+            raise ValueError(
+                "Glyph assembly for '%s' has an extender part with "
+                "non-positive advance (%s); this would hang the renderer."
+                % (glyph_name, part["advance"]))
+
 def get_v_assembly(math_table):
     variants = math_table.MathVariants
     vglyphs = variants.VertGlyphCoverage.glyphs
@@ -181,6 +195,7 @@ def get_v_assembly(math_table):
             # There is an assembly for this glyph
             italic = assembly.ItalicsCorrection.Value
             parts = [part_dict(part) for part in assembly.PartRecords]
+            validate_parts(name, parts)
             assembly_dict[name] = {
                     "italic" : assembly.ItalicsCorrection.Value,
                     "parts" : parts }
@@ -199,6 +214,7 @@ def get_h_assembly(math_table):
         if assembly is not None:
             italic = assembly.ItalicsCorrection.Value
             parts = [part_dict(part) for part in assembly.PartRecords]
+            validate_parts(name, parts)
             assembly_dict[name] = {
                     "italic" : assembly.ItalicsCorrection.Value,
                     "parts" : parts }
