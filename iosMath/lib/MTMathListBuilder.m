@@ -241,7 +241,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
-            MTMathList* done = [self stopCommand:command list:list stopChar:stop];
+            MTMathList* done = [self stopCommand:command list:list stopChar:stop oneChar:oneCharOnly];
             if (done) {
                 return done;
             } else if (_error) {
@@ -911,7 +911,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
 }
 
-- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
+- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar oneChar:(BOOL) oneChar
 {
     static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
     static dispatch_once_t fractionCommandsOnce;
@@ -935,6 +935,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         // return the list read so far.
         return list;
     } else if ([fractionCommands objectForKey:command]) {
+        if (oneChar) {
+            // REN-6: \over/\atop/\choose/\brack/\brace are illegal in a one-character
+            // argument slot (e.g. x^\over y). TeX rejects this too. Users who want a
+            // fraction in a script must use explicit braces: x^{a \over b}.
+            NSString* errorMessage = [NSString stringWithFormat:
+                @"\\%@ cannot be used in a one-character argument; "
+                @"wrap it in braces, e.g. x^{a \\%@ b}", command, command];
+            [self setError:MTParseErrorInvalidCommand message:errorMessage];
+            return nil;
+        }
         MTFraction* frac = nil;
         if ([command isEqualToString:@"over"]) {
             frac = [[MTFraction alloc] init];
