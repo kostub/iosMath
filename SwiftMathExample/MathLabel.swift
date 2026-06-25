@@ -41,26 +41,12 @@ struct MathLabel: View {
 /// The math fonts bundled with iosMath, exposed for the font switcher.
 enum MathFont: String, CaseIterable, Identifiable {
     case latinModern = "Latin Modern"
-    case termes = "TeX Gyre Termes"
-    case xits = "XITS"
-    case newComputerModern = "New Computer Modern"
-    case pagella = "TeX Gyre Pagella"
-    case stixTwo = "STIX Two"
-    case firaMath = "Fira Math"
-    case notoSansMath = "Noto Sans Math"
 
     var id: String { rawValue }
 
     var fontName: String {
         switch self {
         case .latinModern:      return MTFontNameLatinModern
-        case .termes:           return MTFontNameTermes
-        case .xits:             return MTFontNameXITS
-        case .newComputerModern: return MTFontNameNewComputerModern
-        case .pagella:          return MTFontNamePagella
-        case .stixTwo:          return MTFontNameSTIXTwo
-        case .firaMath:         return MTFontNameFiraMath
-        case .notoSansMath:     return MTFontNameNotoSansMath
         }
     }
 

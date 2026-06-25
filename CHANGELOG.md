@@ -1,5 +1,8 @@
 ## Changelog
 
+### Unreleased
+* **Breaking:** Removed all bundled fonts except the default **Latin Modern Math**. The `MTFontName*` constants for the removed fonts (`MTFontNameXITS`, `MTFontNameTermes`, `MTFontNameNewComputerModern`, `MTFontNamePagella`, `MTFontNameSTIXTwo`, `MTFontNameFiraMath`, `MTFontNameNotoSansMath`) are gone; only `MTFontNameLatinModern` remains. `defaultFont` is unchanged (Latin Modern Math at 20pt). This shrinks the bundled resource footprint.
+
 ### v2.3.1 (2026-06-07)
 * Fix SPM consumer build: public headers in `render/` used bare `#import` of siblings in `lib/`, which only resolved via target-internal header search paths and failed when downstream packages built the `iosMath` Clang module. Qualify the cross-directory imports so the module builds in consumer projects (#215).
 * Lower deployment targets from iOS 18+ / macOS 15+ back down to **iOS 13+ / macOS 10.15+**. The earlier raise was a toolchain-cleanup pass, not driven by any actual API requirement (#214).

@@ -200,26 +200,26 @@ label.fontSize = 30
 
 ### Font
 
-The default font is *Latin Modern Math*. Eight fonts are bundled; you can
-also use any OTF math font. Select a font using `MTFontName*` constants and
+The bundled font is *Latin Modern Math*, which is also the default. Select it
+explicitly using the `MTFontNameLatinModern` constant and
 `font(withName:size:)`:
 
 ```swift
-label.font = MTFontManager.fontManager.font(withName: MTFontNameTermes, size: 20)
+label.font = MTFontManager.fontManager.font(withName: MTFontNameLatinModern, size: 20)
 ```
 
 <details>
 <summary>Objective-C</summary>
 
 ```objective-c
-label.font = [MTFontManager.fontManager fontWithName:MTFontNameTermes size:20];
+label.font = [MTFontManager.fontManager fontWithName:MTFontNameLatinModern size:20];
 ```
 
 </details>
 
 The three per-font convenience methods (`latinModernFontWithSize:`,
 `xitsFontWithSize:`, `termesFontWithSize:`) were removed. Use
-`fontWithName:size:` with one of the bundled constants instead.
+`fontWithName:size:` with the bundled constant instead.
 `defaultFont` is unchanged and returns Latin Modern Math at 20pt.
 
 Available `MTFontName*` constants:
@@ -227,13 +227,6 @@ Available `MTFontName*` constants:
 | Constant | Font |
 |---|---|
 | `MTFontNameLatinModern` | Latin Modern Math |
-| `MTFontNameXITS` | XITS Math |
-| `MTFontNameTermes` | TeX Gyre Termes Math |
-| `MTFontNameNewComputerModern` | New Computer Modern Math |
-| `MTFontNamePagella` | TeX Gyre Pagella Math |
-| `MTFontNameSTIXTwo` | STIX Two Math |
-| `MTFontNameFiraMath` | Fira Math |
-| `MTFontNameNotoSansMath` | Noto Sans Math |
 
 ### Color
 
@@ -408,15 +401,8 @@ iosMath is available under the MIT license. See the [LICENSE](./LICENSE) file fo
 
 ### Fonts
 
-The following fonts are bundled with this distribution:
+The following font is bundled with this distribution:
 
 * [Latin Modern Math](https://www.gust.org.pl/projects/e-foundry/lm-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-Latin-Modern-Math.txt](./iosMath/fonts/README-Latin-Modern-Math.txt)
-* [TeX Gyre Termes Math](https://www.gust.org.pl/projects/e-foundry/tg-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-TeX-Gyre-Termes-Math.txt](./iosMath/fonts/README-TeX-Gyre-Termes-Math.txt)
-* [XITS Math](https://github.com/aliftype/xits) v1.302: [Open Font License](./iosMath/fonts/OFL.txt)
-* [New Computer Modern Math](https://ctan.org/pkg/newcomputermodern): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-New-Computer-Modern-Math.txt](./iosMath/fonts/README-New-Computer-Modern-Math.txt)
-* [TeX Gyre Pagella Math](https://www.gust.org.pl/projects/e-foundry/tg-math): [GUST Font License](./iosMath/fonts/GUST-FONT-LICENSE.txt) — see [README-TeX-Gyre-Pagella-Math.txt](./iosMath/fonts/README-TeX-Gyre-Pagella-Math.txt)
-* [STIX Two Math](https://github.com/stipub/stixfonts): [Open Font License](./iosMath/fonts/OFL-STIXTwo.txt)
-* [Fira Math](https://github.com/firamath/firamath): [Open Font License](./iosMath/fonts/OFL-FiraMath.txt)
-* [Noto Sans Math](https://github.com/notofonts/math): [Open Font License](./iosMath/fonts/OFL-NotoSansMath.txt)
 
 **Cambria Math is intentionally not bundled (proprietary Microsoft license).**

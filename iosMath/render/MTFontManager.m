@@ -15,13 +15,6 @@
 const int kDefaultFontSize = 20;
 
 NSString *const MTFontNameLatinModern       = @"latinmodern-math";
-NSString *const MTFontNameXITS              = @"xits-math";
-NSString *const MTFontNameTermes            = @"texgyretermes-math";
-NSString *const MTFontNameNewComputerModern = @"newcm-math";
-NSString *const MTFontNamePagella           = @"texgyrepagella-math";
-NSString *const MTFontNameSTIXTwo           = @"stixtwo-math";
-NSString *const MTFontNameFiraMath          = @"firamath";
-NSString *const MTFontNameNotoSansMath      = @"notosansmath";
 
 @interface MTFontManager ()
 

@@ -18,13 +18,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *const MTFontNameLatinModern;
-extern NSString *const MTFontNameXITS;
-extern NSString *const MTFontNameTermes;
-extern NSString *const MTFontNameNewComputerModern;
-extern NSString *const MTFontNamePagella;
-extern NSString *const MTFontNameSTIXTwo;
-extern NSString *const MTFontNameFiraMath;
-extern NSString *const MTFontNameNotoSansMath;
 
 /** A manager to load font files from disc and keep them
  in memory. */

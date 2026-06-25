@@ -43,11 +43,9 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 }
 
 static NSString *const kMacFontNames[] = {
-    @"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math",
-    @"New Computer Modern", @"TeX Gyre Pagella", @"STIX Two",
-    @"Fira Math", @"Noto Sans Math",
+    @"Latin Modern Math",
 };
-static const NSUInteger kMacFontCount = 8;
+static const NSUInteger kMacFontCount = 1;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -210,9 +208,7 @@ static const NSUInteger kMacFontCount = 8;
     // `extern NSString *const` values, not compile-time constants, so they can't
     // initialize a file-scope static array.
     NSString *const kMacFontKeys[] = {
-        MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
-        MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
-        MTFontNameFiraMath, MTFontNameNotoSansMath,
+        MTFontNameLatinModern,
     };
     NSString* key = kMacFontKeys[i];
     for (MTMathUILabel* label in self.demoLabels) {

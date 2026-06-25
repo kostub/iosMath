@@ -431,7 +431,7 @@ static NSString* const kHorizVariants = @"h_variants";
         // No sized variants for this glyph. This covers two cases: the glyph has no
         // MathGlyphConstruction entry at all (variantGlyphs == nil), and assembly-only
         // glyphs whose construction has a GlyphAssembly but zero variant records (an
-        // empty array, e.g. XITS's stretchy arrows). In both cases the glyph itself is
+        // empty array, e.g. some fonts' stretchy arrows). In both cases the glyph itself is
         // its only variant, so callers can rely on a non-empty result.
         [glyphArray addObject:@(glyph)];
         return glyphArray;

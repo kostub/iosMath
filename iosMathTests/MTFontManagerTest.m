@@ -48,18 +48,11 @@
     XCTAssertNil(font, @"Nil font name should return nil, not throw");
 }
 
-// Test 4: All 8 declared font constants load successfully (regression guard).
+// Test 4: The declared font constant loads successfully (regression guard).
 - (void)testAllDeclaredFontConstantsLoadNonNil
 {
     NSArray<NSString *> *fontNames = @[
         MTFontNameLatinModern,
-        MTFontNameXITS,
-        MTFontNameTermes,
-        MTFontNameNewComputerModern,
-        MTFontNamePagella,
-        MTFontNameSTIXTwo,
-        MTFontNameFiraMath,
-        MTFontNameNotoSansMath,
     ];
     for (NSString *name in fontNames) {
         MTFont *font = [MTFontManager.fontManager fontWithName:name size:20];

@@ -383,9 +383,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 {
     self = [super init];
     if (self) {
-        self.fontNames = @[@"Latin Modern Math", @"TeX Gyre Termes", @"XITS Math",
-                           @"New Computer Modern", @"TeX Gyre Pagella", @"STIX Two",
-                           @"Fira Math", @"Noto Sans Math"];
+        self.fontNames = @[@"Latin Modern Math"];
     }
     return self;
 }
@@ -410,9 +408,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     // Display names (self.fontNames) map 1:1 to these loader keys.
     // Not static: extern const NSString* values aren't compile-time constants.
     NSString *const kFontKeys[] = {
-        MTFontNameLatinModern, MTFontNameTermes, MTFontNameXITS,
-        MTFontNameNewComputerModern, MTFontNamePagella, MTFontNameSTIXTwo,
-        MTFontNameFiraMath, MTFontNameNotoSansMath,
+        MTFontNameLatinModern,
     };
     self.controller.fontField.text = self.fontNames[row];
     [self.controller.fontField resignFirstResponder];
