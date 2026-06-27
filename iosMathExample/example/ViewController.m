@@ -95,7 +95,11 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     picker.dataSource = self.colorPickerDelegate;
     self.colorField.inputView = picker;
     self.colorField.delegate = self;
-
+    UIColor* initialColor = self.colorPickerDelegate.colors[0];
+    self.colorField.backgroundColor = initialColor;
+    
+    self.mathLabel.textColor = initialColor;
+    
     self.latexField.delegate = self;
 
     // Global font-size control in the top row, beside the font + colour fields.
@@ -144,7 +148,8 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     contentFillsWidth.active = YES;
     // Demo formulae — LaTeX strings from MathExamples.h
     static const CGFloat demoHeights[] = {
-        60, 40, 120, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60
+        60, 40, 120, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60,
+        60
     };
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {
@@ -152,6 +157,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = demoFormulas[i];
         label.fontSize = 15;
+        label.textColor = initialColor;
         [self.demoLabels addObject:label];
         [self.demoHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.demoBaseHeights addObject:@(height)];
@@ -179,13 +185,15 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         40, 40, 50, 60, 50, 40, 70, 40,
         40, 40, 40, 40, 40, 50, 50, 60, 50, 50, 40, 70,
         80, 150, 60, 60, 50, 60, 50,
-        40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60
+        40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60,
+        70, 40, 40, 50, 40, 50
     };
     NSArray<NSString*>* testFormulas = MathTestFormulas();
     for (NSUInteger i = 0; i < testFormulas.count; i++) {
         CGFloat height = HeightAtIndex(testHeights, sizeof(testHeights)/sizeof(CGFloat), i, 40);
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = testFormulas[i];
+        label.textColor = initialColor;
         [self.labels addObject:label];
         [self.testHeightConstraints addObject:[self setHeight:height forView:label]];
         [self.testBaseHeights addObject:@(height)];
@@ -204,7 +212,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     self.contentHeightConstraint = [self setHeight:totalHeight forView:contentView];
 
     // Rendering properties that are not shared (alignment, mode, color, insets, fontSize).
-    UIColor* highlight = [UIColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    UIColor* highlight = [UIColor colorWithHue:0.15 saturation:0.5 brightness:1.0 alpha:0.5];
     self.labels[0].backgroundColor = highlight;
     self.labels[1].backgroundColor = highlight;
     self.labels[1].textAlignment = kMTTextAlignmentCenter;
@@ -419,7 +427,17 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
 {
     self = [super init];
     if (self) {
-        self.colors = @[UIColor.blackColor, UIColor.blueColor, UIColor.redColor, UIColor.greenColor];
+        self.colors = @[
+            UIColor.labelColor, // Initial color: black in light mode, white in dark mode.
+            UIColor.systemPurpleColor,
+            UIColor.systemBlueColor,
+            UIColor.systemTealColor,
+            UIColor.systemGreenColor,
+            UIColor.systemYellowColor,
+            UIColor.systemOrangeColor,
+            UIColor.systemRedColor,
+            UIColor.systemPinkColor,
+        ];
     }
     return self;
 }

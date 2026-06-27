@@ -37,6 +37,11 @@ NSString *const MTParseError = @"ParseError";
 
 @end
 
+// Maximum recursion depth for -buildInternal:oneCharOnly:stopChar:.
+// 150 is comfortably deeper than any realistic human-authored expression yet
+// far below the thousands of frames needed to overflow a 1 MB stack.
+static const NSInteger kMTMaxRecursionDepth = 150;
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
@@ -45,6 +50,7 @@ NSString *const MTParseError = @"ParseError";
     MTEnvProperties* _currentEnv;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
+    NSInteger _recursionDepth;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -57,6 +63,7 @@ NSString *const MTParseError = @"ParseError";
         [str getCharacters:_chars range:NSMakeRange(0, str.length)];
         _currentChar = 0;
         _currentFontStyle = kMTFontStyleDefault;
+        _recursionDepth = 0;
     }
     return self;
 }
@@ -159,6 +166,12 @@ NSString *const MTParseError = @"ParseError";
 
 - (MTMathList*)buildInternal:(BOOL) oneCharOnly stopChar:(unichar) stop
 {
+    if (_recursionDepth >= kMTMaxRecursionDepth) {
+        [self setError:MTParseErrorNestingTooDeep message:@"LaTeX nesting too deep"];
+        return nil;
+    }
+    _recursionDepth++;
+    @try {
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
     MTMathAtom* prevAtom = nil;
@@ -228,7 +241,7 @@ NSString *const MTParseError = @"ParseError";
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
-            MTMathList* done = [self stopCommand:command list:list stopChar:stop];
+            MTMathList* done = [self stopCommand:command list:list stopChar:stop oneChar:oneCharOnly];
             if (done) {
                 return done;
             } else if (_error) {
@@ -373,6 +386,9 @@ NSString *const MTParseError = @"ParseError";
         }
     }
     return list;
+    } @finally {
+        _recursionDepth--;
+    }
 }
 
 - (NSString*) readString
@@ -545,28 +561,67 @@ NSString *const MTParseError = @"ParseError";
         [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
         return nil;
     }
-    
+
     // Ignore spaces and nonascii.
     [self skipSpaces];
 
-    // a string of all upper and lower case characters.
+    // Read the entire token up to the closing brace or whitespace.
+    // We deliberately do NOT restrict the charset here so that invalid
+    // inputs (e.g. named colors like "red") are captured whole and can
+    // produce a clear validation error instead of a confusing "Missing }".
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
-            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
-        } else {
-            // we went too far
+        if (ch == '}') {
+            // Put the closing brace back; expectCharacter below will consume it.
             [self unlookCharacter];
             break;
         }
+        [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
     }
 
     if (![self expectCharacter:'}']) {
-        // We didn't find an closing brace, so invalid format.
+        // We didn't find a closing brace, so invalid format.
         [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
         return nil;
     }
+
+    // Validate: color must be '#' followed by exactly 3 or 6 hex digits.
+    // This keeps the grammar consistent with colorFromHexString: which requires
+    // a leading '#'.  Named colors and bare hex strings are not supported.
+    //
+    // NOTE: 3-digit #RGB is accepted here at parse time, but correct *rendering*
+    // of #RGB depends on colorFromHexString: handling the 3-digit shorthand.
+    // The current decoder is 6-digit-only (scanHexInt on "f00" yields 0xF00 and
+    // is masked as if it were #000F00), so #RGB currently renders the wrong
+    // color until that decoder fix (REN-7) lands.  We deliberately keep
+    // accepting #RGB rather than rejecting it: the previous parser also
+    // accepted and mis-rendered #RGB identically, so this is parse-correct /
+    // render-deferred, not a regression.
+    BOOL valid = NO;
+    NSUInteger len = mutable.length;
+    if (len == 4 || len == 7) {
+        unichar first = [mutable characterAtIndex:0];
+        if (first == '#') {
+            valid = YES;
+            for (NSUInteger i = 1; i < len && valid; i++) {
+                unichar c = [mutable characterAtIndex:i];
+                BOOL isHex = ((c >= '0' && c <= '9') ||
+                              (c >= 'a' && c <= 'f') ||
+                              (c >= 'A' && c <= 'F'));
+                if (!isHex) {
+                    valid = NO;
+                }
+            }
+        }
+    }
+
+    if (!valid) {
+        NSString* msg = [NSString stringWithFormat:@"Invalid color: %@", mutable];
+        [self setError:MTParseErrorInvalidCommand message:msg];
+        return nil;
+    }
+
     return mutable;
 }
 
@@ -607,10 +662,11 @@ NSString *const MTParseError = @"ParseError";
 - (NSString*) readCommand
 {
     static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
         singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
+    });
     if ([self hasCharacters]) {
         // Check if we have a single character command.
         unichar ch = [self getNextCharacter];
@@ -828,14 +884,24 @@ NSString *const MTParseError = @"ParseError";
         return table;
     } else if ([command isEqualToString:@"color"]) {
         // A color command has 2 arguments
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColor* mathColor = [[MTMathColor alloc] init];
-        mathColor.colorString = [self readColor];
+        mathColor.colorString = colorStr;
         mathColor.innerList = [self buildInternal:true];
         return mathColor;
     } else if ([command isEqualToString:@"colorbox"]) {
-        // A color command has 2 arguments
+        // A colorbox command has 2 arguments
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColorbox* mathColorbox = [[MTMathColorbox alloc] init];
-        mathColorbox.colorString = [self readColor];
+        mathColorbox.colorString = colorStr;
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
     } else {
@@ -845,16 +911,17 @@ NSString *const MTParseError = @"ParseError";
     }
 }
 
-- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
+- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar oneChar:(BOOL) oneChar
 {
     static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
-    if (!fractionCommands) {
+    static dispatch_once_t fractionCommandsOnce;
+    dispatch_once(&fractionCommandsOnce, ^{
         fractionCommands = @{ @"over" : @[],
                               @"atop" : @[],
                               @"choose" : @[ @"(", @")"],
                               @"brack" : @[ @"[", @"]"],
                               @"brace" : @[ @"{", @"}"]};
-    }
+    });
     if ([command isEqualToString:@"right"]) {
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
@@ -868,6 +935,16 @@ NSString *const MTParseError = @"ParseError";
         // return the list read so far.
         return list;
     } else if ([fractionCommands objectForKey:command]) {
+        if (oneChar) {
+            // REN-6: \over/\atop/\choose/\brack/\brace are illegal in a one-character
+            // argument slot (e.g. x^\over y). TeX rejects this too. Users who want a
+            // fraction in a script must use explicit braces: x^{a \over b}.
+            NSString* errorMessage = [NSString stringWithFormat:
+                @"\\%@ cannot be used in a one-character argument; "
+                @"wrap it in braces, e.g. x^{a \\%@ b}", command, command];
+            [self setError:MTParseErrorInvalidCommand message:errorMessage];
+            return nil;
+        }
         MTFraction* frac = nil;
         if ([command isEqualToString:@"over"]) {
             frac = [[MTFraction alloc] init];
@@ -1009,7 +1086,8 @@ NSString *const MTParseError = @"ParseError";
 + (NSDictionary*) spaceToCommands
 {
     static NSDictionary* spaceToCommands = nil;
-    if (!spaceToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         spaceToCommands = @{
                             @3 : @",",
                             @4 : @">",
@@ -1018,7 +1096,7 @@ NSString *const MTParseError = @"ParseError";
                             @18 : @"quad",
                             @36 : @"qquad",
                     };
-    }
+    });
     return spaceToCommands;
 }
 
@@ -1093,14 +1171,15 @@ NSString *const MTParseError = @"ParseError";
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
-    if (!styleToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         styleToCommands = @{
                             @(kMTLineStyleDisplay) : @"displaystyle",
                             @(kMTLineStyleText) : @"textstyle",
                             @(kMTLineStyleScript) : @"scriptstyle",
                             @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
                             };
-    }
+    });
     return styleToCommands;
 }
 
