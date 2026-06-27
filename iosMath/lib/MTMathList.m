@@ -898,6 +898,20 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return op;
 }
 
+// A style atom is a non-rendering control marker: its nucleus is never drawn (and scripts are
+// already forbidden via -scriptsAllowed). Reject any attempt to give it a nucleus so callers
+// can't silently store meaningless state on it. The empty string is permitted so the inherited
+// -copyWithZone: (which assigns self.nucleus) keeps working.
+- (void)setNucleus:(NSString *)nucleus
+{
+    if (nucleus.length > 0) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:@"Nucleus cannot be set on a style atom; it is a non-rendering control marker."
+                                        userInfo:nil];
+    }
+    [super setNucleus:nucleus];
+}
+
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
     NSString* command = [MTMathListBuilder styleToCommands][@(self.style)];
