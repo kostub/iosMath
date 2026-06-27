@@ -1494,6 +1494,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
               @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
               @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
+              @[@"x 𝑎 y", @(MTParseErrorInvalidCharacter)],      // above-BMP literal (U+1D44E, surrogate pair)
               // Special characters with no meaning in math mode are errors (match LaTeX:
               // % is a comment, # is a macro parameter, $ toggles math mode - none valid here).
               @[@"a % b", @(MTParseErrorInvalidCharacter)],
@@ -1517,6 +1518,42 @@ static NSArray* getTestDataParseErrors() {
             NSInteger code = [num integerValue];
             XCTAssertEqual(error.code, code, @"%@", desc);
         }
+}
+
+// REN-5: an above-BMP literal is a UTF-16 surrogate pair; the error message must
+// name the real Unicode scalar (U+1D44E), not a lone surrogate (U+D835).
+- (void) testInvalidCharacterErrorMessageDecodesSurrogatePair
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"𝑎" error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCharacter);
+    NSString* message = error.userInfo[NSLocalizedDescriptionKey];
+    XCTAssertTrue([message containsString:@"U+1D44E"],
+                  @"Expected real scalar U+1D44E in message, got: %@", message);
+    XCTAssertFalse([message containsString:@"U+D835"],
+                   @"Message should not report a lone surrogate: %@", message);
+}
+
+// REN-5: characters TeX silently discards (whitespace catcode 10/5 and NUL
+// catcode 9) must continue to parse without error. Guards against the error
+// path swallowing legitimate whitespace.
+- (void) testIgnoredWhitespaceCharacters
+{
+    unichar nulChars[3] = { 'x', 0x0000, 'y' };
+    NSString* withNul = [NSString stringWithCharacters:nulChars length:3];
+    NSArray* inputs = @[ @"x\ty", @"x\ny", @"x\ry", withNul ];
+    for (NSString* str in inputs) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        NSString* desc = [NSString stringWithFormat:@"whitespace input %@", str];
+        XCTAssertNotNil(list, @"%@", desc);
+        XCTAssertNil(error, @"%@", desc);
+        XCTAssertEqual(list.atoms.count, 2u, @"%@", desc);
+        XCTAssertEqual([list.atoms[0] type], kMTMathAtomVariable, @"%@", desc);
+        XCTAssertEqual([list.atoms[1] type], kMTMathAtomVariable, @"%@", desc);
+    }
 }
 
 // REN-6: \over inside an explicit-brace script group must still parse correctly.
