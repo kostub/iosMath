@@ -1453,6 +1453,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"}a", @(MTParseErrorMismatchBraces)],
               @[@"\\notacommand", @(MTParseErrorInvalidCommand)],
               @[@"\\sqrt[5+3", @(MTParseErrorCharacterNotFound)],
+              @[@"\\smash[t", @(MTParseErrorCharacterNotFound)], // missing ] on smash optional arg
               @[@"{5+3", @(MTParseErrorMismatchBraces)],
               @[@"5+3}", @(MTParseErrorMismatchBraces)],
               @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],

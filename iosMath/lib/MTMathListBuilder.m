@@ -972,10 +972,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
             unichar ch = [self getNextCharacter];
             if (ch == '[') {
                 NSMutableString* opt = [NSMutableString string];
+                BOOL foundClose = NO;
                 while ([self hasCharacters]) {
                     unichar c = [self getNextCharacter];
-                    if (c == ']') { break; }
+                    if (c == ']') { foundClose = YES; break; }
                     [opt appendString:[NSString stringWithCharacters:&c length:1]];
+                }
+                if (!foundClose) {
+                    // Mirror \sqrt[…]: a missing ']' is a parse error, not a silent recovery.
+                    [self setError:MTParseErrorCharacterNotFound message:@"Expected character not found: ]"];
+                    return nil;
                 }
                 NSString* o = [opt stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
                 if ([o isEqualToString:@"t"]) { box.keepHeight = NO; box.keepDepth = YES; }
