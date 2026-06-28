@@ -1402,75 +1402,46 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
-// FUN-8: Regression — tableWithEnvironment:rows:error: must insert a distinct atom copy
-// into each cell rather than aliasing the same object across cells.
+// FUN-8: Regression — in eqalign/split/aligned, tableWithEnvironment:rows:error: prepends a
+// relation spacer to every second-column cell. That spacer is a plain *mutable* ordinary atom,
+// so each cell must get its own copy: mutating one cell's spacer must NOT bleed into the others.
+// With the aliasing bug all cells share one object and the mutation leaks.
 //
-// The two inserted atoms are asymmetric:
-//   - matrix/cases insert an MTMathStyle, a non-rendering control marker. It is immutable
-//     (style is readonly, scripts throw, and -setNucleus: now throws), so the only thing that
-//     can go wrong is the *objects* being shared. We assert they are distinct instances.
-//   - eqalign/aligned insert a plain ordinary atom (the relation spacer). That atom is fully
-//     mutable and its nucleus renders, so we exercise the real failure mode: mutating one
-//     cell's spacer must NOT bleed into the others. With the bug all cells share one object.
-- (void) testTableCellsHaveIndependentLeadingAtoms
+// matrix/cases also prepend a leading atom (an MTMathStyle), but that one is deliberately the
+// *same shared instance* across cells — which is safe because MTMathStyle is immutable. That
+// invariant is covered by -testStyleAtomIsImmutable below rather than here.
+- (void) testTableSpacerCellsAreIndependent
 {
-    // matrix: every cell gets an (immutable) MTMathStyle inserted at index 0.
-    {
-        NSString *str = @"\\begin{matrix} a & b \\\\ c & d \\end{matrix}";
-        MTMathList *list = [MTMathListBuilder buildFromString:str];
-        XCTAssertNotNil(list);
-        MTMathTable *table = list.atoms[0];
-        MTMathAtom *atom00 = table.cells[0][0].atoms[0];
-        MTMathAtom *atom01 = table.cells[0][1].atoms[0];
-        MTMathAtom *atom10 = table.cells[1][0].atoms[0];
-        // Each cell must own a distinct style instance — not the same shared object.
-        XCTAssertNotIdentical(atom00, atom01, @"matrix row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom00, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom01, atom10, @"matrix row0/row1 cells share the same style atom (FUN-8)");
-    }
-
-    // cases: every cell also gets an (immutable) MTMathStyle inserted at index 0.
-    {
-        NSString *str = @"\\begin{cases} a & b \\\\ c & d \\end{cases}";
-        MTMathList *list = [MTMathListBuilder buildFromString:str];
-        XCTAssertNotNil(list);
-        // cases wraps the table in an MTInner.
-        MTInner *inner = list.atoms[0];
-        XCTAssertEqual(inner.type, kMTMathAtomInner);
-        MTMathTable *table = inner.innerList.atoms[1]; // index 0 is the comma spacer
-        MTMathAtom *atom00 = table.cells[0][0].atoms[0];
-        MTMathAtom *atom01 = table.cells[0][1].atoms[0];
-        MTMathAtom *atom10 = table.cells[1][0].atoms[0];
-        XCTAssertNotIdentical(atom00, atom01, @"cases row0 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom00, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
-        XCTAssertNotIdentical(atom01, atom10, @"cases row0/row1 cells share the same style atom (FUN-8)");
-    }
-
-    // aligned: every second-column cell gets a mutable ordinary spacer atom inserted at index 0.
-    {
-        NSString *str = @"\\begin{aligned} a & b \\\\ c & d \\end{aligned}";
-        MTMathList *list = [MTMathListBuilder buildFromString:str];
-        XCTAssertNotNil(list);
-        MTMathTable *table = list.atoms[0];
-        // Column 1 cells (index 1 in each row) carry the spacer at atoms[0].
-        MTMathAtom *spacer0 = table.cells[0][1].atoms[0];
-        MTMathAtom *spacer1 = table.cells[1][1].atoms[0];
-        // Mutate row0's spacer. With the aliasing bug this is the same object as row1's, so the
-        // change would leak. The spacer is an ordinary atom whose nucleus renders, so this is a
-        // meaningful mutation.
-        spacer0.nucleus = @"MUTATED";
-        XCTAssertEqualObjects(spacer0.nucleus, @"MUTATED");
-        XCTAssertNotEqualObjects(spacer1.nucleus, @"MUTATED", @"aligned: mutating row0 spacer leaked into row1 — shared spacer atom (FUN-8)");
-    }
+    NSString *str = @"\\begin{aligned} a & b \\\\ c & d \\end{aligned}";
+    MTMathList *list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathTable *table = list.atoms[0];
+    // Column 1 cells (index 1 in each row) carry the spacer at atoms[0].
+    MTMathAtom *spacer0 = table.cells[0][1].atoms[0];
+    MTMathAtom *spacer1 = table.cells[1][1].atoms[0];
+    // Mutate row0's spacer. With the aliasing bug this is the same object as row1's, so the
+    // change would leak. The spacer is an ordinary atom whose nucleus renders, so this is a
+    // meaningful mutation.
+    spacer0.nucleus = @"MUTATED";
+    XCTAssertEqualObjects(spacer0.nucleus, @"MUTATED");
+    XCTAssertNotEqualObjects(spacer1.nucleus, @"MUTATED", @"aligned: mutating row0 spacer leaked into row1 — shared spacer atom (FUN-8)");
 }
 
-// FUN-8: a style atom is a non-rendering control marker, so it must reject a nucleus.
-- (void) testStyleAtomRejectsNucleus
+// FUN-8: a style atom is a non-rendering control marker (the typesetter reads only its `style`).
+// It must be fully immutable so matrix/cases can share one instance across all cells safely.
+- (void) testStyleAtomIsImmutable
 {
     MTMathStyle *style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+    // nucleus, type and fontStyle are all meaningless for a style atom and must be rejected.
     XCTAssertThrows(style.nucleus = @"x", @"style atom must reject a non-empty nucleus");
-    XCTAssertNoThrow(style.nucleus = @"", @"empty nucleus must remain allowed so copying works");
-    // A round-trip copy (which assigns nucleus internally) must not throw.
+    XCTAssertThrows(style.type = kMTMathAtomOrdinary, @"style atom must reject a type change");
+    XCTAssertThrows(style.fontStyle = kMTFontStyleBold, @"style atom must reject a font style");
+    // Scripts are already forbidden for style atoms via -scriptsAllowed.
+    XCTAssertThrows(style.subScript = [MTMathListBuilder buildFromString:@"x"], @"style atom must reject a subscript");
+    // The values copyWithZone: assigns must remain allowed so deep copying still works.
+    XCTAssertNoThrow(style.nucleus = @"");
+    XCTAssertNoThrow(style.type = kMTMathAtomStyle);
+    XCTAssertNoThrow(style.fontStyle = kMTFontStyleDefault);
     XCTAssertNoThrow([style copy]);
 }
 
