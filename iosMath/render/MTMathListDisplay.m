@@ -988,6 +988,62 @@ static BOOL isIos6Supported(void) {
 
 @end
 
+#pragma mark - MTMathBoxDisplay
+
+@implementation MTMathBoxDisplay
+
+- (instancetype) initWithChild:(MTMathListDisplay*) child
+                     keepWidth:(BOOL) keepWidth
+                    keepHeight:(BOOL) keepHeight
+                     keepDepth:(BOOL) keepDepth
+                     drawChild:(BOOL) drawChild
+                        hAlign:(MTBoxHAlign) hAlign
+                         range:(NSRange) range
+{
+    self = [super init];
+    if (self) {
+        _child = child;
+        _drawChild = drawChild;
+        _keepWidth = keepWidth;
+        _hAlign = hAlign;
+        self.width   = keepWidth  ? child.width   : 0;
+        self.ascent  = keepHeight ? child.ascent  : 0;
+        self.descent = keepDepth  ? child.descent : 0;
+        self.range = range;
+    }
+    return self;
+}
+
+- (void)setTextColor:(MTColor *)textColor
+{
+    [super setTextColor:textColor];
+    self.child.textColor = textColor;   // forward so smash/lap inherit label color
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [super draw:context];               // base draws only localBackgroundColor (a no-op here)
+    if (!self.drawChild) {
+        return;                         // phantom: geometry already flowed up at measure time
+    }
+    CGFloat offset = 0;
+    if (!self.keepWidth) {
+        switch (self.hAlign) {
+            case kMTBoxHAlignRight:  offset = -self.child.width;     break;  // \llap
+            case kMTBoxHAlignCenter: offset = -self.child.width / 2; break;  // \clap
+            case kMTBoxHAlignLeft:
+            default:                 offset = 0;                     break;  // \rlap
+        }
+    }
+    CGContextSaveGState(context);
+    CGContextTranslateCTM(context, self.position.x + offset, self.position.y);
+    self.child.position = CGPointZero;
+    [self.child draw:context];
+    CGContextRestoreGState(context);
+}
+
+@end
+
 #pragma mark - MTInnerDisplay
 
 @implementation MTInnerDisplay {
