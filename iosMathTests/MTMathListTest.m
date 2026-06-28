@@ -922,4 +922,33 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqual(fwd.length, (NSUInteger)6, @"length should be 6");
 }
 
+- (void) testMathBoxModel
+{
+    MTMathBox* box = [MTMathBox new];
+    XCTAssertEqual(box.type, kMTMathAtomBox);
+    XCTAssertTrue(box.scriptsAllowed, @"kMTMathAtomBox (20) < kMTMathAtomBoundary (101) so scripts are allowed");
+
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    box.innerList = inner;
+    box.keepWidth = YES; box.keepHeight = YES; box.keepDepth = YES;
+    box.drawChild = NO; box.hAlign = kMTBoxHAlignCenter;
+
+    // typeToText
+    XCTAssertEqualObjects([MTMathAtom atomWithType:kMTMathAtomBox value:@""].class, MTMathBox.class);
+
+    // copy is deep and preserves every flag
+    MTMathBox* copy = [box copy];
+    XCTAssertNotEqual(copy.innerList, box.innerList);
+    XCTAssertEqual(copy.innerList.atoms.count, 1);
+    XCTAssertEqual(copy.keepWidth, box.keepWidth);
+    XCTAssertEqual(copy.keepHeight, box.keepHeight);
+    XCTAssertEqual(copy.keepDepth, box.keepDepth);
+    XCTAssertEqual(copy.drawChild, box.drawChild);
+    XCTAssertEqual(copy.hAlign, box.hAlign);
+
+    // initWithType:value: guard throws for the wrong type
+    XCTAssertThrows([[MTMathBox alloc] initWithType:kMTMathAtomOrdinary value:@""]);
+}
+
 @end

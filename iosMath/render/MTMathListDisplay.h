@@ -226,6 +226,11 @@ typedef NS_ENUM(unsigned int, MTLinePosition)  {
 
 @end
 
+/** Display for the box family (phantom/smash/lap). Reports geometry selected by
+ the keep* flags and either draws or suppresses its measured child. */
+@interface MTMathBoxDisplay : MTDisplay
+@end
+
 /// Rendering of an list with delimiters
 @interface MTInnerDisplay : MTDisplay
 

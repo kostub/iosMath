@@ -163,6 +163,23 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+@interface MTMathBoxDisplay ()
+
+- (instancetype) initWithChild:(MTMathListDisplay*) child
+                     keepWidth:(BOOL) keepWidth
+                    keepHeight:(BOOL) keepHeight
+                     keepDepth:(BOOL) keepDepth
+                     drawChild:(BOOL) drawChild
+                        hAlign:(MTBoxHAlign) hAlign
+                         range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@property (nonatomic) MTMathListDisplay* child;
+@property (nonatomic) BOOL drawChild;
+@property (nonatomic) BOOL keepWidth;
+@property (nonatomic) MTBoxHAlign hAlign;
+
+@end
+
 @interface MTInnerDisplay ()
 
 - (instancetype) initWithInner:(MTMathListDisplay*) inner leftDelimiter:(MTDisplay*) leftDelimiter rightDelimiter:(MTDisplay*) rightDelimiter atIndex:(NSUInteger) index NS_DESIGNATED_INITIALIZER;

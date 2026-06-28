@@ -66,6 +66,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// \textit, \textsf, \texttt. Captured raw at parse time; the body cannot
     /// contain math.
     kMTMathAtomText = 19,
+    /// A box atom (phantom/smash/lap family). Script-capable (< kMTMathAtomBoundary).
+    kMTMathAtomBox = 20,
 
     // Atoms after this point do not support subscripts or superscripts
 
@@ -608,6 +610,39 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 
 /// The inner math list
 @property (nonatomic, nullable) MTMathList* innerList;
+
+@end
+
+/** Horizontal alignment of a box's child relative to the box origin (drives the lap draw offset). */
+typedef NS_ENUM(NSUInteger, MTBoxHAlign) {
+    kMTBoxHAlignLeft = 0,   ///< \rlap: child left edge at origin, offset 0
+    kMTBoxHAlignCenter,     ///< \clap: offset -childWidth/2
+    kMTBoxHAlignRight,      ///< \llap: child right edge at origin, offset -childWidth
+};
+
+/** An atom representing a box element: the phantom/smash/lap family.
+ @note As with `MTMathColorbox`, the usual nucleus/script fields are unused;
+ the content lives in `innerList` and the flags below select the variant. */
+@interface MTMathBox : MTMathAtom
+
+/// Creates an empty box atom (type = kMTMathAtomBox).
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
+/// Throws unless type == kMTMathAtomBox.
+- (instancetype) initWithType:(MTMathAtomType)type value:(NSString *)value;
+
+/// The wrapped math content.
+@property (nonatomic, nullable) MTMathList* innerList;
+/// Report the child's width (YES) or zero width (NO).
+@property (nonatomic) BOOL keepWidth;
+/// Report the child's ascent (YES) or zero ascent (NO).
+@property (nonatomic) BOOL keepHeight;
+/// Report the child's descent (YES) or zero descent (NO).
+@property (nonatomic) BOOL keepDepth;
+/// Draw the measured child (YES) or suppress drawing entirely (NO, phantom).
+@property (nonatomic) BOOL drawChild;
+/// Horizontal draw offset applied when keepWidth == NO (laps).
+@property (nonatomic) MTBoxHAlign hAlign;
 
 @end
 
