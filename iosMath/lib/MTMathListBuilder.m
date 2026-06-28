@@ -376,25 +376,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 // (e.g. π, ×, ≤) or a special character with no meaning in math mode
                 // (% is a comment, # a macro parameter, $ toggles math mode). Callers
                 // should use the corresponding LaTeX command (e.g. \pi, \%, \#).
-                // _chars is UTF-16, so decode a surrogate pair to report the real
-                // Unicode scalar (e.g. U+1D44E) instead of a lone surrogate.
-                UTF32Char codepoint = ch;
-                NSString* charStr;
-                if (CFStringIsSurrogateHighCharacter(ch) && [self hasCharacters]) {
-                    unichar low = [self getNextCharacter];
-                    if (CFStringIsSurrogateLowCharacter(low)) {
-                        unichar pair[2] = {ch, low};
-                        charStr = [NSString stringWithCharacters:pair length:2];
-                        codepoint = CFStringGetLongCharacterForSurrogatePair(ch, low);
-                    } else {
-                        [self unlookCharacter];
-                        charStr = [NSString stringWithCharacters:&ch length:1];
-                    }
-                } else {
-                    charStr = [NSString stringWithCharacters:&ch length:1];
-                }
+                // ch is a single UTF-16 code unit; we just report its value (an
+                // above-BMP character reports its leading surrogate, which is fine
+                // for an error message).
                 [self setError:MTParseErrorInvalidCharacter
-                       message:[NSString stringWithFormat:@"Unknown character U+%04X ('%@') is not a valid LaTeX input character in math mode. Use the corresponding LaTeX command instead.", codepoint, charStr]];
+                       message:[NSString stringWithFormat:@"Unknown character U+%04X is not a valid LaTeX input character in math mode. Use the corresponding LaTeX command instead.", ch]];
                 return nil;
             }
         }

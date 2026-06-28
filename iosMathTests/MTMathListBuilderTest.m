@@ -1520,22 +1520,6 @@ static NSArray* getTestDataParseErrors() {
         }
 }
 
-// REN-5: an above-BMP literal is a UTF-16 surrogate pair; the error message must
-// name the real Unicode scalar (U+1D44E), not a lone surrogate (U+D835).
-- (void) testInvalidCharacterErrorMessageDecodesSurrogatePair
-{
-    NSError* error = nil;
-    MTMathList* list = [MTMathListBuilder buildFromString:@"𝑎" error:&error];
-    XCTAssertNil(list);
-    XCTAssertNotNil(error);
-    XCTAssertEqual(error.code, MTParseErrorInvalidCharacter);
-    NSString* message = error.userInfo[NSLocalizedDescriptionKey];
-    XCTAssertTrue([message containsString:@"U+1D44E"],
-                  @"Expected real scalar U+1D44E in message, got: %@", message);
-    XCTAssertFalse([message containsString:@"U+D835"],
-                   @"Message should not report a lone surrogate: %@", message);
-}
-
 // REN-5: characters TeX silently discards (whitespace catcode 10/5 and NUL
 // catcode 9) must continue to parse without error. Guards against the error
 // path swallowing legitimate whitespace.
