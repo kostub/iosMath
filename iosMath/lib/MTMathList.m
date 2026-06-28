@@ -66,6 +66,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Stack";
         case kMTMathAtomText:
             return @"Text";
+        case kMTMathAtomBox:
+            return @"Box";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -153,9 +155,12 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             return [[MTTextAtom alloc] initWithText:value ?: @""
                                              style:kMTTextStyleRoman];
 
+        case kMTMathAtomBox:
+            return [[MTMathBox alloc] init];
+
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
-        
+
         case kMTMathAtomColor:
             return [[MTMathColor alloc] init];
             
@@ -996,6 +1001,74 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 @end
 
+
+#pragma mark - MTMathBox
+
+@implementation MTMathBox
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomBox value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomBox) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathBox initWithType:value:] cannot be called. Use [MTMathBox init] instead."
+                                 userInfo:nil];
+}
+
+// Lossy by design (LLD §3.4): pick the closest LaTeX command from the flag matrix.
+- (NSString *)stringValue
+{
+    NSString* cmd;
+    NSString* inner = self.innerList.stringValue ?: @"";
+    if (!self.drawChild) {
+        // phantom family
+        if (self.keepWidth && self.keepHeight && self.keepDepth)      cmd = @"\\phantom";
+        else if (self.keepWidth)                                       cmd = @"\\hphantom";
+        else                                                          cmd = @"\\vphantom"; // covers \mathstrut -> \vphantom{(}
+    } else if (!self.keepWidth) {
+        // lap family
+        switch (self.hAlign) {
+            case kMTBoxHAlignRight:  cmd = @"\\llap"; break;
+            case kMTBoxHAlignCenter: cmd = @"\\clap"; break;
+            case kMTBoxHAlignLeft:
+            default:                 cmd = @"\\rlap"; break;
+        }
+    } else {
+        // smash family
+        if (!self.keepHeight && !self.keepDepth)      cmd = @"\\smash";
+        else if (self.keepDepth && !self.keepHeight)  cmd = @"\\smash[t]";
+        else                                          cmd = @"\\smash[b]";
+    }
+    return [NSString stringWithFormat:@"%@{%@}", cmd, inner];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathBox* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    op->_keepWidth = self.keepWidth;
+    op->_keepHeight = self.keepHeight;
+    op->_keepDepth = self.keepDepth;
+    op->_drawChild = self.drawChild;
+    op->_hAlign = self.hAlign;
+    return op;
+}
+
+- (instancetype)finalized
+{
+    MTMathBox *newBox = [super finalized];
+    newBox.innerList = newBox.innerList.finalized;
+    return newBox;
+}
+
+@end
 
 #pragma mark - MTMathTable
 
