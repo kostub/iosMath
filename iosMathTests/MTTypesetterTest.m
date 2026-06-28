@@ -2779,6 +2779,17 @@
                     @"a horizontal assembly with a zero-advance extender must be rejected at load");
 }
 
+- (void)testGlyphAssemblyWithNegativeAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    // Guard the full `advance <= 0` condition, not just the zero boundary.
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:-10],
+                    @"an assembly with a negative-advance extender must be rejected at load");
+}
+
 - (void)testValidGlyphAssemblyIsAccepted
 {
     NSString* glyphName = nil;
