@@ -1438,6 +1438,7 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertThrows(style.fontStyle = kMTFontStyleBold, @"style atom must reject a font style");
     // Scripts are already forbidden for style atoms via -scriptsAllowed.
     XCTAssertThrows(style.subScript = [MTMathListBuilder buildFromString:@"x"], @"style atom must reject a subscript");
+    XCTAssertThrows(style.superScript = [MTMathListBuilder buildFromString:@"x"], @"style atom must reject a superscript");
     // The values copyWithZone: assigns must remain allowed so deep copying still works.
     XCTAssertNoThrow(style.nucleus = @"");
     XCTAssertNoThrow(style.type = kMTMathAtomStyle);
