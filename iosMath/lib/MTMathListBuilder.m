@@ -762,6 +762,30 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return boundary;
 }
 
+// Maps each phantom/smash/lap command to its MTMathBox flag set.
+// keys: kW=keepWidth, kH=keepHeight, kD=keepDepth, draw=drawChild, hAlign, acceptsTB, synthParen
++ (NSDictionary<NSString*, NSDictionary*>*) boxCommands
+{
+    static NSDictionary* commands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commands = @{
+            @"phantom":   @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@NO},
+            @"hphantom":  @{@"kW":@YES, @"kH":@NO,  @"kD":@NO,  @"draw":@NO},
+            @"vphantom":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@NO},
+            @"mathstrut": @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@NO, @"synthParen":@YES},
+            @"smash":     @{@"kW":@YES, @"kH":@NO,  @"kD":@NO,  @"draw":@YES, @"acceptsTB":@YES},
+            @"llap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignRight)},
+            @"rlap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignLeft)},
+            @"clap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignCenter)},
+            @"mathllap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignRight)},
+            @"mathrlap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignLeft)},
+            @"mathclap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignCenter)},
+        };
+    });
+    return commands;
+}
+
 - (MTMathAtom*) atomForCommand:(NSString*) command
 {
     MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:command];
@@ -923,7 +947,50 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         mathColorbox.colorString = colorStr;
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
-    } else {
+    }
+
+    NSDictionary* boxSpec = [MTMathListBuilder boxCommands][command];
+    if (boxSpec) {
+        MTMathBox* box = [MTMathBox new];
+        box.keepWidth  = [boxSpec[@"kW"] boolValue];
+        box.keepHeight = [boxSpec[@"kH"] boolValue];
+        box.keepDepth  = [boxSpec[@"kD"] boolValue];
+        box.drawChild  = [boxSpec[@"draw"] boolValue];
+        box.hAlign     = (MTBoxHAlign)[boxSpec[@"hAlign"] unsignedIntegerValue];
+
+        if ([boxSpec[@"synthParen"] boolValue]) {
+            // \mathstrut: no argument; synthetic inner list with a single open paren.
+            MTMathList* inner = [MTMathList new];
+            MTMathAtom* paren = [MTMathAtomFactory atomForCharacter:'('];
+            [inner addAtom:paren];
+            box.innerList = inner;
+            return box;
+        }
+
+        if ([boxSpec[@"acceptsTB"] boolValue] && [self hasCharacters]) {
+            // \smash[t]/[b]: optional [t]/[b] before the {X} argument (\sqrt[…] pattern).
+            unichar ch = [self getNextCharacter];
+            if (ch == '[') {
+                NSMutableString* opt = [NSMutableString string];
+                while ([self hasCharacters]) {
+                    unichar c = [self getNextCharacter];
+                    if (c == ']') { break; }
+                    [opt appendString:[NSString stringWithCharacters:&c length:1]];
+                }
+                NSString* o = [opt stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                if ([o isEqualToString:@"t"]) { box.keepHeight = NO; box.keepDepth = YES; }
+                else if ([o isEqualToString:@"b"]) { box.keepHeight = YES; box.keepDepth = NO; }
+                // any other value: ignore, leave smash-both flags (no crash).
+            } else {
+                [self unlookCharacter];
+            }
+        }
+
+        box.innerList = [self buildInternal:true];
+        return box;
+    }
+
+    {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
         return nil;

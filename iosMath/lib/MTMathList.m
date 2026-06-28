@@ -1049,6 +1049,11 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return [NSString stringWithFormat:@"%@{%@}", cmd, inner];
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendString:self.stringValue];
+}
+
 - (id)copyWithZone:(NSZone *)zone
 {
     MTMathBox* op = [super copyWithZone:zone];
