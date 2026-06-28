@@ -1020,12 +1020,16 @@ static BOOL isIos6Supported(void) {
     self.child.textColor = textColor;   // forward so smash/lap inherit label color
 }
 
-- (void)draw:(CGContextRef)context
+- (void) setPosition:(CGPoint)position
 {
-    [super draw:context];               // base draws only localBackgroundColor (a no-op here)
-    if (!self.drawChild) {
-        return;                         // phantom: geometry already flowed up at measure time
-    }
+    super.position = position;
+    [self updateChildPosition];
+}
+
+- (void) updateChildPosition
+{
+    // Push an absolute position down to the child (mirrors MTRadicalDisplay /
+    // MTInnerDisplay) so draw: never has to mutate child state or juggle the CTM.
     CGFloat offset = 0;
     if (!self.keepWidth) {
         switch (self.hAlign) {
@@ -1035,11 +1039,18 @@ static BOOL isIos6Supported(void) {
             default:                 offset = 0;                     break;  // \rlap
         }
     }
-    CGContextSaveGState(context);
-    CGContextTranslateCTM(context, self.position.x + offset, self.position.y);
-    self.child.position = CGPointZero;
+    self.child.position = CGPointMake(self.position.x + offset, self.position.y);
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [super draw:context];               // base draws only localBackgroundColor (a no-op here)
+    if (!self.drawChild) {
+        return;                         // phantom: geometry already flowed up at measure time
+    }
+    // Child holds its own absolute position (set in setPosition:); it translates
+    // the CTM by that position itself, so there is nothing to do here but draw it.
     [self.child draw:context];
-    CGContextRestoreGState(context);
 }
 
 @end
