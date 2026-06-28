@@ -1500,6 +1500,12 @@ static NSArray* getTestDataParseErrors() {
               @[@"a % b", @(MTParseErrorInvalidCharacter)],
               @[@"a # b", @(MTParseErrorInvalidCharacter)],
               @[@"a $ b", @(MTParseErrorInvalidCharacter)],
+              // Item 4: spacing dimension parse errors
+              @[@"\\kern", @(MTParseErrorInvalidCommand)],          // missing distance at EOF
+              @[@"\\kernabc", @(MTParseErrorInvalidCommand)],       // no number/unit
+              @[@"\\hspace{abc}", @(MTParseErrorInvalidCommand)],   // no number/unit
+              @[@"\\hspace{}", @(MTParseErrorInvalidCommand)],      // empty
+              @[@"\\mkern{1em}", @(MTParseErrorInvalidCommand)],    // mu required for \mkern
               ];
 };
 
@@ -3250,6 +3256,53 @@ static NSArray* getTestDataLargeDelimiters() {
     // Serialization must stay \left< x\right>  (unchanged round-trip)
     NSString* serialized = [MTMathListBuilder mathListToString:leftRightList];
     XCTAssertEqualObjects(serialized, @"\\left< x\\right> ", @"serialized LaTeX unchanged");
+}
+
+// Item 4: spacing command parsing tests (TDD — added before implementation)
+
+- (void) testParseSpacingDimensions
+{
+    // \kern accepts em or mu; em -> value*18 mu
+    for (NSString* latex in @[@"\\kern1em", @"\\kern{1em}", @"\\kern 1em"]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        [self checkAtomTypes:list types:@[@(kMTMathAtomSpace)] desc:latex];
+        MTMathSpace* sp = list.atoms[0];
+        XCTAssertEqualWithAccuracy(sp.space, 18.0, 0.001, @"%@", latex);
+    }
+
+    MTMathSpace* neg = [MTMathListBuilder buildFromString:@"\\kern-1em"].atoms[0];
+    XCTAssertEqualWithAccuracy(neg.space, -18.0, 0.001);
+
+    MTMathSpace* half = [MTMathListBuilder buildFromString:@"\\kern{.5em}"].atoms[0];
+    XCTAssertEqualWithAccuracy(half.space, 9.0, 0.001);
+
+    MTMathSpace* mk = [MTMathListBuilder buildFromString:@"\\mkern3mu"].atoms[0];
+    XCTAssertEqualWithAccuracy(mk.space, 3.0, 0.001);
+
+    // whitespace around the dimension, leading-zero-less decimal, sign
+    MTMathSpace* ws = [MTMathListBuilder buildFromString:@"\\hspace{ -.2em }"].atoms[0];
+    XCTAssertEqualWithAccuracy(ws.space, -3.6, 0.001);
+}
+
+- (void) testParseSpacingAliases
+{
+    // \hspace*, \hskip behave as \hspace/\kern (em or mu); \mskip, \mspace as \mkern (mu only)
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hspace*{1em}"].atoms[0]).space, 18.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hskip 1em"].atoms[0]).space, 18.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mskip 4mu"].atoms[0]).space, 4.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mspace{4mu}"].atoms[0]).space, 4.0, 0.001);
+}
+
+- (void) testParseGlueTailIgnored
+{
+    // \mkern 3mu plus 1mu -> 3mu space followed by ordinary math "plus 1mu" (no glue detection)
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\mkern 3mu plus 1mu"];
+    XCTAssertEqual(list.atoms.count > 1, YES);
+    MTMathSpace* sp = list.atoms[0];
+    XCTAssertEqual(sp.type, kMTMathAtomSpace);
+    XCTAssertEqualWithAccuracy(sp.space, 3.0, 0.001);
+    // remaining atoms are ordinary math (the literal letters p,l,u,s, ...), not spaces
+    XCTAssertNotEqual(((MTMathAtom*)list.atoms[1]).type, kMTMathAtomSpace);
 }
 
 @end

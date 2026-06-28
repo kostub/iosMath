@@ -2980,4 +2980,21 @@
                          @"Display must contain at least one sub-display");
 }
 
+// Item 4: spacing command typesetter advance tests (TDD — added before implementation)
+
+- (void) testSpacingAdvances
+{
+    // \mkern18mu advances by the same width as \kern1em in the current style
+    MTMathListDisplay* mk = [self displayForLaTeX:@"x\\mkern18mu y"];
+    MTMathListDisplay* k  = [self displayForLaTeX:@"x\\kern1em y"];
+    XCTAssertEqualWithAccuracy(mk.width, k.width, 0.01);
+
+    // positive vs negative \hspace move the pen the opposite way
+    MTMathListDisplay* pos = [self displayForLaTeX:@"x\\hspace{1em}y"];
+    MTMathListDisplay* neg = [self displayForLaTeX:@"x\\hspace{-1em}y"];
+    MTMathListDisplay* plain = [self displayForLaTeX:@"xy"];
+    XCTAssertGreaterThan(pos.width, plain.width);
+    XCTAssertLessThan(neg.width, plain.width);
+}
+
 @end
