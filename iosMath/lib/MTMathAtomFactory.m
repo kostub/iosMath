@@ -98,11 +98,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
     if (ch < 0x21 || ch > 0x7E) {
-        // skip non ascii characters and spaces. Non-Latin text must be
-        // wrapped in \text*, \textbf{...}, etc.
+        // No atom for control characters, spaces, or non-ASCII literals. The
+        // builder decides what to do with these: whitespace is silently ignored,
+        // everything else raises MTParseErrorInvalidCharacter. Non-Latin text
+        // must be wrapped in \text*, \textbf{...}, etc.
         return nil;
     } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
-        // These are latex control characters that have special meanings. We don't support them.
+        // LaTeX control characters with special meanings. They have no atom of
+        // their own; the builder handles them (& / ~ / ' are consumed before
+        // reaching here, while $ % # raise MTParseErrorInvalidCharacter).
         return nil;
     } else if (ch == '^' || ch == '_' || ch == '{' || ch == '}' || ch == '\\') {
         // more special characters for Latex.

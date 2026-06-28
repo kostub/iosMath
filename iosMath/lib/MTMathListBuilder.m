@@ -358,11 +358,30 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (_spacesAllowed && ch == ' ') {
             // If spaces are allowed then spaces do not need escaping with a \ before being used.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
+        } else if (ch == '~') {
+            // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
+            atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
-                // Not a recognized character
-                continue;
+                // Characters TeX silently discards: whitespace (catcode 10/5,
+                // ignored in math mode) and NUL (catcode 9). Note that other
+                // control characters are *not* spaces in TeX (form feed is \par,
+                // vertical tab is an ordinary "other" character), so they fall
+                // through to the error below, as they should.
+                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\0') {
+                    continue;
+                }
+                // Any other unrecognized character is an error: a non-ASCII literal
+                // (e.g. π, ×, ≤) or a special character with no meaning in math mode
+                // (% is a comment, # a macro parameter, $ toggles math mode). Callers
+                // should use the corresponding LaTeX command (e.g. \pi, \%, \#).
+                // ch is a single UTF-16 code unit; we just report its value (an
+                // above-BMP character reports its leading surrogate, which is fine
+                // for an error message).
+                [self setError:MTParseErrorInvalidCharacter
+                       message:[NSString stringWithFormat:@"Unknown character U+%04X is not a valid LaTeX input character in math mode. Use the corresponding LaTeX command instead.", ch]];
+                return nil;
             }
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");

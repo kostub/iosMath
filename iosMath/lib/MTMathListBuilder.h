@@ -89,6 +89,10 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorInvalidLimits,
     /// The LaTeX nesting depth exceeded the safe parsing limit.
     MTParseErrorNestingTooDeep,
+    /// A character in the string is not a valid LaTeX input character in math
+    /// mode (e.g. a non-ASCII literal like π, or a special character such as
+    /// %, #, $ that has no meaning here).
+    MTParseErrorInvalidCharacter,
 };
 
 @end

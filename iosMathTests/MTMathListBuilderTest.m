@@ -69,6 +69,8 @@ static NSArray* getTestData() {
              @[ @"x \\ y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              // spacing
              @[ @"x \\quad y \\; z \\! q", @[  @(kMTMathAtomVariable), @(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable)], @"x\\quad y\\; z\\! q"],
+             // tilde is a non-breaking space (renders as an ordinary space, same as a literal space)
+             @[ @"x~y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              ];
 }
 
@@ -1488,6 +1490,16 @@ static NSArray* getTestDataParseErrors() {
               @[@"x^\\choose y", @(MTParseErrorInvalidCommand)],
               @[@"x^\\brack y",  @(MTParseErrorInvalidCommand)],
               @[@"x^\\brace y",  @(MTParseErrorInvalidCommand)],
+              // REN-5: non-ASCII literal characters should produce MTParseErrorInvalidCharacter
+              @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
+              @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
+              @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
+              @[@"x 𝑎 y", @(MTParseErrorInvalidCharacter)],      // above-BMP literal (U+1D44E, surrogate pair)
+              // Special characters with no meaning in math mode are errors (match LaTeX:
+              // % is a comment, # is a macro parameter, $ toggles math mode - none valid here).
+              @[@"a % b", @(MTParseErrorInvalidCharacter)],
+              @[@"a # b", @(MTParseErrorInvalidCharacter)],
+              @[@"a $ b", @(MTParseErrorInvalidCharacter)],
               ];
 };
 
@@ -1506,6 +1518,26 @@ static NSArray* getTestDataParseErrors() {
             NSInteger code = [num integerValue];
             XCTAssertEqual(error.code, code, @"%@", desc);
         }
+}
+
+// REN-5: characters TeX silently discards (whitespace catcode 10/5 and NUL
+// catcode 9) must continue to parse without error. Guards against the error
+// path swallowing legitimate whitespace.
+- (void) testIgnoredWhitespaceCharacters
+{
+    unichar nulChars[3] = { 'x', 0x0000, 'y' };
+    NSString* withNul = [NSString stringWithCharacters:nulChars length:3];
+    NSArray* inputs = @[ @"x\ty", @"x\ny", @"x\ry", withNul ];
+    for (NSString* str in inputs) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        NSString* desc = [NSString stringWithFormat:@"whitespace input %@", str];
+        XCTAssertNotNil(list, @"%@", desc);
+        XCTAssertNil(error, @"%@", desc);
+        XCTAssertEqual(list.atoms.count, 2u, @"%@", desc);
+        XCTAssertEqual([list.atoms[0] type], kMTMathAtomVariable, @"%@", desc);
+        XCTAssertEqual([list.atoms[1] type], kMTMathAtomVariable, @"%@", desc);
+    }
 }
 
 // REN-6: \over inside an explicit-brace script group must still parse correctly.
