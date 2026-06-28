@@ -2725,6 +2725,82 @@
     XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
 }
 
+#pragma mark - Glyph assembly validation (FUN-4)
+
+// A glyph assembly whose extender part has a non-positive fullAdvance is
+// degenerate: adding more copies of the extender never increases the assembled
+// height, which would make MTTypesetter's assembly loop spin forever. The font
+// math table must reject such a plist at load time by throwing, the same way it
+// already throws for an invalid plist version, rather than silently mis-rendering
+// the glyph. The bundled fonts contain no such assembly, so these tests build a
+// synthetic math table to exercise the guard.
+
+// Returns a real glyph from the bundled font (and its round-tripped name) so the
+// synthetic assembly is keyed exactly as -getGlyphAssemblyFromTable: looks it up.
+- (CGGlyph)glyphForCharacter:(unichar)ch name:(NSString**)outName
+{
+    CGGlyph glyph = 0;
+    CTFontGetGlyphsForCharacters(self.font.ctFont, &ch, &glyph, 1);
+    *outName = [self.font getGlyphName:glyph];
+    return glyph;
+}
+
+- (MTFontMathTable*)mathTableWithAssemblyKey:(NSString*)key
+                                   glyphName:(NSString*)glyphName
+                             extenderAdvance:(int)extenderAdvance
+{
+    NSDictionary* startPart = @{ @"advance": @(100), @"startConnector": @(0),  @"endConnector": @(20), @"extender": @NO,  @"glyph": glyphName };
+    NSDictionary* extender  = @{ @"advance": @(extenderAdvance), @"startConnector": @(20), @"endConnector": @(20), @"extender": @YES, @"glyph": glyphName };
+    NSDictionary* endPart   = @{ @"advance": @(100), @"startConnector": @(20), @"endConnector": @(0),  @"extender": @NO,  @"glyph": glyphName };
+    NSDictionary* mathTable = @{
+        @"version": @"1.4",
+        key: @{ glyphName: @{ @"italic": @(0), @"parts": @[ startPart, extender, endPart ] } }
+    };
+    return [[MTFontMathTable alloc] initWithFont:self.font mathTable:mathTable];
+}
+
+- (void)testVerticalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a vertical assembly with a zero-advance extender must be rejected at load");
+}
+
+- (void)testHorizontalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"h_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a horizontal assembly with a zero-advance extender must be rejected at load");
+}
+
+- (void)testGlyphAssemblyWithNegativeAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    // Guard the full `advance <= 0` condition, not just the zero boundary.
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:-10],
+                    @"an assembly with a negative-advance extender must be rejected at load");
+}
+
+- (void)testValidGlyphAssemblyIsAccepted
+{
+    NSString* glyphName = nil;
+    CGGlyph glyph = [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    MTFontMathTable* table = [self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:50];
+    NSArray<MTGlyphPart*>* parts = [table getVerticalGlyphAssemblyForGlyph:glyph];
+    XCTAssertEqual(parts.count, 3u, @"a well-formed assembly must be returned unchanged");
+}
+
 // REN-3: \color atoms must receive inter-element spacing before the colored sub-display.
 // Before the fix, the colored group abutted the preceding binary operator with no gap.
 // After the fix, the medium binary-operator→ordinary gap (4 mu) separates them.
