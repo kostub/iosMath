@@ -644,6 +644,104 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return mutable;
 }
 
+// Reads a TeX length dimension (e.g. "1em", "-0.5em", "3mu") from the char stream.
+// Grammar: [ws] ['{'] [ws] [sign] (digits[.digits] | .digits) [ws] unit [ws] ['}']
+// where unit ∈ {em, mu}.  On success, writes the value in mu to *outMu and returns YES.
+// On any malformed or unsupported input, sets _error (MTParseErrorInvalidCommand) and
+// returns NO.  em is converted to mu via factor 18; mu is stored as-is.
+// allowEm = NO means only mu is accepted (for \mkern/\mskip/\mspace).
+- (BOOL) readDimensionIntoMu:(CGFloat*)outMu allowEm:(BOOL)allowEm command:(NSString*)cmd
+{
+    // Skip any leading whitespace.
+    [self skipSpaces];
+
+    // Check for an optional opening brace.
+    BOOL braced = NO;
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '{') {
+            braced = YES;
+        } else {
+            [self unlookCharacter];
+        }
+    }
+    // Skip whitespace after optional '{'.
+    [self skipSpaces];
+
+    // Parse optional sign.
+    CGFloat sign = 1;
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '-') {
+            sign = -1;
+        } else if (c == '+') {
+            sign = 1;
+        } else {
+            [self unlookCharacter];
+        }
+    }
+
+    // Parse mantissa: digits[.digits] | .digits  (require at least one digit overall).
+    NSMutableString* num = [NSMutableString string];
+    BOOL sawDigit = NO, sawDot = NO;
+    while ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c >= '0' && c <= '9') {
+            sawDigit = YES;
+            [num appendString:[NSString stringWithCharacters:&c length:1]];
+        } else if (c == '.' && !sawDot) {
+            sawDot = YES;
+            [num appendString:@"."];
+        } else {
+            [self unlookCharacter];
+            break;
+        }
+    }
+    if (!sawDigit) {
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"\\%@ expects a length", cmd]];
+        return NO;
+    }
+    // Skip whitespace between number and unit.
+    [self skipSpaces];
+
+    // Read exactly two characters for the unit.
+    NSMutableString* unit = [NSMutableString string];
+    for (int i = 0; i < 2 && [self hasCharacters]; i++) {
+        unichar c = [self getNextCharacter];
+        [unit appendString:[NSString stringWithCharacters:&c length:1]];
+    }
+
+    CGFloat factor;
+    if ([unit isEqualToString:@"em"]) {
+        if (!allowEm) {
+            [self setError:MTParseErrorInvalidCommand
+                   message:[NSString stringWithFormat:@"\\%@ expects mu units", cmd]];
+            return NO;
+        }
+        factor = 18;
+    } else if ([unit isEqualToString:@"mu"]) {
+        factor = 1;
+    } else {
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"\\%@ expects em or mu units, got: %@", cmd, unit]];
+        return NO;
+    }
+
+    // If braced, skip whitespace and consume the closing '}'.
+    if (braced) {
+        [self skipSpaces];
+        if (![self hasCharacters] || [self getNextCharacter] != '}') {
+            [self setError:MTParseErrorInvalidCommand
+                   message:[NSString stringWithFormat:@"\\%@ missing closing brace", cmd]];
+            return NO;
+        }
+    }
+
+    *outMu = sign * num.doubleValue * factor;
+    return YES;
+}
+
 - (void) skipSpaces
 {
     while ([self hasCharacters]) {
@@ -947,6 +1045,31 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         mathColorbox.colorString = colorStr;
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
+    }
+
+    // Spacing commands: \kern, \hspace[*], \hskip, \mkern, \mskip, \mspace.
+    // The table maps each command name to @YES (em or mu allowed) or @NO (mu only).
+    NSNumber* allowEm = [MTMathListBuilder spacingCommands][command];
+    if (allowEm) {
+        // \hspace* is identical to \hspace; the '*' is left in the stream by the
+        // lexer (readString stops at '*' since it is not alphabetic), so consume it.
+        // TeX tolerates whitespace before the '*' (e.g. "\hspace *{1em}"), so skip
+        // spaces first; any skipped run is harmless when no '*' follows because
+        // readDimensionIntoMu:allowEm:command: also skips leading whitespace.
+        if ([command isEqualToString:@"hspace"]) {
+            [self skipSpaces];
+            if ([self hasCharacters]) {
+                unichar c = [self getNextCharacter];
+                if (c != '*') {
+                    [self unlookCharacter];
+                }
+            }
+        }
+        CGFloat mu = 0;
+        if (![self readDimensionIntoMu:&mu allowEm:allowEm.boolValue command:command]) {
+            return nil;   // _error already set by readDimensionIntoMu:
+        }
+        return [[MTMathSpace alloc] initWithSpace:mu];
     }
 
     NSDictionary* boxSpec = [MTMathListBuilder boxCommands][command];
@@ -1273,6 +1396,24 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                             };
     });
     return styleToCommands;
+}
+
+// Maps each spacing command to whether em units are allowed (YES => em or mu; NO => mu only).
++ (NSDictionary<NSString*, NSNumber*>*) spacingCommands
+{
+    static NSDictionary* commands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commands = @{
+            @"kern":    @YES,   // em or mu
+            @"hspace":  @YES,   // also handles \hspace* (the '*' is consumed in the dispatch)
+            @"hskip":   @YES,
+            @"mkern":   @NO,    // mu only
+            @"mskip":   @NO,
+            @"mspace":  @NO,
+        };
+    });
+    return commands;
 }
 
 + (MTMathList *)buildFromString:(NSString *)str
