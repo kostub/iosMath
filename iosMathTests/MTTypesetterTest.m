@@ -2997,4 +2997,100 @@
     XCTAssertLessThan(neg.width, plain.width);
 }
 
+- (void) testPhantomMetrics
+{
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    MTMathListDisplay* phantomLine = [self displayForLaTeX:@"\\phantom{x}"];
+    MTDisplay* box = phantomLine.subDisplays.firstObject;
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01);
+}
+
+- (void) testHPhantomMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\hphantom{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqual(box.ascent, 0);
+    XCTAssertEqual(box.descent, 0);
+}
+
+- (void) testVPhantomMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\vphantom{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqual(box.width, 0);
+    XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01);
+}
+
+- (void) testMathStrutMetrics
+{
+    MTDisplay* strut = [self singleDisplayForLaTeX:@"\\mathstrut"];
+    MTDisplay* vparen = [self singleDisplayForLaTeX:@"\\vphantom{(}"];
+    XCTAssertEqual(strut.width, 0);
+    XCTAssertEqualWithAccuracy(strut.ascent, vparen.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(strut.descent, vparen.descent, 0.01);
+}
+
+- (void) testSmashMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\smash{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqual(box.ascent, 0);
+    XCTAssertEqual(box.descent, 0);
+
+    MTDisplay* st = [self singleDisplayForLaTeX:@"\\smash[t]{x}"];
+    XCTAssertEqual(st.ascent, 0);
+    XCTAssertTrue(st.descent > 0 || x.descent == 0);
+
+    MTDisplay* sb = [self singleDisplayForLaTeX:@"\\smash[b]{x}"];
+    XCTAssertEqual(sb.descent, 0);
+    XCTAssertTrue(sb.ascent > 0);
+}
+
+- (void) testLapMetrics
+{
+    for (NSString* latex in @[@"\\llap{x}", @"\\rlap{x}", @"\\clap{x}"]) {
+        MTDisplay* box = [self singleDisplayForLaTeX:latex];
+        XCTAssertEqual(box.width, 0, @"%@", latex);
+        MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+        XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01, @"%@", latex);
+    }
+}
+
+// Integration / composition (LLD §7)
+- (void) testVPhantomDrivesDelimiterSize
+{
+    MTMathListDisplay* withPhantom = [self displayForLaTeX:@"\\left(\\vphantom{\\frac{1}{x}}x\\right)"];
+    MTMathListDisplay* withoutPhantom = [self displayForLaTeX:@"\\left(x\\right)"];
+    XCTAssertGreaterThan(withPhantom.ascent + withPhantom.descent,
+                         withoutPhantom.ascent + withoutPhantom.descent);
+}
+
+- (void) testScriptOnBox
+{
+    // \phantom{x}^2 : script attaches to the box display, no crash.
+    MTMathListDisplay* d = [self displayForLaTeX:@"\\phantom{x}^2"];
+    XCTAssertNotNil(d);
+    XCTAssertGreaterThan(d.subDisplays.count, 0);
+}
+
+- (void) testRlapDoesNotAdvance
+{
+    // a\rlap{+b}c : 'c' position matches the no-lap baseline "ac".
+    MTMathListDisplay* lapped = [self displayForLaTeX:@"a\\rlap{+b}c"];
+    MTMathListDisplay* plain = [self displayForLaTeX:@"ac"];
+    XCTAssertEqualWithAccuracy(lapped.width, plain.width, 0.01);
+}
+
+- (void) testLeadingNegativeKernRendersAtNegativeX
+{
+    // Pin accepted-clipping behavior: a left \llap places ink at x<0 and still renders.
+    MTMathListDisplay* d = [self displayForLaTeX:@"\\llap{xy}z"];
+    XCTAssertNotNil(d);
+}
+
 @end

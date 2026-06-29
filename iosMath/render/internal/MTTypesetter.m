@@ -679,6 +679,35 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 break;
             }
 
+            case kMTMathAtomBox: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Box spacing class is Ordinary: reclassify before any inter-element lookup
+                // (mirrors overline/accent), so it never reaches the getInterElementSpace default assert.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+
+                MTMathBox* boxAtom = (MTMathBox*) atom;
+                MTMathListDisplay* child = [MTTypesetter createLineForMathList:boxAtom.innerList font:_font style:_style];
+                MTMathBoxDisplay* display = [[MTMathBoxDisplay alloc] initWithChild:child
+                                                                         keepWidth:boxAtom.keepWidth
+                                                                        keepHeight:boxAtom.keepHeight
+                                                                         keepDepth:boxAtom.keepDepth
+                                                                         drawChild:boxAtom.drawChild
+                                                                            hAlign:boxAtom.hAlign
+                                                                             range:atom.indexRange];
+                display.position = _currentPosition;
+                _currentPosition.x += display.width;   // 0 for vphantom/laps
+                [_displayAtoms addObject:display];
+
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+
             case kMTMathAtomText: {
                 // Flush any pending math run so the text block stands alone.
                 if (_currentLine.length > 0) {

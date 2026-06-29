@@ -1453,6 +1453,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"}a", @(MTParseErrorMismatchBraces)],
               @[@"\\notacommand", @(MTParseErrorInvalidCommand)],
               @[@"\\sqrt[5+3", @(MTParseErrorCharacterNotFound)],
+              @[@"\\smash[t", @(MTParseErrorCharacterNotFound)], // missing ] on smash optional arg
               @[@"{5+3", @(MTParseErrorMismatchBraces)],
               @[@"5+3}", @(MTParseErrorMismatchBraces)],
               @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],
@@ -3303,6 +3304,80 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualWithAccuracy(sp.space, 3.0, 0.001);
     // remaining atoms are ordinary math (the literal letters p,l,u,s, ...), not spaces
     XCTAssertNotEqual(((MTMathAtom*)list.atoms[1]).type, kMTMathAtomSpace);
+}
+
+- (void) testParsePhantomFamily
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\phantom{x}"];
+    [self checkAtomTypes:list types:@[@(kMTMathAtomBox)] desc:@"phantom"];
+    MTMathBox* box = list.atoms[0];
+    XCTAssertTrue(box.keepWidth && box.keepHeight && box.keepDepth && !box.drawChild);
+    XCTAssertEqual(box.innerList.atoms.count, 1);
+
+    // \phantom x : single-character argument (buildInternal:true), no braces
+    MTMathBox* box2 = [MTMathListBuilder buildFromString:@"\\phantom x"].atoms[0];
+    XCTAssertEqual(box2.innerList.atoms.count, 1);
+
+    MTMathBox* h = [MTMathListBuilder buildFromString:@"\\hphantom{x}"].atoms[0];
+    XCTAssertTrue(h.keepWidth && !h.keepHeight && !h.keepDepth && !h.drawChild);
+
+    MTMathBox* v = [MTMathListBuilder buildFromString:@"\\vphantom{x}"].atoms[0];
+    XCTAssertTrue(!v.keepWidth && v.keepHeight && v.keepDepth && !v.drawChild);
+
+    // \mathstrut: no argument, synthetic inner = open paren "(", vphantom flags
+    MTMathBox* strut = [MTMathListBuilder buildFromString:@"\\mathstrut"].atoms[0];
+    XCTAssertTrue(!strut.keepWidth && strut.keepHeight && strut.keepDepth && !strut.drawChild);
+    XCTAssertEqual(strut.innerList.atoms.count, 1);
+    XCTAssertEqualObjects(((MTMathAtom*)strut.innerList.atoms[0]).nucleus, @"(");
+}
+
+- (void) testParseSmash
+{
+    MTMathBox* s = [MTMathListBuilder buildFromString:@"\\smash{x}"].atoms[0];
+    XCTAssertTrue(s.keepWidth && !s.keepHeight && !s.keepDepth && s.drawChild);
+
+    MTMathBox* st = [MTMathListBuilder buildFromString:@"\\smash[t]{x}"].atoms[0];
+    XCTAssertTrue(st.keepWidth && !st.keepHeight && st.keepDepth && st.drawChild);
+
+    MTMathBox* sb = [MTMathListBuilder buildFromString:@"\\smash[b]{x}"].atoms[0];
+    XCTAssertTrue(sb.keepWidth && sb.keepHeight && !sb.keepDepth && sb.drawChild);
+
+    // bad optional value: ignore bracket, smash both, no crash (PRD §7.2.2)
+    MTMathBox* sx = [MTMathListBuilder buildFromString:@"\\smash[q]{x}"].atoms[0];
+    XCTAssertTrue(!sx.keepHeight && !sx.keepDepth);
+}
+
+- (void) testParseLaps
+{
+    NSDictionary<NSString*, NSNumber*>* cases = @{
+        @"\\llap{x}": @(kMTBoxHAlignRight),  @"\\mathllap{x}": @(kMTBoxHAlignRight),
+        @"\\rlap{x}": @(kMTBoxHAlignLeft),   @"\\mathrlap{x}": @(kMTBoxHAlignLeft),
+        @"\\clap{x}": @(kMTBoxHAlignCenter), @"\\mathclap{x}": @(kMTBoxHAlignCenter),
+    };
+    for (NSString* latex in cases) {
+        MTMathBox* box = [MTMathListBuilder buildFromString:latex].atoms[0];
+        XCTAssertEqual(box.type, kMTMathAtomBox, @"%@", latex);
+        XCTAssertTrue(!box.keepWidth && box.keepHeight && box.keepDepth && box.drawChild, @"%@", latex);
+        XCTAssertEqual(box.hAlign, (MTBoxHAlign)cases[latex].unsignedIntegerValue, @"%@", latex);
+    }
+}
+
+- (void) testParseBoxAtEOF
+{
+    // \phantom with no argument at EOF: empty inner, no crash (LLD §6)
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\phantom"];
+    XCTAssertNotNil(list);
+    MTMathBox* box = list.atoms[0];
+    XCTAssertEqual(box.innerList.atoms.count, 0);
+}
+
+- (void) testBoxRoundTrip
+{
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\phantom{x}"]], @"\\phantom{x}");
+    // \mathstrut serializes lossily to \vphantom{(}
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
 }
 
 @end
