@@ -1053,10 +1053,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     if (allowEm) {
         // \hspace* is identical to \hspace; the '*' is left in the stream by the
         // lexer (readString stops at '*' since it is not alphabetic), so consume it.
-        if ([command isEqualToString:@"hspace"] && [self hasCharacters]) {
-            unichar c = [self getNextCharacter];
-            if (c != '*') {
-                [self unlookCharacter];
+        // TeX tolerates whitespace before the '*' (e.g. "\hspace *{1em}"), so skip
+        // spaces first; any skipped run is harmless when no '*' follows because
+        // readDimensionIntoMu:allowEm:command: also skips leading whitespace.
+        if ([command isEqualToString:@"hspace"]) {
+            [self skipSpaces];
+            if ([self hasCharacters]) {
+                unichar c = [self getNextCharacter];
+                if (c != '*') {
+                    [self unlookCharacter];
+                }
             }
         }
         CGFloat mu = 0;

@@ -1507,6 +1507,8 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\hspace{abc}", @(MTParseErrorInvalidCommand)],   // no number/unit
               @[@"\\hspace{}", @(MTParseErrorInvalidCommand)],      // empty
               @[@"\\mkern{1em}", @(MTParseErrorInvalidCommand)],    // mu required for \mkern
+              @[@"\\kern1pt", @(MTParseErrorInvalidCommand)],      // valid number, unsupported unit
+              @[@"\\kern1xx", @(MTParseErrorInvalidCommand)],      // valid number, unknown unit
               ];
 };
 
@@ -3289,6 +3291,8 @@ static NSArray* getTestDataLargeDelimiters() {
 {
     // \hspace*, \hskip behave as \hspace/\kern (em or mu); \mskip, \mspace as \mkern (mu only)
     XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hspace*{1em}"].atoms[0]).space, 18.0, 0.001);
+    // TeX tolerates whitespace between the command and the '*' (e.g. "\hspace *{1em}")
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hspace *{1em}"].atoms[0]).space, 18.0, 0.001);
     XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hskip 1em"].atoms[0]).space, 18.0, 0.001);
     XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mskip 4mu"].atoms[0]).space, 4.0, 0.001);
     XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mspace{4mu}"].atoms[0]).space, 4.0, 0.001);
