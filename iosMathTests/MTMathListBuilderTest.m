@@ -1568,6 +1568,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\mkern{1em}", @(MTParseErrorInvalidCommand)],    // mu required for \mkern
               @[@"\\kern1pt", @(MTParseErrorInvalidCommand)],      // valid number, unsupported unit
               @[@"\\kern1xx", @(MTParseErrorInvalidCommand)],      // valid number, unknown unit
+              @[@"\\begin{alignedat} x & y \\end{alignedat}", @(MTParseErrorInvalidCommand)],  // missing {n}
               ];
 };
 

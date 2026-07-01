@@ -17,6 +17,7 @@ NSString *const MTParseError = @"ParseError";
 @interface MTEnvProperties : NSObject
 
 @property (nonatomic, readonly) NSString* envName;
+@property (nonatomic) NSString* argument;
 @property (nonatomic) BOOL ended;
 @property (nonatomic) NSInteger numRows;
 
@@ -29,6 +30,7 @@ NSString *const MTParseError = @"ParseError";
     self = [super init];
     if (self) {
         _envName = name;
+        _argument = nil;
         _numRows = 0;
         _ended = NO;
     }
@@ -344,7 +346,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 return list;
             } else {
                 // Create a new table with the current list and a default env
-                MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
+                MTMathAtom* table = [self buildTable:nil argument:nil firstList:list row:NO];
                 return [MTMathList mathListWithAtoms:table, nil];
             }
         } else if (ch == '\'') {
@@ -883,6 +885,47 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return env;
 }
 
+// Environments that take a mandatory raw {…} argument after \begin{env}.
+// This is the same generic gate the array LLD calls environmentsRequiringColumnSpec;
+// if both features land they must converge on one mechanism (LLD §5).
++ (NSSet<NSString*>*) environmentsTakingArgument
+{
+    static NSSet<NSString*>* envs = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        envs = [NSSet setWithObjects:@"alignedat", nil];
+    });
+    return envs;
+}
+
+// Reads the raw {…} argument after \begin{env}: require {, capture raw chars to },
+// require }. Returns the raw inside string (e.g. @"2"); interpretation happens later
+// in -buildTable:argument:firstList:row:. On a malformed argument, sets the error and
+// returns nil.
+- (nullable NSString*) readEnvironmentArgument
+{
+    if (![self expectCharacter:'{']) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        return nil;
+    }
+    NSMutableString* arg = [NSMutableString string];
+    while ([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '}') {
+            [self unlookCharacter];
+            break;
+        }
+        [arg appendString:[NSString stringWithCharacters:&ch length:1]];
+    }
+    if (![self expectCharacter:'}']) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        return nil;
+    }
+    return arg;
+}
+
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
 {
     NSString* delim = [self readDelimiter];
@@ -1061,7 +1104,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         if (!env) {
             return nil;
         }
-        MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
+        NSString* argument = nil;
+        if ([[MTMathListBuilder environmentsTakingArgument] containsObject:env]) {
+            argument = [self readEnvironmentArgument];
+            if (!argument) {
+                // readEnvironmentArgument already set the error.
+                return nil;
+            }
+        }
+        MTMathAtom* table = [self buildTable:env argument:argument firstList:nil row:NO];
         return table;
     } else if ([command isEqualToString:@"color"]) {
         // A color command has 2 arguments
@@ -1232,7 +1283,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
             return list;
         } else {
             // Create a new table with the current list and a default env
-            MTMathAtom* table = [self buildTable:nil firstList:list row:YES];
+            MTMathAtom* table = [self buildTable:nil argument:nil firstList:list row:YES];
             return [MTMathList mathListWithAtoms:table, nil];
         }
     } else if ([command isEqualToString:@"end"]) {
@@ -1292,11 +1343,12 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
 }
 
-- (MTMathAtom*) buildTable:(NSString*) env firstList:(MTMathList*) firstList row:(BOOL) isRow
+- (MTMathAtom*) buildTable:(NSString*) env argument:(NSString*) argument firstList:(MTMathList*) firstList row:(BOOL) isRow
 {
     // Save the current env till an new one gets built.
     MTEnvProperties* oldEnv = _currentEnv;
     _currentEnv = [[MTEnvProperties alloc] initWithName:env];
+    _currentEnv.argument = argument;
     NSInteger currentRow = 0;
     NSInteger currentCol = 0;
     NSMutableArray<NSMutableArray<MTMathList*>*>* rows = [NSMutableArray array];
