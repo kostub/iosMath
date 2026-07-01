@@ -1242,6 +1242,42 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\begin{matrix}x&y\\\\ z&w\\end{matrix}");
 }
 
+- (void) testSmallMatrix
+{
+    NSString *str = @"\\begin{smallmatrix} x & y \\\\ z & w \\end{smallmatrix}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertEqualObjects(table.environment, @"smallmatrix");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    // Honest amsmath value: \thickspace = 5mu, stored unscaled. PR 1's renderer
+    // scales it to the Script cell style at layout time (5 * scriptScaleDown outer-mu).
+    XCTAssertEqual(table.interColumnSpacing, 5);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    // Cells render in scriptstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleScript);
+
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+
+    // round-trip: cells carry no injected style atom (style is on table.cellStyle)
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{smallmatrix}x&y\\\\ z&w\\end{smallmatrix}");
+}
+
 - (void) testPMatrix
 {
     NSString *str = @"\\begin{pmatrix} x & y \\\\ z & w \\end{pmatrix}";
@@ -1449,6 +1485,27 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
+- (void) testGathered
+{
+    NSString *str = @"\\begin{gathered} x \\\\ y \\end{gathered}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"gathered");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 1);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+
+    // single centered column, no injected atoms — straight round-trip
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{gathered}x\\\\ y\\end{gathered}");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -1483,6 +1540,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               @[@"\\begin{displaylines} x & y \\end{displaylines}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{gathered} x & y \\end{gathered}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
               @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
               // REN-6: generalized-fraction commands are illegal in one-char script slots

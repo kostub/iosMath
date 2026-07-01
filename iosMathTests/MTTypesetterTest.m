@@ -3245,4 +3245,56 @@
                                @"Ord->Ord: no space after the group");
 }
 
+- (void) testSmallMatrixColumnGap
+{
+    // The stored 5mu \thickspace renders scaled to the Script cell style (PR 1):
+    // gap = 5 * muUnit * scriptScaleDown. Using identical cells makes every column
+    // the same width, so center alignment adds no offset and the gap between the two
+    // columns is exactly col1.x - col0.x - col0.width.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{smallmatrix} a & a \\\\ a & a \\end{smallmatrix}"];
+    XCTAssertNotNil(list);
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* table = (MTMathListDisplay*) display.subDisplays[0];
+    MTMathListDisplay* row0 = (MTMathListDisplay*) table.subDisplays[0];
+    XCTAssertEqual(row0.subDisplays.count, 2);
+    MTDisplay* col0 = row0.subDisplays[0];
+    MTDisplay* col1 = row0.subDisplays[1];
+
+    CGFloat expectedGap = 5.0 * self.font.mathTable.muUnit * self.font.mathTable.scriptScaleDown;
+    CGFloat actualGap = col1.position.x - col0.position.x - col0.width;
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01);
+}
+
+- (void) testSmallMatrixCompactVsMatrix
+{
+    // Script-size cells + the tighter \thickspace gap make smallmatrix more compact
+    // than the textstyle matrix in both width and height.
+    MTMathList* small  = [MTMathListBuilder buildFromString:@"\\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix}"];
+    MTMathList* matrix = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    XCTAssertNotNil(small);
+    XCTAssertNotNil(matrix);
+
+    MTMathListDisplay* smallDisp  = [MTTypesetter createLineForMathList:small  font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* matrixDisp = [MTTypesetter createLineForMathList:matrix font:self.font style:kMTLineStyleDisplay];
+    XCTAssertLessThan(smallDisp.width, matrixDisp.width);
+    XCTAssertLessThan(smallDisp.ascent, matrixDisp.ascent);
+}
+
+- (void) testGatheredMatchesGather
+{
+    MTMathList* gathered = [MTMathListBuilder buildFromString:@"\\begin{gathered} a+b \\\\ c+d \\end{gathered}"];
+    MTMathList* gather   = [MTMathListBuilder buildFromString:@"\\begin{gather} a+b \\\\ c+d \\end{gather}"];
+    XCTAssertNotNil(gathered);
+    XCTAssertNotNil(gather);
+
+    MTMathListDisplay* gatheredDisp = [MTTypesetter createLineForMathList:gathered font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* gatherDisp   = [MTTypesetter createLineForMathList:gather   font:self.font style:kMTLineStyleDisplay];
+
+    // gathered is layout-identical to gather (LLD §4 assumption): same factory branch.
+    XCTAssertEqualWithAccuracy(gatheredDisp.width,   gatherDisp.width,   0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.ascent,  gatherDisp.ascent,  0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.descent, gatherDisp.descent, 0.01);
+}
+
 @end
