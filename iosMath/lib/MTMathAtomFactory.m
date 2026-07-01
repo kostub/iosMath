@@ -716,6 +716,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"trianglelefteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B4"],
                      @"trianglerighteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B5"],
                      @"triangleq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u225C"],
+                     // '<' / '>' are literal characters, not commands, so these cannot go
+                     // through the aliases map (command -> command). Map them straight to the
+                     // relation atoms produced by the literal characters.
+                     @"lt" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"<"],
+                     @"gt" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@">"],
+                     @"frown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2322"],
+                     @"smile" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2323"],
+                     @"bowtie" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22C8"],
+                     @"longmapsto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FC"],
 
                      // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
                      @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
@@ -776,6 +785,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"veebar" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BB"],
                      @"triangleleft" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25C1"],
                      @"triangleright" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B7"],
+                     @"diamond" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C4"],
+                     @"bigcirc" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25EF"],
+                     // \bigtriangleup / \bigtriangledown share glyphs with the ordinary
+                     // \triangle (U+25B3) / \triangledown (U+25BD) but must have binary-op spacing.
+                     @"bigtriangleup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B3"],
+                     @"bigtriangledown" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25BD"],
 
                      // No limit operators
                      @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
@@ -880,6 +895,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"cdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EF"],
                      @"ddots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22F1"],
                      @"triangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B3"],
+                     @"surd" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u221A"],
+                     @"flat" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266D"],
+                     @"natural" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266E"],
+                     @"sharp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266F"],
                      @"imath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A4"],
                      @"jmath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A5"],
                      @"partial" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D715"],

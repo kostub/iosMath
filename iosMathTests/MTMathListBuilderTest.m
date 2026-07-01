@@ -2241,6 +2241,81 @@ static NSArray* getTestDataLargeDelimiters() {
     }
 }
 
+- (void) testMissingRelationOperatorAndOrdinarySymbols
+{
+    // command, expected nucleus, expected atom type
+    NSArray* rows = @[
+        @[ @"lt",              @0x003C, @(kMTMathAtomRelation) ],
+        @[ @"gt",              @0x003E, @(kMTMathAtomRelation) ],
+        @[ @"frown",           @0x2322, @(kMTMathAtomRelation) ],
+        @[ @"smile",           @0x2323, @(kMTMathAtomRelation) ],
+        @[ @"bowtie",          @0x22C8, @(kMTMathAtomRelation) ],
+        @[ @"longmapsto",      @0x27FC, @(kMTMathAtomRelation) ],
+        @[ @"bigcirc",         @0x25EF, @(kMTMathAtomBinaryOperator) ],
+        @[ @"bigtriangleup",   @0x25B3, @(kMTMathAtomBinaryOperator) ],
+        @[ @"bigtriangledown", @0x25BD, @(kMTMathAtomBinaryOperator) ],
+        @[ @"diamond",         @0x22C4, @(kMTMathAtomBinaryOperator) ],
+        @[ @"surd",            @0x221A, @(kMTMathAtomOrdinary) ],
+        @[ @"flat",            @0x266D, @(kMTMathAtomOrdinary) ],
+        @[ @"natural",         @0x266E, @(kMTMathAtomOrdinary) ],
+        @[ @"sharp",           @0x266F, @(kMTMathAtomOrdinary) ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)14);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        MTMathAtomType expectedType = (MTMathAtomType)[r[2] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, expectedType, @"%@ type", input);
+        XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        // Round-trip: surround with variables so finalize keeps the atom class stable.
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testBigtriangleupIsBinaryOpDistinctFromTriangle
+{
+    // Same glyph (U+25B3), different atom class: \triangle is ordinary, \bigtriangleup is a binary op.
+    MTMathAtom* tri = [MTMathListBuilder buildFromString:@"\\triangle"].atoms[0];
+    MTMathAtom* big = [MTMathListBuilder buildFromString:@"\\bigtriangleup"].atoms[0];
+    XCTAssertEqualObjects(tri.nucleus, big.nucleus);
+    XCTAssertEqual(tri.type, kMTMathAtomOrdinary);
+    XCTAssertEqual(big.type, kMTMathAtomBinaryOperator);
+}
+
+- (void) testDiamondIsBinaryOpDistinctFromDiamondsuit
+{
+    MTMathAtom* diamond = [MTMathListBuilder buildFromString:@"\\diamond"].atoms[0];
+    MTMathAtom* suit = [MTMathListBuilder buildFromString:@"\\diamondsuit"].atoms[0];
+    XCTAssertEqual(diamond.type, kMTMathAtomBinaryOperator);
+    XCTAssertEqualObjects(diamond.nucleus, @"⋄");
+    XCTAssertEqual(suit.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(suit.nucleus, @"♢");
+}
+
+- (void) testStackrelFrown
+{
+    // Regression for #63: \stackrel{\frown}{AD}
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\stackrel{\\frown}{AD}" error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+}
+
 - (void) testPrecedesSucceeds
 {
     NSArray* rows = @[

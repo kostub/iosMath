@@ -1,5 +1,8 @@
 ## Changelog
 
+### v2.5.0 (2026-07-02)
+* Add missing relation, operator, and ordinary symbols reported across several issues: relations `\lt`, `\gt`, `\frown`, `\smile`, `\bowtie`, `\longmapsto`; binary operators `\bigcirc`, `\bigtriangleup`, `\bigtriangledown`, `\diamond`; and ordinaries `\surd`, `\flat`, `\natural`, `\sharp` (#101, #153, #36, #63, #147). `\bigtriangleup`/`\bigtriangledown` share glyphs with the ordinary `\triangle`/`\triangledown` but carry binary-operator spacing, and `\diamond` is a binary operator distinct from the ordinary `\diamondsuit`. `\Join` (U+2A1D) was deferred: Latin Modern Math lacks that glyph, so it cannot render from the default font.
+
 ### v2.4.0 (2026-06-30)
 * Add **box commands** for spacing and overlap control: `\phantom`, `\vphantom`, `\hphantom` (reserve space without drawing), `\smash` (draw without reserving vertical space), and the lap family `\llap`, `\rlap`, `\clap`, `\mathllap`, `\mathrlap`, `\mathclap` (#244).
 * Add over/under stacking commands: `\overset`, `\underset`, `\stackrel`, and `\stackbin` (#219).
