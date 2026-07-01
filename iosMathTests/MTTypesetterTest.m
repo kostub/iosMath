@@ -3117,4 +3117,25 @@
     XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width, 0.001);
 }
 
+- (void) testEqnarrayColumnGapUnchangedByCellStyle
+{
+    // eqnarray injects no style atom, so cell style == outer style: the entire table
+    // scales uniformly with the outer style. Its width at Script must therefore be
+    // exactly scriptScaleDown x its width at Display -- confirming the new cell-style
+    // gap scaling is a no-op when no style atom is injected (cellStyleForTable: == _style).
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{eqnarray} a & = & b \\\\ c & = & d \\end{eqnarray}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{eqnarray} a & = & b \\\\ c & = & d \\end{eqnarray}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    CGFloat scriptScaleDown = self.font.mathTable.scriptScaleDown;
+    XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width * scriptScaleDown, 1.0);
+}
+
 @end
