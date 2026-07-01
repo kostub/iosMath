@@ -250,6 +250,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 // \brack, \brace) fired inside this group. The resulting fraction
                 // replaces the group in the parent list (TeX behavior) — do NOT
                 // wrap in MTMathGroup. Fall through to continue after appending.
+                // Update prevAtom to the last appended atom so a following ^ / _ /
+                // prime attaches to the fraction (or field atom), not a spurious
+                // empty Ord — mirrors the pre-grouping behavior and the shared
+                // append path below (prevAtom = atom).
+                prevAtom = [sublist.atoms lastObject];
                 [list append:sublist];
                 if (oneCharOnly) {
                     return list;

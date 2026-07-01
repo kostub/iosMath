@@ -51,7 +51,6 @@ NSUInteger getInterElementSpaceArrayIndexForType(MTMathAtomType type, BOOL row) 
         case kMTMathAtomColor:
         case kMTMathAtomColorbox:
         case kMTMathAtomOrdinary:
-        case kMTMathAtomOrdGroup:       // Ord group is spaced as Ordinary
         case kMTMathAtomPlaceholder:   // A placeholder is treated as ordinary
         case kMTMathAtomText:          // Text blocks are spaced as Ord
             return 0;

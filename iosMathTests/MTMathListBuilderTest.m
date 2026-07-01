@@ -3480,4 +3480,24 @@ static NSArray* getTestDataLargeDelimiters() {
                    @"z must be a plain top-level variable, not style-contaminated");
 }
 
+- (void)testScriptAfterOverTransformedGroupAttachesToFraction
+{
+    // {a \over b}^2 — \over transforms the enclosing group into a Fraction at
+    // the parent level (TeX group-transformation). The following ^2 must attach
+    // to THAT fraction, not to a spurious empty Ord. Before the prevAtom fix the
+    // transformed path appended the fraction without updating prevAtom, so the ^
+    // branch allocated an empty Ord and hung the superscript on it instead.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"{a \\over b}^2" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"expected a single fraction atom, not fraction + empty Ord");
+    MTMathAtom* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"expected the \\over fraction");
+    XCTAssertNotNil(frac.superScript, @"^2 must attach to the fraction");
+    [self checkAtomTypes:frac.superScript types:@[ @(kMTMathAtomNumber) ] desc:@"{a \\over b}^2 superscript"];
+    // Round-trip: \over normalizes to \frac{}{} on serialization (existing
+    // behavior); the superscript stays on the fraction.
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\frac{a}{b}^{2}");
+}
+
 @end
