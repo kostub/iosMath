@@ -908,6 +908,41 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return op;
 }
 
+// A style atom is a non-rendering control marker: the typesetter reads only its `style`, never
+// its nucleus/type/fontStyle, and scripts are already forbidden via -scriptsAllowed. Make it
+// fully immutable so the same instance can be shared across table cells without aliasing bugs.
+// Each setter permits only the value that the inherited -copyWithZone: assigns (so copying keeps
+// working) and rejects anything else.
+- (void)setNucleus:(NSString *)nucleus
+{
+    if (nucleus.length > 0) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:@"Nucleus cannot be set on a style atom; it is a non-rendering control marker."
+                                        userInfo:nil];
+    }
+    [super setNucleus:nucleus];
+}
+
+- (void)setType:(MTMathAtomType)type
+{
+    if (type != kMTMathAtomStyle) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:@"The type of a style atom cannot be changed."
+                                        userInfo:nil];
+    }
+    [super setType:type];
+}
+
+- (void)setFontStyle:(MTFontStyle)fontStyle
+{
+    if (fontStyle != kMTFontStyleDefault) {
+        @throw [[NSException alloc] initWithName:@"Error"
+                                          reason:@"Font style cannot be set on a style atom; it is a non-rendering control marker."
+                                        userInfo:nil];
+    }
+    [super setFontStyle:fontStyle];
+}
+
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
     NSString* command = [MTMathListBuilder styleToCommands][@(self.style)];

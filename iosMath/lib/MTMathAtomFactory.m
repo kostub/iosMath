@@ -394,7 +394,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.environment = @"matrix";
         table.interRowAdditionalSpacing = 0;
         table.interColumnSpacing = 18;
-        // All the lists are in textstyle
+        // All the lists are in textstyle. MTMathStyle is immutable, so the same instance can be
+        // shared across every cell without aliasing.
         MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];
@@ -435,7 +436,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];
             if (row.count > 1) {
-                [row[1] insertAtom:spacer atIndex:0];
+                [row[1] insertAtom:[spacer copy] atIndex:0];
             }
         }
         table.interRowAdditionalSpacing = 1;
@@ -481,7 +482,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.interColumnSpacing = 18;
         [table setAlignment:kMTColumnAlignmentLeft forColumn:0];
         [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
-        // All the lists are in textstyle
+        // All the lists are in textstyle. MTMathStyle is immutable, so the same instance can be
+        // shared across every cell without aliasing.
         MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
         for (int i = 0; i < table.cells.count; i++) {
             NSArray<MTMathList*>* row = table.cells[i];

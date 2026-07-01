@@ -1419,6 +1419,50 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
+// FUN-8: Regression — in eqalign/split/aligned, tableWithEnvironment:rows:error: prepends a
+// relation spacer to every second-column cell. That spacer is a plain *mutable* ordinary atom,
+// so each cell must get its own copy: mutating one cell's spacer must NOT bleed into the others.
+// With the aliasing bug all cells share one object and the mutation leaks.
+//
+// matrix/cases also prepend a leading atom (an MTMathStyle), but that one is deliberately the
+// *same shared instance* across cells — which is safe because MTMathStyle is immutable. That
+// invariant is covered by -testStyleAtomIsImmutable below rather than here.
+- (void) testTableSpacerCellsAreIndependent
+{
+    NSString *str = @"\\begin{aligned} a & b \\\\ c & d \\end{aligned}";
+    MTMathList *list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathTable *table = list.atoms[0];
+    // Column 1 cells (index 1 in each row) carry the spacer at atoms[0].
+    MTMathAtom *spacer0 = table.cells[0][1].atoms[0];
+    MTMathAtom *spacer1 = table.cells[1][1].atoms[0];
+    // Mutate row0's spacer. With the aliasing bug this is the same object as row1's, so the
+    // change would leak. The spacer is an ordinary atom whose nucleus renders, so this is a
+    // meaningful mutation.
+    spacer0.nucleus = @"MUTATED";
+    XCTAssertEqualObjects(spacer0.nucleus, @"MUTATED");
+    XCTAssertNotEqualObjects(spacer1.nucleus, @"MUTATED", @"aligned: mutating row0 spacer leaked into row1 — shared spacer atom (FUN-8)");
+}
+
+// FUN-8: a style atom is a non-rendering control marker (the typesetter reads only its `style`).
+// It must be fully immutable so matrix/cases can share one instance across all cells safely.
+- (void) testStyleAtomIsImmutable
+{
+    MTMathStyle *style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
+    // nucleus, type and fontStyle are all meaningless for a style atom and must be rejected.
+    XCTAssertThrows(style.nucleus = @"x", @"style atom must reject a non-empty nucleus");
+    XCTAssertThrows(style.type = kMTMathAtomOrdinary, @"style atom must reject a type change");
+    XCTAssertThrows(style.fontStyle = kMTFontStyleBold, @"style atom must reject a font style");
+    // Scripts are already forbidden for style atoms via -scriptsAllowed.
+    XCTAssertThrows(style.subScript = [MTMathListBuilder buildFromString:@"x"], @"style atom must reject a subscript");
+    XCTAssertThrows(style.superScript = [MTMathListBuilder buildFromString:@"x"], @"style atom must reject a superscript");
+    // The values copyWithZone: assigns must remain allowed so deep copying still works.
+    XCTAssertNoThrow(style.nucleus = @"");
+    XCTAssertNoThrow(style.type = kMTMathAtomStyle);
+    XCTAssertNoThrow(style.fontStyle = kMTFontStyleDefault);
+    XCTAssertNoThrow([style copy]);
+}
+
 - (void) testDisplayLines
 {
     NSString *str1 = @"\\begin{displaylines}x\\\\ y\\end{displaylines}";
