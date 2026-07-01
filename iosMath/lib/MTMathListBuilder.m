@@ -234,7 +234,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 // inner error already set (e.g. missing closing brace); propagate.
                 return nil;
             }
+            // Read-and-clear: a \over/\atop-\class transform fired by an INNER
+            // group must not leak into THIS (enclosing) group's decision. The flag
+            // is set in stopCommand: and reset at the top of each buildInternal:,
+            // but the inner recursion runs between our reset and this read, so
+            // without clearing here a transformed inner group would wrongly
+            // suppress wrapping of the outer group (dropping it + leaking any
+            // \scriptstyle inside it — a #177 regression).
             BOOL transformed = _groupWasTransformedByStopCommand;
+            _groupWasTransformedByStopCommand = NO;
             if (oneCharOnly || transformed) {
                 // Field brace (^{…}, _{…}, \frac{…}, command argument): the {…}
                 // *is* the field. Flatten and return it as the field — unchanged.

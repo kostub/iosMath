@@ -3446,4 +3446,38 @@ static NSArray* getTestDataLargeDelimiters() {
     [self checkAtomTypes:super0 types:@[ @(kMTMathAtomStyle), @(kMTMathAtomVariable) ] desc:@"super field"];
 }
 
+- (void)testBraceGroupingAroundOverTransform
+{
+    // Regression: an inner group transformed by \over must NOT cause the
+    // ENCLOSING group to be dropped. {{a \over b}c} → the outer group survives,
+    // wrapping [Fraction, Variable(c)] (the inner {a \over b} became a Fraction,
+    // but that transform is scoped to the inner group only).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"{{a \\over b}c}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{a \\over b}c} top"];
+    MTMathGroup* group = (MTMathGroup*) list.atoms[0];
+    XCTAssertTrue([group isKindOfClass:[MTMathGroup class]]);
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomFraction), @(kMTMathAtomVariable) ]
+                    desc:@"{{a \\over b}c} inner"];
+
+    // The #177 leak variant: \scriptstyle inside the enclosing group must stay
+    // scoped to that group even when a leading inner group was \over-transformed.
+    // Before the fix the inner group's "transformed" flag leaked upward, the
+    // outer group was dropped, and \scriptstyle escaped onto z.
+    list = [MTMathListBuilder buildFromString:@"{{a \\over b}\\scriptstyle c}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list
+                   types:@[ @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ]
+                    desc:@"{{a \\over b}\\scriptstyle c}z top"];
+    group = (MTMathGroup*) list.atoms[0];
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomFraction), @(kMTMathAtomStyle), @(kMTMathAtomVariable) ]
+                    desc:@"group innerList"];
+    // z is a separate top-level atom — \scriptstyle did NOT leak out of the group.
+    XCTAssertEqual(((MTMathAtom*) list.atoms[1]).type, kMTMathAtomVariable,
+                   @"z must be a plain top-level variable, not style-contaminated");
+}
+
 @end
