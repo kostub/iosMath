@@ -3281,4 +3281,20 @@
     XCTAssertLessThan(smallDisp.ascent, matrixDisp.ascent);
 }
 
+- (void) testGatheredMatchesGather
+{
+    MTMathList* gathered = [MTMathListBuilder buildFromString:@"\\begin{gathered} a+b \\\\ c+d \\end{gathered}"];
+    MTMathList* gather   = [MTMathListBuilder buildFromString:@"\\begin{gather} a+b \\\\ c+d \\end{gather}"];
+    XCTAssertNotNil(gathered);
+    XCTAssertNotNil(gather);
+
+    MTMathListDisplay* gatheredDisp = [MTTypesetter createLineForMathList:gathered font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* gatherDisp   = [MTTypesetter createLineForMathList:gather   font:self.font style:kMTLineStyleDisplay];
+
+    // gathered is layout-identical to gather (LLD §4 assumption): same factory branch.
+    XCTAssertEqualWithAccuracy(gatheredDisp.width,   gatherDisp.width,   0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.ascent,  gatherDisp.ascent,  0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.descent, gatherDisp.descent, 0.01);
+}
+
 @end
