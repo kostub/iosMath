@@ -59,8 +59,8 @@ static NSArray* getTestData() {
              @[ @"x+2", @[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) ], @"x+2"],
              // spaces are ignored
              @[ @"(2.3 * 8)", @[ @(kMTMathAtomOpen), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) , @(kMTMathAtomClose) ], @"(2.3*8)"],
-             // braces are just for grouping
-             @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)], @"53+4"],
+             // braces create an Ord group (MTMathGroup)
+             @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @"5{3+4}"],
              // commands
              @[ @"\\pi+\\theta\\geq 3",@[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber)], @"\\pi +\\theta \\geq 3"],
              // aliases
@@ -102,9 +102,9 @@ static NSArray* getTestDataSuperScript() {
              @[ @"x^{2^3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x^{2^{3}}"],
              @[ @"x^{^2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x^{{}^{2}*}"],
              @[ @"^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
-             @[ @"{}^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
+             @[ @"{}^2", @ [ @(kMTMathAtomOrdGroup)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
              @[ @"x^^2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x^{}{}^{2}"],
-             @[ @"5{x}^2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x^{2}"],
+             @[ @"5{x}^2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @[ ], @"5{x}^{2}"],
              ];
 }
 
@@ -152,9 +152,9 @@ static NSArray* getTestDataSubScript() {
              @[ @"x_{2_3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x_{2_{3}}"],
              @[ @"x_{_2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x_{{}_{2}*}"],
              @[ @"_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
-             @[ @"{}_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
+             @[ @"{}_2", @ [ @(kMTMathAtomOrdGroup)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
              @[ @"x__2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x_{}{}_{2}"],
-             @[ @"5{x}_2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x_{2}"],
+             @[ @"5{x}_2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @[ ], @"5{x}_{2}"],
              ];
 }
 
@@ -407,16 +407,21 @@ static NSArray* getTestDataSuperSubScript() {
 
 - (void) testSqrtInGroup
 {
-    // A \sqrt with no argument inside a group exercises a different path
-    // (empty radicand via the oneCharOnly stop-char guard) than the
-    // end-of-input case, and must also not crash.
+    // A \sqrt with no argument inside a brace group. With MTMathGroup semantics,
+    // the {…} wraps as an Ord subformula — the radical lives inside the group.
+    // This exercises the MTMathGroup path without crashing.
     NSString *str = @"{\\sqrt}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
 
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
-    MTRadical* rad = list.atoms[0];
+    // The outer atom is an MTMathGroup (Ord subformula wrapping the radical).
+    MTMathGroup* group = list.atoms[0];
+    XCTAssertEqual(group.type, kMTMathAtomOrdGroup, @"%@", desc);
+
+    XCTAssertEqualObjects(@(group.innerList.atoms.count), @1, @"%@", desc);
+    MTRadical* rad = group.innerList.atoms[0];
     XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
 
     MTMathList *subList = rad.radicand;
@@ -424,9 +429,9 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertEqualObjects(@(subList.atoms.count), @0, @"%@", desc);
     XCTAssertNil(rad.degree, @"%@", desc);
 
-    // convert it back to latex
+    // convert it back to latex — braces preserved, radical serializes as \sqrt{}
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    XCTAssertEqualObjects(latex, @"\\sqrt{}", @"%@", desc);
+    XCTAssertEqualObjects(latex, @"{\\sqrt{}}", @"%@", desc);
 }
 
 - (void) testSqrtInSqrt
@@ -3382,6 +3387,63 @@ static NSArray* getTestDataLargeDelimiters() {
     // \mathstrut serializes lossily to \vphantom{(}
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:
         [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
+}
+
+- (void)testBraceGrouping
+{
+    // x{\scriptstyle y}z — the issue #177 case. The group is a distinct atom;
+    // \scriptstyle lives inside it; round-trips with braces preserved.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"x{\\scriptstyle y}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list
+                   types:@[ @(kMTMathAtomVariable), @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ]
+                    desc:@"x{\\scriptstyle y}z"];
+    MTMathGroup* group = (MTMathGroup*) list.atoms[1];
+    XCTAssertTrue([group isKindOfClass:[MTMathGroup class]]);
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomStyle), @(kMTMathAtomVariable) ]
+                    desc:@"group innerList"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"x{\\scriptstyle y}z");
+
+    // {x}^2 — the script attaches to the whole group.
+    list = [MTMathListBuilder buildFromString:@"{x}^2" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{x}^2"];
+    group = (MTMathGroup*) list.atoms[0];
+    XCTAssertNotNil(group.superScript, @"superscript must be on the group");
+    [self checkAtomTypes:group.superScript types:@[ @(kMTMathAtomNumber) ] desc:@"{x}^2 script"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{x}^{2}");
+
+    // {a+b} — Bin classification stays inside the group; round-trips with braces.
+    list = [MTMathListBuilder buildFromString:@"{a+b}c" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ] desc:@"{a+b}c"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{a+b}c");
+
+    // Nested {{x}} — outer group's innerList holds a single inner group.
+    list = [MTMathListBuilder buildFromString:@"{{x}}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{x}}"];
+    group = (MTMathGroup*) list.atoms[0];
+    [self checkAtomTypes:group.innerList types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{x}} inner"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{{x}}");
+
+    // Empty {} — a group with an empty innerList; round-trips as {}.
+    list = [MTMathListBuilder buildFromString:@"{}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{}"];
+    group = (MTMathGroup*) list.atoms[0];
+    XCTAssertEqual(group.innerList.atoms.count, 0u);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{}");
+
+    // Field braces must NOT wrap: ^{\scriptstyle y}z keeps the style scoped to the
+    // superscript field, with no group wrapper and no leak onto z.
+    list = [MTMathListBuilder buildFromString:@"x^{\\scriptstyle y}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomVariable), @(kMTMathAtomVariable) ] desc:@"x^{...}z"];
+    MTMathList* super0 = ((MTMathAtom*) list.atoms[0]).superScript;
+    [self checkAtomTypes:super0 types:@[ @(kMTMathAtomStyle), @(kMTMathAtomVariable) ] desc:@"super field"];
 }
 
 @end

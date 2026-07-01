@@ -51,6 +51,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
     NSInteger _recursionDepth;
+    // Set to YES by stopCommand when a TeX group-transformation command (\over,
+    // \atop, \choose, \brack, \brace) fires inside a {…} group. Checked in the
+    // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
+    // every buildInternal call so the check is always fresh.
+    BOOL _groupWasTransformedByStopCommand;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -171,6 +176,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         return nil;
     }
     _recursionDepth++;
+    _groupWasTransformedByStopCommand = NO;
     @try {
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
@@ -224,12 +230,33 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '{') {
             // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
             MTMathList* sublist = [self buildInternal:false stopChar:'}'];
-            prevAtom = [sublist.atoms lastObject];
-            [list append:sublist];
-            if (oneCharOnly) {
-                return list;
+            if (!sublist) {
+                // inner error already set (e.g. missing closing brace); propagate.
+                return nil;
             }
-            continue;
+            BOOL transformed = _groupWasTransformedByStopCommand;
+            if (oneCharOnly || transformed) {
+                // Field brace (^{…}, _{…}, \frac{…}, command argument): the {…}
+                // *is* the field. Flatten and return it as the field — unchanged.
+                // Also: a group-transforming command (\over, \atop, \choose,
+                // \brack, \brace) fired inside this group. The resulting fraction
+                // replaces the group in the parent list (TeX behavior) — do NOT
+                // wrap in MTMathGroup. Fall through to continue after appending.
+                [list append:sublist];
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
+            // Grouping brace in the main list: wrap as an Ord subformula so style
+            // nodes are scoped, scripts target the whole group, and Bin/Ord
+            // reclassification stops at the brace boundary
+            // (== TeX Ord-noad-with-sub_mlist / KaTeX ordgroup).
+            MTMathGroup* group = [[MTMathGroup alloc] init];
+            group.innerList = sublist;
+            atom = group;
+            // fall through to the shared append path below: it sets prevAtom = group
+            // (so {x}^2 scripts the group) and finalize assigns the indexRange.
         } else if (ch == '}') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
             NSAssert(stop == 0, @"This should have been handled before");
@@ -1178,6 +1205,12 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         MTMathList* fracList = [MTMathList new];
         [fracList addAtom:frac];
+        // Signal to the {…} branch that this group was transformed by a TeX
+        // group-transformation command (\over / \atop / \choose / \brack / \brace).
+        // The fraction should be inserted into the parent list directly (not wrapped
+        // in MTMathGroup), mirroring TeX's behavior where these commands replace the
+        // enclosing group with a generalized fraction.
+        _groupWasTransformedByStopCommand = YES;
         return fracList;
     } else if ([command isEqualToString:@"\\"] || [command isEqualToString:@"cr"]) {
         if (_currentEnv) {
