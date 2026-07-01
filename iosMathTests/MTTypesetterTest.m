@@ -3093,4 +3093,53 @@
     XCTAssertNotNil(d);
 }
 
+- (void)testScriptStyleDoesNotLeakPastBraceGroup {
+    // Issue #177: x{\scriptstyle y}z — \scriptstyle must be scoped to the group;
+    // z must render in the outer (display) style, not scriptstyle.
+    MTMathListDisplay* display = [self displayForLaTeX:@"x{\\scriptstyle y}z"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 3u,
+                   @"Expected [CTLine(x), group MTMathListDisplay, CTLine(z)]");
+
+    MTDisplay* xLine = display.subDisplays[0];
+    MTDisplay* groupSub = display.subDisplays[1];
+    MTDisplay* zLine = display.subDisplays[2];
+    XCTAssertTrue([xLine isKindOfClass:[MTCTLineDisplay class]]);
+    XCTAssertTrue([groupSub isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertTrue([zLine isKindOfClass:[MTCTLineDisplay class]]);
+
+    // z is full display style (same ascent as x) — the leak is fixed.
+    XCTAssertEqualWithAccuracy(zLine.ascent, xLine.ascent, 0.01,
+                               @"z leaked \\scriptstyle: z ascent %.3f != x ascent %.3f",
+                               zLine.ascent, xLine.ascent);
+    // The group's interior y IS in scriptstyle — smaller than display-style x.
+    XCTAssertLessThan(groupSub.ascent, xLine.ascent,
+                      @"group interior should be scriptstyle (smaller)");
+}
+
+- (void)testBraceGroupRenders {
+    // {x}^2 renders without error and produces a group MTMathListDisplay.
+    MTMathListDisplay* display = [self displayForLaTeX:@"{x}^2"];
+    XCTAssertNotNil(display);
+    BOOL hasGroup = NO;
+    for (MTDisplay* d in display.subDisplays) {
+        if ([d isKindOfClass:[MTMathListDisplay class]]) { hasGroup = YES; break; }
+    }
+    XCTAssertTrue(hasGroup, @"Expected a group MTMathListDisplay for {x}^2");
+}
+
+- (void)testBraceGroupAddsNoSpuriousSpacing {
+    // a{b}c — an Ordinary-class group adds no inter-element space (Ord->Ord = none).
+    MTMathListDisplay* display = [self displayForLaTeX:@"a{b}c"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 3u);
+    MTDisplay* aLine = display.subDisplays[0];
+    MTDisplay* groupSub = display.subDisplays[1];
+    MTDisplay* cLine = display.subDisplays[2];
+    XCTAssertEqualWithAccuracy(groupSub.position.x, aLine.position.x + aLine.width, 0.01,
+                               @"Ord->Ord: no space before the group");
+    XCTAssertEqualWithAccuracy(cLine.position.x, groupSub.position.x + groupSub.width, 0.01,
+                               @"Ord->Ord: no space after the group");
+}
+
 @end

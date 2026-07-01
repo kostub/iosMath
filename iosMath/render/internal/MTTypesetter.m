@@ -708,6 +708,31 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 break;
             }
 
+            case kMTMathAtomOrdGroup: {
+                // A brace group {…}: an Ord subformula. Lay out its sub-mlist with a
+                // fresh typesetter — that recursion scopes any interior style node
+                // (the #177 fix) — then place the child inline like \color and run
+                // scripts on the whole group.
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Spaced as Ordinary: reclassify before any inter-element lookup
+                // (mirrors the Box case), so it never reaches the default assert.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+
+                MTMathGroup* groupAtom = (MTMathGroup*) atom;
+                MTMathListDisplay* child = [MTTypesetter createLineForMathList:groupAtom.innerList font:_font style:_style];
+                child.position = _currentPosition;
+                _currentPosition.x += child.width;
+                [_displayAtoms addObject:child];
+
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:child index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+
             case kMTMathAtomText: {
                 // Flush any pending math run so the text block stands alone.
                 if (_currentLine.length > 0) {
