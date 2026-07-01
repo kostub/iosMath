@@ -1542,6 +1542,10 @@ static NSArray* getTestDataLeftRight() {
             }
         }
     }
+
+    // round-trip: {n} re-emitted; per-pair spacers stripped by serializedCellAtRow:column:
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}10&x+&3&y\\\\ 3&x+&13&y\\end{alignedat}");
 }
 
 static NSArray* getTestDataParseErrors() {
