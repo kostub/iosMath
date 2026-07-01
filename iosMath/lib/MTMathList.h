@@ -455,6 +455,14 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
     kMTLineStyleScriptScript
 };
 
+/// Sentinel for "no explicit style" (e.g. a table whose cells inherit the
+/// surrounding style). Deliberately defined outside the enum body so it is not
+/// a case in the exhaustive `switch (MTLineStyle)` statements in the renderer.
+/// `__attribute__((unused))` keeps translation units that include this public
+/// header but never reference the sentinel from emitting -Wunused-const-variable
+/// (which would break downstream builds compiled with -Werror).
+static const MTLineStyle kMTLineStyleInherit __attribute__((unused)) = (MTLineStyle) -1;
+
 /** An atom representing a style change.
  @note None of the usual fields of the `MTMathAtom` apply even though this
  class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
@@ -712,6 +720,13 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// Additional spacing between rows in jots (one jot is 0.3 times font size).
 /// If the additional spacing is 0, then normal row spacing is used are used.
 @property (nonatomic) CGFloat interRowAdditionalSpacing;
+
+/// The line style every cell of this table renders in. `kMTLineStyleInherit`
+/// (the default) means the cells render in the surrounding style
+/// (aligned/gather/eqnarray/alignedat). A concrete style means every cell
+/// renders in it (matrix/cases -> Text, smallmatrix -> Script). amsmath also
+/// measures the inter-column/row glue in this style.
+@property (nonatomic) MTLineStyle cellStyle;
 
 /// Set the value of a given cell. The table is automatically resized to contain this cell.
 - (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;

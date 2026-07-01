@@ -394,14 +394,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.environment = @"matrix";
         table.interRowAdditionalSpacing = 0;
         table.interColumnSpacing = 18;
-        // All the lists are in textstyle
-        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
-        for (int i = 0; i < table.cells.count; i++) {
-            NSArray<MTMathList*>* row = table.cells[i];
-            for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
-            }
-        }
+        // All the cells render in textstyle.
+        table.cellStyle = kMTLineStyleText;
         // Add delimiters
         NSArray* delims = [matrixEnvs objectForKey:env];
         if (delims.count == 2) {
@@ -481,14 +475,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.interColumnSpacing = 18;
         [table setAlignment:kMTColumnAlignmentLeft forColumn:0];
         [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
-        // All the lists are in textstyle
-        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
-        for (int i = 0; i < table.cells.count; i++) {
-            NSArray<MTMathList*>* row = table.cells[i];
-            for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
-            }
-        }
+        // All the cells render in textstyle.
+        table.cellStyle = kMTLineStyleText;
         // Add delimiters
         MTInner* inner = [[MTInner alloc] init];
         inner.leftBoundary = [self boundaryAtomForDelimiterName:@"{"];

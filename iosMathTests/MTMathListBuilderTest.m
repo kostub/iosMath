@@ -1223,18 +1223,16 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(table.interColumnSpacing, 18);
     XCTAssertEqual(table.numRows, 2);
     XCTAssertEqual(table.numColumns, 2);
-    
+    // Cells render in textstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+
     for (int i = 0; i < 2; i++) {
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
         XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
         for (int j = 0; j < 2; j++) {
             MTMathList* cell = table.cells[j][i];
-            XCTAssertEqual(cell.atoms.count, 2);
-            MTMathStyle* style = cell.atoms[0];
-            XCTAssertEqual(style.type, kMTMathAtomStyle);
-            XCTAssertEqual(style.style, kMTLineStyleText);
-            
-            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
             XCTAssertEqual(atom.type, kMTMathAtomVariable);
         }
     }
@@ -1275,18 +1273,16 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(table.interColumnSpacing, 18);
     XCTAssertEqual(table.numRows, 2);
     XCTAssertEqual(table.numColumns, 2);
-    
+    // Cells render in textstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+
     for (int i = 0; i < 2; i++) {
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
         XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
         for (int j = 0; j < 2; j++) {
             MTMathList* cell = table.cells[j][i];
-            XCTAssertEqual(cell.atoms.count, 2);
-            MTMathStyle* style = cell.atoms[0];
-            XCTAssertEqual(style.type, kMTMathAtomStyle);
-            XCTAssertEqual(style.style, kMTLineStyleText);
-            
-            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
             XCTAssertEqual(atom.type, kMTMathAtomVariable);
         }
     }

@@ -570,6 +570,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 // returns the size of the font in this style
 + (CGFloat) getStyleSize:(MTLineStyle) style font:(MTFont*) font
 {
+    // kMTLineStyleInherit is a sentinel, not a real style with a size; callers must
+    // resolve it (e.g. via -cellStyleForTable:) before asking for a size. Fail loud
+    // rather than fall off the end of the switch and return an uninitialized value.
+    NSAssert(style != kMTLineStyleInherit, @"getStyleSize: requires a resolved style, not kMTLineStyleInherit");
     CGFloat original = font.fontSize;
     switch (style) {
         case kMTLineStyleDisplay:
@@ -2231,12 +2235,15 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 - (NSArray<NSArray<MTDisplay*>*>*) typesetCells:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     NSMutableArray<NSMutableArray<MTDisplay*>*> *displays = [NSMutableArray arrayWithCapacity:table.numRows];
-    
+    // Cells inherit the surrounding style unless the env pins one (matrix/cases -> Text,
+    // smallmatrix -> Script); see -cellStyleForTable:.
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+
     for(NSArray<MTMathList*>* row in table.cells) {
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
         for (int i = 0; i < row.count; i++) {
-            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style cramped:NO];
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:cellStyle cramped:NO];
             columnWidths[i] = MAX(disp.width, columnWidths[i]);
             [colDisplays addObject:disp];
         };
@@ -2244,9 +2251,24 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     return displays;
 }
 
+// The line style the cells of this table actually render in. Some envs pin every
+// cell to a fixed style (matrix/cases -> Text, smallmatrix -> Script) via
+// table.cellStyle; the rest leave it kMTLineStyleInherit and render in the
+// surrounding _style (aligned/gather/eqnarray/alignedat). amsmath puts a table's
+// inter-column/row glue inside the array's own style group, so the gap must be
+// measured with a font sized to this cell style, not the surrounding _style.
+- (MTLineStyle) cellStyleForTable:(MTMathTable*) table
+{
+    return table.cellStyle == kMTLineStyleInherit ? _style : table.cellStyle;
+}
+
 - (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     CGFloat columnStart = 0;
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+    // muUnit == fontSize/18 (see -[MTFontMathTable muUnit]). Don't copy a CTFont just to
+    // read a scalar that is a pure function of _font + cellStyle.
+    CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
@@ -2274,7 +2296,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         }
         
         col.position = CGPointMake(cellPos, 0);
-        columnStart += colWidth + table.interColumnSpacing * _styleFont.mathTable.muUnit;
+        columnStart += colWidth + table.interColumnSpacing * cellStyleMuUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
@@ -2286,10 +2308,19 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     // Position the rows
     // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
     CGFloat currPos = 0;
-    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * _styleFont.fontSize;
-    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkip = openup + kLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * _styleFont.fontSize;
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+    // openup tracks the cell-content font size (a jot is 0.3× font size). The size is a
+    // pure scalar of _font + cellStyle, so compute it directly instead of copying a CTFont.
+    CGFloat cellStyleFontSize = [[self class] getStyleSize:cellStyle font:_font];
+    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * cellStyleFontSize;
+    // Row leading also tracks the cell-content style, not the surrounding style. A
+    // styled table (e.g. a matrix nested in a script position) is a self-contained
+    // vbox whose internal baseline grid is fixed in the cell style before it is placed
+    // into the smaller context; scaling these to _styleFont would pack the rows
+    // scriptScaleDown x too tight (the row-spacing analogue of the column-gap fix above).
+    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkip = openup + kLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * cellStyleFontSize;
     CGFloat prevRowDescent = 0;
     CGFloat ascent = 0;
     BOOL first = true;
