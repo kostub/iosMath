@@ -26,6 +26,14 @@ NSString *const MTSymbolInfinity = @"\u221E"; // \infty
 NSString *const MTSymbolAngle = @"\u2220"; // \angle
 NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
+// Inter-column spacing for \begin{smallmatrix}, in mu. amsmath separates smallmatrix
+// columns with \thickspace = 5mu, measured under \scriptstyle (amsmath.dtx); KaTeX
+// mirrors this as 0.2778em = 5/18em (src/environments/array.ts). We store the honest
+// 5mu here and let the renderer scale the gap to the Script cell style
+// (MTTypesetter -cellStyleForTable:, PR 1), so the rendered gap is 5 * scriptScaleDown
+// outer-mu -- font-exact, with no pre-scaled magic factor baked into the model.
+static const CGFloat kSmallMatrixInterColumnSpacing = 5;
+
 @implementation MTMathStackCommandSpec
 - (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
                        under:(nullable MTMathStackConstruction*)under
@@ -484,6 +492,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         MTMathAtom* space = [self atomForLatexSymbolName:@","];
         inner.innerList = [MTMathList mathListWithAtoms:space, table, nil];
         return inner;
+    } else if ([env isEqualToString:@"smallmatrix"]) {
+        // Compact inline matrix: script-style cells, no delimiters, center default.
+        table.interRowAdditionalSpacing = 0;
+        table.interColumnSpacing = kSmallMatrixInterColumnSpacing;
+        table.cellStyle = kMTLineStyleScript;
+        return table;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];

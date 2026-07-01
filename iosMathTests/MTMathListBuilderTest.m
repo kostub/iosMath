@@ -1242,6 +1242,42 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\begin{matrix}x&y\\\\ z&w\\end{matrix}");
 }
 
+- (void) testSmallMatrix
+{
+    NSString *str = @"\\begin{smallmatrix} x & y \\\\ z & w \\end{smallmatrix}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertEqualObjects(table.environment, @"smallmatrix");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    // Honest amsmath value: \thickspace = 5mu, stored unscaled. PR 1's renderer
+    // scales it to the Script cell style at layout time (5 * scriptScaleDown outer-mu).
+    XCTAssertEqual(table.interColumnSpacing, 5);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    // Cells render in scriptstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleScript);
+
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+
+    // round-trip: cells carry no injected style atom (style is on table.cellStyle)
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{smallmatrix}x&y\\\\ z&w\\end{smallmatrix}");
+}
+
 - (void) testPMatrix
 {
     NSString *str = @"\\begin{pmatrix} x & y \\\\ z & w \\end{pmatrix}";
