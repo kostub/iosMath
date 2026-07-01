@@ -951,4 +951,31 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertThrows([[MTMathBox alloc] initWithType:kMTMathAtomOrdinary value:@""]);
 }
 
+- (void)testMathGroupAtom
+{
+    // Factory returns an MTMathGroup for the OrdGroup type.
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOrdGroup value:@""];
+    XCTAssertTrue([atom isKindOfClass:[MTMathGroup class]]);
+    XCTAssertEqual(atom.type, kMTMathAtomOrdGroup);
+
+    // Scripts are allowed (type < kMTMathAtomBoundary): no "scripts not allowed" throw.
+    XCTAssertTrue(atom.scriptsAllowed);
+    XCTAssertNoThrow(atom.superScript = [MTMathListBuilder buildFromString:@"2"]);
+
+    // stringValue braces the group and preserves an interior \scriptstyle
+    // (uses mathListToString:, not innerList.stringValue).
+    MTMathGroup* group = (MTMathGroup*) [MTMathAtom atomWithType:kMTMathAtomOrdGroup value:@""];
+    group.innerList = [MTMathListBuilder buildFromString:@"\\scriptstyle y"];
+    XCTAssertEqualObjects(group.stringValue, @"{\\scriptstyle y}");
+
+    // copyWithZone: deep-copies innerList (distinct object, equal content).
+    MTMathGroup* copy = [group copy];
+    XCTAssertNotEqual(copy.innerList, group.innerList);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:copy.innerList],
+                          [MTMathListBuilder mathListToString:group.innerList]);
+
+    // initWithType: guard — only kMTMathAtomOrdGroup is permitted.
+    XCTAssertThrows([[MTMathGroup alloc] initWithType:kMTMathAtomBox value:@""]);
+}
+
 @end
