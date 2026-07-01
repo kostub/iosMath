@@ -3135,6 +3135,10 @@
     MTDisplay* tableAtScript  = atScript.subDisplays[0];
 
     CGFloat scriptScaleDown = self.font.mathTable.scriptScaleDown;
+    // 1.0pt is a rounding tolerance on the scaled comparison, not a slack allowance:
+    // a genuine gap mis-scale would diverge by roughly a full inter-column gap (several
+    // points), well outside this bound, so the test still fails loudly if Inherit ever
+    // resolves to Text and the cells stop tracking the outer style.
     XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width * scriptScaleDown, 1.0);
 }
 

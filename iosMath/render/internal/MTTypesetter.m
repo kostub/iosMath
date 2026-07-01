@@ -570,6 +570,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 // returns the size of the font in this style
 + (CGFloat) getStyleSize:(MTLineStyle) style font:(MTFont*) font
 {
+    // kMTLineStyleInherit is a sentinel, not a real style with a size; callers must
+    // resolve it (e.g. via -cellStyleForTable:) before asking for a size. Fail loud
+    // rather than fall off the end of the switch and return an uninitialized value.
+    NSAssert(style != kMTLineStyleInherit, @"getStyleSize: requires a resolved style, not kMTLineStyleInherit");
     CGFloat original = font.fontSize;
     switch (style) {
         case kMTLineStyleDisplay:

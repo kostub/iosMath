@@ -1154,8 +1154,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 - (MTMathList *)serializedCellAtRow:(NSUInteger)row column:(NSUInteger)column
 {
     MTMathList* cell = self.cells[row][column];
-    // matrix/cases cells no longer carry a leading style atom: their style lives on
-    // table.cellStyle, so there is nothing to strip for round-trip.
     if ([self.environment isEqualToString:@"eqalign"] || [self.environment isEqualToString:@"aligned"] || [self.environment isEqualToString:@"split"]) {
         if (column == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
             NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];

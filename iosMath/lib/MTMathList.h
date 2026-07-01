@@ -458,7 +458,10 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
 /// Sentinel for "no explicit style" (e.g. a table whose cells inherit the
 /// surrounding style). Deliberately defined outside the enum body so it is not
 /// a case in the exhaustive `switch (MTLineStyle)` statements in the renderer.
-static const MTLineStyle kMTLineStyleInherit = (MTLineStyle) -1;
+/// `__attribute__((unused))` keeps translation units that include this public
+/// header but never reference the sentinel from emitting -Wunused-const-variable
+/// (which would break downstream builds compiled with -Werror).
+static const MTLineStyle kMTLineStyleInherit __attribute__((unused)) = (MTLineStyle) -1;
 
 /** An atom representing a style change.
  @note None of the usual fields of the `MTMathAtom` apply even though this
