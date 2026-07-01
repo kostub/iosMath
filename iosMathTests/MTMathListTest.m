@@ -672,11 +672,13 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [table setAlignment:kMTColumnAlignmentRight forColumn:1];
     table.interRowAdditionalSpacing = 3;
     table.interColumnSpacing = 10;
-    
+    table.cellStyle = kMTLineStyleScript;
+
     MTMathTable* copy = [table copy];
     [MTMathListTest checkAtomCopy:copy original:table forTest:self];
     XCTAssertEqual(copy.interColumnSpacing, table.interColumnSpacing);
     XCTAssertEqual(copy.interRowAdditionalSpacing, table.interRowAdditionalSpacing);
+    XCTAssertEqual(copy.cellStyle, table.cellStyle);
     XCTAssertEqualObjects(copy.alignments, table.alignments);
     XCTAssertNotEqual(copy.alignments, table.alignments);
     

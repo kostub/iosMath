@@ -1089,12 +1089,8 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 - (MTMathList *)serializedCellAtRow:(NSUInteger)row column:(NSUInteger)column
 {
     MTMathList* cell = self.cells[row][column];
-    if ([self.environment isEqualToString:@"matrix"]) {
-        if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
-            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
-            return [MTMathList mathListWithAtomsArray:atoms];
-        }
-    }
+    // matrix/cases cells no longer carry a leading style atom: their style lives on
+    // table.cellStyle, so there is nothing to strip for round-trip.
     if ([self.environment isEqualToString:@"eqalign"] || [self.environment isEqualToString:@"aligned"] || [self.environment isEqualToString:@"split"]) {
         if (column == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
             NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
@@ -1112,6 +1108,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         self.cells = [NSMutableArray array];
         self.interRowAdditionalSpacing = 0;
         self.interColumnSpacing = 0;
+        self.cellStyle = kMTLineStyleInherit;
         _environment = env;
     }
     return self;
@@ -1137,6 +1134,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathTable* op = [super copyWithZone:zone];
     op.interRowAdditionalSpacing = self.interRowAdditionalSpacing;
     op.interColumnSpacing = self.interColumnSpacing;
+    op.cellStyle = self.cellStyle;
     op->_environment = self.environment;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
     // Perform a deep copy of the cells.

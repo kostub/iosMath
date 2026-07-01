@@ -2206,12 +2206,15 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 - (NSArray<NSArray<MTDisplay*>*>*) typesetCells:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     NSMutableArray<NSMutableArray<MTDisplay*>*> *displays = [NSMutableArray arrayWithCapacity:table.numRows];
-    
+    // Cells inherit the surrounding style unless the env pins one (matrix/cases -> Text,
+    // smallmatrix -> Script); see -cellStyleForTable:.
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+
     for(NSArray<MTMathList*>* row in table.cells) {
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
         for (int i = 0; i < row.count; i++) {
-            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style cramped:NO];
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:cellStyle cramped:NO];
             columnWidths[i] = MAX(disp.width, columnWidths[i]);
             [colDisplays addObject:disp];
         };
@@ -2219,30 +2222,24 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     return displays;
 }
 
-// The line style the cells of this table actually render in. The factory injects a
-// leading MTMathStyle atom for some envs (matrix/cases -> Text, smallmatrix -> Script),
-// and that atom overrides the style *inside* each cell (see typesetCells:, where cells
-// are created at the outer _style but the leading style atom re-sets it). amsmath puts
-// a table's inter-column/row glue inside the array's own style group, so the gap must be
-// measured with a font sized to this cell style, not the surrounding _style. Returns
-// _style when no style atom is injected (aligned/gather/eqnarray/alignedat).
+// The line style the cells of this table actually render in. Some envs pin every
+// cell to a fixed style (matrix/cases -> Text, smallmatrix -> Script) via
+// table.cellStyle; the rest leave it kMTLineStyleInherit and render in the
+// surrounding _style (aligned/gather/eqnarray/alignedat). amsmath puts a table's
+// inter-column/row glue inside the array's own style group, so the gap must be
+// measured with a font sized to this cell style, not the surrounding _style.
 - (MTLineStyle) cellStyleForTable:(MTMathTable*) table
 {
-    for (NSArray<MTMathList*>* row in table.cells) {
-        for (MTMathList* cell in row) {
-            if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
-                return [(MTMathStyle*) cell.atoms[0] style];
-            }
-        }
-    }
-    return _style;
+    return table.cellStyle == kMTLineStyleInherit ? _style : table.cellStyle;
 }
 
 - (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     CGFloat columnStart = 0;
     MTLineStyle cellStyle = [self cellStyleForTable:table];
-    MTFont* cellStyleFont = [_font copyFontWithSize:[[self class] getStyleSize:cellStyle font:_font]];
+    // muUnit == fontSize/18 (see -[MTFontMathTable muUnit]). Don't copy a CTFont just to
+    // read a scalar that is a pure function of _font + cellStyle.
+    CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
@@ -2270,7 +2267,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         }
         
         col.position = CGPointMake(cellPos, 0);
-        columnStart += colWidth + table.interColumnSpacing * cellStyleFont.mathTable.muUnit;
+        columnStart += colWidth + table.interColumnSpacing * cellStyleMuUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
@@ -2283,8 +2280,10 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
     CGFloat currPos = 0;
     MTLineStyle cellStyle = [self cellStyleForTable:table];
-    MTFont* cellStyleFont = [_font copyFontWithSize:[[self class] getStyleSize:cellStyle font:_font]];
-    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * cellStyleFont.fontSize;
+    // openup tracks the cell-content font size (a jot is 0.3× font size). The size is a
+    // pure scalar of _font + cellStyle, so compute it directly instead of copying a CTFont.
+    CGFloat cellStyleFontSize = [[self class] getStyleSize:cellStyle font:_font];
+    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * cellStyleFontSize;
     CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * _styleFont.fontSize;
     CGFloat lineSkip = openup + kLineSkipMultiplier * _styleFont.fontSize;
     CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * _styleFont.fontSize;
