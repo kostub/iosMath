@@ -445,7 +445,7 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
         [table setAlignment:kMTColumnAlignmentRight forColumn:0];
         [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
         return table;
-    } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"]) {
+    } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"] || [env isEqualToString:@"gathered"]) {
         if (table.numColumns != 1) {
             NSString* message = [NSString stringWithFormat:@"%@ environment can only have 1 column", env];
             if (error != nil) {

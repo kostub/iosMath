@@ -1485,6 +1485,27 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
+- (void) testGathered
+{
+    NSString *str = @"\\begin{gathered} x \\\\ y \\end{gathered}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"gathered");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 1);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+
+    // single centered column, no injected atoms — straight round-trip
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{gathered}x\\\\ y\\end{gathered}");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -1519,6 +1540,7 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               @[@"\\begin{displaylines} x & y \\end{displaylines}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{gathered} x & y \\end{gathered}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
               @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
               // REN-6: generalized-fraction commands are illegal in one-char script slots
