@@ -1659,6 +1659,35 @@
     }
 }
 
+- (void) testMissingSymbolsHaveGlyphsInDefaultFont
+{
+    // Every command added for the missing-symbols work must resolve to a real glyph
+    // in the default font (Latin Modern Math), never .notdef (glyph 0). \Join
+    // (U+2A1D) was deliberately excluded from this batch because Latin Modern lacks
+    // that glyph in its own table (it would only render via OS font substitution).
+    NSArray<NSString*>* commands = @[
+        @"lt", @"gt", @"frown", @"smile", @"bowtie", @"longmapsto",
+        @"bigcirc", @"bigtriangleup", @"bigtriangledown", @"diamond",
+        @"surd", @"flat", @"natural", @"sharp",
+    ];
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    for (NSString* cmd in commands) {
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:cmd];
+        XCTAssertNotNil(atom, @"%@", cmd);
+        NSString* nucleus = atom.nucleus;
+        NSRange range = [nucleus rangeOfComposedCharacterSequenceAtIndex:0];
+        unichar chars[range.length];
+        [nucleus getCharacters:chars range:range];
+        CGGlyph glyphs[range.length];
+        bool found = CTFontGetGlyphsForCharacters(font.ctFont, chars, glyphs, range.length);
+        XCTAssertTrue(found, @"\\%@ (U+%04X) missing from Latin Modern Math",
+                      cmd, [nucleus characterAtIndex:0]);
+        XCTAssertNotEqual(glyphs[0], (CGGlyph)0,
+                          @"\\%@ (U+%04X) rendered as .notdef in Latin Modern Math",
+                          cmd, [nucleus characterAtIndex:0]);
+    }
+}
+
 - (void) testAllBundledFontsLoad
 {
     // Every bundled font must resolve from its <key>.otf + <key>.plist pair
