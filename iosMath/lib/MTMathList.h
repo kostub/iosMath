@@ -68,6 +68,10 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     kMTMathAtomText = 19,
     /// A box atom (phantom/smash/lap family). Script-capable (< kMTMathAtomBoundary).
     kMTMathAtomBox = 20,
+    /// A brace group {…} in math mode — an Ord subformula whose nucleus is a
+    /// sub-mlist (== TeX Ord noad with sub_mlist / KaTeX "ordgroup").
+    /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
+    kMTMathAtomOrdGroup = 21,
 
     // Atoms after this point do not support subscripts or superscripts
 
@@ -648,6 +652,24 @@ typedef NS_ENUM(NSUInteger, MTBoxHAlign) {
 @property (nonatomic) BOOL drawChild;
 /// Horizontal draw offset applied when keepWidth == NO (laps).
 @property (nonatomic) MTBoxHAlign hAlign;
+
+@end
+
+/** A brace group `{…}` in math mode — an Ord subformula whose nucleus is a
+ sub-mlist. Script-capable; spaced as Ordinary. The honest analog of TeX's
+ Ord noad with a `sub_mlist` nucleus and KaTeX's `ordgroup` node. The usual
+ nucleus is empty; the grouped content lives in `innerList`, and the
+ sub/superScript fields drive scripting of the whole group. */
+@interface MTMathGroup : MTMathAtom
+
+/// Creates an empty Ord group (type = kMTMathAtomOrdGroup).
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
+/// Throws unless type == kMTMathAtomOrdGroup.
+- (instancetype) initWithType:(MTMathAtomType)type value:(NSString *)value;
+
+/// The grouped math content.
+@property (nonatomic, nonnull) MTMathList* innerList;
 
 @end
 

@@ -68,6 +68,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Text";
         case kMTMathAtomBox:
             return @"Box";
+        case kMTMathAtomOrdGroup:
+            return @"Ord Group";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -157,6 +159,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
         case kMTMathAtomBox:
             return [[MTMathBox alloc] init];
+
+        case kMTMathAtomOrdGroup:
+            return [[MTMathGroup alloc] init];
 
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
@@ -1071,6 +1076,66 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathBox *newBox = [super finalized];
     newBox.innerList = newBox.innerList.finalized;
     return newBox;
+}
+
+@end
+
+#pragma mark - MTMathGroup
+
+@implementation MTMathGroup
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomOrdGroup value:@""];
+    if (self) {
+        _innerList = [MTMathList new];
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomOrdGroup) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathGroup initWithType:value:] cannot be called. Use [MTMathGroup init] instead."
+                                 userInfo:nil];
+}
+
+// Standalone string (description / error messages): braces + this atom's scripts.
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithFormat:@"{%@}",
+                            [MTMathListBuilder mathListToString:self.innerList]];
+    if (self.superScript) {
+        [str appendFormat:@"^{%@}", self.superScript.stringValue];
+    }
+    if (self.subScript) {
+        [str appendFormat:@"_{%@}", self.subScript.stringValue];
+    }
+    return str;
+}
+
+// List serializer: emit ONLY {inner}. mathListToString: appends this atom's own
+// ^{…}/_{…} afterwards, so emitting scripts here would double them.
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:self.innerList]];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathGroup* group = [super copyWithZone:zone];
+    group.innerList = [self.innerList copyWithZone:zone];
+    return group;
+}
+
+- (instancetype)finalized
+{
+    MTMathGroup* newGroup = [super finalized];
+    newGroup.innerList = newGroup.innerList.finalized;
+    return newGroup;
 }
 
 @end
