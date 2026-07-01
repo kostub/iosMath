@@ -1506,6 +1506,44 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\begin{gathered}x\\\\ y\\end{gathered}");
 }
 
+- (void) testAlignedat
+{
+    NSString *str = @"\\begin{alignedat}{2} 10&x +& 3&y \\\\ 3&x +& 13&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 4);
+
+    // alternating Right / Left across the 2 alignment pairs
+    MTColumnAlignment expected[4] = {
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft,
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft };
+    for (int j = 0; j < 4; j++) {
+        XCTAssertEqual([table getAlignmentForColumn:j], expected[j]);
+    }
+
+    // a relation spacer (empty ordinary) is injected at index 0 of every odd column
+    for (int row = 0; row < 2; row++) {
+        for (int col = 0; col < 4; col++) {
+            MTMathList* cell = table.cells[row][col];
+            if (col % 2 == 1) {
+                MTMathAtom* spacer = cell.atoms[0];
+                XCTAssertEqual(spacer.type, kMTMathAtomOrdinary);
+                XCTAssertEqual(spacer.nucleus.length, 0u);
+            } else {
+                XCTAssertEqual(cell.atoms[0].type, kMTMathAtomNumber);
+            }
+        }
+    }
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -1569,6 +1607,9 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\kern1pt", @(MTParseErrorInvalidCommand)],      // valid number, unsupported unit
               @[@"\\kern1xx", @(MTParseErrorInvalidCommand)],      // valid number, unknown unit
               @[@"\\begin{alignedat} x & y \\end{alignedat}", @(MTParseErrorInvalidCommand)],  // missing {n}
+              @[@"\\begin{alignedat}{x} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // non-numeric
+              @[@"\\begin{alignedat}{0} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // n < 1
+              @[@"\\begin{alignedat}{2} a&b&c \\end{alignedat}", @(MTParseErrorInvalidNumColumns)], // 3 cols != 2n
               ];
 };
 

@@ -498,6 +498,27 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
         table.interColumnSpacing = kSmallMatrixInterColumnSpacing;
         table.cellStyle = kMTLineStyleScript;
         return table;
+    } else if ([env isEqualToString:@"alignedat"]) {
+        // Generalization of the aligned branch to n alignment pairs (2n columns).
+        // The parser has already validated numColumns == 2n.
+        NSInteger cols = table.numColumns;
+        // Relation spacer before each odd column (mirrors aligned's column-1 spacer,
+        // repeated per pair) for correct = / relation spacing.
+        MTMathAtom* spacer = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+        for (int i = 0; i < table.cells.count; i++) {
+            NSArray<MTMathList*>* row = table.cells[i];
+            for (int j = 0; j < row.count; j++) {
+                if (j % 2 == 1) {
+                    [row[j] insertAtom:spacer atIndex:0];
+                }
+            }
+        }
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 0;
+        for (int j = 0; j < cols; j++) {
+            [table setAlignment:(j % 2 == 0 ? kMTColumnAlignmentRight : kMTColumnAlignmentLeft) forColumn:j];
+        }
+        return table;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];

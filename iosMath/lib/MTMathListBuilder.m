@@ -1385,6 +1385,32 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
         return nil;
     }
+    if ([_currentEnv.envName isEqualToString:@"alignedat"]) {
+        // argument is the raw {n}; require a positive integer.
+        NSString* arg = _currentEnv.argument;
+        BOOL numeric = arg.length > 0;
+        for (NSUInteger i = 0; i < arg.length; i++) {
+            unichar c = [arg characterAtIndex:i];
+            if (c < '0' || c > '9') { numeric = NO; break; }
+        }
+        NSInteger n = arg.integerValue;
+        if (!numeric || n < 1) {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+            return nil;
+        }
+        NSInteger maxCols = 0;
+        for (NSArray<MTMathList*>* r in rows) {
+            if ((NSInteger) r.count > maxCols) { maxCols = r.count; }
+        }
+        if (maxCols != 2 * n) {
+            NSString* message = [NSString stringWithFormat:
+                @"alignedat declares {%ld} (%ld columns) but a row has %ld columns",
+                (long) n, (long) (2 * n), (long) maxCols];
+            [self setError:MTParseErrorInvalidNumColumns message:message];
+            return nil;
+        }
+    }
     NSError* error;
     MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
     if (!table && !_error) {
