@@ -3142,6 +3142,31 @@
     XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width * scriptScaleDown, 1.0);
 }
 
+- (void) testMatrixRowSpacingTracksCellStyle
+{
+    // Companion to testMatrixColumnGapTracksCellStyle, for the vertical axis. matrix
+    // forces Text-size cells regardless of the surrounding style, so the whole bare
+    // table -- including its inter-row baseline grid -- must be identical in points
+    // whether the matrix sits in a Display or a Script context. Before the row-leading
+    // cell-style fix the Script-context baselineSkip was measured at the (smaller)
+    // Script font, packing the rows scriptScaleDown x too tight and making the nested
+    // matrix shorter for no legitimate reason (a nested vbox keeps its own leading).
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{matrix} a \\\\ c \\end{matrix}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{matrix} a \\\\ c \\end{matrix}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    CGFloat heightAtDisplay = tableAtDisplay.ascent + tableAtDisplay.descent;
+    CGFloat heightAtScript  = tableAtScript.ascent + tableAtScript.descent;
+    XCTAssertEqualWithAccuracy(heightAtScript, heightAtDisplay, 0.001);
+}
+
 - (void)testScriptStyleDoesNotLeakPastBraceGroup {
     // Issue #177: x{\scriptstyle y}z — \scriptstyle must be scoped to the group;
     // z must render in the outer (display) style, not scriptstyle.

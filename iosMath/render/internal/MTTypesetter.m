@@ -2313,9 +2313,14 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     // pure scalar of _font + cellStyle, so compute it directly instead of copying a CTFont.
     CGFloat cellStyleFontSize = [[self class] getStyleSize:cellStyle font:_font];
     CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * cellStyleFontSize;
-    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkip = openup + kLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * _styleFont.fontSize;
+    // Row leading also tracks the cell-content style, not the surrounding style. A
+    // styled table (e.g. a matrix nested in a script position) is a self-contained
+    // vbox whose internal baseline grid is fixed in the cell style before it is placed
+    // into the smaller context; scaling these to _styleFont would pack the rows
+    // scriptScaleDown x too tight (the row-spacing analogue of the column-gap fix above).
+    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkip = openup + kLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * cellStyleFontSize;
     CGFloat prevRowDescent = 0;
     CGFloat ascent = 0;
     BOOL first = true;
