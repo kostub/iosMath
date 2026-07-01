@@ -3093,4 +3093,28 @@
     XCTAssertNotNil(d);
 }
 
+- (void) testMatrixColumnGapTracksCellStyle
+{
+    // matrix forces Text-size cells regardless of the surrounding style, so its
+    // bare-table width (driven by the 18mu inter-column gap) must be identical in
+    // points whether the matrix sits in a Display context or a Script context.
+    // Before the cell-style fix the Script-context gap was measured at the (smaller)
+    // Script muUnit, making the nested table scriptScaleDown x too narrow.
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    // Plain matrix has no delimiters, so subDisplays[0] is the bare table display.
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    // Cells are Text-forced in both contexts => identical column widths; after the
+    // fix the gap is also identical (measured at the Text cell style) => equal width.
+    XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width, 0.001);
+}
+
 @end
