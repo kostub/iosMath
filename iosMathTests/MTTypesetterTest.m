@@ -3297,4 +3297,33 @@
     XCTAssertEqualWithAccuracy(gatheredDisp.descent, gatherDisp.descent, 0.01);
 }
 
+- (void) testAlignedatLayout
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{alignedat}{2} 10&x +& 3&y \\\\ 3&x +& 13&y \\end{alignedat}"];
+    XCTAssertNotNil(list);
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTMathListDisplay* tableDisp = (MTMathListDisplay*) display.subDisplays[0];
+    XCTAssertEqual(tableDisp.subDisplays.count, 2);  // two rows
+
+    for (MTDisplay* rowSub in tableDisp.subDisplays) {
+        XCTAssertTrue([rowSub isKindOfClass:[MTMathListDisplay class]]);
+        MTMathListDisplay* row = (MTMathListDisplay*) rowSub;
+        XCTAssertEqual(row.subDisplays.count, 4);  // four columns (2 pairs)
+
+        // interColumnSpacing == 0 => pairs are butted: each column starts at or after
+        // the previous one across the row.
+        CGFloat prevX = -CGFLOAT_MAX;
+        for (MTDisplay* colSub in row.subDisplays) {
+            MTMathListDisplay* col = (MTMathListDisplay*) colSub;
+            XCTAssertGreaterThanOrEqual(col.position.x, prevX);
+            prevX = col.position.x;
+        }
+    }
+}
+
 @end

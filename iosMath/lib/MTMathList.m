@@ -1160,6 +1160,12 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             return [MTMathList mathListWithAtomsArray:atoms];
         }
     }
+    if ([self.environment isEqualToString:@"alignedat"]) {
+        if (column % 2 == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
+            NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
+            return [MTMathList mathListWithAtomsArray:atoms];
+        }
+    }
     return cell;
 }
 
@@ -1278,6 +1284,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     if (self.environment) {
         [str appendFormat:@"\\begin{%@}", self.environment];
+        if ([self.environment isEqualToString:@"alignedat"]) {
+            [str appendFormat:@"{%ld}", (long) (self.numColumns / 2)];
+        }
     }
     for (NSUInteger i = 0; i < self.numRows; i++) {
         NSArray<MTMathList*>* row = self.cells[i];

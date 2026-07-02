@@ -1506,6 +1506,135 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqualObjects(latex, @"\\begin{gathered}x\\\\ y\\end{gathered}");
 }
 
+- (void) testAlignedat
+{
+    NSString *str = @"\\begin{alignedat}{2} 10&x +& 3&y \\\\ 3&x +& 13&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 4);
+
+    // alternating Right / Left across the 2 alignment pairs
+    MTColumnAlignment expected[4] = {
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft,
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft };
+    for (int j = 0; j < 4; j++) {
+        XCTAssertEqual([table getAlignmentForColumn:j], expected[j]);
+    }
+
+    // a relation spacer (empty ordinary) is injected at index 0 of every odd column
+    for (int row = 0; row < 2; row++) {
+        for (int col = 0; col < 4; col++) {
+            MTMathList* cell = table.cells[row][col];
+            if (col % 2 == 1) {
+                MTMathAtom* spacer = cell.atoms[0];
+                XCTAssertEqual(spacer.type, kMTMathAtomOrdinary);
+                XCTAssertEqual(spacer.nucleus.length, 0u);
+            } else {
+                XCTAssertEqual(cell.atoms[0].type, kMTMathAtomNumber);
+            }
+        }
+    }
+
+    // round-trip: {n} re-emitted; per-pair spacers stripped by serializedCellAtRow:column:
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}10&x+&3&y\\\\ 3&x+&13&y\\end{alignedat}");
+}
+
+// n=1: the 2-column minimum (single alignment pair, degenerate case).
+- (void) testAlignedatSinglePair
+{
+    NSString *str = @"\\begin{alignedat}{1} x&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numRows, 1);
+    XCTAssertEqual(table.numColumns, 2);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentLeft);
+
+    // spacer injected into the single odd column
+    MTMathAtom* spacer = ((MTMathList*) table.cells[0][1]).atoms[0];
+    XCTAssertEqual(spacer.type, kMTMathAtomOrdinary);
+    XCTAssertEqual(spacer.nucleus.length, 0u);
+
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{1}x&y\\end{alignedat}");
+}
+
+// Empty odd-column cell (x&&z&w, n=2): the spacer is inserted into an empty list,
+// and the strip must round-trip it back to an empty column.
+- (void) testAlignedatEmptyCell
+{
+    NSString *str = @"\\begin{alignedat}{2} x&&z&w \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqual(table.numColumns, 4);
+
+    // The empty odd cell (col 1) contains only the injected spacer.
+    MTMathList* emptyCell = table.cells[0][1];
+    XCTAssertEqual(emptyCell.atoms.count, 1u);
+    XCTAssertEqual(((MTMathAtom*) emptyCell.atoms[0]).type, kMTMathAtomOrdinary);
+    XCTAssertEqual(((MTMathAtom*) emptyCell.atoms[0]).nucleus.length, 0u);
+
+    // Round-trip: spacer stripped, empty column preserved as &&.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}x&&z&w\\end{alignedat}");
+}
+
+// alignedat wrapped in delimiters: exercises the MTInner nesting path.
+- (void) testAlignedatInDelimiters
+{
+    NSString *str = @"\\left( \\begin{alignedat}{1} x&y \\end{alignedat} \\right)";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTInner* inner = list.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomInner);
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus, @"(");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, @")");
+    XCTAssertEqualObjects(@(inner.innerList.atoms.count), @1);
+    MTMathTable* table = inner.innerList.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numColumns, 2);
+
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\left( \\begin{alignedat}{1}x&y\\end{alignedat}\\right) ");
+}
+
+// Whitespace surrounding the {n} argument is stripped (TeX behavior; matches readColor).
+- (void) testAlignedatWhitespaceArgument
+{
+    NSString *str = @"\\begin{alignedat}{ 2 } 10&x +& 3&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numColumns, 4);
+
+    // The stripped argument re-emits without the surrounding spaces.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}10&x+&3&y\\end{alignedat}");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
@@ -1568,6 +1697,12 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\mkern{1em}", @(MTParseErrorInvalidCommand)],    // mu required for \mkern
               @[@"\\kern1pt", @(MTParseErrorInvalidCommand)],      // valid number, unsupported unit
               @[@"\\kern1xx", @(MTParseErrorInvalidCommand)],      // valid number, unknown unit
+              @[@"\\begin{alignedat} x & y \\end{alignedat}", @(MTParseErrorInvalidCommand)],  // missing {n}
+              @[@"\\begin{alignedat}{x} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // non-numeric
+              @[@"\\begin{alignedat}{0} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // n < 1
+              @[@"\\begin{alignedat}{-1} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],     // negative (leading '-' fails digit check)
+              @[@"\\begin{alignedat}{} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],       // empty braces
+              @[@"\\begin{alignedat}{2} a&b&c \\end{alignedat}", @(MTParseErrorInvalidNumColumns)], // 3 cols != 2n
               ];
 };
 
