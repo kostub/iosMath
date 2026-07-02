@@ -923,7 +923,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
         return nil;
     }
-    return arg;
+    // Strip surrounding whitespace (TeX's argument scanner ignores it), matching
+    // -readColor's skipSpaces. Interior whitespace is preserved so malformed args
+    // like {2 3} still fail the digit check downstream.
+    return [arg stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
