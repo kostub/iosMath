@@ -77,12 +77,15 @@ Defined in `MTMathList.h` as `MTMathAtomType`.
 | `kMTMathAtomUnderline` | Under | Rule 10. |
 | `kMTMathAtomOverline` | Over | Rule 9. |
 | `kMTMathAtomAccent` | Acc | Rule 12. |
-| `kMTMathAtomStack` | Acc (over/under extensible) | iosMath extension. Generic over/under atom used for `\overrightarrow`, `\overleftarrow`, `\overleftrightarrow`, `\underrightarrow`, `\underleftarrow`, `\underleftrightarrow`, `\overbrace`, `\underbrace`. Retyped to `displayClass` (default Ord) before Rule 16 spacing lookup. Renders via `MTTypesetter.makeStack:` → `MTStackDisplay`. Extensible over/under rows use OpenType `stretchStackGapAboveMin` / `stretchStackGapBelowMin` for vertical clearance. |
+| `kMTMathAtomStack` | Acc (over/under extensible) | iosMath extension. Generic over/under atom used for `\overrightarrow`, `\overleftarrow`, `\overleftrightarrow`, `\underrightarrow`, `\underleftarrow`, `\underleftrightarrow`, `\overbrace`, `\underbrace`, and the two-argument stack macros `\overset`, `\underset`, `\stackrel`, `\stackbin`. Retyped to `displayClass` before Rule 16 spacing lookup — default Ord, but `\stackrel` forces Relation, `\stackbin` forces Binary, and `\overset`/`\underset` inherit the base list's class. Renders via `MTTypesetter.makeStack:` → `MTStackDisplay`. Extensible over/under rows use OpenType `stretchStackGapAboveMin` / `stretchStackGapBelowMin` for vertical clearance. |
 | `kMTMathAtomBoundary` | (for \left, \right) | Cannot appear in a `MTMathList` directly; only on `MTInner.leftBoundary` / `.rightBoundary`. Rule 19 analogue is in `MTTypesetter.makeInner:atIndex:`. |
 | `kMTMathAtomSpace` | glue/kern | Rule 2. |
 | `kMTMathAtomStyle` | style item | Rule 3. |
 | `kMTMathAtomColor` / `kMTMathAtomColorbox` | — | iosMath extension. Renders inner list and applies fg/bg color. |
 | `kMTMathAtomTable` | — | iosMath extension (equivalent to TeX `\halign` for matrices, aligned, cases, etc.). |
+| `kMTMathAtomText` | Ord (with sub-mlist) | iosMath extension for the `\text`/`\textrm`/`\textbf`/… family. Holds a run of text typeset upright; spaced as Ordinary (see `MTTypesetter` case). |
+| `kMTMathAtomBox` | Ord (with sub-mlist) | iosMath extension for the phantom/smash/lap family (`\phantom`, `\hphantom`, `\vphantom`, `\smash`, `\llap`, `\rlap`, `\clap`, `\mathstrut`). Script-capable. Draws (or reserves the metrics of) its inner list per per-command keep-width/height/depth flags. |
+| `kMTMathAtomOrdGroup` | Ord (with sub-mlist) | iosMath extension: a brace group `{…}` in math mode — an Ord subformula whose nucleus is a sub-mlist (== TeX Ord noad with `sub_mlist`, KaTeX "ordgroup"). Script-capable; spaced as Ordinary. |
 
 **Missing noad types** (vs. TeX):
 - **Vcent atom (Rule 8).** `\vcenter` is not supported. The corresponding atom type does not exist.

@@ -9,7 +9,7 @@ equations look exactly as LaTeX would render them — no WebView required.
 
 It is similar to [MathJax](https://www.mathjax.org) or
 [KaTeX](https://github.com/Khan/KaTeX) for the web but for native iOS or
-macOS applications, and significantly faster than a `UIWebView`.
+macOS applications, and significantly faster than a `WKWebView`.
 
 ## Examples
 
@@ -132,8 +132,11 @@ support is available in [`SwiftMathExample/MathLabel.swift`](SwiftMathExample/Ma
 * Math spacing
 * Overline and underline
 * Math accents
-* Matrices
+* Over/under braces and arrows (`\overbrace`, `\overrightarrow`, etc.)
+* Stacked and annotated relations (`\overset`, `\underset`, `\stackrel`)
+* Matrices (including compact `smallmatrix`)
 * Equation alignment
+* Phantoms and spacing boxes (`\phantom`, `\smash`, `\rlap`, etc.)
 * Bold, roman, caligraphic and other font styles (`\bf`, `\text`, etc.)
 * Most commonly used math symbols
 * Colors

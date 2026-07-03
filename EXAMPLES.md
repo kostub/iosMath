@@ -98,12 +98,13 @@ i\hbar\frac{\partial}{\partial t}\mathbf\Psi(\mathbf{x},t) = -\frac{\hbar}{2m}\n
 
 ## Lorentz Equations
 Use the `gather` or `displaylines` environments to center multiple
-equations.
+equations. `gathered` is the nestable variant, usable inside another
+formula.
 ```LaTeX
 \begin{gather}
 \dot{x} = \sigma(y-x) \\
 \dot{y} = \rho x - y - xz \\
-\dot{z} = -\beta z + xy"
+\dot{z} = -\beta z + xy
 \end{gather}
 ```
 
@@ -136,7 +137,8 @@ multiple equations.
 
 ## Matrix multiplication
 Supported matrix environments: `matrix`, `pmatrix`, `bmatrix`, `Bmatrix`,
-`vmatrix`, `Vmatrix`.
+`vmatrix`, `Vmatrix`, and `smallmatrix` (a compact, script-sized matrix for
+inline use).
 ```LaTeX
 \begin{pmatrix}
 a & b\\ c & d
@@ -171,3 +173,69 @@ f(x) = \begin{cases}
 ```
 
 ![Long equation](img/long.png)
+
+---
+
+# More supported features
+
+The examples below showcase additional supported commands. They mirror the
+runnable gallery in [`MathExamples.h`](./MathExamples.h) (shared by the iOS,
+macOS, and SwiftUI example apps); preview images are not included here.
+
+## AMS fraction and binomial macros
+`\dfrac` / `\tfrac` force display / text style; `\cfrac` builds continued
+fractions; `\dbinom` / `\tbinom` are the display / text binomials.
+```LaTeX
+\tfrac{1}{2} + \dfrac{1}{2} = \cfrac{1}{1+\cfrac{1}{1+\cfrac{1}{1}}}
+\qquad \dbinom{n}{k} \quad \tbinom{n}{k}
+```
+
+## Explicitly sized delimiters
+`\big`, `\Big`, `\bigg`, `\Bigg` (with `l` / `r` / `m` class variants) set a
+fixed delimiter size, independent of the content-driven `\left … \right`.
+```LaTeX
+\bigl( x + y \bigr) \quad \Bigl[ z \Bigr] \quad
+\biggl\langle w \biggr\rangle \quad a \bigm| b
+```
+
+## Stacked and annotated relations
+`\overset`, `\underset`, `\stackrel`, and `\stackbin` place a symbol above or
+below a base while keeping the correct spacing class.
+```LaTeX
+f(x) \stackrel{\text{def}}{=} \sum_{n=0}^{\infty} \frac{f^{(n)}(0)}{n!} x^n
+\qquad \underset{x \in \mathbb{R}}{\sup}\, f(x)
+```
+
+## Over/under braces and arrows
+```LaTeX
+\overbrace{a+b+c}^{n} + \underbrace{d+e+f}_{m}
+\qquad \overrightarrow{AB} \cdot \overleftarrow{CD}
+```
+
+## Multiple integrals
+```LaTeX
+\iint_S f \, dA = \iiint_V g \, dV = \iiiint_{\mathbb{R}^4} h \, dV
+```
+
+## Compact inline matrices
+`smallmatrix` renders script-sized cells for use inside a line of math.
+```LaTeX
+A^{-1} = \frac{1}{ad-bc}\left(\begin{smallmatrix} d & -b \\ -c & a \end{smallmatrix}\right)
+```
+
+## Nestable centered equations
+`gathered` centers a stack of equations and, unlike `gather`, can be nested
+inside another formula.
+```LaTeX
+\begin{gathered}
+(a+b)^2 = a^2 + 2ab + b^2 \\
+(a-b)^2 = a^2 - 2ab + b^2
+\end{gathered}
+```
+
+## Colors
+`\color` recolors an expression; `\colorbox` fills the background behind it.
+```LaTeX
+\color{#ff3399}{(a_1+a_2)^2} = a_1^2 + 2a_1a_2 + a_2^2
+\qquad \colorbox{#f0f0e0}{\sqrt{1+x}}
+```

@@ -86,6 +86,13 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
         @"f(x) = \\begin{cases}\\frac{e^x}{2} & x \\geq 0 \\\\1 & x < 0\\end{cases}",
         // 20: Ridge regression — argmin via \underset
         @"\\hat\\theta = \\underset{\\theta}{\\arg\\min}\\, \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|^2",
+        // 21: Inline 2×2 matrix — smallmatrix keeps cells script-sized
+        @"A^{-1} = \\frac{1}{ad-bc}\\left(\\begin{smallmatrix} d & -b \\\\ -c & a \\end{smallmatrix}\\right)",
+        // 22: Centered stacked identities — gathered environment
+        @"\\begin{gathered}"
+         "(a+b)^2 = a^2 + 2ab + b^2 \\\\"
+         "(a-b)^2 = a^2 - 2ab + b^2"
+         "\\end{gathered}",
     ];
 }
 
