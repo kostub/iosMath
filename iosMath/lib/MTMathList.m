@@ -1208,8 +1208,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     op.cellStyle = self.cellStyle;
     op->_environment = self.environment;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
-    op.verticalLines = [NSArray arrayWithArray:self.verticalLines];
-    op.horizontalLines = [NSArray arrayWithArray:self.horizontalLines];
+    // The copy setters take an immutable snapshot, so a plain assignment suffices.
+    op.verticalLines = self.verticalLines;
+    op.horizontalLines = self.horizontalLines;
     // Perform a deep copy of the cells.
     NSMutableArray* cellCopy = [NSMutableArray arrayWithCapacity:self.cells.count];
     for (NSMutableArray* row in self.cells) {

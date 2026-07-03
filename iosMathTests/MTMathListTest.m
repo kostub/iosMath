@@ -319,6 +319,17 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     // Mutating the original's field must not affect the copy.
     table.verticalLines = @[ @9 ];
     XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
+
+    // The properties take an immutable snapshot: mutating a mutable array
+    // *after* assigning it must not change the stored value (copy semantics).
+    NSMutableArray<NSNumber*>* mutV = [@[ @1, @2 ] mutableCopy];
+    NSMutableArray<NSNumber*>* mutH = [@[ @3 ] mutableCopy];
+    table.verticalLines = mutV;
+    table.horizontalLines = mutH;
+    [mutV addObject:@99];
+    [mutH addObject:@99];
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @2 ]));
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @3 ]));
 }
 
 - (void)testArrayTableFactoryBuildsBareTextstyleTable

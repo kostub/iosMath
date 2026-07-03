@@ -731,12 +731,12 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// The number of `|` vertical rules at each column boundary (array environment).
 /// Length numColumns+1: index 0 = before column 0 … numColumns = after the last column.
 /// Empty for every non-array environment (inert default — no layout effect).
-@property (nonatomic, nonnull) NSArray<NSNumber*>* verticalLines;
+@property (nonatomic, copy, nonnull) NSArray<NSNumber*>* verticalLines;
 
 /// The number of `\hline` horizontal rules at each row boundary (array environment).
 /// Length numRows+1: index 0 = above row 0 … numRows = below the last row.
 /// Empty for every non-array environment (inert default — no layout effect).
-@property (nonatomic, nonnull) NSArray<NSNumber*>* horizontalLines;
+@property (nonatomic, copy, nonnull) NSArray<NSNumber*>* horizontalLines;
 
 /// Set the value of a given cell. The table is automatically resized to contain this cell.
 - (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;
