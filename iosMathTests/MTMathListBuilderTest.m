@@ -2967,6 +2967,59 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(colorAtom.colorString, @"#f00");
 }
 
+- (void)testTextcolorValidHexSix
+{
+    // \textcolor is an alias of \color: same 2-argument parse path, same MTMathColor node.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\textcolor{#FF0000}{x}" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#FF0000");
+    XCTAssertNotNil(colorAtom.innerList);
+    XCTAssertEqual(colorAtom.innerList.atoms.count, (NSUInteger)1);
+    // \textcolor round-trips through the same MTMathColor serialization as \color.
+    XCTAssertEqualObjects(colorAtom.stringValue, @"\\color{#FF0000}{x}");
+}
+
+- (void)testTextcolorEquivalentToColor
+{
+    // \textcolor{c}{content} must produce a structurally equivalent MTMathList
+    // to \color{c}{content}: same MTMathColor node, colorString, and inner list.
+    NSError* textcolorError = nil;
+    MTMathList* textcolorList = [MTMathListBuilder buildFromString:@"\\textcolor{#FF0000}{x}" error:&textcolorError];
+    XCTAssertNil(textcolorError, @"Unexpected error: %@", textcolorError);
+    XCTAssertNotNil(textcolorList);
+
+    NSError* colorError = nil;
+    MTMathList* colorList = [MTMathListBuilder buildFromString:@"\\color{#FF0000}{x}" error:&colorError];
+    XCTAssertNil(colorError, @"Unexpected error: %@", colorError);
+    XCTAssertNotNil(colorList);
+
+    XCTAssertEqual(textcolorList.atoms.count, colorList.atoms.count);
+    MTMathColor* textcolorAtom = (MTMathColor*)textcolorList.atoms[0];
+    MTMathColor* colorAtom = (MTMathColor*)colorList.atoms[0];
+    XCTAssertEqual(textcolorAtom.type, colorAtom.type);
+    XCTAssertEqualObjects(textcolorAtom.colorString, colorAtom.colorString);
+    XCTAssertEqual(textcolorAtom.innerList.atoms.count, colorAtom.innerList.atoms.count);
+    // stringValue serializes color + inner content, so equal stringValue implies
+    // structurally equivalent color nodes.
+    XCTAssertEqualObjects(textcolorAtom.stringValue, colorAtom.stringValue);
+}
+
+- (void)testTextcolorInvalidNamedColorIsParseError
+{
+    // \textcolor shares \color's readColor grammar: named colors fail loud.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\textcolor{red}{x}" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid textcolor color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 - (void)testColorboxValidHexSix
 {
     NSError* error = nil;
