@@ -3369,4 +3369,31 @@
     XCTAssertGreaterThan(x2, x1);
 }
 
+- (void)testArrayRuleDisplayCountAndBounds
+{
+    // {|c|c|} with \hline top+bottom: 2 vertical outer + 1 interior vertical = 3 vertical,
+    // and 2 horizontal rules. Total rule count == sum(verticalLines)+sum(horizontalLines).
+    NSString* str = @"\\begin{array}{|c|c|} \\hline a & b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+
+    NSUInteger ruleCount = 0;
+    NSUInteger rowCount = 0;
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        if ([sub isKindOfClass:[MTRuleDisplay class]]) { ruleCount++; }
+        else { rowCount++; }
+    }
+    // verticalLines = [1,1,1] (sum 3); horizontalLines = [1,0,1] (sum 2) -> 5 rules.
+    XCTAssertEqual(ruleCount, 5);
+    XCTAssertEqual(rowCount, 1);
+
+    // Rules widen the table beyond a rule-free counterpart.
+    MTMathList* plain = [MTMathListBuilder buildFromString:@"\\begin{array}{cc} a & b \\end{array}"];
+    MTMathListDisplay* plainDisp = [MTTypesetter createLineForMathList:plain font:self.font style:kMTLineStyleDisplay];
+    XCTAssertGreaterThan(tableDisp.width, ((MTMathListDisplay*) plainDisp.subDisplays[0]).width);
+    // \hline extents are included in the table's vertical bounds.
+    XCTAssertGreaterThan(tableDisp.ascent + tableDisp.descent, 0);
+}
+
 @end

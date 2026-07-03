@@ -2239,12 +2239,96 @@ static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule cleara
 
         // Position all the rows
         [self positionRows:rowDisplays forTable:table];
+        NSArray<MTRuleDisplay*>* rules = [self makeRuleDisplaysForTable:table
+                                                                  rows:rowDisplays
+                                                               vRuleXs:vRuleXs
+                                                          contentWidth:contentWidth
+                                                             thickness:thickness];
+        [rowDisplays addObjectsFromArray:rules];
         tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
         tableDisplay.position = _currentPosition;
     } @finally {
         free(columnWidths);
     }
     return tableDisplay;
+}
+
+// Build vertical + horizontal rule displays for an array table from the positioned rows.
+// Vertical rules span the shared frame (frameBot..frameTop); horizontals span the full
+// content width so outer rules meet at the corners by construction. Returns @[] when the
+// table has no rules (every non-array table, and arrays without rules) — fast path.
+- (NSArray<MTRuleDisplay*>*) makeRuleDisplaysForTable:(MTMathTable*) table
+                                                rows:(NSArray<MTDisplay*>*) rows
+                                             vRuleXs:(NSArray<NSArray<NSNumber*>*>*) vRuleXs
+                                        contentWidth:(CGFloat) contentWidth
+                                           thickness:(CGFloat) thickness
+{
+    NSArray<NSNumber*>* vLines = table.verticalLines;
+    NSArray<NSNumber*>* hLines = table.horizontalLines;
+    BOOL anyV = NO; for (NSNumber* n in vLines) { if (n.integerValue > 0) { anyV = YES; break; } }
+    BOOL anyH = NO; for (NSNumber* n in hLines) { if (n.integerValue > 0) { anyH = YES; break; } }
+    if (!anyV && !anyH) { return @[]; }
+
+    CGFloat padding = kArrayRulePaddingMultiplier * _styleFont.fontSize;
+    CGFloat ruleGap = kArrayRuleGapMultiplier * _styleFont.fontSize;
+    NSMutableArray<MTRuleDisplay*>* rules = [NSMutableArray array];
+
+    // Centred content box from the positioned rows.
+    CGFloat contentTop = -CGFLOAT_MAX;
+    CGFloat contentBot = CGFLOAT_MAX;
+    for (MTDisplay* row in rows) {
+        contentTop = MAX(contentTop, row.position.y + row.ascent);
+        contentBot = MIN(contentBot, row.position.y - row.descent);
+    }
+    CGFloat frameTop = contentTop + padding;
+    CGFloat frameBot = contentBot - padding;
+
+    // Vertical rules — span the whole frame so they meet the top/bottom horizontals.
+    for (NSUInteger i = 0; i < vRuleXs.count; i++) {
+        for (NSNumber* xn in vRuleXs[i]) {
+            [rules addObject:[[MTRuleDisplay alloc] initWithStart:CGPointMake(xn.doubleValue, frameBot)
+                                                          length:(frameTop - frameBot)
+                                                       thickness:thickness
+                                                        vertical:YES
+                                                           range:table.indexRange]];
+        }
+    }
+
+    // Horizontal rules — span full content width so they meet the outer verticals.
+    NSUInteger numRows = table.numRows;
+    for (NSUInteger b = 0; b < hLines.count; b++) {
+        NSInteger count = hLines[b].integerValue;
+        if (count == 0) { continue; }
+        CGFloat y0;
+        if (b == 0) {
+            y0 = frameTop;
+        } else if (b >= numRows) {
+            y0 = frameBot;
+        } else {
+            MTDisplay* above = rows[b - 1];   // upper row (higher y)
+            MTDisplay* below = rows[b];       // lower row
+            CGFloat gapBot = above.position.y - above.descent;
+            CGFloat gapTop = below.position.y + below.ascent;
+            y0 = (gapTop + gapBot) / 2;
+        }
+        for (NSInteger k = 0; k < count; k++) {
+            CGFloat yk;
+            if (b == 0) {
+                yk = y0 - k * (thickness + ruleGap);           // stack downward
+            } else if (b >= numRows) {
+                yk = y0 + k * (thickness + ruleGap);           // stack upward
+            } else {
+                NSInteger step = (k % 2 == 0 ? 1 : -1) * ((k + 1) / 2);
+                yk = y0 + step * (thickness + ruleGap);        // symmetric
+            }
+            [rules addObject:[[MTRuleDisplay alloc] initWithStart:CGPointMake(0, yk)
+                                                          length:contentWidth
+                                                       thickness:thickness
+                                                        vertical:NO
+                                                           range:table.indexRange]];
+        }
+    }
+    return rules;
 }
 
 // Compute per-column start x-offsets shared by cells and vertical rules, so they cannot
