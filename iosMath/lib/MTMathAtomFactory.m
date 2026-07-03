@@ -527,6 +527,47 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
     return nil;
 }
 
++ (nullable MTMathAtom*) arrayTableWithAlignments:(NSArray<NSNumber*>*) columnAlignments
+                                    verticalLines:(NSArray<NSNumber*>*) verticalLines
+                                  horizontalLines:(NSArray<NSNumber*>*) horizontalLines
+                                             rows:(NSArray<NSArray<MTMathList*>*>*) rows
+                                            error:(NSError**) error
+{
+    MTMathTable* table = [[MTMathTable alloc] initWithEnvironment:@"array"];
+    NSInteger numCols = columnAlignments.count;
+    for (int i = 0; i < rows.count; i++) {
+        NSArray<MTMathList*>* row = rows[i];
+        if ((NSInteger) row.count > numCols) {
+            if (error) {
+                NSString* message = [NSString stringWithFormat:
+                    @"array row has %ld cells but column specification declares %ld columns",
+                    (long) row.count, (long) numCols];
+                *error = [NSError errorWithDomain:MTParseError
+                                             code:MTParseErrorInvalidNumColumns
+                                         userInfo:@{ NSLocalizedDescriptionKey : message }];
+            }
+            return nil;
+        }
+        for (int j = 0; j < row.count; j++) {
+            [table setCell:row[j] forRow:i column:j];
+        }
+    }
+    for (int j = 0; j < numCols; j++) {
+        [table setAlignment:columnAlignments[j].integerValue forColumn:j];
+    }
+    table.verticalLines = verticalLines;
+    // Normalize horizontalLines to length numRows+1 so the renderer can index boundaries.
+    NSMutableArray<NSNumber*>* hLines = [NSMutableArray arrayWithArray:horizontalLines];
+    while (hLines.count < table.numRows + 1) {
+        [hLines addObject:@0];
+    }
+    table.horizontalLines = hLines;
+    table.interRowAdditionalSpacing = 0;
+    table.interColumnSpacing = 18;   // ≈ 2·\arraycolsep at the default size; matches matrix.
+    table.cellStyle = kMTLineStyleText;   // post-#245: cells render textstyle via the table.
+    return table;
+}
+
 + (NSMutableDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
 {
     static NSMutableDictionary<NSString*, MTMathAtom*>* commands = nil;

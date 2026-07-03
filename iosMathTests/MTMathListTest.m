@@ -321,6 +321,39 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
 }
 
+- (void)testArrayTableFactoryBuildsBareTextstyleTable
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    MTMathList* c = [MTMathListBuilder buildFromString:@"c"];
+    MTMathList* d = [MTMathListBuilder buildFromString:@"d"];
+    NSArray* rows = @[ @[ a, b ], @[ c, d ] ];
+
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentRight), @(kMTColumnAlignmentLeft) ]
+                   verticalLines:@[ @1, @0, @1 ]
+                 horizontalLines:@[ @1 ]
+                            rows:rows
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    // Bare table — no MTInner / delimiters wrapping.
+    XCTAssertEqual(atom.type, kMTMathAtomTable);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @0, @1 ]));
+    // horizontalLines normalized to numRows+1 == 3.
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @1, @0, @0 ]));
+    XCTAssertEqual(table.interColumnSpacing, 18);
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+}
+
 @end
 
 @interface MTMathAtomTest : XCTestCase
