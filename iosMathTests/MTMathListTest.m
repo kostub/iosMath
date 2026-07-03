@@ -354,6 +354,44 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqual(table.cellStyle, kMTLineStyleText);
 }
 
+- (void)testArrayTableFactoryRejectsTooManyCells
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    // Spec declares 1 column but the row has 2 cells.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @0, @0 ]
+                 horizontalLines:@[]
+                            rows:@[ @[ a, b ] ]
+                           error:&error];
+    XCTAssertNil(atom);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorInvalidNumColumns);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array row has 2 cells but column specification declares 1 columns");
+}
+
+- (void)testArrayTableFactoryAcceptsShortRows
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    // Spec declares 3 columns; row has 1 cell — allowed, trailing cells absent.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @0, @0, @0, @0 ]
+                 horizontalLines:@[]
+                            rows:@[ @[ a ] ]
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqual([table.cells[0] count], 1);
+}
+
 @end
 
 @interface MTMathAtomTest : XCTestCase
