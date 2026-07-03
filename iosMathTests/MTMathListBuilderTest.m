@@ -1703,6 +1703,13 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{alignedat}{-1} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],     // negative (leading '-' fails digit check)
               @[@"\\begin{alignedat}{} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],       // empty braces
               @[@"\\begin{alignedat}{2} a&b&c \\end{alignedat}", @(MTParseErrorInvalidNumColumns)], // 3 cols != 2n
+              @[@"\\begin{array} a \\end{array}", @(MTParseErrorMissingColumnSpec)],
+              @[@"\\begin{array}{} a \\end{array}", @(MTParseErrorInvalidColumnSpec)],
+              @[@"\\begin{array}{p} a \\end{array}", @(MTParseErrorInvalidColumnSpec)],
+              @[@"\\begin{array}{c} a & b \\end{array}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{array}{c} a", @(MTParseErrorMissingEnd)],
+              @[@"\\hline a", @(MTParseErrorInvalidCommand)],
+              @[@"\\begin{matrix} \\hline a \\end{matrix}", @(MTParseErrorInvalidCommand)],
               ];
 };
 
@@ -3895,6 +3902,38 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(e2.code, MTParseErrorInvalidCommand);
     XCTAssertEqualObjects(e2.localizedDescription,
         @"\\hline is only valid inside an array environment");
+}
+
+- (void)testArrayFullSpecParse
+{
+    NSString* str = @"\\begin{array}{|r|c|l|} 10 & = & 7 + 3 \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, 1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numRows, 1);
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table getAlignmentForColumn:2], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @1, @1, @1 ]));
+    // No \hline -> horizontalLines all zero (length numRows+1).
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @0, @0 ]));
+    // Bare table, textstyle cells.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+    XCTAssertEqual(table.interColumnSpacing, 18);
+}
+
+- (void)testArrayTooManyCellsIsError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{c} a & b \\end{array}" error:&error];
+    XCTAssertNil(list);
+    XCTAssertEqual(error.code, MTParseErrorInvalidNumColumns);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array row has 2 cells but column specification declares 1 columns");
 }
 
 @end
