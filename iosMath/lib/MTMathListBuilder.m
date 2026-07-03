@@ -940,6 +940,42 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return [arg stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
+// Interpret a raw array column-spec string (e.g. "|r|c|l|") into structured
+// alignments + per-boundary vertical-line counts. l/c/r append an alignment and
+// open a new boundary slot; | increments the current (rightmost) boundary slot.
+// Any other char, or zero declared columns, is a loud error. Returns NO on error.
+- (BOOL) interpretArrayColumnSpec:(NSString*) raw
+                   intoAlignments:(NSMutableArray<NSNumber*>*) alignments
+                    verticalLines:(NSMutableArray<NSNumber*>*) vLines
+{
+    [vLines addObject:@0];   // boundary before column 0
+    for (NSUInteger i = 0; i < raw.length; i++) {
+        unichar c = [raw characterAtIndex:i];
+        switch (c) {
+            case 'l': [alignments addObject:@(kMTColumnAlignmentLeft)];   [vLines addObject:@0]; break;
+            case 'c': [alignments addObject:@(kMTColumnAlignmentCenter)]; [vLines addObject:@0]; break;
+            case 'r': [alignments addObject:@(kMTColumnAlignmentRight)];  [vLines addObject:@0]; break;
+            case '|': {
+                NSUInteger idx = vLines.count - 1;
+                vLines[idx] = @(vLines[idx].integerValue + 1);
+                break;
+            }
+            default: {
+                NSString* message = [NSString stringWithFormat:
+                    @"Unsupported array column specifier: %C", c];
+                [self setError:MTParseErrorInvalidColumnSpec message:message];
+                return NO;
+            }
+        }
+    }
+    if (alignments.count == 0) {
+        [self setError:MTParseErrorInvalidColumnSpec
+               message:@"array environment must declare at least one column"];
+        return NO;
+    }
+    return YES;
+}
+
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
 {
     NSString* delim = [self readDelimiter];
@@ -1427,7 +1463,23 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
     }
     NSError* error;
-    MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    MTMathAtom* table;
+    if ([_currentEnv.envName isEqualToString:@"array"]) {
+        NSMutableArray<NSNumber*>* alignments = [NSMutableArray array];
+        NSMutableArray<NSNumber*>* vLines = [NSMutableArray array];
+        if ([self interpretArrayColumnSpec:_currentEnv.argument
+                            intoAlignments:alignments
+                             verticalLines:vLines]) {
+            table = [MTMathAtomFactory arrayTableWithAlignments:alignments
+                                                  verticalLines:vLines
+                                                horizontalLines:@[]
+                                                           rows:rows
+                                                          error:&error];
+        }
+        // else: interpretArrayColumnSpec set _error; table stays nil.
+    } else {
+        table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    }
     if (!table && !_error) {
         _error = error;
         return nil;

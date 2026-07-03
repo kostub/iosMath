@@ -3828,4 +3828,46 @@ static NSArray* getTestDataLargeDelimiters() {
         @"array environment requires a column specification");
 }
 
+- (void)testArrayColumnSpecInterpretation
+{
+    // {rcl} -> 3 cols R/C/L, no rules.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{rcl} a & b & c \\end{array}"];
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table getAlignmentForColumn:2], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @0, @0, @0, @0 ]));
+
+    // {||c||c|} -> vertical-line counts 2/2/1.
+    MTMathList* list2 = [MTMathListBuilder buildFromString:@"\\begin{array}{||c||c|} a & b \\end{array}"];
+    MTMathTable* table2 = list2.atoms[0];
+    XCTAssertEqualObjects(table2.verticalLines, (@[ @2, @2, @1 ]));
+    XCTAssertEqual([table2 getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table2 getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+}
+
+- (void)testArrayEmptySpecAndBadSpecifierAreErrors
+{
+    NSError* e1 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{} a \\end{array}" error:&e1]);
+    XCTAssertEqual(e1.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e1.localizedDescription,
+        @"array environment must declare at least one column");
+
+    NSError* e2 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{||} a \\end{array}" error:&e2]);
+    XCTAssertEqual(e2.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e2.localizedDescription,
+        @"array environment must declare at least one column");
+
+    NSError* e3 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{p} a \\end{array}" error:&e3]);
+    XCTAssertEqual(e3.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e3.localizedDescription,
+        @"Unsupported array column specifier: p");
+}
+
 @end
