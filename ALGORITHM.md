@@ -84,7 +84,7 @@ Defined in `MTMathList.h` as `MTMathAtomType`.
 | `kMTMathAtomColor` / `kMTMathAtomColorbox` | — | iosMath extension. Renders inner list and applies fg/bg color. |
 | `kMTMathAtomTable` | — | iosMath extension (equivalent to TeX `\halign` for matrices, aligned, cases, etc.). |
 | `kMTMathAtomText` | Ord (with sub-mlist) | iosMath extension for the `\text`/`\textrm`/`\textbf`/… family. Holds a run of text typeset upright; spaced as Ordinary (see `MTTypesetter` case). |
-| `kMTMathAtomBox` | Ord (with sub-mlist) | iosMath extension for the phantom/smash/lap family (`\phantom`, `\hphantom`, `\vphantom`, `\smash`, `\llap`, `\rlap`, `\clap`, `\mathstrut`). Script-capable. Draws (or reserves the metrics of) its inner list per per-command keep-width/height/depth flags. |
+| `kMTMathAtomBox` | Ord (with sub-mlist) | iosMath extension for the phantom/smash/lap family (`\phantom`, `\hphantom`, `\vphantom`, `\smash`, `\llap`, `\rlap`, `\clap`, `\mathstrut`). Script-capable. Draws (or reserves the metrics of) its inner list per its per-command keep-width/height/depth flags. |
 | `kMTMathAtomOrdGroup` | Ord (with sub-mlist) | iosMath extension: a brace group `{…}` in math mode — an Ord subformula whose nucleus is a sub-mlist (== TeX Ord noad with `sub_mlist`, KaTeX "ordgroup"). Script-capable; spaced as Ordinary. |
 
 **Missing noad types** (vs. TeX):
