@@ -1117,8 +1117,9 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         MTMathAtom* table = [self buildTable:env argument:argument firstList:nil row:NO];
         return table;
-    } else if ([command isEqualToString:@"color"]) {
-        // A color command has 2 arguments
+    } else if ([command isEqualToString:@"color"] || [command isEqualToString:@"textcolor"]) {
+        // \color and its alias \textcolor are 2-argument commands: a color
+        // followed by the content group that the color applies to.
         NSString* colorStr = [self readColor];
         if (!colorStr) {
             // readColor already set the error.
