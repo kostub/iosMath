@@ -302,6 +302,25 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkListCopy:list2 original:list forTest:self];
 }
 
+- (void)testMathTableVerticalHorizontalLinesDefaultAndCopy
+{
+    MTMathTable* table = [[MTMathTable alloc] init];
+    // Default: both empty (inert — existing envs unaffected).
+    XCTAssertNotNil(table.verticalLines);
+    XCTAssertNotNil(table.horizontalLines);
+    XCTAssertEqual(table.verticalLines.count, 0);
+    XCTAssertEqual(table.horizontalLines.count, 0);
+
+    table.verticalLines = @[ @1, @0, @2 ];
+    table.horizontalLines = @[ @1, @0 ];
+    MTMathTable* copy = [table copy];
+    XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
+    XCTAssertEqualObjects(copy.horizontalLines, (@[ @1, @0 ]));
+    // Mutating the original's field must not affect the copy.
+    table.verticalLines = @[ @9 ];
+    XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
+}
+
 @end
 
 @interface MTMathAtomTest : XCTestCase
