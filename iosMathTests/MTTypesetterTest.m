@@ -3351,4 +3351,22 @@
     XCTAssertEqual(v.descent, 0);
 }
 
+- (void)testArrayColumnOffsetsMatchAlignmentNoRules
+{
+    // No vertical rules: array column x-positions must follow the same rule as matrix
+    // (left col at 0, next col at colWidth0 + interColumnSpacing·muUnit).
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{lll} a & b & c \\end{array}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+    // One row display; its sub-displays are the three cells, left-aligned at increasing x.
+    MTMathListDisplay* rowDisp = tableDisp.subDisplays[0];
+    CGFloat x0 = ((MTDisplay*) rowDisp.subDisplays[0]).position.x;
+    CGFloat x1 = ((MTDisplay*) rowDisp.subDisplays[1]).position.x;
+    CGFloat x2 = ((MTDisplay*) rowDisp.subDisplays[2]).position.x;
+    XCTAssertEqualWithAccuracy(x0, 0, 0.01);
+    XCTAssertGreaterThan(x1, x0);
+    XCTAssertGreaterThan(x2, x1);
+}
+
 @end

@@ -2197,6 +2197,10 @@ static const CGFloat kLineSkipMultiplier = 0.1;  // default is 1pt for 10pt font
 static const CGFloat kLineSkipLimitMultiplier = 0;
 static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 
+// Array rule geometry. Starting values (font-scaled), tuned by snapshot tests.
+static const CGFloat kArrayRuleGapMultiplier = 0.2;     // ≈ \doublerulesep (2pt at 10pt)
+static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule clearance
+
 - (MTDisplay*) makeTable:(MTMathTable*) table
 {
     NSUInteger numColumns = table.numColumns;
@@ -2204,7 +2208,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         // Empty table
         return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
     }
-    
+
     CGFloat *columnWidths = calloc(numColumns, sizeof(CGFloat));
     NSAssert(columnWidths != NULL, @"Failed to allocate columnWidths");
     // Wrap in @try/@finally so columnWidths is released on all exit paths.
@@ -2214,10 +2218,22 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     @try {
         NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
 
+        MTLineStyle cellStyle = [self cellStyleForTable:table];
+        CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
+        CGFloat thickness = _styleFont.mathTable.fractionRuleThickness;
+        NSMutableArray<NSArray<NSNumber*>*>* vRuleXs = [NSMutableArray array];
+        CGFloat contentWidth = 0;
+        NSArray<NSNumber*>* columnOffsets = [self columnOffsetsForTable:table
+                                                          columnWidths:columnWidths
+                                                             thickness:thickness
+                                                       cellStyleMuUnit:cellStyleMuUnit
+                                                               vRuleXs:vRuleXs
+                                                          contentWidth:&contentWidth];
+
         // Position all the columns in each row
         NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
         for (NSArray<MTDisplay*>* row in displays) {
-            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
+            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths columnOffsets:columnOffsets];
             [rowDisplays addObject:rowDisplay];
         }
 
@@ -2229,6 +2245,49 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         free(columnWidths);
     }
     return tableDisplay;
+}
+
+// Compute per-column start x-offsets shared by cells and vertical rules, so they cannot
+// drift. For each vertical boundary i (0..numColumns) with verticalLines[i] > 0, widen the
+// gap by 2·padding + the rule block and record each rule's centre x in vRuleXs[i]. With no
+// rules this reduces to -makeRowWithColumns:'s exact running sum (matrix path unchanged).
+- (NSArray<NSNumber*>*) columnOffsetsForTable:(MTMathTable*) table
+                                 columnWidths:(CGFloat[]) columnWidths
+                                    thickness:(CGFloat) thickness
+                              cellStyleMuUnit:(CGFloat) cellStyleMuUnit
+                                      vRuleXs:(NSMutableArray<NSArray<NSNumber*>*>*) vRuleXs
+                                 contentWidth:(CGFloat*) outWidth
+{
+    NSUInteger numColumns = table.numColumns;
+    NSArray<NSNumber*>* vLines = table.verticalLines;
+    CGFloat padding = kArrayRulePaddingMultiplier * _styleFont.fontSize;
+    CGFloat ruleGap = kArrayRuleGapMultiplier * _styleFont.fontSize;
+    NSMutableArray<NSNumber*>* offsets = [NSMutableArray arrayWithCapacity:numColumns];
+    CGFloat x = 0;
+    for (NSUInteger i = 0; i <= numColumns; i++) {
+        CGFloat base = (i == 0 || i == numColumns)
+            ? 0 : table.interColumnSpacing * cellStyleMuUnit;
+        NSInteger count = (i < vLines.count) ? vLines[i].integerValue : 0;
+        NSMutableArray<NSNumber*>* xs = [NSMutableArray array];
+        if (count > 0) {
+            CGFloat ruleAreaStart = x + padding + base / 2;
+            for (NSInteger k = 0; k < count; k++) {
+                CGFloat cx = ruleAreaStart + k * (thickness + ruleGap) + thickness / 2;
+                [xs addObject:@(cx)];
+            }
+            CGFloat ruleBlock = count * thickness + (count - 1) * ruleGap;
+            x += base + 2 * padding + ruleBlock;
+        } else {
+            x += base;
+        }
+        [vRuleXs addObject:xs];
+        if (i < numColumns) {
+            [offsets addObject:@(x)];
+            x += columnWidths[i];
+        }
+    }
+    *outWidth = x;
+    return offsets;
 }
 
 // Typeset every cell in the table. As a side-effect calculate the max column width of each column.
@@ -2262,29 +2321,25 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     return table.cellStyle == kMTLineStyleInherit ? _style : table.cellStyle;
 }
 
-- (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
+- (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths columnOffsets:(NSArray<NSNumber*>*) columnOffsets
 {
-    CGFloat columnStart = 0;
-    MTLineStyle cellStyle = [self cellStyleForTable:table];
-    // muUnit == fontSize/18 (see -[MTFontMathTable muUnit]). Don't copy a CTFont just to
-    // read a scalar that is a pure function of _font + cellStyle.
-    CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
         CGFloat colWidth = columnWidths[i];
+        CGFloat columnStart = columnOffsets[i].doubleValue;
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
-        
+
         CGFloat cellPos = columnStart;
         switch (alignment) {
             case kMTColumnAlignmentRight:
                 cellPos += colWidth - col.width;
                 break;
-                
+
             case kMTColumnAlignmentCenter:
                 cellPos += (colWidth - col.width) / 2;
                 break;
-                
+
             case kMTColumnAlignmentLeft:
                 // No changes if left aligned
                 break;
@@ -2294,9 +2349,8 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         } else {
             rowRange = col.range;
         }
-        
+
         col.position = CGPointMake(cellPos, 0);
-        columnStart += colWidth + table.interColumnSpacing * cellStyleMuUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
