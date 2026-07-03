@@ -3936,4 +3936,22 @@ static NSArray* getTestDataLargeDelimiters() {
         @"array row has 2 cells but column specification declares 1 columns");
 }
 
+- (void)testArrayRoundTrip
+{
+    // \hline at top boundary, two rows, leading+trailing vertical rules.
+    NSString* str = @"\\begin{array}{|c|} \\hline a \\\\ b \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{array}{|c|}\\hline a\\\\ b\\end{array}");
+}
+
+- (void)testArrayRoundTripMixedAlignmentNoRules
+{
+    NSString* str = @"\\begin{array}{rcl} a & b & c \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{array}{rcl}a&b&c\\end{array}");
+}
+
 @end
