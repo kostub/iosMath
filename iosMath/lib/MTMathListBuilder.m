@@ -893,7 +893,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     static NSSet<NSString*>* envs = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        envs = [NSSet setWithObjects:@"alignedat", nil];
+        envs = [NSSet setWithObjects:@"alignedat", @"array", nil];
     });
     return envs;
 }
@@ -902,11 +902,17 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // require }. Returns the raw inside string (e.g. @"2"); interpretation happens later
 // in -buildTable:argument:firstList:row:. On a malformed argument, sets the error and
 // returns nil.
-- (nullable NSString*) readEnvironmentArgument
+- (nullable NSString*) readEnvironmentArgument:(NSString*) env
 {
+    BOOL isArray = [env isEqualToString:@"array"];
     if (![self expectCharacter:'{']) {
-        [self setError:MTParseErrorInvalidCommand
-               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        if (isArray) {
+            [self setError:MTParseErrorMissingColumnSpec
+                   message:@"array environment requires a column specification"];
+        } else {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        }
         return nil;
     }
     NSMutableString* arg = [NSMutableString string];
@@ -919,8 +925,13 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [arg appendString:[NSString stringWithCharacters:&ch length:1]];
     }
     if (![self expectCharacter:'}']) {
-        [self setError:MTParseErrorInvalidCommand
-               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        if (isArray) {
+            [self setError:MTParseErrorInvalidColumnSpec
+                   message:@"array column specification is missing a closing brace"];
+        } else {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        }
         return nil;
     }
     // Strip surrounding whitespace (TeX's argument scanner ignores it), matching
@@ -1109,7 +1120,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         NSString* argument = nil;
         if ([[MTMathListBuilder environmentsTakingArgument] containsObject:env]) {
-            argument = [self readEnvironmentArgument];
+            argument = [self readEnvironmentArgument:env];
             if (!argument) {
                 // readEnvironmentArgument already set the error.
                 return nil;

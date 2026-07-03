@@ -3817,4 +3817,15 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\frac{a}{b}^{2}");
 }
 
+- (void)testArrayMissingColumnSpecIsError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array} a \\end{array}" error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorMissingColumnSpec);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array environment requires a column specification");
+}
+
 @end

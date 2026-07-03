@@ -93,6 +93,10 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     /// mode (e.g. a non-ASCII literal like π, or a special character such as
     /// %, #, $ that has no meaning here).
     MTParseErrorInvalidCharacter,
+    /// An array environment was declared with no column specification.
+    MTParseErrorMissingColumnSpec,
+    /// An array column specification was empty or used an unsupported specifier.
+    MTParseErrorInvalidColumnSpec,
 };
 
 @end
