@@ -20,6 +20,7 @@ NSString *const MTParseError = @"ParseError";
 @property (nonatomic) NSString* argument;
 @property (nonatomic) BOOL ended;
 @property (nonatomic) NSInteger numRows;
+@property (nonatomic) NSMutableArray<NSNumber*>* hLines;
 
 @end
 
@@ -33,6 +34,7 @@ NSString *const MTParseError = @"ParseError";
         _argument = nil;
         _numRows = 0;
         _ended = NO;
+        _hLines = [NSMutableArray array];
     }
     return self;
 }
@@ -283,6 +285,13 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
+            if ([command isEqualToString:@"hline"]) {
+                // \hline is a no-op boundary marker: record it and keep reading the same cell.
+                if (![self recordHorizontalLine]) {
+                    return nil;   // error already set
+                }
+                continue;
+            }
             MTMathList* done = [self stopCommand:command list:list stopChar:stop oneChar:oneCharOnly];
             if (done) {
                 return done;
@@ -898,6 +907,35 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return envs;
 }
 
++ (NSSet<NSString*>*) environmentsAllowingHorizontalLines
+{
+    static NSSet<NSString*>* envs = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        envs = [NSSet setWithObjects:@"array", nil];
+    });
+    return envs;
+}
+
+// Record a \hline at the current row boundary (== _currentEnv.numRows). Allowed only
+// inside an environment that permits horizontal lines (array). \hline emits no atom and
+// consumes no cell content. Returns NO (and sets the error) if not in such an environment.
+- (BOOL) recordHorizontalLine
+{
+    if (_currentEnv && [[MTMathListBuilder environmentsAllowingHorizontalLines]
+                            containsObject:_currentEnv.envName]) {
+        NSUInteger boundary = _currentEnv.numRows;
+        while (_currentEnv.hLines.count <= boundary) {
+            [_currentEnv.hLines addObject:@0];
+        }
+        _currentEnv.hLines[boundary] = @(_currentEnv.hLines[boundary].integerValue + 1);
+        return YES;
+    }
+    [self setError:MTParseErrorInvalidCommand
+           message:@"\\hline is only valid inside an array environment"];
+    return NO;
+}
+
 // Reads the raw {…} argument after \begin{env}: require {, capture raw chars to },
 // require }. Returns the raw inside string (e.g. @"2"); interpretation happens later
 // in -buildTable:argument:firstList:row:. On a malformed argument, sets the error and
@@ -1436,6 +1474,23 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
         return nil;
     }
+    if ([_currentEnv.envName isEqualToString:@"array"] && rows.count > 0) {
+        // A trailing "\\" is needed so a bottom \hline is recognized before \end (it
+        // opens a new row boundary). If nothing but \hline/whitespace followed that
+        // trailing "\\", the row it opened has no real content — drop it so it isn't
+        // counted as an extra (blank) array row.
+        NSArray<MTMathList*>* lastRow = rows.lastObject;
+        BOOL lastRowEmpty = YES;
+        for (MTMathList* cell in lastRow) {
+            if (cell.atoms.count > 0) {
+                lastRowEmpty = NO;
+                break;
+            }
+        }
+        if (lastRowEmpty) {
+            [rows removeLastObject];
+        }
+    }
     if ([_currentEnv.envName isEqualToString:@"alignedat"]) {
         // argument is the raw {n}; require a positive integer.
         NSString* arg = _currentEnv.argument;
@@ -1472,7 +1527,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                              verticalLines:vLines]) {
             table = [MTMathAtomFactory arrayTableWithAlignments:alignments
                                                   verticalLines:vLines
-                                                horizontalLines:@[]
+                                                horizontalLines:(_currentEnv.hLines ?: @[])
                                                            rows:rows
                                                           error:&error];
         }

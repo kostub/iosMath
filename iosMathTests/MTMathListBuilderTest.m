@@ -3870,4 +3870,31 @@ static NSArray* getTestDataLargeDelimiters() {
         @"Unsupported array column specifier: p");
 }
 
+- (void)testArrayHorizontalLineCounting
+{
+    // \hline at top, middle, and bottom boundaries; bottom needs a trailing \\.
+    NSString* str = @"\\begin{array}{c} \\hline a \\\\ \\hline b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.numRows, 2);
+    // Boundaries: 0 (top)=1, 1 (middle)=1, 2 (bottom)=1.
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @1, @1, @1 ]));
+}
+
+- (void)testHlineOutsideArrayIsError
+{
+    NSError* e1 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\hline a" error:&e1]);
+    XCTAssertEqual(e1.code, MTParseErrorInvalidCommand);
+    XCTAssertEqualObjects(e1.localizedDescription,
+        @"\\hline is only valid inside an array environment");
+
+    NSError* e2 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{matrix} \\hline a \\end{matrix}" error:&e2]);
+    XCTAssertEqual(e2.code, MTParseErrorInvalidCommand);
+    XCTAssertEqualObjects(e2.localizedDescription,
+        @"\\hline is only valid inside an array environment");
+}
+
 @end
