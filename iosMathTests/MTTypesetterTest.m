@@ -3396,4 +3396,30 @@
     XCTAssertGreaterThan(tableDisp.ascent + tableDisp.descent, 0);
 }
 
+- (void)testArrayInsideDelimitersScalesToRuleBounds
+{
+    // \left[ {cc|c} augmented matrix with rules \right] — delimiters read the bare table's
+    // ascent/descent, which include the rules (folded via -recomputeDimensions).
+    NSString* str = @"\\left[ \\begin{array}{cc|c} 1 & 0 & 5 \\\\ 0 & 1 & 6 \\end{array} \\right]";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    // The full expression renders with positive bounds and does not throw.
+    XCTAssertGreaterThan(display.width, 0);
+    XCTAssertGreaterThan(display.ascent + display.descent, 0);
+}
+
+- (void)testMatrixLayoutUnchangedByArraySupport
+{
+    // Regression: a plain matrix produces exactly one table display with no MTRuleDisplay.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        XCTAssertFalse([sub isKindOfClass:[MTRuleDisplay class]]);
+    }
+    XCTAssertEqual(tableDisp.subDisplays.count, 2);   // exactly two row displays
+}
+
 @end
