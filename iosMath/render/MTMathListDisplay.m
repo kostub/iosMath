@@ -832,6 +832,54 @@ static BOOL isIos6Supported(void) {
 
 @end
 
+#pragma mark - MTRuleDisplay
+
+@implementation MTRuleDisplay {
+    CGFloat _length;
+    CGFloat _thickness;
+    BOOL _vertical;
+}
+
+- (instancetype)initWithStart:(CGPoint)start length:(CGFloat)length thickness:(CGFloat)thickness vertical:(BOOL)isVertical range:(NSRange)range
+{
+    self = [super init];
+    if (self) {
+        _length = length;
+        _thickness = thickness;
+        _vertical = isVertical;
+        self.position = start;
+        self.range = range;
+        if (isVertical) {
+            self.width = thickness;
+            self.ascent = length;
+            self.descent = 0;
+        } else {
+            self.width = length;
+            self.ascent = thickness;
+            self.descent = 0;
+        }
+    }
+    return self;
+}
+
+- (void)draw:(CGContextRef)context
+{
+    [super draw:context];
+    CGContextSaveGState(context);
+    [self.textColor setStroke];
+    MTBezierPath* path = [MTBezierPath bezierPath];
+    [path moveToPoint:self.position];
+    CGPoint end = _vertical
+        ? CGPointMake(self.position.x, self.position.y + _length)
+        : CGPointMake(self.position.x + _length, self.position.y);
+    [path addLineToPoint:end];
+    path.lineWidth = _thickness;
+    [path stroke];
+    CGContextRestoreGState(context);
+}
+
+@end
+
 #pragma mark - MTAccentDisplay
 
 @implementation MTAccentDisplay

@@ -3326,4 +3326,29 @@
     }
 }
 
+- (void)testRuleDisplayHorizontalAndVerticalMetrics
+{
+    MTRuleDisplay* h = [[MTRuleDisplay alloc] initWithStart:CGPointMake(2, 5)
+                                                     length:10
+                                                  thickness:0.6
+                                                   vertical:NO
+                                                      range:NSMakeRange(0, 1)];
+    XCTAssertEqual(h.position.x, 2);
+    XCTAssertEqual(h.position.y, 5);
+    XCTAssertEqual(h.width, 10);
+    XCTAssertEqual(h.ascent, 0.6);
+    XCTAssertEqual(h.descent, 0);
+
+    MTRuleDisplay* v = [[MTRuleDisplay alloc] initWithStart:CGPointMake(3, -4)
+                                                     length:12
+                                                  thickness:0.6
+                                                   vertical:YES
+                                                      range:NSMakeRange(0, 1)];
+    XCTAssertEqual(v.position.x, 3);
+    XCTAssertEqual(v.position.y, -4);
+    XCTAssertEqual(v.width, 0.6);
+    XCTAssertEqual(v.ascent, 12);   // top end = position.y + ascent
+    XCTAssertEqual(v.descent, 0);
+}
+
 @end

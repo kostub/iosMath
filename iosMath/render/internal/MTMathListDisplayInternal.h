@@ -135,6 +135,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+// A standalone straight rule (horizontal or vertical) used to draw array `|` and \hline.
+// A positioned leaf like MTGlyphDisplay: it carries its own position/width/ascent/descent
+// so -recomputeDimensions folds it into the enclosing table's bounds.
+@interface MTRuleDisplay : MTDisplay
+
+// `start` is in table-local coordinates. For a horizontal rule `length` extends
+// rightward (+x); for a vertical rule it extends upward (+y). Stroke is centred on
+// the path, so callers offset `start` by thickness/2 where edge alignment matters.
+- (instancetype) initWithStart:(CGPoint) start
+                        length:(CGFloat) length
+                     thickness:(CGFloat) thickness
+                      vertical:(BOOL) isVertical
+                         range:(NSRange) range NS_DESIGNATED_INITIALIZER;
+
+@end
+
 @interface MTStackDisplay ()
 
 - (instancetype)initWithBase:(MTMathListDisplay*) base
