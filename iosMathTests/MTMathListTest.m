@@ -387,7 +387,8 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
 - (void)testArrayTableFactoryAcceptsShortRows
 {
     MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
-    // Spec declares 3 columns; row has 1 cell — allowed, trailing cells absent.
+    // Spec declares 3 columns; row has 1 cell — allowed. The short row is padded out
+    // to 3 cells so the declared trailing columns (alignment + vertical rule) survive.
     NSError* error = nil;
     MTMathAtom* atom = [MTMathAtomFactory
         arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter),
@@ -400,7 +401,29 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertNil(error);
     XCTAssertNotNil(atom);
     MTMathTable* table = (MTMathTable*) atom;
-    XCTAssertEqual([table.cells[0] count], 1);
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table.cells[0] count], 3);
+}
+
+- (void)testArrayTableFactoryNormalizesVerticalLines
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    // Caller passes a too-short verticalLines (and nil horizontalLines); the factory
+    // pads verticalLines to numCols+1 and tolerates nil rather than crashing.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @1 ]
+                 horizontalLines:nil
+                            rows:@[ @[ a, b ] ]
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqual(table.verticalLines.count, 3);   // numCols(2) + 1
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @0, @0 ]));
 }
 
 @end

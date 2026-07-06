@@ -551,13 +551,25 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
         for (int j = 0; j < row.count; j++) {
             [table setCell:row[j] forRow:i column:j];
         }
+        // Pad short rows out to numCols. numColumns is derived from the widest row,
+        // so without this a trailing all-empty column (its alignment + vertical rule)
+        // would be silently dropped. setCell backfills the intermediate cells.
+        if ((NSInteger) row.count < numCols) {
+            [table setCell:[MTMathList new] forRow:i column:numCols - 1];
+        }
     }
     for (int j = 0; j < numCols; j++) {
         [table setAlignment:columnAlignments[j].integerValue forColumn:j];
     }
-    table.verticalLines = verticalLines;
+    // Normalize verticalLines to length numCols+1 so every declared column boundary is
+    // represented (mirrors horizontalLines below). Guard nil for the nonnull property.
+    NSMutableArray<NSNumber*>* vLines = [NSMutableArray arrayWithArray:verticalLines ?: @[]];
+    while ((NSInteger) vLines.count < numCols + 1) {
+        [vLines addObject:@0];
+    }
+    table.verticalLines = vLines;
     // Normalize horizontalLines to length numRows+1 so the renderer can index boundaries.
-    NSMutableArray<NSNumber*>* hLines = [NSMutableArray arrayWithArray:horizontalLines];
+    NSMutableArray<NSNumber*>* hLines = [NSMutableArray arrayWithArray:horizontalLines ?: @[]];
     while (hLines.count < table.numRows + 1) {
         [hLines addObject:@0];
     }
