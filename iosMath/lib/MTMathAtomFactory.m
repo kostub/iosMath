@@ -26,6 +26,14 @@ NSString *const MTSymbolInfinity = @"\u221E"; // \infty
 NSString *const MTSymbolAngle = @"\u2220"; // \angle
 NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
+// Inter-column spacing for \begin{smallmatrix}, in mu. amsmath separates smallmatrix
+// columns with \thickspace = 5mu, measured under \scriptstyle (amsmath.dtx); KaTeX
+// mirrors this as 0.2778em = 5/18em (src/environments/array.ts). We store the honest
+// 5mu here and let the renderer scale the gap to the Script cell style
+// (MTTypesetter -cellStyleForTable:, PR 1), so the rendered gap is 5 * scriptScaleDown
+// outer-mu -- font-exact, with no pre-scaled magic factor baked into the model.
+static const CGFloat kSmallMatrixInterColumnSpacing = 5;
+
 @implementation MTMathStackCommandSpec
 - (instancetype)initWithOver:(nullable MTMathStackConstruction*)over
                        under:(nullable MTMathStackConstruction*)under
@@ -98,11 +106,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSString *chStr = [NSString stringWithCharacters:&ch length:1];
     if (ch < 0x21 || ch > 0x7E) {
-        // skip non ascii characters and spaces. Non-Latin text must be
-        // wrapped in \text*, \textbf{...}, etc.
+        // No atom for control characters, spaces, or non-ASCII literals. The
+        // builder decides what to do with these: whitespace is silently ignored,
+        // everything else raises MTParseErrorInvalidCharacter. Non-Latin text
+        // must be wrapped in \text*, \textbf{...}, etc.
         return nil;
     } else if (ch == '$' || ch == '%' || ch == '#' || ch == '&' || ch == '~' || ch == '\'') {
-        // These are latex control characters that have special meanings. We don't support them.
+        // LaTeX control characters with special meanings. They have no atom of
+        // their own; the builder handles them (& / ~ / ' are consumed before
+        // reaching here, while $ % # raise MTParseErrorInvalidCharacter).
         return nil;
     } else if (ch == '^' || ch == '_' || ch == '{' || ch == '}' || ch == '\\') {
         // more special characters for Latex.
@@ -141,7 +153,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSParameterAssert(chars);
     NSInteger len = chars.length;
-    unichar buff[len];
+    unichar *buff = malloc(sizeof(unichar) * (size_t)len);
+    NSAssert(len == 0 || buff != NULL, @"Failed to allocate buff");
     [chars getCharacters:buff range:NSMakeRange(0, len)];
     MTMathList* list = [[MTMathList alloc] init];
     for (NSInteger i = 0; i < len; i++) {
@@ -150,6 +163,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             [list addAtom:atom];
         }
     }
+    free(buff);
     return list;
 }
 
@@ -163,7 +177,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         // Switch to the canonical name
         symbolName = canonicalName;
     }
-    
+
     NSDictionary* commands = [self supportedLatexSymbols];
     MTMathAtom* atom = commands[symbolName];
     if (atom) {
@@ -200,8 +214,14 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 {
     NSParameterAssert(name);
     NSParameterAssert(atom);
+    // Custom symbols are expected to be registered at setup time, before any
+    // concurrent parsing/rendering begins. The symbol tables are therefore not
+    // guarded at run time: once initialized (via dispatch_once in each accessor)
+    // they are only read, and concurrent reads of an unmutated dictionary are
+    // safe. Do not call this while parsing on another thread.
     NSMutableDictionary<NSString*, MTMathAtom*>* commands = [self supportedLatexSymbols];
-    commands[name] = atom;
+    commands[name] = [atom copy];   // copy on write — symmetric with the read side, which
+                                    // copies because atoms are mutable
     if (atom.nucleus.length != 0) {
         NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* dict = [self textToLatexSymbolNames];
         NSMutableDictionary<NSNumber*, NSString*>* inner = dict[atom.nucleus];
@@ -272,7 +292,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (NSDictionary<NSString*, NSNumber*>*) textStyles
 {
     static NSDictionary<NSString*, NSNumber*>* textStyles = nil;
-    if (!textStyles) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         textStyles = @{
             @"text":   @(kMTTextStyleRoman),
             @"textrm": @(kMTTextStyleRoman),
@@ -281,7 +302,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             @"textsf": @(kMTTextStyleSansSerif),
             @"texttt": @(kMTTextStyleTypewriter),
         };
-    }
+    });
     return textStyles;
 }
 
@@ -367,27 +388,22 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         }
     }
     static NSDictionary<NSString*, NSArray*>* matrixEnvs = nil;
-    if (!matrixEnvs) {
+    static dispatch_once_t matrixEnvsOnce;
+    dispatch_once(&matrixEnvsOnce, ^{
         matrixEnvs = @{ @"matrix" : @[],
                         @"pmatrix" : @[ @"(", @")"],
                         @"bmatrix" : @[ @"[", @"]"],
                         @"Bmatrix" : @[ @"{", @"}"],
                         @"vmatrix" : @[ @"vert", @"vert"],
                         @"Vmatrix" : @[ @"Vert", @"Vert"], };
-    }
+    });
     if ([matrixEnvs objectForKey:env]) {
         // it is set to matrix as the delimiters are converted to latex outside the table.
         table.environment = @"matrix";
         table.interRowAdditionalSpacing = 0;
         table.interColumnSpacing = 18;
-        // All the lists are in textstyle
-        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
-        for (int i = 0; i < table.cells.count; i++) {
-            NSArray<MTMathList*>* row = table.cells[i];
-            for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
-            }
-        }
+        // All the cells render in textstyle.
+        table.cellStyle = kMTLineStyleText;
         // Add delimiters
         NSArray* delims = [matrixEnvs objectForKey:env];
         if (delims.count == 2) {
@@ -429,7 +445,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         [table setAlignment:kMTColumnAlignmentRight forColumn:0];
         [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
         return table;
-    } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"]) {
+    } else if ([env isEqualToString:@"displaylines"] || [env isEqualToString:@"gather"] || [env isEqualToString:@"gathered"]) {
         if (table.numColumns != 1) {
             NSString* message = [NSString stringWithFormat:@"%@ environment can only have 1 column", env];
             if (error != nil) {
@@ -467,14 +483,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         table.interColumnSpacing = 18;
         [table setAlignment:kMTColumnAlignmentLeft forColumn:0];
         [table setAlignment:kMTColumnAlignmentLeft forColumn:1];
-        // All the lists are in textstyle
-        MTMathAtom* style = [[MTMathStyle alloc] initWithStyle:kMTLineStyleText];
-        for (int i = 0; i < table.cells.count; i++) {
-            NSArray<MTMathList*>* row = table.cells[i];
-            for (int j = 0; j < row.count; j++) {
-                [row[j] insertAtom:style atIndex:0];
-            }
-        }
+        // All the cells render in textstyle.
+        table.cellStyle = kMTLineStyleText;
         // Add delimiters
         MTInner* inner = [[MTInner alloc] init];
         inner.leftBoundary = [self boundaryAtomForDelimiterName:@"{"];
@@ -482,6 +492,33 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
         MTMathAtom* space = [self atomForLatexSymbolName:@","];
         inner.innerList = [MTMathList mathListWithAtoms:space, table, nil];
         return inner;
+    } else if ([env isEqualToString:@"smallmatrix"]) {
+        // Compact inline matrix: script-style cells, no delimiters, center default.
+        table.interRowAdditionalSpacing = 0;
+        table.interColumnSpacing = kSmallMatrixInterColumnSpacing;
+        table.cellStyle = kMTLineStyleScript;
+        return table;
+    } else if ([env isEqualToString:@"alignedat"]) {
+        // Generalization of the aligned branch to n alignment pairs (2n columns).
+        // The parser has already validated numColumns == 2n.
+        NSInteger cols = table.numColumns;
+        // Relation spacer before each odd column (mirrors aligned's column-1 spacer,
+        // repeated per pair) for correct = / relation spacing.
+        MTMathAtom* spacer = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+        for (int i = 0; i < table.cells.count; i++) {
+            NSArray<MTMathList*>* row = table.cells[i];
+            for (int j = 0; j < row.count; j++) {
+                if (j % 2 == 1) {
+                    [row[j] insertAtom:spacer atIndex:0];
+                }
+            }
+        }
+        table.interRowAdditionalSpacing = 1;
+        table.interColumnSpacing = 0;
+        for (int j = 0; j < cols; j++) {
+            [table setAlignment:(j % 2 == 0 ? kMTColumnAlignmentRight : kMTColumnAlignmentLeft) forColumn:j];
+        }
+        return table;
     }
     if (error) {
         NSString* message = [NSString stringWithFormat:@"Unknown environment: %@", env];
@@ -493,7 +530,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (NSMutableDictionary<NSString*, MTMathAtom*>*) supportedLatexSymbols
 {
     static NSMutableDictionary<NSString*, MTMathAtom*>* commands = nil;
-    if (!commands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         commands = [NSMutableDictionary dictionaryWithDictionary:@{
                      // Greek characters
                      @"alpha" : [MTMathAtom atomWithType:kMTMathAtomVariable value:@"\u03B1"],
@@ -701,6 +739,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"trianglelefteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B4"],
                      @"trianglerighteq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22B5"],
                      @"triangleq" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u225C"],
+                     // '<' / '>' are literal characters, not commands, so these cannot go
+                     // through the aliases map (command -> command). Map them straight to the
+                     // relation atoms produced by the literal characters.
+                     @"lt" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"<"],
+                     @"gt" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@">"],
+                     @"frown" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2322"],
+                     @"smile" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u2323"],
+                     @"bowtie" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u22C8"],
+                     @"longmapsto" : [MTMathAtom atomWithType:kMTMathAtomRelation value:@"\u27FC"],
 
                      // Missing ordinaries (logic / suits / Hebrew letters / amssymb)
                      @"complement" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u2201"],
@@ -761,6 +808,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"veebar" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22BB"],
                      @"triangleleft" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25C1"],
                      @"triangleright" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B7"],
+                     @"diamond" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u22C4"],
+                     @"bigcirc" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25EF"],
+                     // \bigtriangleup / \bigtriangledown share glyphs with the ordinary
+                     // \triangle (U+25B3) / \triangledown (U+25BD) but must have binary-op spacing.
+                     @"bigtriangleup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25B3"],
+                     @"bigtriangledown" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u25BD"],
 
                      // No limit operators
                      @"log" : [MTMathAtomFactory operatorWithName:@"log" limits:NO],
@@ -865,6 +918,10 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"cdots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22EF"],
                      @"ddots" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u22F1"],
                      @"triangle" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u25B3"],
+                     @"surd" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u221A"],
+                     @"flat" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266D"],
+                     @"natural" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266E"],
+                     @"sharp" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\u266F"],
                      @"imath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A4"],
                      @"jmath" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D6A5"],
                      @"partial" : [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@"\U0001D715"],
@@ -883,15 +940,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                      @"scriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScript],
                      @"scriptscriptstyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleScriptScript],
                      }];
-        
-    }
+    });
     return commands;
 }
 
 + (NSDictionary*) aliases
 {
     static NSDictionary* aliases = nil;
-    if (!aliases) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         aliases = @{
                     @"lnot" : @"neg",
                     @"land" : @"wedge",
@@ -920,14 +977,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"precnapprox" : @"nprecapprox",
                     @"succnapprox" : @"nsuccapprox",
                     };
-    }
+    });
     return aliases;
 }
 
 + (NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>*) textToLatexSymbolNames
 {
     static NSMutableDictionary<NSString*, NSMutableDictionary<NSNumber*, NSString*>*>* textToCommands = nil;
-    if (!textToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSDictionary* commands = [self supportedLatexSymbols];
         textToCommands = [NSMutableDictionary dictionaryWithCapacity:commands.count];
         for (NSString* command in commands) {
@@ -957,14 +1015,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             }
             inner[typeKey] = command;
         }
-    }
+    });
     return textToCommands;
 }
 
 + (NSDictionary<NSString*, NSString*>*) accents
 {
     static NSDictionary* accents = nil;
-    if (!accents) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         accents = @{
                     @"grave" : @"\u0300",
                     @"acute" : @"\u0301",
@@ -979,14 +1038,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                     @"widehat" : @"\u0302",
                     @"widetilde" : @"\u0303",
                     };
-    }
+    });
     return accents;
 }
 
 + (NSDictionary*) accentValueToName
 {
     static NSDictionary* accentToCommands = nil;
-    if (!accentToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSDictionary* accents = [self accents];
         NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:accents.count];
         for (NSString* command in accents) {
@@ -1007,22 +1067,23 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             mutableDict[acc] = command;
         }
         accentToCommands = [mutableDict copy];
-    }
+    });
     return accentToCommands;
 }
 
 +(NSDictionary<NSString*, NSString*> *) delimiters
 {
     static NSDictionary* delims = nil;
-    if (!delims) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         delims = @{
                    @"." : @"", // . means no delimiter
                    @"(" : @"(",
                    @")" : @")",
                    @"[" : @"[",
                    @"]" : @"]",
-                   @"<" : @"\u2329",
-                   @">" : @"\u232A",
+                   @"<" : @"\u27E8",
+                   @">" : @"\u27E9",
                    @"/" : @"/",
                    @"\\" : @"\\",
                    @"|" : @"|",
@@ -1034,12 +1095,12 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                    @"uparrow" : @"\u2191",
                    @"downarrow" : @"\u2193",
                    @"updownarrow" : @"\u2195",
-                   @"Uparrow" : @"21D1",
-                   @"Downarrow" : @"21D3",
-                   @"Updownarrow" : @"21D5",
+                   @"Uparrow" : @"\u21D1",
+                   @"Downarrow" : @"\u21D3",
+                   @"Updownarrow" : @"\u21D5",
                    @"backslash" : @"\\",
-                   @"rangle" : @"\u232A",
-                   @"langle" : @"\u2329",
+                   @"rangle" : @"\u27E9",
+                   @"langle" : @"\u27E8",
                    @"rbrace" : @"}",
                    @"}" : @"}",
                    @"{" : @"{",
@@ -1049,14 +1110,15 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                    @"lfloor" : @"\u230A",
                    @"rfloor" : @"\u230B",
                    };
-    }
+    });
     return delims;
 }
 
 + (NSDictionary*) delimValueToName
 {
     static NSDictionary* delimToCommands = nil;
-    if (!delimToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSDictionary* delims = [self delimiters];
         NSMutableDictionary* mutableDict = [NSMutableDictionary dictionaryWithCapacity:delims.count];
         for (NSString* command in delims) {
@@ -1077,7 +1139,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             mutableDict[delim] = command;
         }
         delimToCommands = [mutableDict copy];
-    }
+    });
     return delimToCommands;
 }
 
@@ -1085,7 +1147,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 +(NSDictionary<NSString*, NSNumber*> *) fontStyles
 {
     static NSDictionary<NSString*, NSNumber*>* fontStyles = nil;
-    if (!fontStyles) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         // \text* commands are handled by the parser via the textStyles
         // dictionary, so they do NOT appear here.
         fontStyles = @{
@@ -1106,7 +1169,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
                        @"mathbfit": @(kMTFontStyleBoldItalic),
                        @"bm": @(kMTFontStyleBoldItalic),
                    };
-    }
+    });
     return fontStyles;
 }
 
@@ -1115,7 +1178,8 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 + (NSDictionary<NSString*, MTMathStackCommandSpec*>*) stackCommands
 {
     static NSDictionary* stackCommands = nil;
-    if (!stackCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         // Each command maps to a single stretchy cap glyph (a Unicode codepoint). The
         // typesetter walks the cap's OpenType h_variants first; if no variant is wide
         // enough, it falls back to the font's HorizontalGlyphAssembly (parts + connector
@@ -1142,7 +1206,7 @@ NSString *const MTSymbolDegree = @"\u00B0"; // \circ
             @"stackrel":           [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomRelation       argRoles:@[@(kMTStackArgOver),  @(kMTStackArgBase)] inheritsClass:NO],
             @"stackbin":           [[MTMathStackCommandSpec alloc] initWithOver:nil under:nil displayClass:kMTMathAtomBinaryOperator argRoles:@[@(kMTStackArgOver),  @(kMTStackArgBase)] inheritsClass:NO],
         };
-    }
+    });
     return stackCommands;
 }
 
@@ -1192,7 +1256,8 @@ static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
 + (NSDictionary<NSString*, NSString*>*) stackCommandReverseTable
 {
     static NSDictionary* reverseTable = nil;
-    if (!reverseTable) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSDictionary<NSString*, MTMathStackCommandSpec*>* forward = [self stackCommands];
         NSMutableDictionary* mutable = [NSMutableDictionary dictionaryWithCapacity:forward.count];
         for (NSString* cmd in forward) {
@@ -1201,7 +1266,7 @@ static NSString* StackCommandKey(MTMathStackConstruction* _Nullable over,
             mutable[key] = cmd;
         }
         reverseTable = [mutable copy];
-    }
+    });
     return reverseTable;
 }
 

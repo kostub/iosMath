@@ -1659,6 +1659,35 @@
     }
 }
 
+- (void) testMissingSymbolsHaveGlyphsInDefaultFont
+{
+    // Every command added for the missing-symbols work must resolve to a real glyph
+    // in the default font (Latin Modern Math), never .notdef (glyph 0). \Join
+    // (U+2A1D) was deliberately excluded from this batch because Latin Modern lacks
+    // that glyph in its own table (it would only render via OS font substitution).
+    NSArray<NSString*>* commands = @[
+        @"lt", @"gt", @"frown", @"smile", @"bowtie", @"longmapsto",
+        @"bigcirc", @"bigtriangleup", @"bigtriangledown", @"diamond",
+        @"surd", @"flat", @"natural", @"sharp",
+    ];
+    MTFont* font = [[MTFontManager fontManager] defaultFont];
+    for (NSString* cmd in commands) {
+        MTMathAtom* atom = [MTMathAtomFactory atomForLatexSymbolName:cmd];
+        XCTAssertNotNil(atom, @"%@", cmd);
+        NSString* nucleus = atom.nucleus;
+        NSRange range = [nucleus rangeOfComposedCharacterSequenceAtIndex:0];
+        unichar chars[range.length];
+        [nucleus getCharacters:chars range:range];
+        CGGlyph glyphs[range.length];
+        bool found = CTFontGetGlyphsForCharacters(font.ctFont, chars, glyphs, range.length);
+        XCTAssertTrue(found, @"\\%@ (U+%04X) missing from Latin Modern Math",
+                      cmd, [nucleus characterAtIndex:0]);
+        XCTAssertNotEqual(glyphs[0], (CGGlyph)0,
+                          @"\\%@ (U+%04X) rendered as .notdef in Latin Modern Math",
+                          cmd, [nucleus characterAtIndex:0]);
+    }
+}
+
 - (void) testAllBundledFontsLoad
 {
     // Every bundled font must resolve from its <key>.otf + <key>.plist pair
@@ -2725,6 +2754,225 @@
     XCTAssertLessThan(nestedStack.over.ascent, baselineStack.over.ascent);
 }
 
+#pragma mark - Glyph assembly validation (FUN-4)
+
+// A glyph assembly whose extender part has a non-positive fullAdvance is
+// degenerate: adding more copies of the extender never increases the assembled
+// height, which would make MTTypesetter's assembly loop spin forever. The font
+// math table must reject such a plist at load time by throwing, the same way it
+// already throws for an invalid plist version, rather than silently mis-rendering
+// the glyph. The bundled fonts contain no such assembly, so these tests build a
+// synthetic math table to exercise the guard.
+
+// Returns a real glyph from the bundled font (and its round-tripped name) so the
+// synthetic assembly is keyed exactly as -getGlyphAssemblyFromTable: looks it up.
+- (CGGlyph)glyphForCharacter:(unichar)ch name:(NSString**)outName
+{
+    CGGlyph glyph = 0;
+    CTFontGetGlyphsForCharacters(self.font.ctFont, &ch, &glyph, 1);
+    *outName = [self.font getGlyphName:glyph];
+    return glyph;
+}
+
+- (MTFontMathTable*)mathTableWithAssemblyKey:(NSString*)key
+                                   glyphName:(NSString*)glyphName
+                             extenderAdvance:(int)extenderAdvance
+{
+    NSDictionary* startPart = @{ @"advance": @(100), @"startConnector": @(0),  @"endConnector": @(20), @"extender": @NO,  @"glyph": glyphName };
+    NSDictionary* extender  = @{ @"advance": @(extenderAdvance), @"startConnector": @(20), @"endConnector": @(20), @"extender": @YES, @"glyph": glyphName };
+    NSDictionary* endPart   = @{ @"advance": @(100), @"startConnector": @(20), @"endConnector": @(0),  @"extender": @NO,  @"glyph": glyphName };
+    NSDictionary* mathTable = @{
+        @"version": @"1.4",
+        key: @{ glyphName: @{ @"italic": @(0), @"parts": @[ startPart, extender, endPart ] } }
+    };
+    return [[MTFontMathTable alloc] initWithFont:self.font mathTable:mathTable];
+}
+
+- (void)testVerticalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a vertical assembly with a zero-advance extender must be rejected at load");
+}
+
+- (void)testHorizontalGlyphAssemblyWithZeroAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"h_assembly" glyphName:glyphName extenderAdvance:0],
+                    @"a horizontal assembly with a zero-advance extender must be rejected at load");
+}
+
+- (void)testGlyphAssemblyWithNegativeAdvanceExtenderIsRejected
+{
+    NSString* glyphName = nil;
+    [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    // Guard the full `advance <= 0` condition, not just the zero boundary.
+    XCTAssertThrows([self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:-10],
+                    @"an assembly with a negative-advance extender must be rejected at load");
+}
+
+- (void)testValidGlyphAssemblyIsAccepted
+{
+    NSString* glyphName = nil;
+    CGGlyph glyph = [self glyphForCharacter:'(' name:&glyphName];
+    XCTAssertNotNil(glyphName);
+
+    MTFontMathTable* table = [self mathTableWithAssemblyKey:@"v_assembly" glyphName:glyphName extenderAdvance:50];
+    NSArray<MTGlyphPart*>* parts = [table getVerticalGlyphAssemblyForGlyph:glyph];
+    XCTAssertEqual(parts.count, 3u, @"a well-formed assembly must be returned unchanged");
+}
+
+// REN-3: \color atoms must receive inter-element spacing before the colored sub-display.
+// Before the fix, the colored group abutted the preceding binary operator with no gap.
+// After the fix, the medium binary-operator→ordinary gap (4 mu) separates them.
+
+- (void)testColorReceivesInterElementSpacingBeforeIt {
+    // x + \color{red}y  — the colored sub-display follows the binary operator +.
+    // The gap between the end of "x+" and the start of the colored group must equal
+    // the medium space (4mu = 4 * font.mathTable.muUnit) at display style.
+    MTMathListDisplay* display = [self displayForLaTeX:@"x+\\color{#ff0000}{y}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected CTLine for 'x+' and a colored sub-display");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]],
+                  @"First sub-display should be a CTLine for 'x+'");
+    MTCTLineDisplay* xPlusLine = (MTCTLineDisplay*)sub0;
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTMathListDisplay class]],
+                  @"Second sub-display should be the colored MTMathListDisplay");
+    MTMathListDisplay* colorSub = (MTMathListDisplay*)sub1;
+    XCTAssertNotNil(colorSub.localTextColor, @"Colored display must carry a localTextColor");
+
+    // The medium binary-operator gap is 4 mu = 4 * muUnit (display style, non-script).
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = colorSub.position.x - (xPlusLine.position.x + xPlusLine.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Expected medium binary-op gap of %.4f pt before \\color, got %.4f pt",
+                               expectedGap, actualGap);
+}
+
+- (void)testColorboxReceivesInterElementSpacingBeforeIt {
+    // x + \colorbox{red}y — same as testColorReceivesInterElementSpacingBeforeIt
+    // but for \colorbox (kMTMathAtomColorbox).
+    MTMathListDisplay* display = [self displayForLaTeX:@"x+\\colorbox{#ff0000}{y}"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected CTLine for 'x+' and a colorbox sub-display");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTCTLineDisplay class]],
+                  @"First sub-display should be a CTLine for 'x+'");
+    MTCTLineDisplay* xPlusLine = (MTCTLineDisplay*)sub0;
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTMathListDisplay class]],
+                  @"Second sub-display should be the colorbox MTMathListDisplay");
+    MTMathListDisplay* colorboxSub = (MTMathListDisplay*)sub1;
+    XCTAssertNotNil(colorboxSub.localBackgroundColor,
+                    @"Colorbox display must carry a localBackgroundColor");
+
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = colorboxSub.position.x - (xPlusLine.position.x + xPlusLine.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Expected medium binary-op gap of %.4f pt before \\colorbox, got %.4f pt",
+                               expectedGap, actualGap);
+}
+
+- (void)testSpacingAfterColorGroupIsPreserved {
+    // Regression guard: spacing AFTER a \color group already worked via the spacing table.
+    // \color{red}{x} + z — the binary-operator gap after the colored group must still be present.
+    // The display structure is: [colored MTMathListDisplay, CTLine for "+z"].
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\color{#ff0000}{x}+z"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 2u,
+                   @"Expected colored sub-display and a CTLine for '+z'");
+
+    MTDisplay* sub0 = display.subDisplays[0];
+    XCTAssertTrue([sub0 isKindOfClass:[MTMathListDisplay class]],
+                  @"First sub-display should be the colored MTMathListDisplay");
+    MTMathListDisplay* colorSub = (MTMathListDisplay*)sub0;
+    XCTAssertNotNil(colorSub.localTextColor);
+
+    MTDisplay* sub1 = display.subDisplays[1];
+    XCTAssertTrue([sub1 isKindOfClass:[MTCTLineDisplay class]],
+                  @"Second sub-display should be CTLine for '+z'");
+    MTCTLineDisplay* plusZLine = (MTCTLineDisplay*)sub1;
+
+    // The color group is Ord and '+' is a BinaryOperator, so the gap between them
+    // is the Ord->BinOp inter-element space: medium (4 mu).
+    CGFloat expectedGap = 4.0 * self.font.mathTable.muUnit;
+    CGFloat actualGap = plusZLine.position.x - (colorSub.position.x + colorSub.width);
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01,
+                               @"Spacing after \\color group must be preserved (%.4f pt), got %.4f pt",
+                               expectedGap, actualGap);
+}
+
+// SEC-2 regression tests: heap-allocate input-sized buffers (VLA → malloc/free)
+// These verify that the three fixed sites correctly handle larger inputs without
+// crashing or producing wrong results.
+
+- (void)testMathListForCharactersLargeInput_SEC2
+{
+    // Site 1: +[MTMathAtomFactory mathListForCharacters:]
+    // Build a 10,000-character digit string. The old VLA would put 20 KB on the
+    // stack; with the heap fix it should succeed and return exactly 10,000 atoms.
+    NSMutableString* digits = [NSMutableString stringWithCapacity:10000];
+    for (int i = 0; i < 10000; i++) {
+        [digits appendString:@"1"];
+    }
+    MTMathList* list = [MTMathAtomFactory mathListForCharacters:digits];
+    XCTAssertNotNil(list, @"mathListForCharacters: should not return nil for a 10k-digit string");
+    XCTAssertEqual(list.atoms.count, (NSUInteger)10000, @"Each character should produce exactly one atom");
+}
+
+- (void)testChangeFontLargeNucleus_SEC2
+{
+    // Site 2: changeFont() in MTTypesetter (exercised via rendering a long
+    // variable/number run). Build a math list with a single ordinary atom whose
+    // nucleus is 10,000 'x' characters. The typesetter calls changeFont on it
+    // which would stack-overflow with a VLA; with the heap fix it should
+    // produce a non-nil display.
+    NSMutableString* longNucleus = [NSMutableString stringWithCapacity:10000];
+    for (int i = 0; i < 10000; i++) {
+        [longNucleus appendString:@"x"];
+    }
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomVariable value:longNucleus];
+    MTMathList* list = [[MTMathList alloc] init];
+    [list addAtom:atom];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Rendering a 10k-char nucleus should produce a display (not crash)");
+    XCTAssertGreaterThan(display.ascent, 0, @"Display should have positive ascent");
+}
+
+- (void)testMathTableManyColumns_SEC2
+{
+    // Site 3: -[MTTypesetter makeTable:] columnWidths VLA.
+    // Build a table with 500 columns (all empty cells). The old VLA would put
+    // 500*8 = 4 KB on the stack; with the heap fix it should succeed and return
+    // a non-nil display.
+    MTMathTable* table = [[MTMathTable alloc] init];
+    NSUInteger numCols = 500;
+    for (NSUInteger col = 0; col < numCols; col++) {
+        MTMathList* cell = [[MTMathList alloc] init];
+        [table setCell:cell forRow:0 column:col];
+    }
+    MTMathList* mathList = [[MTMathList alloc] init];
+    [mathList addAtom:table];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:mathList font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display, @"Rendering a 500-column table should produce a display");
+}
+
 // SEC-4: getDefaultStyle() formerly threw IllegalCharacter for non-Latin/digit/Greek
 // nuclei, crashing the host app on the render path. Verify the fallback is safe.
 - (void)testSEC4_nonLatinVariableNucleusDoesNotCrash {
@@ -2759,6 +3007,323 @@
     XCTAssertNotNil(display, @"Render of non-digit Number atom must not crash");
     XCTAssertGreaterThan(display.subDisplays.count, (NSUInteger)0,
                          @"Display must contain at least one sub-display");
+}
+
+// Item 4: spacing command typesetter advance tests (TDD — added before implementation)
+
+- (void) testSpacingAdvances
+{
+    // \mkern18mu advances by the same width as \kern1em in the current style
+    MTMathListDisplay* mk = [self displayForLaTeX:@"x\\mkern18mu y"];
+    MTMathListDisplay* k  = [self displayForLaTeX:@"x\\kern1em y"];
+    XCTAssertEqualWithAccuracy(mk.width, k.width, 0.01);
+
+    // positive vs negative \hspace move the pen the opposite way
+    MTMathListDisplay* pos = [self displayForLaTeX:@"x\\hspace{1em}y"];
+    MTMathListDisplay* neg = [self displayForLaTeX:@"x\\hspace{-1em}y"];
+    MTMathListDisplay* plain = [self displayForLaTeX:@"xy"];
+    XCTAssertGreaterThan(pos.width, plain.width);
+    XCTAssertLessThan(neg.width, plain.width);
+}
+
+- (void) testPhantomMetrics
+{
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    MTMathListDisplay* phantomLine = [self displayForLaTeX:@"\\phantom{x}"];
+    MTDisplay* box = phantomLine.subDisplays.firstObject;
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01);
+}
+
+- (void) testHPhantomMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\hphantom{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqual(box.ascent, 0);
+    XCTAssertEqual(box.descent, 0);
+}
+
+- (void) testVPhantomMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\vphantom{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqual(box.width, 0);
+    XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01);
+}
+
+- (void) testMathStrutMetrics
+{
+    MTDisplay* strut = [self singleDisplayForLaTeX:@"\\mathstrut"];
+    MTDisplay* vparen = [self singleDisplayForLaTeX:@"\\vphantom{(}"];
+    XCTAssertEqual(strut.width, 0);
+    XCTAssertEqualWithAccuracy(strut.ascent, vparen.ascent, 0.01);
+    XCTAssertEqualWithAccuracy(strut.descent, vparen.descent, 0.01);
+}
+
+- (void) testSmashMetrics
+{
+    MTDisplay* box = [self singleDisplayForLaTeX:@"\\smash{x}"];
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    XCTAssertEqualWithAccuracy(box.width, x.width, 0.01);
+    XCTAssertEqual(box.ascent, 0);
+    XCTAssertEqual(box.descent, 0);
+
+    MTDisplay* st = [self singleDisplayForLaTeX:@"\\smash[t]{x}"];
+    XCTAssertEqual(st.ascent, 0);
+    XCTAssertTrue(st.descent > 0 || x.descent == 0);
+
+    MTDisplay* sb = [self singleDisplayForLaTeX:@"\\smash[b]{x}"];
+    XCTAssertEqual(sb.descent, 0);
+    XCTAssertTrue(sb.ascent > 0);
+}
+
+- (void) testLapMetrics
+{
+    for (NSString* latex in @[@"\\llap{x}", @"\\rlap{x}", @"\\clap{x}"]) {
+        MTDisplay* box = [self singleDisplayForLaTeX:latex];
+        XCTAssertEqual(box.width, 0, @"%@", latex);
+        MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+        XCTAssertEqualWithAccuracy(box.ascent, x.ascent, 0.01, @"%@", latex);
+    }
+}
+
+// Integration / composition (LLD §7)
+- (void) testVPhantomDrivesDelimiterSize
+{
+    MTMathListDisplay* withPhantom = [self displayForLaTeX:@"\\left(\\vphantom{\\frac{1}{x}}x\\right)"];
+    MTMathListDisplay* withoutPhantom = [self displayForLaTeX:@"\\left(x\\right)"];
+    XCTAssertGreaterThan(withPhantom.ascent + withPhantom.descent,
+                         withoutPhantom.ascent + withoutPhantom.descent);
+}
+
+- (void) testScriptOnBox
+{
+    // \phantom{x}^2 : script attaches to the box display, no crash.
+    MTMathListDisplay* d = [self displayForLaTeX:@"\\phantom{x}^2"];
+    XCTAssertNotNil(d);
+    XCTAssertGreaterThan(d.subDisplays.count, 0);
+}
+
+- (void) testRlapDoesNotAdvance
+{
+    // a\rlap{+b}c : 'c' position matches the no-lap baseline "ac".
+    MTMathListDisplay* lapped = [self displayForLaTeX:@"a\\rlap{+b}c"];
+    MTMathListDisplay* plain = [self displayForLaTeX:@"ac"];
+    XCTAssertEqualWithAccuracy(lapped.width, plain.width, 0.01);
+}
+
+- (void) testLeadingNegativeKernRendersAtNegativeX
+{
+    // Pin accepted-clipping behavior: a left \llap places ink at x<0 and still renders.
+    MTMathListDisplay* d = [self displayForLaTeX:@"\\llap{xy}z"];
+    XCTAssertNotNil(d);
+}
+
+- (void) testMatrixColumnGapTracksCellStyle
+{
+    // matrix forces Text-size cells regardless of the surrounding style, so its
+    // bare-table width (driven by the 18mu inter-column gap) must be identical in
+    // points whether the matrix sits in a Display context or a Script context.
+    // Before the cell-style fix the Script-context gap was measured at the (smaller)
+    // Script muUnit, making the nested table scriptScaleDown x too narrow.
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    // Plain matrix has no delimiters, so subDisplays[0] is the bare table display.
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    // Cells are Text-forced in both contexts => identical column widths; after the
+    // fix the gap is also identical (measured at the Text cell style) => equal width.
+    XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width, 0.001);
+}
+
+- (void) testEqnarrayColumnGapUnchangedByCellStyle
+{
+    // eqnarray injects no style atom, so cell style == outer style: the entire table
+    // scales uniformly with the outer style. Its width at Script must therefore be
+    // exactly scriptScaleDown x its width at Display -- confirming the new cell-style
+    // gap scaling is a no-op when no style atom is injected (cellStyleForTable: == _style).
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{eqnarray} a & = & b \\\\ c & = & d \\end{eqnarray}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{eqnarray} a & = & b \\\\ c & = & d \\end{eqnarray}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    CGFloat scriptScaleDown = self.font.mathTable.scriptScaleDown;
+    // 1.0pt is a rounding tolerance on the scaled comparison, not a slack allowance:
+    // a genuine gap mis-scale would diverge by roughly a full inter-column gap (several
+    // points), well outside this bound, so the test still fails loudly if Inherit ever
+    // resolves to Text and the cells stop tracking the outer style.
+    XCTAssertEqualWithAccuracy(tableAtScript.width, tableAtDisplay.width * scriptScaleDown, 1.0);
+}
+
+- (void) testMatrixRowSpacingTracksCellStyle
+{
+    // Companion to testMatrixColumnGapTracksCellStyle, for the vertical axis. matrix
+    // forces Text-size cells regardless of the surrounding style, so the whole bare
+    // table -- including its inter-row baseline grid -- must be identical in points
+    // whether the matrix sits in a Display or a Script context. Before the row-leading
+    // cell-style fix the Script-context baselineSkip was measured at the (smaller)
+    // Script font, packing the rows scriptScaleDown x too tight and making the nested
+    // matrix shorter for no legitimate reason (a nested vbox keeps its own leading).
+    MTMathList* displayList = [MTMathListBuilder buildFromString:@"\\begin{matrix} a \\\\ c \\end{matrix}"];
+    MTMathList* scriptList  = [MTMathListBuilder buildFromString:@"\\begin{matrix} a \\\\ c \\end{matrix}"];
+    XCTAssertNotNil(displayList);
+    XCTAssertNotNil(scriptList);
+
+    MTMathListDisplay* atDisplay = [MTTypesetter createLineForMathList:displayList font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* atScript  = [MTTypesetter createLineForMathList:scriptList  font:self.font style:kMTLineStyleScript];
+
+    MTDisplay* tableAtDisplay = atDisplay.subDisplays[0];
+    MTDisplay* tableAtScript  = atScript.subDisplays[0];
+
+    CGFloat heightAtDisplay = tableAtDisplay.ascent + tableAtDisplay.descent;
+    CGFloat heightAtScript  = tableAtScript.ascent + tableAtScript.descent;
+    XCTAssertEqualWithAccuracy(heightAtScript, heightAtDisplay, 0.001);
+}
+
+- (void)testScriptStyleDoesNotLeakPastBraceGroup {
+    // Issue #177: x{\scriptstyle y}z — \scriptstyle must be scoped to the group;
+    // z must render in the outer (display) style, not scriptstyle.
+    MTMathListDisplay* display = [self displayForLaTeX:@"x{\\scriptstyle y}z"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 3u,
+                   @"Expected [CTLine(x), group MTMathListDisplay, CTLine(z)]");
+
+    MTDisplay* xLine = display.subDisplays[0];
+    MTDisplay* groupSub = display.subDisplays[1];
+    MTDisplay* zLine = display.subDisplays[2];
+    XCTAssertTrue([xLine isKindOfClass:[MTCTLineDisplay class]]);
+    XCTAssertTrue([groupSub isKindOfClass:[MTMathListDisplay class]]);
+    XCTAssertTrue([zLine isKindOfClass:[MTCTLineDisplay class]]);
+
+    // z is full display style (same ascent as x) — the leak is fixed.
+    XCTAssertEqualWithAccuracy(zLine.ascent, xLine.ascent, 0.01,
+                               @"z leaked \\scriptstyle: z ascent %.3f != x ascent %.3f",
+                               zLine.ascent, xLine.ascent);
+    // The group's interior y IS in scriptstyle — smaller than display-style x.
+    XCTAssertLessThan(groupSub.ascent, xLine.ascent,
+                      @"group interior should be scriptstyle (smaller)");
+}
+
+- (void)testBraceGroupRenders {
+    // {x}^2 renders without error and produces a group MTMathListDisplay.
+    MTMathListDisplay* display = [self displayForLaTeX:@"{x}^2"];
+    XCTAssertNotNil(display);
+    BOOL hasGroup = NO;
+    for (MTDisplay* d in display.subDisplays) {
+        if ([d isKindOfClass:[MTMathListDisplay class]]) { hasGroup = YES; break; }
+    }
+    XCTAssertTrue(hasGroup, @"Expected a group MTMathListDisplay for {x}^2");
+}
+
+- (void)testBraceGroupAddsNoSpuriousSpacing {
+    // a{b}c — an Ordinary-class group adds no inter-element space (Ord->Ord = none).
+    MTMathListDisplay* display = [self displayForLaTeX:@"a{b}c"];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.subDisplays.count, 3u);
+    MTDisplay* aLine = display.subDisplays[0];
+    MTDisplay* groupSub = display.subDisplays[1];
+    MTDisplay* cLine = display.subDisplays[2];
+    XCTAssertEqualWithAccuracy(groupSub.position.x, aLine.position.x + aLine.width, 0.01,
+                               @"Ord->Ord: no space before the group");
+    XCTAssertEqualWithAccuracy(cLine.position.x, groupSub.position.x + groupSub.width, 0.01,
+                               @"Ord->Ord: no space after the group");
+}
+
+- (void) testSmallMatrixColumnGap
+{
+    // The stored 5mu \thickspace renders scaled to the Script cell style (PR 1):
+    // gap = 5 * muUnit * scriptScaleDown. Using identical cells makes every column
+    // the same width, so center alignment adds no offset and the gap between the two
+    // columns is exactly col1.x - col0.x - col0.width.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{smallmatrix} a & a \\\\ a & a \\end{smallmatrix}"];
+    XCTAssertNotNil(list);
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* table = (MTMathListDisplay*) display.subDisplays[0];
+    MTMathListDisplay* row0 = (MTMathListDisplay*) table.subDisplays[0];
+    XCTAssertEqual(row0.subDisplays.count, 2);
+    MTDisplay* col0 = row0.subDisplays[0];
+    MTDisplay* col1 = row0.subDisplays[1];
+
+    CGFloat expectedGap = 5.0 * self.font.mathTable.muUnit * self.font.mathTable.scriptScaleDown;
+    CGFloat actualGap = col1.position.x - col0.position.x - col0.width;
+    XCTAssertEqualWithAccuracy(actualGap, expectedGap, 0.01);
+}
+
+- (void) testSmallMatrixCompactVsMatrix
+{
+    // Script-size cells + the tighter \thickspace gap make smallmatrix more compact
+    // than the textstyle matrix in both width and height.
+    MTMathList* small  = [MTMathListBuilder buildFromString:@"\\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix}"];
+    MTMathList* matrix = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    XCTAssertNotNil(small);
+    XCTAssertNotNil(matrix);
+
+    MTMathListDisplay* smallDisp  = [MTTypesetter createLineForMathList:small  font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* matrixDisp = [MTTypesetter createLineForMathList:matrix font:self.font style:kMTLineStyleDisplay];
+    XCTAssertLessThan(smallDisp.width, matrixDisp.width);
+    XCTAssertLessThan(smallDisp.ascent, matrixDisp.ascent);
+}
+
+- (void) testGatheredMatchesGather
+{
+    MTMathList* gathered = [MTMathListBuilder buildFromString:@"\\begin{gathered} a+b \\\\ c+d \\end{gathered}"];
+    MTMathList* gather   = [MTMathListBuilder buildFromString:@"\\begin{gather} a+b \\\\ c+d \\end{gather}"];
+    XCTAssertNotNil(gathered);
+    XCTAssertNotNil(gather);
+
+    MTMathListDisplay* gatheredDisp = [MTTypesetter createLineForMathList:gathered font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* gatherDisp   = [MTTypesetter createLineForMathList:gather   font:self.font style:kMTLineStyleDisplay];
+
+    // gathered is layout-identical to gather (LLD §4 assumption): same factory branch.
+    XCTAssertEqualWithAccuracy(gatheredDisp.width,   gatherDisp.width,   0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.ascent,  gatherDisp.ascent,  0.01);
+    XCTAssertEqualWithAccuracy(gatheredDisp.descent, gatherDisp.descent, 0.01);
+}
+
+- (void) testAlignedatLayout
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{alignedat}{2} 10&x +& 3&y \\\\ 3&x +& 13&y \\end{alignedat}"];
+    XCTAssertNotNil(list);
+
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    XCTAssertEqual(display.type, kMTLinePositionRegular);
+    XCTAssertEqual(display.subDisplays.count, 1);
+
+    MTMathListDisplay* tableDisp = (MTMathListDisplay*) display.subDisplays[0];
+    XCTAssertEqual(tableDisp.subDisplays.count, 2);  // two rows
+
+    for (MTDisplay* rowSub in tableDisp.subDisplays) {
+        XCTAssertTrue([rowSub isKindOfClass:[MTMathListDisplay class]]);
+        MTMathListDisplay* row = (MTMathListDisplay*) rowSub;
+        XCTAssertEqual(row.subDisplays.count, 4);  // four columns (2 pairs)
+
+        // interColumnSpacing == 0 => pairs are butted: each column starts at or after
+        // the previous one across the row.
+        CGFloat prevX = -CGFLOAT_MAX;
+        for (MTDisplay* colSub in row.subDisplays) {
+            MTMathListDisplay* col = (MTMathListDisplay*) colSub;
+            XCTAssertGreaterThanOrEqual(col.position.x, prevX);
+            prevX = col.position.x;
+        }
+    }
 }
 
 @end

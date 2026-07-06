@@ -1,5 +1,15 @@
 ## Changelog
 
+### v2.5.0 (2026-07-02)
+* Add missing relation, operator, and ordinary symbols reported across several issues: relations `\lt`, `\gt`, `\frown`, `\smile`, `\bowtie`, `\longmapsto`; binary operators `\bigcirc`, `\bigtriangleup`, `\bigtriangledown`, `\diamond`; and ordinaries `\surd`, `\flat`, `\natural`, `\sharp` (#101, #153, #36, #63, #147). `\bigtriangleup`/`\bigtriangledown` share glyphs with the ordinary `\triangle`/`\triangledown` but carry binary-operator spacing, and `\diamond` is a binary operator distinct from the ordinary `\diamondsuit`. `\Join` (U+2A1D) was deferred: Latin Modern Math lacks that glyph, so it cannot render from the default font.
+
+### v2.4.0 (2026-06-30)
+* Add **box commands** for spacing and overlap control: `\phantom`, `\vphantom`, `\hphantom` (reserve space without drawing), `\smash` (draw without reserving vertical space), and the lap family `\llap`, `\rlap`, `\clap`, `\mathllap`, `\mathrlap`, `\mathclap` (#244).
+* Add over/under stacking commands: `\overset`, `\underset`, `\stackrel`, and `\stackbin` (#219).
+* Add explicit-dimension spacing commands with em/mu units: `\kern`, `\hspace`, `\hskip`, `\mkern`, and `\mskip` (#243).
+* Security hardening: recursion-depth cap in the parser to prevent stack overflow on deeply nested input, heap allocation in place of input-sized stack VLAs, thread-safe global symbol/lookup tables, and a safe style fallback for unknown glyphs instead of crashing (#225, #226, #227, #228).
+* Bug fixes: correct Unicode glyphs for `\Uparrow`/`\Downarrow`/`\Updownarrow` and the angle-bracket delimiters; `\color`/`\colorbox` now validate hex input, expand `#RGB` shorthand, and receive proper inter-element spacing; error instead of mis-parsing `\over`/`\atop`/`\choose` in a single-character script slot; raise an error on non-ASCII literal input; plus fixes to `MTMathListRange` union, `MTFontManager` font loading, `MTFraction` serialization, and an infinite loop in glyph assembly on degenerate extenders (#221, #222, #223, #229, #230, #231, #232, #233, #234, #235, #239).
+
 ### v2.3.1 (2026-06-07)
 * Fix SPM consumer build: public headers in `render/` used bare `#import` of siblings in `lib/`, which only resolved via target-internal header search paths and failed when downstream packages built the `iosMath` Clang module. Qualify the cross-directory imports so the module builds in consumer projects (#215).
 * Lower deployment targets from iOS 18+ / macOS 15+ back down to **iOS 13+ / macOS 10.15+**. The earlier raise was a toolchain-cleanup pass, not driven by any actual API requirement (#214).

@@ -672,11 +672,13 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [table setAlignment:kMTColumnAlignmentRight forColumn:1];
     table.interRowAdditionalSpacing = 3;
     table.interColumnSpacing = 10;
-    
+    table.cellStyle = kMTLineStyleScript;
+
     MTMathTable* copy = [table copy];
     [MTMathListTest checkAtomCopy:copy original:table forTest:self];
     XCTAssertEqual(copy.interColumnSpacing, table.interColumnSpacing);
     XCTAssertEqual(copy.interRowAdditionalSpacing, table.interRowAdditionalSpacing);
+    XCTAssertEqual(copy.cellStyle, table.cellStyle);
     XCTAssertEqualObjects(copy.alignments, table.alignments);
     XCTAssertNotEqual(copy.alignments, table.alignments);
     
@@ -920,6 +922,62 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     // Both should span from index 1 to 6 → start=1, length=6
     XCTAssertEqual(fwd.start.atomIndex, (NSUInteger)1, @"start should be 1");
     XCTAssertEqual(fwd.length, (NSUInteger)6, @"length should be 6");
+}
+
+- (void) testMathBoxModel
+{
+    MTMathBox* box = [MTMathBox new];
+    XCTAssertEqual(box.type, kMTMathAtomBox);
+    XCTAssertTrue(box.scriptsAllowed, @"kMTMathAtomBox (20) < kMTMathAtomBoundary (101) so scripts are allowed");
+
+    MTMathList* inner = [[MTMathList alloc] init];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    box.innerList = inner;
+    box.keepWidth = YES; box.keepHeight = YES; box.keepDepth = YES;
+    box.drawChild = NO; box.hAlign = kMTBoxHAlignCenter;
+
+    // typeToText
+    XCTAssertEqualObjects([MTMathAtom atomWithType:kMTMathAtomBox value:@""].class, MTMathBox.class);
+
+    // copy is deep and preserves every flag
+    MTMathBox* copy = [box copy];
+    XCTAssertNotEqual(copy.innerList, box.innerList);
+    XCTAssertEqual(copy.innerList.atoms.count, 1);
+    XCTAssertEqual(copy.keepWidth, box.keepWidth);
+    XCTAssertEqual(copy.keepHeight, box.keepHeight);
+    XCTAssertEqual(copy.keepDepth, box.keepDepth);
+    XCTAssertEqual(copy.drawChild, box.drawChild);
+    XCTAssertEqual(copy.hAlign, box.hAlign);
+
+    // initWithType:value: guard throws for the wrong type
+    XCTAssertThrows([[MTMathBox alloc] initWithType:kMTMathAtomOrdinary value:@""]);
+}
+
+- (void)testMathGroupAtom
+{
+    // Factory returns an MTMathGroup for the OrdGroup type.
+    MTMathAtom* atom = [MTMathAtom atomWithType:kMTMathAtomOrdGroup value:@""];
+    XCTAssertTrue([atom isKindOfClass:[MTMathGroup class]]);
+    XCTAssertEqual(atom.type, kMTMathAtomOrdGroup);
+
+    // Scripts are allowed (type < kMTMathAtomBoundary): no "scripts not allowed" throw.
+    XCTAssertTrue(atom.scriptsAllowed);
+    XCTAssertNoThrow(atom.superScript = [MTMathListBuilder buildFromString:@"2"]);
+
+    // stringValue braces the group and preserves an interior \scriptstyle
+    // (uses mathListToString:, not innerList.stringValue).
+    MTMathGroup* group = (MTMathGroup*) [MTMathAtom atomWithType:kMTMathAtomOrdGroup value:@""];
+    group.innerList = [MTMathListBuilder buildFromString:@"\\scriptstyle y"];
+    XCTAssertEqualObjects(group.stringValue, @"{\\scriptstyle y}");
+
+    // copyWithZone: deep-copies innerList (distinct object, equal content).
+    MTMathGroup* copy = [group copy];
+    XCTAssertNotEqual(copy.innerList, group.innerList);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:copy.innerList],
+                          [MTMathListBuilder mathListToString:group.innerList]);
+
+    // initWithType: guard — only kMTMathAtomOrdGroup is permitted.
+    XCTAssertThrows([[MTMathGroup alloc] initWithType:kMTMathAtomBox value:@""]);
 }
 
 @end

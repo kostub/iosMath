@@ -66,6 +66,12 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// \textit, \textsf, \texttt. Captured raw at parse time; the body cannot
     /// contain math.
     kMTMathAtomText = 19,
+    /// A box atom (phantom/smash/lap family). Script-capable (< kMTMathAtomBoundary).
+    kMTMathAtomBox = 20,
+    /// A brace group {…} in math mode — an Ord subformula whose nucleus is a
+    /// sub-mlist (== TeX Ord noad with sub_mlist / KaTeX "ordgroup").
+    /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
+    kMTMathAtomOrdGroup = 21,
 
     // Atoms after this point do not support subscripts or superscripts
 
@@ -449,6 +455,14 @@ typedef NS_ENUM(unsigned int, MTLineStyle)  {
     kMTLineStyleScriptScript
 };
 
+/// Sentinel for "no explicit style" (e.g. a table whose cells inherit the
+/// surrounding style). Deliberately defined outside the enum body so it is not
+/// a case in the exhaustive `switch (MTLineStyle)` statements in the renderer.
+/// `__attribute__((unused))` keeps translation units that include this public
+/// header but never reference the sentinel from emitting -Wunused-const-variable
+/// (which would break downstream builds compiled with -Werror).
+static const MTLineStyle kMTLineStyleInherit __attribute__((unused)) = (MTLineStyle) -1;
+
 /** An atom representing a style change.
  @note None of the usual fields of the `MTMathAtom` apply even though this
  class inherits from `MTMathAtom`. i.e. it is meaningless to have a value
@@ -611,6 +625,57 @@ typedef NS_ENUM(NSUInteger, MTMathStackConstructionKind) {
 
 @end
 
+/** Horizontal alignment of a box's child relative to the box origin (drives the lap draw offset). */
+typedef NS_ENUM(NSUInteger, MTBoxHAlign) {
+    kMTBoxHAlignLeft = 0,   ///< \rlap: child left edge at origin, offset 0
+    kMTBoxHAlignCenter,     ///< \clap: offset -childWidth/2
+    kMTBoxHAlignRight,      ///< \llap: child right edge at origin, offset -childWidth
+};
+
+/** An atom representing a box element: the phantom/smash/lap family.
+ @note As with `MTMathColorbox`, the usual nucleus/script fields are unused;
+ the content lives in `innerList` and the flags below select the variant. */
+@interface MTMathBox : MTMathAtom
+
+/// Creates an empty box atom (type = kMTMathAtomBox).
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
+/// Throws unless type == kMTMathAtomBox.
+- (instancetype) initWithType:(MTMathAtomType)type value:(NSString *)value;
+
+/// The wrapped math content.
+@property (nonatomic, nullable) MTMathList* innerList;
+/// Report the child's width (YES) or zero width (NO).
+@property (nonatomic) BOOL keepWidth;
+/// Report the child's ascent (YES) or zero ascent (NO).
+@property (nonatomic) BOOL keepHeight;
+/// Report the child's descent (YES) or zero descent (NO).
+@property (nonatomic) BOOL keepDepth;
+/// Draw the measured child (YES) or suppress drawing entirely (NO, phantom).
+@property (nonatomic) BOOL drawChild;
+/// Horizontal draw offset applied when keepWidth == NO (laps).
+@property (nonatomic) MTBoxHAlign hAlign;
+
+@end
+
+/** A brace group `{…}` in math mode — an Ord subformula whose nucleus is a
+ sub-mlist. Script-capable; spaced as Ordinary. The honest analog of TeX's
+ Ord noad with a `sub_mlist` nucleus and KaTeX's `ordgroup` node. The usual
+ nucleus is empty; the grouped content lives in `innerList`, and the
+ sub/superScript fields drive scripting of the whole group. */
+@interface MTMathGroup : MTMathAtom
+
+/// Creates an empty Ord group (type = kMTMathAtomOrdGroup).
+- (instancetype) init NS_DESIGNATED_INITIALIZER;
+
+/// Throws unless type == kMTMathAtomOrdGroup.
+- (instancetype) initWithType:(MTMathAtomType)type value:(NSString *)value;
+
+/// The grouped math content.
+@property (nonatomic, nonnull) MTMathList* innerList;
+
+@end
+
 /** An atom representing an table element. This atom is not like other
  atoms and is not present in TeX. We use it to represent the `\halign` command
  in TeX with some simplifications. This is used for matrices, equation
@@ -655,6 +720,13 @@ typedef NS_ENUM(NSInteger, MTColumnAlignment) {
 /// Additional spacing between rows in jots (one jot is 0.3 times font size).
 /// If the additional spacing is 0, then normal row spacing is used are used.
 @property (nonatomic) CGFloat interRowAdditionalSpacing;
+
+/// The line style every cell of this table renders in. `kMTLineStyleInherit`
+/// (the default) means the cells render in the surrounding style
+/// (aligned/gather/eqnarray/alignedat). A concrete style means every cell
+/// renders in it (matrix/cases -> Text, smallmatrix -> Script). amsmath also
+/// measures the inter-column/row glue in this style.
+@property (nonatomic) MTLineStyle cellStyle;
 
 /// Set the value of a given cell. The table is automatically resized to contain this cell.
 - (void) setCell:(MTMathList*) list forRow:(NSInteger) row column:(NSInteger) column;

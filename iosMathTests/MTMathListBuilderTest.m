@@ -59,8 +59,8 @@ static NSArray* getTestData() {
              @[ @"x+2", @[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) ], @"x+2"],
              // spaces are ignored
              @[ @"(2.3 * 8)", @[ @(kMTMathAtomOpen), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber) , @(kMTMathAtomClose) ], @"(2.3*8)"],
-             // braces are just for grouping
-             @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomNumber), @(kMTMathAtomBinaryOperator), @(kMTMathAtomNumber)], @"53+4"],
+             // braces create an Ord group (MTMathGroup)
+             @[ @"5{3+4}", @[@(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @"5{3+4}"],
              // commands
              @[ @"\\pi+\\theta\\geq 3",@[ @(kMTMathAtomVariable), @(kMTMathAtomBinaryOperator), @(kMTMathAtomVariable), @(kMTMathAtomRelation), @(kMTMathAtomNumber)], @"\\pi +\\theta \\geq 3"],
              // aliases
@@ -69,6 +69,8 @@ static NSArray* getTestData() {
              @[ @"x \\ y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              // spacing
              @[ @"x \\quad y \\; z \\! q", @[  @(kMTMathAtomVariable), @(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable),@(kMTMathAtomSpace), @(kMTMathAtomVariable)], @"x\\quad y\\; z\\! q"],
+             // tilde is a non-breaking space (renders as an ordinary space, same as a literal space)
+             @[ @"x~y", @[  @(kMTMathAtomVariable), @(kMTMathAtomOrdinary), @(kMTMathAtomVariable)], @"x\\  y"],
              ];
 }
 
@@ -100,9 +102,9 @@ static NSArray* getTestDataSuperScript() {
              @[ @"x^{2^3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x^{2^{3}}"],
              @[ @"x^{^2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x^{{}^{2}*}"],
              @[ @"^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
-             @[ @"{}^2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
+             @[ @"{}^2", @ [ @(kMTMathAtomOrdGroup)], @[ @(kMTMathAtomNumber) ], @"{}^{2}"],
              @[ @"x^^2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x^{}{}^{2}"],
-             @[ @"5{x}^2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x^{2}"],
+             @[ @"5{x}^2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @[ ], @"5{x}^{2}"],
              ];
 }
 
@@ -150,9 +152,9 @@ static NSArray* getTestDataSubScript() {
              @[ @"x_{2_3}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomNumber)], @[ @(kMTMathAtomNumber),], @"x_{2_{3}}"],
              @[ @"x_{_2*}", @[ @(kMTMathAtomVariable) ], @[ @(kMTMathAtomOrdinary), @(kMTMathAtomBinaryOperator)], @[ @(kMTMathAtomNumber),], @"x_{{}_{2}*}"],
              @[ @"_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
-             @[ @"{}_2", @ [ @(kMTMathAtomOrdinary)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
+             @[ @"{}_2", @ [ @(kMTMathAtomOrdGroup)], @[ @(kMTMathAtomNumber) ], @"{}_{2}" ],
              @[ @"x__2", @[ @(kMTMathAtomVariable), @(kMTMathAtomOrdinary) ],  @[ ], @"x_{}{}_{2}"],
-             @[ @"5{x}_2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomVariable)], @[ ], @"5x_{2}"],
+             @[ @"5{x}_2", @ [ @(kMTMathAtomNumber), @(kMTMathAtomOrdGroup)], @[ ], @"5{x}_{2}"],
              ];
 }
 
@@ -405,16 +407,21 @@ static NSArray* getTestDataSuperSubScript() {
 
 - (void) testSqrtInGroup
 {
-    // A \sqrt with no argument inside a group exercises a different path
-    // (empty radicand via the oneCharOnly stop-char guard) than the
-    // end-of-input case, and must also not crash.
+    // A \sqrt with no argument inside a brace group. With MTMathGroup semantics,
+    // the {…} wraps as an Ord subformula — the radical lives inside the group.
+    // This exercises the MTMathGroup path without crashing.
     NSString *str = @"{\\sqrt}";
     MTMathList* list = [MTMathListBuilder buildFromString:str];
     NSString* desc = [NSString stringWithFormat:@"Error for string:%@", str];
 
     XCTAssertNotNil(list, @"%@", desc);
     XCTAssertEqualObjects(@(list.atoms.count), @1, @"%@", desc);
-    MTRadical* rad = list.atoms[0];
+    // The outer atom is an MTMathGroup (Ord subformula wrapping the radical).
+    MTMathGroup* group = list.atoms[0];
+    XCTAssertEqual(group.type, kMTMathAtomOrdGroup, @"%@", desc);
+
+    XCTAssertEqualObjects(@(group.innerList.atoms.count), @1, @"%@", desc);
+    MTRadical* rad = group.innerList.atoms[0];
     XCTAssertEqual(rad.type, kMTMathAtomRadical, @"%@", desc);
 
     MTMathList *subList = rad.radicand;
@@ -422,9 +429,9 @@ static NSArray* getTestDataSuperSubScript() {
     XCTAssertEqualObjects(@(subList.atoms.count), @0, @"%@", desc);
     XCTAssertNil(rad.degree, @"%@", desc);
 
-    // convert it back to latex
+    // convert it back to latex — braces preserved, radical serializes as \sqrt{}
     NSString* latex = [MTMathListBuilder mathListToString:list];
-    XCTAssertEqualObjects(latex, @"\\sqrt{}", @"%@", desc);
+    XCTAssertEqualObjects(latex, @"{\\sqrt{}}", @"%@", desc);
 }
 
 - (void) testSqrtInSqrt
@@ -497,7 +504,7 @@ static NSArray* getTestDataLeftRight() {
              // commands
              @[@"\\left\\{ 2 \\right\\}", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomNumber)], @"{", @"}", @"\\left\\{ 2\\right\\} "],
              // complex commands
-             @[@"\\left\\langle x \\right\\rangle", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"\u2329", @"\u232A", @"\\left< x\\right> "],
+             @[@"\\left\\langle x \\right\\rangle", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"\u27E8", @"\u27E9", @"\\left< x\\right> "],
              // bars
              @[@"\\left| x \\right\\|", @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)], @"|", @"\u2016", @"\\left| x\\right\\| "],
              // inner in between
@@ -512,6 +519,16 @@ static NSArray* getTestDataLeftRight() {
              @[@"\\left(^2 \\right )", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomOrdinary)], @"(", @")", @"\\left( {}^{2}\\right) "],
              // Dot
              @[@"\\left( 2 \\right.", @[ @(kMTMathAtomInner)], @0, @[ @(kMTMathAtomNumber)], @"(", @"", @"\\left( 2\\right. "],
+             // Double arrows (REN-1): Uparrow/Downarrow nuclei must be the actual Unicode glyphs, not the literal strings "21D1"/"21D3"
+             @[@"\\left\\Uparrow x \\right\\Downarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"\u21D1", @"\u21D3",
+               @"\\left\\Uparrow x\\right\\Downarrow "],
+             // Updownarrow (REN-1): nucleus must be the Unicode glyph U+21D5, not the literal string "21D5"
+             @[@"\\left\\Updownarrow x \\right\\Updownarrow",
+               @[ @(kMTMathAtomInner) ], @0, @[ @(kMTMathAtomVariable)],
+               @"\u21D5", @"\u21D5",
+               @"\\left\\Updownarrow x\\right\\Updownarrow "],
         ];
 }
 
@@ -1206,18 +1223,16 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(table.interColumnSpacing, 18);
     XCTAssertEqual(table.numRows, 2);
     XCTAssertEqual(table.numColumns, 2);
-    
+    // Cells render in textstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+
     for (int i = 0; i < 2; i++) {
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
         XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
         for (int j = 0; j < 2; j++) {
             MTMathList* cell = table.cells[j][i];
-            XCTAssertEqual(cell.atoms.count, 2);
-            MTMathStyle* style = cell.atoms[0];
-            XCTAssertEqual(style.type, kMTMathAtomStyle);
-            XCTAssertEqual(style.style, kMTLineStyleText);
-            
-            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
             XCTAssertEqual(atom.type, kMTMathAtomVariable);
         }
     }
@@ -1225,6 +1240,42 @@ static NSArray* getTestDataLeftRight() {
     // convert it back to latex
     NSString* latex = [MTMathListBuilder mathListToString:list];
     XCTAssertEqualObjects(latex, @"\\begin{matrix}x&y\\\\ z&w\\end{matrix}");
+}
+
+- (void) testSmallMatrix
+{
+    NSString *str = @"\\begin{smallmatrix} x & y \\\\ z & w \\end{smallmatrix}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.nucleus, @"");
+    XCTAssertEqualObjects(table.environment, @"smallmatrix");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    // Honest amsmath value: \thickspace = 5mu, stored unscaled. PR 1's renderer
+    // scales it to the Script cell style at layout time (5 * scriptScaleDown outer-mu).
+    XCTAssertEqual(table.interColumnSpacing, 5);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    // Cells render in scriptstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleScript);
+
+    for (int i = 0; i < 2; i++) {
+        MTColumnAlignment alignment = [table getAlignmentForColumn:i];
+        XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
+        for (int j = 0; j < 2; j++) {
+            MTMathList* cell = table.cells[j][i];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
+            XCTAssertEqual(atom.type, kMTMathAtomVariable);
+        }
+    }
+
+    // round-trip: cells carry no injected style atom (style is on table.cellStyle)
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{smallmatrix}x&y\\\\ z&w\\end{smallmatrix}");
 }
 
 - (void) testPMatrix
@@ -1258,18 +1309,16 @@ static NSArray* getTestDataLeftRight() {
     XCTAssertEqual(table.interColumnSpacing, 18);
     XCTAssertEqual(table.numRows, 2);
     XCTAssertEqual(table.numColumns, 2);
-    
+    // Cells render in textstyle, stored on the table rather than per-cell.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+
     for (int i = 0; i < 2; i++) {
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
         XCTAssertEqual(alignment, kMTColumnAlignmentCenter);
         for (int j = 0; j < 2; j++) {
             MTMathList* cell = table.cells[j][i];
-            XCTAssertEqual(cell.atoms.count, 2);
-            MTMathStyle* style = cell.atoms[0];
-            XCTAssertEqual(style.type, kMTMathAtomStyle);
-            XCTAssertEqual(style.style, kMTLineStyleText);
-            
-            MTMathAtom* atom = cell.atoms[1];
+            XCTAssertEqual(cell.atoms.count, 1);
+            MTMathAtom* atom = cell.atoms[0];
             XCTAssertEqual(atom.type, kMTMathAtomVariable);
         }
     }
@@ -1436,11 +1485,162 @@ static NSArray* getTestDataLeftRight() {
     }
 }
 
+- (void) testGathered
+{
+    NSString *str = @"\\begin{gathered} x \\\\ y \\end{gathered}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"gathered");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 1);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+
+    // single centered column, no injected atoms — straight round-trip
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{gathered}x\\\\ y\\end{gathered}");
+}
+
+- (void) testAlignedat
+{
+    NSString *str = @"\\begin{alignedat}{2} 10&x +& 3&y \\\\ 3&x +& 13&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.interRowAdditionalSpacing, 1);
+    XCTAssertEqual(table.interColumnSpacing, 0);
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 4);
+
+    // alternating Right / Left across the 2 alignment pairs
+    MTColumnAlignment expected[4] = {
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft,
+        kMTColumnAlignmentRight, kMTColumnAlignmentLeft };
+    for (int j = 0; j < 4; j++) {
+        XCTAssertEqual([table getAlignmentForColumn:j], expected[j]);
+    }
+
+    // a relation spacer (empty ordinary) is injected at index 0 of every odd column
+    for (int row = 0; row < 2; row++) {
+        for (int col = 0; col < 4; col++) {
+            MTMathList* cell = table.cells[row][col];
+            if (col % 2 == 1) {
+                MTMathAtom* spacer = cell.atoms[0];
+                XCTAssertEqual(spacer.type, kMTMathAtomOrdinary);
+                XCTAssertEqual(spacer.nucleus.length, 0u);
+            } else {
+                XCTAssertEqual(cell.atoms[0].type, kMTMathAtomNumber);
+            }
+        }
+    }
+
+    // round-trip: {n} re-emitted; per-pair spacers stripped by serializedCellAtRow:column:
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}10&x+&3&y\\\\ 3&x+&13&y\\end{alignedat}");
+}
+
+// n=1: the 2-column minimum (single alignment pair, degenerate case).
+- (void) testAlignedatSinglePair
+{
+    NSString *str = @"\\begin{alignedat}{1} x&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numRows, 1);
+    XCTAssertEqual(table.numColumns, 2);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentLeft);
+
+    // spacer injected into the single odd column
+    MTMathAtom* spacer = ((MTMathList*) table.cells[0][1]).atoms[0];
+    XCTAssertEqual(spacer.type, kMTMathAtomOrdinary);
+    XCTAssertEqual(spacer.nucleus.length, 0u);
+
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{1}x&y\\end{alignedat}");
+}
+
+// Empty odd-column cell (x&&z&w, n=2): the spacer is inserted into an empty list,
+// and the strip must round-trip it back to an empty column.
+- (void) testAlignedatEmptyCell
+{
+    NSString *str = @"\\begin{alignedat}{2} x&&z&w \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqual(table.numColumns, 4);
+
+    // The empty odd cell (col 1) contains only the injected spacer.
+    MTMathList* emptyCell = table.cells[0][1];
+    XCTAssertEqual(emptyCell.atoms.count, 1u);
+    XCTAssertEqual(((MTMathAtom*) emptyCell.atoms[0]).type, kMTMathAtomOrdinary);
+    XCTAssertEqual(((MTMathAtom*) emptyCell.atoms[0]).nucleus.length, 0u);
+
+    // Round-trip: spacer stripped, empty column preserved as &&.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}x&&z&w\\end{alignedat}");
+}
+
+// alignedat wrapped in delimiters: exercises the MTInner nesting path.
+- (void) testAlignedatInDelimiters
+{
+    NSString *str = @"\\left( \\begin{alignedat}{1} x&y \\end{alignedat} \\right)";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(@(list.atoms.count), @1);
+    MTInner* inner = list.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomInner);
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus, @"(");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, @")");
+    XCTAssertEqualObjects(@(inner.innerList.atoms.count), @1);
+    MTMathTable* table = inner.innerList.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numColumns, 2);
+
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\left( \\begin{alignedat}{1}x&y\\end{alignedat}\\right) ");
+}
+
+// Whitespace surrounding the {n} argument is stripped (TeX behavior; matches readColor).
+- (void) testAlignedatWhitespaceArgument
+{
+    NSString *str = @"\\begin{alignedat}{ 2 } 10&x +& 3&y \\end{alignedat}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"alignedat");
+    XCTAssertEqual(table.numColumns, 4);
+
+    // The stripped argument re-emits without the surrounding spaces.
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{alignedat}{2}10&x+&3&y\\end{alignedat}");
+}
+
 static NSArray* getTestDataParseErrors() {
     return @[
               @[@"}a", @(MTParseErrorMismatchBraces)],
               @[@"\\notacommand", @(MTParseErrorInvalidCommand)],
               @[@"\\sqrt[5+3", @(MTParseErrorCharacterNotFound)],
+              @[@"\\smash[t", @(MTParseErrorCharacterNotFound)], // missing ] on smash optional arg
               @[@"{5+3", @(MTParseErrorMismatchBraces)],
               @[@"5+3}", @(MTParseErrorMismatchBraces)],
               @[@"{1+\\frac{3+2", @(MTParseErrorMismatchBraces)],
@@ -1469,8 +1669,40 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{matrix} \\notacommand \\end{matrix}", @(MTParseErrorInvalidCommand)],
               @[@"\\begin{displaylines} x & y \\end{displaylines}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\begin{eqalign} x \\end{eqalign}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{gathered} x & y \\end{gathered}", @(MTParseErrorInvalidNumColumns)],
               @[@"\\nolimits", @(MTParseErrorInvalidLimits)],
               @[@"\\frac\\limits{1}{2}", @(MTParseErrorInvalidLimits)],
+              // REN-6: generalized-fraction commands are illegal in one-char script slots
+              @[@"x^\\over y",   @(MTParseErrorInvalidCommand)],
+              @[@"x_\\over y",   @(MTParseErrorInvalidCommand)],
+              @[@"x^\\atop y",   @(MTParseErrorInvalidCommand)],
+              @[@"x^\\choose y", @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brack y",  @(MTParseErrorInvalidCommand)],
+              @[@"x^\\brace y",  @(MTParseErrorInvalidCommand)],
+              // REN-5: non-ASCII literal characters should produce MTParseErrorInvalidCharacter
+              @[@"π", @(MTParseErrorInvalidCharacter)],          // π (U+03C0)
+              @[@"3 × 4", @(MTParseErrorInvalidCharacter)],      // 3 × 4
+              @[@"x ≤ y", @(MTParseErrorInvalidCharacter)],      // x ≤ y
+              @[@"x 𝑎 y", @(MTParseErrorInvalidCharacter)],      // above-BMP literal (U+1D44E, surrogate pair)
+              // Special characters with no meaning in math mode are errors (match LaTeX:
+              // % is a comment, # is a macro parameter, $ toggles math mode - none valid here).
+              @[@"a % b", @(MTParseErrorInvalidCharacter)],
+              @[@"a # b", @(MTParseErrorInvalidCharacter)],
+              @[@"a $ b", @(MTParseErrorInvalidCharacter)],
+              // Item 4: spacing dimension parse errors
+              @[@"\\kern", @(MTParseErrorInvalidCommand)],          // missing distance at EOF
+              @[@"\\kernabc", @(MTParseErrorInvalidCommand)],       // no number/unit
+              @[@"\\hspace{abc}", @(MTParseErrorInvalidCommand)],   // no number/unit
+              @[@"\\hspace{}", @(MTParseErrorInvalidCommand)],      // empty
+              @[@"\\mkern{1em}", @(MTParseErrorInvalidCommand)],    // mu required for \mkern
+              @[@"\\kern1pt", @(MTParseErrorInvalidCommand)],      // valid number, unsupported unit
+              @[@"\\kern1xx", @(MTParseErrorInvalidCommand)],      // valid number, unknown unit
+              @[@"\\begin{alignedat} x & y \\end{alignedat}", @(MTParseErrorInvalidCommand)],  // missing {n}
+              @[@"\\begin{alignedat}{x} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // non-numeric
+              @[@"\\begin{alignedat}{0} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],      // n < 1
+              @[@"\\begin{alignedat}{-1} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],     // negative (leading '-' fails digit check)
+              @[@"\\begin{alignedat}{} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],       // empty braces
+              @[@"\\begin{alignedat}{2} a&b&c \\end{alignedat}", @(MTParseErrorInvalidNumColumns)], // 3 cols != 2n
               ];
 };
 
@@ -1489,6 +1721,38 @@ static NSArray* getTestDataParseErrors() {
             NSInteger code = [num integerValue];
             XCTAssertEqual(error.code, code, @"%@", desc);
         }
+}
+
+// REN-5: characters TeX silently discards (whitespace catcode 10/5 and NUL
+// catcode 9) must continue to parse without error. Guards against the error
+// path swallowing legitimate whitespace.
+- (void) testIgnoredWhitespaceCharacters
+{
+    unichar nulChars[3] = { 'x', 0x0000, 'y' };
+    NSString* withNul = [NSString stringWithCharacters:nulChars length:3];
+    NSArray* inputs = @[ @"x\ty", @"x\ny", @"x\ry", withNul ];
+    for (NSString* str in inputs) {
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+        NSString* desc = [NSString stringWithFormat:@"whitespace input %@", str];
+        XCTAssertNotNil(list, @"%@", desc);
+        XCTAssertNil(error, @"%@", desc);
+        XCTAssertEqual(list.atoms.count, 2u, @"%@", desc);
+        XCTAssertEqual([list.atoms[0] type], kMTMathAtomVariable, @"%@", desc);
+        XCTAssertEqual([list.atoms[1] type], kMTMathAtomVariable, @"%@", desc);
+    }
+}
+
+// REN-6: \over inside an explicit-brace script group must still parse correctly.
+- (void) testOverInScriptBraces
+{
+    NSString* str = @"x^{1 \\over y}";
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:str error:&error];
+    XCTAssertNotNil(list, @"x^{1 \\over y} should parse without error");
+    XCTAssertNil(error, @"x^{1 \\over y} should not produce an error");
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"x^{\\frac{1}{y}}", @"round-trip for x^{1 \\over y}");
 }
 
 - (void) testCustom
@@ -1716,7 +1980,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"\\bigm|",    @(kMTMathAtomRelation), @(kMTDelimiterSize1), @"|" ],
         @[ @"\\Bigm\\|",  @(kMTMathAtomRelation), @(kMTDelimiterSize2), @"\u2016" ],
         @[ @"\\biggm\\Vert", @(kMTMathAtomRelation),@(kMTDelimiterSize3), @"\u2016", @"\\biggm\\|" ],
-        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u2329", @"\\Biggm<" ],
+        @[ @"\\Biggm\\langle", @(kMTMathAtomRelation),@(kMTDelimiterSize4), @"\u27E8", @"\\Biggm<" ],
         // Null delimiter.
         @[ @"\\bigl.",    @(kMTMathAtomOpen),     @(kMTDelimiterSize1), @"" ],
         @[ @"\\bigr.",    @(kMTMathAtomClose),    @(kMTDelimiterSize1), @"" ],
@@ -2164,6 +2428,81 @@ static NSArray* getTestDataLargeDelimiters() {
                               ([NSString stringWithFormat:@"a%@ b", input]),
                               @"round-trip %@", input);
     }
+}
+
+- (void) testMissingRelationOperatorAndOrdinarySymbols
+{
+    // command, expected nucleus, expected atom type
+    NSArray* rows = @[
+        @[ @"lt",              @0x003C, @(kMTMathAtomRelation) ],
+        @[ @"gt",              @0x003E, @(kMTMathAtomRelation) ],
+        @[ @"frown",           @0x2322, @(kMTMathAtomRelation) ],
+        @[ @"smile",           @0x2323, @(kMTMathAtomRelation) ],
+        @[ @"bowtie",          @0x22C8, @(kMTMathAtomRelation) ],
+        @[ @"longmapsto",      @0x27FC, @(kMTMathAtomRelation) ],
+        @[ @"bigcirc",         @0x25EF, @(kMTMathAtomBinaryOperator) ],
+        @[ @"bigtriangleup",   @0x25B3, @(kMTMathAtomBinaryOperator) ],
+        @[ @"bigtriangledown", @0x25BD, @(kMTMathAtomBinaryOperator) ],
+        @[ @"diamond",         @0x22C4, @(kMTMathAtomBinaryOperator) ],
+        @[ @"surd",            @0x221A, @(kMTMathAtomOrdinary) ],
+        @[ @"flat",            @0x266D, @(kMTMathAtomOrdinary) ],
+        @[ @"natural",         @0x266E, @(kMTMathAtomOrdinary) ],
+        @[ @"sharp",           @0x266F, @(kMTMathAtomOrdinary) ],
+    ];
+    XCTAssertEqual(rows.count, (NSUInteger)14);
+    for (NSArray* r in rows) {
+        NSString* cmd = r[0];
+        unichar expectedNuc = (unichar)[r[1] unsignedIntegerValue];
+        MTMathAtomType expectedType = (MTMathAtomType)[r[2] unsignedIntegerValue];
+        NSString* input = [@"\\" stringByAppendingString:cmd];
+
+        NSError* error = nil;
+        MTMathList* list = [MTMathListBuilder buildFromString:input error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqual(list.atoms.count, (NSUInteger)1, @"%@", input);
+        MTMathAtom* atom = list.atoms[0];
+        XCTAssertEqual(atom.type, expectedType, @"%@ type", input);
+        XCTAssertEqual(atom.nucleus.length, (NSUInteger)1, @"%@ nucleus length", input);
+        XCTAssertEqual([atom.nucleus characterAtIndex:0], expectedNuc, @"%@ nucleus", input);
+
+        // Round-trip: surround with variables so finalize keeps the atom class stable.
+        NSString* probe = [NSString stringWithFormat:@"a%@ b", input];
+        MTMathList* probeList = [MTMathListBuilder buildFromString:probe error:&error];
+        XCTAssertNil(error, @"%@", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:probeList],
+                              ([NSString stringWithFormat:@"a%@ b", input]),
+                              @"round-trip %@", input);
+    }
+}
+
+- (void) testBigtriangleupIsBinaryOpDistinctFromTriangle
+{
+    // Same glyph (U+25B3), different atom class: \triangle is ordinary, \bigtriangleup is a binary op.
+    MTMathAtom* tri = [MTMathListBuilder buildFromString:@"\\triangle"].atoms[0];
+    MTMathAtom* big = [MTMathListBuilder buildFromString:@"\\bigtriangleup"].atoms[0];
+    XCTAssertEqualObjects(tri.nucleus, big.nucleus);
+    XCTAssertEqual(tri.type, kMTMathAtomOrdinary);
+    XCTAssertEqual(big.type, kMTMathAtomBinaryOperator);
+}
+
+- (void) testDiamondIsBinaryOpDistinctFromDiamondsuit
+{
+    MTMathAtom* diamond = [MTMathListBuilder buildFromString:@"\\diamond"].atoms[0];
+    MTMathAtom* suit = [MTMathListBuilder buildFromString:@"\\diamondsuit"].atoms[0];
+    XCTAssertEqual(diamond.type, kMTMathAtomBinaryOperator);
+    XCTAssertEqualObjects(diamond.nucleus, @"⋄");
+    XCTAssertEqual(suit.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(suit.nucleus, @"♢");
+}
+
+- (void) testStackrelFrown
+{
+    // Regression for #63: \stackrel{\frown}{AD}
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\stackrel{\\frown}{AD}" error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
 }
 
 - (void) testPrecedesSucceeds
@@ -2866,6 +3205,179 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\underset{b}{\\overset{a}{X}}");
 }
 
+#pragma mark - \color and \colorbox tests
+
+- (void)testColorValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff0000}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#ff0000");
+    XCTAssertNotNil(colorAtom.innerList);
+    XCTAssertEqual(colorAtom.innerList.atoms.count, (NSUInteger)1);
+    // stringValue round-trip (mathListToString uses appendLaTeXToString: which MTMathColor
+    // inherits from the base class; stringValue is the color-specific round-trip method).
+    XCTAssertEqualObjects(colorAtom.stringValue, @"\\color{#ff0000}{x}");
+}
+
+- (void)testColorValidHexThree
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#f00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#f00");
+}
+
+- (void)testTextcolorValidHexSix
+{
+    // \textcolor is an alias of \color: same 2-argument parse path, same MTMathColor node.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\textcolor{#FF0000}{x}" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColor* colorAtom = (MTMathColor*)list.atoms[0];
+    XCTAssertEqual(colorAtom.type, kMTMathAtomColor);
+    XCTAssertEqualObjects(colorAtom.colorString, @"#FF0000");
+    XCTAssertNotNil(colorAtom.innerList);
+    XCTAssertEqual(colorAtom.innerList.atoms.count, (NSUInteger)1);
+    // \textcolor round-trips through the same MTMathColor serialization as \color.
+    XCTAssertEqualObjects(colorAtom.stringValue, @"\\color{#FF0000}{x}");
+}
+
+- (void)testTextcolorEquivalentToColor
+{
+    // \textcolor{c}{content} must produce a structurally equivalent MTMathList
+    // to \color{c}{content}: same MTMathColor node, colorString, and inner list.
+    NSError* textcolorError = nil;
+    MTMathList* textcolorList = [MTMathListBuilder buildFromString:@"\\textcolor{#FF0000}{x}" error:&textcolorError];
+    XCTAssertNil(textcolorError, @"Unexpected error: %@", textcolorError);
+    XCTAssertNotNil(textcolorList);
+
+    NSError* colorError = nil;
+    MTMathList* colorList = [MTMathListBuilder buildFromString:@"\\color{#FF0000}{x}" error:&colorError];
+    XCTAssertNil(colorError, @"Unexpected error: %@", colorError);
+    XCTAssertNotNil(colorList);
+
+    XCTAssertEqual(textcolorList.atoms.count, colorList.atoms.count);
+    MTMathColor* textcolorAtom = (MTMathColor*)textcolorList.atoms[0];
+    MTMathColor* colorAtom = (MTMathColor*)colorList.atoms[0];
+    XCTAssertEqual(textcolorAtom.type, colorAtom.type);
+    XCTAssertEqualObjects(textcolorAtom.colorString, colorAtom.colorString);
+    XCTAssertEqual(textcolorAtom.innerList.atoms.count, colorAtom.innerList.atoms.count);
+    // stringValue serializes color + inner content, so equal stringValue implies
+    // structurally equivalent color nodes.
+    XCTAssertEqualObjects(textcolorAtom.stringValue, colorAtom.stringValue);
+}
+
+- (void)testTextcolorInvalidNamedColorIsParseError
+{
+    // \textcolor shares \color's readColor grammar: named colors fail loud.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\textcolor{red}{x}" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid textcolor color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorboxValidHexSix
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{#00ff00}x" error:&error];
+    XCTAssertNil(error, @"Unexpected error: %@", error);
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, (NSUInteger)1);
+    MTMathColorbox* colorboxAtom = (MTMathColorbox*)list.atoms[0];
+    XCTAssertEqual(colorboxAtom.type, kMTMathAtomColorbox);
+    XCTAssertEqualObjects(colorboxAtom.colorString, @"#00ff00");
+}
+
+- (void)testColorInvalidNamedColorIsParseError
+{
+    // Named colors like "red" must be a parse error (not a silent no-op).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidMissingHashIsParseError
+{
+    // "ff0000" without leading # must be a parse error (silent failure bug).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{ff0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color missing #");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonHexDigitIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#gg0000}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for non-hex color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidWrongLengthIsParseError
+{
+    // 4-digit hex is neither #RGB nor #RRGGBB.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for wrong-length color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorboxInvalidNamedColorIsParseError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\colorbox{red}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for invalid colorbox color");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidEmbeddedWhitespaceIsParseError
+{
+    // An embedded space must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff 00}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with embedded whitespace");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+- (void)testColorInvalidNonASCIIIsParseError
+{
+    // A non-ASCII character must be captured into the token and rejected as an
+    // invalid color, not break token reading early and yield "Missing }".
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\color{#ff00é}x" error:&error];
+    XCTAssertNil(list, @"Expected nil list for color with non-ASCII character");
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.domain, MTParseError);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 #pragma mark - SEC-1: Recursion depth cap
 
 // SEC-1 Test 1: Thousands of nested braces must surface as a parse error,
@@ -3024,6 +3536,285 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqual(error.domain, MTParseError);
     XCTAssertEqual(error.code, MTParseErrorNestingTooDeep,
                    @"Expected MTParseErrorNestingTooDeep, got %ld", (long)error.code);
+}
+
+// REN-4: delimiter-table angle brackets must use U+27E8/U+27E9, matching the symbol table.
+- (void)testAngleBracketDelimiterConsistency
+{
+    // Build \langle x \rangle (plain open/close atoms — goes through the symbol table)
+    NSError* error = nil;
+    MTMathList* plainList = [MTMathListBuilder buildFromString:@"\\langle x \\rangle" error:&error];
+    XCTAssertNotNil(plainList, @"\\langle x \\rangle");
+    XCTAssertNil(error, @"\\langle x \\rangle");
+    XCTAssertEqual(plainList.atoms.count, (NSUInteger)3, @"\\langle x \\rangle");
+    MTMathAtom* plainOpen  = plainList.atoms[0];
+    MTMathAtom* plainClose = plainList.atoms[2];
+    XCTAssertEqual(plainOpen.type,  kMTMathAtomOpen,  @"\\langle x \\rangle open type");
+    XCTAssertEqual(plainClose.type, kMTMathAtomClose, @"\\langle x \\rangle close type");
+
+    // Build \left\langle x \right\rangle (goes through the delimiter table)
+    MTMathList* leftRightList = [MTMathListBuilder buildFromString:@"\\left\\langle x \\right\\rangle" error:&error];
+    XCTAssertNotNil(leftRightList, @"\\left\\langle x \\right\\rangle");
+    XCTAssertNil(error, @"\\left\\langle x \\right\\rangle");
+    XCTAssertEqual(leftRightList.atoms.count, (NSUInteger)1, @"\\left\\langle x \\right\\rangle");
+    MTInner* inner = (MTInner*)leftRightList.atoms[0];
+    XCTAssertEqual(inner.type, kMTMathAtomInner, @"inner type");
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus,  plainOpen.nucleus,
+                          @"\\left\\langle boundary nucleus must equal \\langle symbol nucleus");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, plainClose.nucleus,
+                          @"\\right\\rangle boundary nucleus must equal \\rangle symbol nucleus");
+
+    // The nuclei must be U+27E8 / U+27E9 specifically
+    XCTAssertEqualObjects(inner.leftBoundary.nucleus,  @"⟨", @"left boundary should be U+27E8");
+    XCTAssertEqualObjects(inner.rightBoundary.nucleus, @"⟩", @"right boundary should be U+27E9");
+
+    // Build \left< x \right> (shorthand) — covers the "<"/">" delimiter-table entries
+    MTMathList* angleShortList = [MTMathListBuilder buildFromString:@"\\left< x \\right>" error:&error];
+    XCTAssertNotNil(angleShortList, @"\\left< x \\right>");
+    XCTAssertNil(error, @"\\left< x \\right>");
+    MTInner* innerShort = (MTInner*)angleShortList.atoms[0];
+    XCTAssertEqualObjects(innerShort.leftBoundary.nucleus,  @"⟨",
+                          @"\\left< boundary should be U+27E8");
+    XCTAssertEqualObjects(innerShort.rightBoundary.nucleus, @"⟩",
+                          @"\\right> boundary should be U+27E9");
+
+    // Serialization must stay \left< x\right>  (unchanged round-trip)
+    NSString* serialized = [MTMathListBuilder mathListToString:leftRightList];
+    XCTAssertEqualObjects(serialized, @"\\left< x\\right> ", @"serialized LaTeX unchanged");
+}
+
+// Item 4: spacing command parsing tests (TDD — added before implementation)
+
+- (void) testParseSpacingDimensions
+{
+    // \kern accepts em or mu; em -> value*18 mu
+    for (NSString* latex in @[@"\\kern1em", @"\\kern{1em}", @"\\kern 1em"]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        [self checkAtomTypes:list types:@[@(kMTMathAtomSpace)] desc:latex];
+        MTMathSpace* sp = list.atoms[0];
+        XCTAssertEqualWithAccuracy(sp.space, 18.0, 0.001, @"%@", latex);
+    }
+
+    MTMathSpace* neg = [MTMathListBuilder buildFromString:@"\\kern-1em"].atoms[0];
+    XCTAssertEqualWithAccuracy(neg.space, -18.0, 0.001);
+
+    MTMathSpace* half = [MTMathListBuilder buildFromString:@"\\kern{.5em}"].atoms[0];
+    XCTAssertEqualWithAccuracy(half.space, 9.0, 0.001);
+
+    MTMathSpace* mk = [MTMathListBuilder buildFromString:@"\\mkern3mu"].atoms[0];
+    XCTAssertEqualWithAccuracy(mk.space, 3.0, 0.001);
+
+    // whitespace around the dimension, leading-zero-less decimal, sign
+    MTMathSpace* ws = [MTMathListBuilder buildFromString:@"\\hspace{ -.2em }"].atoms[0];
+    XCTAssertEqualWithAccuracy(ws.space, -3.6, 0.001);
+}
+
+- (void) testParseSpacingAliases
+{
+    // \hspace*, \hskip behave as \hspace/\kern (em or mu); \mskip, \mspace as \mkern (mu only)
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hspace*{1em}"].atoms[0]).space, 18.0, 0.001);
+    // TeX tolerates whitespace between the command and the '*' (e.g. "\hspace *{1em}")
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hspace *{1em}"].atoms[0]).space, 18.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\hskip 1em"].atoms[0]).space, 18.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mskip 4mu"].atoms[0]).space, 4.0, 0.001);
+    XCTAssertEqualWithAccuracy(((MTMathSpace*)[MTMathListBuilder buildFromString:@"\\mspace{4mu}"].atoms[0]).space, 4.0, 0.001);
+}
+
+- (void) testParseGlueTailIgnored
+{
+    // \mkern 3mu plus 1mu -> 3mu space followed by ordinary math "plus 1mu" (no glue detection)
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\mkern 3mu plus 1mu"];
+    XCTAssertEqual(list.atoms.count > 1, YES);
+    MTMathSpace* sp = list.atoms[0];
+    XCTAssertEqual(sp.type, kMTMathAtomSpace);
+    XCTAssertEqualWithAccuracy(sp.space, 3.0, 0.001);
+    // remaining atoms are ordinary math (the literal letters p,l,u,s, ...), not spaces
+    XCTAssertNotEqual(((MTMathAtom*)list.atoms[1]).type, kMTMathAtomSpace);
+}
+
+- (void) testParsePhantomFamily
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\phantom{x}"];
+    [self checkAtomTypes:list types:@[@(kMTMathAtomBox)] desc:@"phantom"];
+    MTMathBox* box = list.atoms[0];
+    XCTAssertTrue(box.keepWidth && box.keepHeight && box.keepDepth && !box.drawChild);
+    XCTAssertEqual(box.innerList.atoms.count, 1);
+
+    // \phantom x : single-character argument (buildInternal:true), no braces
+    MTMathBox* box2 = [MTMathListBuilder buildFromString:@"\\phantom x"].atoms[0];
+    XCTAssertEqual(box2.innerList.atoms.count, 1);
+
+    MTMathBox* h = [MTMathListBuilder buildFromString:@"\\hphantom{x}"].atoms[0];
+    XCTAssertTrue(h.keepWidth && !h.keepHeight && !h.keepDepth && !h.drawChild);
+
+    MTMathBox* v = [MTMathListBuilder buildFromString:@"\\vphantom{x}"].atoms[0];
+    XCTAssertTrue(!v.keepWidth && v.keepHeight && v.keepDepth && !v.drawChild);
+
+    // \mathstrut: no argument, synthetic inner = open paren "(", vphantom flags
+    MTMathBox* strut = [MTMathListBuilder buildFromString:@"\\mathstrut"].atoms[0];
+    XCTAssertTrue(!strut.keepWidth && strut.keepHeight && strut.keepDepth && !strut.drawChild);
+    XCTAssertEqual(strut.innerList.atoms.count, 1);
+    XCTAssertEqualObjects(((MTMathAtom*)strut.innerList.atoms[0]).nucleus, @"(");
+}
+
+- (void) testParseSmash
+{
+    MTMathBox* s = [MTMathListBuilder buildFromString:@"\\smash{x}"].atoms[0];
+    XCTAssertTrue(s.keepWidth && !s.keepHeight && !s.keepDepth && s.drawChild);
+
+    MTMathBox* st = [MTMathListBuilder buildFromString:@"\\smash[t]{x}"].atoms[0];
+    XCTAssertTrue(st.keepWidth && !st.keepHeight && st.keepDepth && st.drawChild);
+
+    MTMathBox* sb = [MTMathListBuilder buildFromString:@"\\smash[b]{x}"].atoms[0];
+    XCTAssertTrue(sb.keepWidth && sb.keepHeight && !sb.keepDepth && sb.drawChild);
+
+    // bad optional value: ignore bracket, smash both, no crash (PRD §7.2.2)
+    MTMathBox* sx = [MTMathListBuilder buildFromString:@"\\smash[q]{x}"].atoms[0];
+    XCTAssertTrue(!sx.keepHeight && !sx.keepDepth);
+}
+
+- (void) testParseLaps
+{
+    NSDictionary<NSString*, NSNumber*>* cases = @{
+        @"\\llap{x}": @(kMTBoxHAlignRight),  @"\\mathllap{x}": @(kMTBoxHAlignRight),
+        @"\\rlap{x}": @(kMTBoxHAlignLeft),   @"\\mathrlap{x}": @(kMTBoxHAlignLeft),
+        @"\\clap{x}": @(kMTBoxHAlignCenter), @"\\mathclap{x}": @(kMTBoxHAlignCenter),
+    };
+    for (NSString* latex in cases) {
+        MTMathBox* box = [MTMathListBuilder buildFromString:latex].atoms[0];
+        XCTAssertEqual(box.type, kMTMathAtomBox, @"%@", latex);
+        XCTAssertTrue(!box.keepWidth && box.keepHeight && box.keepDepth && box.drawChild, @"%@", latex);
+        XCTAssertEqual(box.hAlign, (MTBoxHAlign)cases[latex].unsignedIntegerValue, @"%@", latex);
+    }
+}
+
+- (void) testParseBoxAtEOF
+{
+    // \phantom with no argument at EOF: empty inner, no crash (LLD §6)
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\phantom"];
+    XCTAssertNotNil(list);
+    MTMathBox* box = list.atoms[0];
+    XCTAssertEqual(box.innerList.atoms.count, 0);
+}
+
+- (void) testBoxRoundTrip
+{
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\phantom{x}"]], @"\\phantom{x}");
+    // \mathstrut serializes lossily to \vphantom{(}
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
+}
+
+- (void)testBraceGrouping
+{
+    // x{\scriptstyle y}z — the issue #177 case. The group is a distinct atom;
+    // \scriptstyle lives inside it; round-trips with braces preserved.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"x{\\scriptstyle y}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list
+                   types:@[ @(kMTMathAtomVariable), @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ]
+                    desc:@"x{\\scriptstyle y}z"];
+    MTMathGroup* group = (MTMathGroup*) list.atoms[1];
+    XCTAssertTrue([group isKindOfClass:[MTMathGroup class]]);
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomStyle), @(kMTMathAtomVariable) ]
+                    desc:@"group innerList"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"x{\\scriptstyle y}z");
+
+    // {x}^2 — the script attaches to the whole group.
+    list = [MTMathListBuilder buildFromString:@"{x}^2" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{x}^2"];
+    group = (MTMathGroup*) list.atoms[0];
+    XCTAssertNotNil(group.superScript, @"superscript must be on the group");
+    [self checkAtomTypes:group.superScript types:@[ @(kMTMathAtomNumber) ] desc:@"{x}^2 script"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{x}^{2}");
+
+    // {a+b} — Bin classification stays inside the group; round-trips with braces.
+    list = [MTMathListBuilder buildFromString:@"{a+b}c" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ] desc:@"{a+b}c"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{a+b}c");
+
+    // Nested {{x}} — outer group's innerList holds a single inner group.
+    list = [MTMathListBuilder buildFromString:@"{{x}}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{x}}"];
+    group = (MTMathGroup*) list.atoms[0];
+    [self checkAtomTypes:group.innerList types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{x}} inner"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{{x}}");
+
+    // Empty {} — a group with an empty innerList; round-trips as {}.
+    list = [MTMathListBuilder buildFromString:@"{}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{}"];
+    group = (MTMathGroup*) list.atoms[0];
+    XCTAssertEqual(group.innerList.atoms.count, 0u);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"{}");
+
+    // Field braces must NOT wrap: ^{\scriptstyle y}z keeps the style scoped to the
+    // superscript field, with no group wrapper and no leak onto z.
+    list = [MTMathListBuilder buildFromString:@"x^{\\scriptstyle y}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomVariable), @(kMTMathAtomVariable) ] desc:@"x^{...}z"];
+    MTMathList* super0 = ((MTMathAtom*) list.atoms[0]).superScript;
+    [self checkAtomTypes:super0 types:@[ @(kMTMathAtomStyle), @(kMTMathAtomVariable) ] desc:@"super field"];
+}
+
+- (void)testBraceGroupingAroundOverTransform
+{
+    // Regression: an inner group transformed by \over must NOT cause the
+    // ENCLOSING group to be dropped. {{a \over b}c} → the outer group survives,
+    // wrapping [Fraction, Variable(c)] (the inner {a \over b} became a Fraction,
+    // but that transform is scoped to the inner group only).
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"{{a \\over b}c}" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list types:@[ @(kMTMathAtomOrdGroup) ] desc:@"{{a \\over b}c} top"];
+    MTMathGroup* group = (MTMathGroup*) list.atoms[0];
+    XCTAssertTrue([group isKindOfClass:[MTMathGroup class]]);
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomFraction), @(kMTMathAtomVariable) ]
+                    desc:@"{{a \\over b}c} inner"];
+
+    // The #177 leak variant: \scriptstyle inside the enclosing group must stay
+    // scoped to that group even when a leading inner group was \over-transformed.
+    // Before the fix the inner group's "transformed" flag leaked upward, the
+    // outer group was dropped, and \scriptstyle escaped onto z.
+    list = [MTMathListBuilder buildFromString:@"{{a \\over b}\\scriptstyle c}z" error:&error];
+    XCTAssertNil(error);
+    [self checkAtomTypes:list
+                   types:@[ @(kMTMathAtomOrdGroup), @(kMTMathAtomVariable) ]
+                    desc:@"{{a \\over b}\\scriptstyle c}z top"];
+    group = (MTMathGroup*) list.atoms[0];
+    [self checkAtomTypes:group.innerList
+                   types:@[ @(kMTMathAtomFraction), @(kMTMathAtomStyle), @(kMTMathAtomVariable) ]
+                    desc:@"group innerList"];
+    // z is a separate top-level atom — \scriptstyle did NOT leak out of the group.
+    XCTAssertEqual(((MTMathAtom*) list.atoms[1]).type, kMTMathAtomVariable,
+                   @"z must be a plain top-level variable, not style-contaminated");
+}
+
+- (void)testScriptAfterOverTransformedGroupAttachesToFraction
+{
+    // {a \over b}^2 — \over transforms the enclosing group into a Fraction at
+    // the parent level (TeX group-transformation). The following ^2 must attach
+    // to THAT fraction, not to a spurious empty Ord. Before the prevAtom fix the
+    // transformed path appended the fraction without updating prevAtom, so the ^
+    // branch allocated an empty Ord and hung the superscript on it instead.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"{a \\over b}^2" error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqualObjects(@(list.atoms.count), @1, @"expected a single fraction atom, not fraction + empty Ord");
+    MTMathAtom* frac = list.atoms[0];
+    XCTAssertEqual(frac.type, kMTMathAtomFraction, @"expected the \\over fraction");
+    XCTAssertNotNil(frac.superScript, @"^2 must attach to the fraction");
+    [self checkAtomTypes:frac.superScript types:@[ @(kMTMathAtomNumber) ] desc:@"{a \\over b}^2 superscript"];
+    // Round-trip: \over normalizes to \frac{}{} on serialization (existing
+    // behavior); the superscript stays on the fraction.
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\frac{a}{b}^{2}");
 }
 
 @end

@@ -424,15 +424,31 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
 }
 
 static NSString* changeFont(NSString* str, MTFontStyle fontStyle) {
-    NSMutableString* retval = [NSMutableString stringWithCapacity:str.length];
-    unichar charBuffer[str.length];
-    [str getCharacters:charBuffer range:NSMakeRange(0, str.length)];
-    for (int i = 0; i < str.length; ++i) {
-        unichar ch = charBuffer[i];
-        UTF32Char unicode = styleCharacter(ch, fontStyle);
-        unicode = NSSwapHostIntToLittle(unicode);
-        NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
-        [retval appendString:charStr];
+    NSUInteger length = str.length;
+    NSMutableString* retval = [NSMutableString stringWithCapacity:length];
+    // Hot path: almost every nucleus is a single character (length == 1).
+    // Use a fixed-size stack buffer for the common small case to avoid a
+    // malloc/free per call.  Inputs longer than 256 unichars still fall back
+    // to the heap so the SEC-2 fix (no unbounded VLA) remains intact.
+    unichar stackBuf[256];
+    unichar *charBuffer = (length <= 256) ? stackBuf : malloc(sizeof(unichar) * (size_t)length);
+    NSCAssert(length == 0 || charBuffer != NULL, @"Failed to allocate charBuffer");
+    // Wrap in @try/@finally so charBuffer is released on all exit paths,
+    // including the IllegalCharacter / Invalid style exceptions that
+    // styleCharacter can @throw from inside the loop.
+    @try {
+        [str getCharacters:charBuffer range:NSMakeRange(0, length)];
+        for (NSUInteger i = 0; i < length; ++i) {
+            unichar ch = charBuffer[i];
+            UTF32Char unicode = styleCharacter(ch, fontStyle);
+            unicode = NSSwapHostIntToLittle(unicode);
+            NSString* charStr = [[NSString alloc] initWithBytes:&unicode length:sizeof(unicode) encoding:NSUTF32LittleEndianStringEncoding];
+            [retval appendString:charStr];
+        }
+    } @finally {
+        if (charBuffer != stackBuf) {
+            free(charBuffer);
+        }
     }
     return retval;
 }
@@ -554,6 +570,10 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 // returns the size of the font in this style
 + (CGFloat) getStyleSize:(MTLineStyle) style font:(MTFont*) font
 {
+    // kMTLineStyleInherit is a sentinel, not a real style with a size; callers must
+    // resolve it (e.g. via -cellStyleForTable:) before asking for a size. Fail loud
+    // rather than fall off the end of the switch and return an uninitialized value.
+    NSAssert(style != kMTLineStyleInherit, @"getStyleSize: requires a resolved style, not kMTLineStyleInherit");
     CGFloat original = font.fontSize;
     switch (style) {
         case kMTLineStyleDisplay:
@@ -635,6 +655,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (_currentLine.length > 0) {
                     [self addDisplayLine];
                 }
+                // Color is spaced as Ord (see getInterElementSpaceArrayIndexForType).
+                [self addInterElementSpace:prevNode currentType:atom.type];
                 MTMathColor* colorAtom = (MTMathColor*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorAtom.innerList font:_font style:_style];
                 display.localTextColor = [MTColor colorFromHexString:colorAtom.colorString];
@@ -649,6 +671,8 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 if (_currentLine.length > 0) {
                     [self addDisplayLine];
                 }
+                // Colorbox is spaced as Ord (see getInterElementSpaceArrayIndexForType).
+                [self addInterElementSpace:prevNode currentType:atom.type];
                 MTMathColorbox* colorboxAtom = (MTMathColorbox*) atom;
                 MTDisplay* display = [MTTypesetter createLineForMathList:colorboxAtom.innerList font:_font style:_style];
 
@@ -656,6 +680,60 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;
                 [_displayAtoms addObject:display];
+                break;
+            }
+
+            case kMTMathAtomBox: {
+                // stash the existing layout
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Box spacing class is Ordinary: reclassify before any inter-element lookup
+                // (mirrors overline/accent), so it never reaches the getInterElementSpace default assert.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+
+                MTMathBox* boxAtom = (MTMathBox*) atom;
+                MTMathListDisplay* child = [MTTypesetter createLineForMathList:boxAtom.innerList font:_font style:_style];
+                MTMathBoxDisplay* display = [[MTMathBoxDisplay alloc] initWithChild:child
+                                                                         keepWidth:boxAtom.keepWidth
+                                                                        keepHeight:boxAtom.keepHeight
+                                                                         keepDepth:boxAtom.keepDepth
+                                                                         drawChild:boxAtom.drawChild
+                                                                            hAlign:boxAtom.hAlign
+                                                                             range:atom.indexRange];
+                display.position = _currentPosition;
+                _currentPosition.x += display.width;   // 0 for vphantom/laps
+                [_displayAtoms addObject:display];
+
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:display index:atom.indexRange.location delta:0];
+                }
+                break;
+            }
+
+            case kMTMathAtomOrdGroup: {
+                // A brace group {…}: an Ord subformula. Lay out its sub-mlist with a
+                // fresh typesetter — that recursion scopes any interior style node
+                // (the #177 fix) — then place the child inline like \color and run
+                // scripts on the whole group.
+                if (_currentLine.length > 0) {
+                    [self addDisplayLine];
+                }
+                // Spaced as Ordinary: reclassify before any inter-element lookup
+                // (mirrors the Box case), so it never reaches the default assert.
+                [self addInterElementSpace:prevNode currentType:kMTMathAtomOrdinary];
+                atom.type = kMTMathAtomOrdinary;
+
+                MTMathGroup* groupAtom = (MTMathGroup*) atom;
+                MTMathListDisplay* child = [MTTypesetter createLineForMathList:groupAtom.innerList font:_font style:_style];
+                child.position = _currentPosition;
+                _currentPosition.x += child.width;
+                [_displayAtoms addObject:child];
+
+                if (atom.subScript || atom.superScript) {
+                    [self makeScripts:atom display:child index:atom.indexRange.location delta:0];
+                }
                 break;
             }
 
@@ -2127,24 +2205,29 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
     }
     
-    CGFloat columnWidths[numColumns];
-    // NOTE: Using memset to initialize columnWidths array avoids
-    // Xcode Analyze "Assigned value is garbage or undefined".
-    // https://stackoverflow.com/questions/21191194/analyzer-warning-assigned-value-is-garbage-or-undefined
-    memset(columnWidths, 0, sizeof(columnWidths));
-    NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
-    
-    // Position all the columns in each row
-    NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
-    for (NSArray<MTDisplay*>* row in displays) {
-        MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
-        [rowDisplays addObject:rowDisplay];
+    CGFloat *columnWidths = calloc(numColumns, sizeof(CGFloat));
+    NSAssert(columnWidths != NULL, @"Failed to allocate columnWidths");
+    // Wrap in @try/@finally so columnWidths is released on all exit paths.
+    // typesetCells:/makeRowWithColumns: eventually call changeFont, which can
+    // @throw IllegalCharacter / Invalid style; those would otherwise leak the buffer.
+    MTMathListDisplay* tableDisplay = nil;
+    @try {
+        NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
+
+        // Position all the columns in each row
+        NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
+        for (NSArray<MTDisplay*>* row in displays) {
+            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
+            [rowDisplays addObject:rowDisplay];
+        }
+
+        // Position all the rows
+        [self positionRows:rowDisplays forTable:table];
+        tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
+        tableDisplay.position = _currentPosition;
+    } @finally {
+        free(columnWidths);
     }
-    
-    // Position all the rows
-    [self positionRows:rowDisplays forTable:table];
-    MTMathListDisplay* tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
-    tableDisplay.position = _currentPosition;
     return tableDisplay;
 }
 
@@ -2152,12 +2235,15 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 - (NSArray<NSArray<MTDisplay*>*>*) typesetCells:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     NSMutableArray<NSMutableArray<MTDisplay*>*> *displays = [NSMutableArray arrayWithCapacity:table.numRows];
-    
+    // Cells inherit the surrounding style unless the env pins one (matrix/cases -> Text,
+    // smallmatrix -> Script); see -cellStyleForTable:.
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+
     for(NSArray<MTMathList*>* row in table.cells) {
         NSMutableArray<MTDisplay*>* colDisplays = [NSMutableArray arrayWithCapacity:row.count];
         [displays addObject:colDisplays];
         for (int i = 0; i < row.count; i++) {
-            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:_style cramped:NO];
+            MTMathListDisplay* disp = [MTTypesetter createLineForMathList:row[i] font:_font style:cellStyle cramped:NO];
             columnWidths[i] = MAX(disp.width, columnWidths[i]);
             [colDisplays addObject:disp];
         };
@@ -2165,9 +2251,24 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     return displays;
 }
 
+// The line style the cells of this table actually render in. Some envs pin every
+// cell to a fixed style (matrix/cases -> Text, smallmatrix -> Script) via
+// table.cellStyle; the rest leave it kMTLineStyleInherit and render in the
+// surrounding _style (aligned/gather/eqnarray/alignedat). amsmath puts a table's
+// inter-column/row glue inside the array's own style group, so the gap must be
+// measured with a font sized to this cell style, not the surrounding _style.
+- (MTLineStyle) cellStyleForTable:(MTMathTable*) table
+{
+    return table.cellStyle == kMTLineStyleInherit ? _style : table.cellStyle;
+}
+
 - (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
 {
     CGFloat columnStart = 0;
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+    // muUnit == fontSize/18 (see -[MTFontMathTable muUnit]). Don't copy a CTFont just to
+    // read a scalar that is a pure function of _font + cellStyle.
+    CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
@@ -2195,7 +2296,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         }
         
         col.position = CGPointMake(cellPos, 0);
-        columnStart += colWidth + table.interColumnSpacing * _styleFont.mathTable.muUnit;
+        columnStart += colWidth + table.interColumnSpacing * cellStyleMuUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
@@ -2207,10 +2308,19 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     // Position the rows
     // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
     CGFloat currPos = 0;
-    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * _styleFont.fontSize;
-    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkip = openup + kLineSkipMultiplier * _styleFont.fontSize;
-    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * _styleFont.fontSize;
+    MTLineStyle cellStyle = [self cellStyleForTable:table];
+    // openup tracks the cell-content font size (a jot is 0.3× font size). The size is a
+    // pure scalar of _font + cellStyle, so compute it directly instead of copying a CTFont.
+    CGFloat cellStyleFontSize = [[self class] getStyleSize:cellStyle font:_font];
+    CGFloat openup = table.interRowAdditionalSpacing * kJotMultiplier * cellStyleFontSize;
+    // Row leading also tracks the cell-content style, not the surrounding style. A
+    // styled table (e.g. a matrix nested in a script position) is a self-contained
+    // vbox whose internal baseline grid is fixed in the cell style before it is placed
+    // into the smaller context; scaling these to _styleFont would pack the rows
+    // scriptScaleDown x too tight (the row-spacing analogue of the column-gap fix above).
+    CGFloat baselineSkip = openup + kBaseLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkip = openup + kLineSkipMultiplier * cellStyleFontSize;
+    CGFloat lineSkipLimit = openup + kLineSkipLimitMultiplier * cellStyleFontSize;
     CGFloat prevRowDescent = 0;
     CGFloat ascent = 0;
     BOOL first = true;

@@ -17,6 +17,7 @@ NSString *const MTParseError = @"ParseError";
 @interface MTEnvProperties : NSObject
 
 @property (nonatomic, readonly) NSString* envName;
+@property (nonatomic) NSString* argument;
 @property (nonatomic) BOOL ended;
 @property (nonatomic) NSInteger numRows;
 
@@ -29,6 +30,7 @@ NSString *const MTParseError = @"ParseError";
     self = [super init];
     if (self) {
         _envName = name;
+        _argument = nil;
         _numRows = 0;
         _ended = NO;
     }
@@ -51,6 +53,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
     NSInteger _recursionDepth;
+    // Set to YES by stopCommand when a TeX group-transformation command (\over,
+    // \atop, \choose, \brack, \brace) fires inside a {…} group. Checked in the
+    // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
+    // every buildInternal call so the check is always fresh.
+    BOOL _groupWasTransformedByStopCommand;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -171,6 +178,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         return nil;
     }
     _recursionDepth++;
+    _groupWasTransformedByStopCommand = NO;
     @try {
     MTMathList* list = [MTMathList new];
     NSAssert(!(oneCharOnly && (stop > 0)), @"Cannot set both oneCharOnly and stopChar.");
@@ -224,12 +232,46 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '{') {
             // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
             MTMathList* sublist = [self buildInternal:false stopChar:'}'];
-            prevAtom = [sublist.atoms lastObject];
-            [list append:sublist];
-            if (oneCharOnly) {
-                return list;
+            if (!sublist) {
+                // inner error already set (e.g. missing closing brace); propagate.
+                return nil;
             }
-            continue;
+            // Read-and-clear: a \over/\atop-\class transform fired by an INNER
+            // group must not leak into THIS (enclosing) group's decision. The flag
+            // is set in stopCommand: and reset at the top of each buildInternal:,
+            // but the inner recursion runs between our reset and this read, so
+            // without clearing here a transformed inner group would wrongly
+            // suppress wrapping of the outer group (dropping it + leaking any
+            // \scriptstyle inside it — a #177 regression).
+            BOOL transformed = _groupWasTransformedByStopCommand;
+            _groupWasTransformedByStopCommand = NO;
+            if (oneCharOnly || transformed) {
+                // Field brace (^{…}, _{…}, \frac{…}, command argument): the {…}
+                // *is* the field. Flatten and return it as the field — unchanged.
+                // Also: a group-transforming command (\over, \atop, \choose,
+                // \brack, \brace) fired inside this group. The resulting fraction
+                // replaces the group in the parent list (TeX behavior) — do NOT
+                // wrap in MTMathGroup. Fall through to continue after appending.
+                // Update prevAtom to the last appended atom so a following ^ / _ /
+                // prime attaches to the fraction (or field atom), not a spurious
+                // empty Ord — mirrors the pre-grouping behavior and the shared
+                // append path below (prevAtom = atom).
+                prevAtom = [sublist.atoms lastObject];
+                [list append:sublist];
+                if (oneCharOnly) {
+                    return list;
+                }
+                continue;
+            }
+            // Grouping brace in the main list: wrap as an Ord subformula so style
+            // nodes are scoped, scripts target the whole group, and Bin/Ord
+            // reclassification stops at the brace boundary
+            // (== TeX Ord-noad-with-sub_mlist / KaTeX ordgroup).
+            MTMathGroup* group = [[MTMathGroup alloc] init];
+            group.innerList = sublist;
+            atom = group;
+            // fall through to the shared append path below: it sets prevAtom = group
+            // (so {x}^2 scripts the group) and finalize assigns the indexRange.
         } else if (ch == '}') {
             NSAssert(!oneCharOnly, @"This should have been handled before");
             NSAssert(stop == 0, @"This should have been handled before");
@@ -241,7 +283,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
-            MTMathList* done = [self stopCommand:command list:list stopChar:stop];
+            MTMathList* done = [self stopCommand:command list:list stopChar:stop oneChar:oneCharOnly];
             if (done) {
                 return done;
             } else if (_error) {
@@ -304,7 +346,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 return list;
             } else {
                 // Create a new table with the current list and a default env
-                MTMathAtom* table = [self buildTable:nil firstList:list row:NO];
+                MTMathAtom* table = [self buildTable:nil argument:nil firstList:list row:NO];
                 return [MTMathList mathListWithAtoms:table, nil];
             }
         } else if (ch == '\'') {
@@ -358,11 +400,30 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (_spacesAllowed && ch == ' ') {
             // If spaces are allowed then spaces do not need escaping with a \ before being used.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
+        } else if (ch == '~') {
+            // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
+            atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
-                // Not a recognized character
-                continue;
+                // Characters TeX silently discards: whitespace (catcode 10/5,
+                // ignored in math mode) and NUL (catcode 9). Note that other
+                // control characters are *not* spaces in TeX (form feed is \par,
+                // vertical tab is an ordinary "other" character), so they fall
+                // through to the error below, as they should.
+                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\0') {
+                    continue;
+                }
+                // Any other unrecognized character is an error: a non-ASCII literal
+                // (e.g. π, ×, ≤) or a special character with no meaning in math mode
+                // (% is a comment, # a macro parameter, $ toggles math mode). Callers
+                // should use the corresponding LaTeX command (e.g. \pi, \%, \#).
+                // ch is a single UTF-16 code unit; we just report its value (an
+                // above-BMP character reports its leading surrogate, which is fine
+                // for an error message).
+                [self setError:MTParseErrorInvalidCharacter
+                       message:[NSString stringWithFormat:@"Unknown character U+%04X is not a valid LaTeX input character in math mode. Use the corresponding LaTeX command instead.", ch]];
+                return nil;
             }
         }
         NSAssert(atom != nil, @"Atom shouldn't be nil");
@@ -561,29 +622,166 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorCharacterNotFound message:@"Missing {"];
         return nil;
     }
-    
+
     // Ignore spaces and nonascii.
     [self skipSpaces];
 
-    // a string of all upper and lower case characters.
+    // Read the entire token up to the closing brace or whitespace.
+    // We deliberately do NOT restrict the charset here so that invalid
+    // inputs (e.g. named colors like "red") are captured whole and can
+    // produce a clear validation error instead of a confusing "Missing }".
     NSMutableString* mutable = [NSMutableString string];
     while([self hasCharacters]) {
         unichar ch = [self getNextCharacter];
-        if (ch == '#' || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
-            [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
+        if (ch == '}') {
+            // Put the closing brace back; expectCharacter below will consume it.
+            [self unlookCharacter];
+            break;
+        }
+        [mutable appendString:[NSString stringWithCharacters:&ch length:1]];
+    }
+
+    if (![self expectCharacter:'}']) {
+        // We didn't find a closing brace, so invalid format.
+        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
+        return nil;
+    }
+
+    // Validate: color must be '#' followed by exactly 3 or 6 hex digits.
+    // This keeps the grammar consistent with colorFromHexString: which requires
+    // a leading '#'.  Named colors and bare hex strings are not supported.
+    //
+    // NOTE: 3-digit #RGB is accepted here at parse time, but correct *rendering*
+    // of #RGB depends on colorFromHexString: handling the 3-digit shorthand.
+    // The current decoder is 6-digit-only (scanHexInt on "f00" yields 0xF00 and
+    // is masked as if it were #000F00), so #RGB currently renders the wrong
+    // color until that decoder fix (REN-7) lands.  We deliberately keep
+    // accepting #RGB rather than rejecting it: the previous parser also
+    // accepted and mis-rendered #RGB identically, so this is parse-correct /
+    // render-deferred, not a regression.
+    BOOL valid = NO;
+    NSUInteger len = mutable.length;
+    if (len == 4 || len == 7) {
+        unichar first = [mutable characterAtIndex:0];
+        if (first == '#') {
+            valid = YES;
+            for (NSUInteger i = 1; i < len && valid; i++) {
+                unichar c = [mutable characterAtIndex:i];
+                BOOL isHex = ((c >= '0' && c <= '9') ||
+                              (c >= 'a' && c <= 'f') ||
+                              (c >= 'A' && c <= 'F'));
+                if (!isHex) {
+                    valid = NO;
+                }
+            }
+        }
+    }
+
+    if (!valid) {
+        NSString* msg = [NSString stringWithFormat:@"Invalid color: %@", mutable];
+        [self setError:MTParseErrorInvalidCommand message:msg];
+        return nil;
+    }
+
+    return mutable;
+}
+
+// Reads a TeX length dimension (e.g. "1em", "-0.5em", "3mu") from the char stream.
+// Grammar: [ws] ['{'] [ws] [sign] (digits[.digits] | .digits) [ws] unit [ws] ['}']
+// where unit ∈ {em, mu}.  On success, writes the value in mu to *outMu and returns YES.
+// On any malformed or unsupported input, sets _error (MTParseErrorInvalidCommand) and
+// returns NO.  em is converted to mu via factor 18; mu is stored as-is.
+// allowEm = NO means only mu is accepted (for \mkern/\mskip/\mspace).
+- (BOOL) readDimensionIntoMu:(CGFloat*)outMu allowEm:(BOOL)allowEm command:(NSString*)cmd
+{
+    // Skip any leading whitespace.
+    [self skipSpaces];
+
+    // Check for an optional opening brace.
+    BOOL braced = NO;
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '{') {
+            braced = YES;
         } else {
-            // we went too far
+            [self unlookCharacter];
+        }
+    }
+    // Skip whitespace after optional '{'.
+    [self skipSpaces];
+
+    // Parse optional sign.
+    CGFloat sign = 1;
+    if ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '-') {
+            sign = -1;
+        } else if (c == '+') {
+            sign = 1;
+        } else {
+            [self unlookCharacter];
+        }
+    }
+
+    // Parse mantissa: digits[.digits] | .digits  (require at least one digit overall).
+    NSMutableString* num = [NSMutableString string];
+    BOOL sawDigit = NO, sawDot = NO;
+    while ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c >= '0' && c <= '9') {
+            sawDigit = YES;
+            [num appendString:[NSString stringWithCharacters:&c length:1]];
+        } else if (c == '.' && !sawDot) {
+            sawDot = YES;
+            [num appendString:@"."];
+        } else {
             [self unlookCharacter];
             break;
         }
     }
-
-    if (![self expectCharacter:'}']) {
-        // We didn't find an closing brace, so invalid format.
-        [self setError:MTParseErrorCharacterNotFound message:@"Missing }"];
-        return nil;
+    if (!sawDigit) {
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"\\%@ expects a length", cmd]];
+        return NO;
     }
-    return mutable;
+    // Skip whitespace between number and unit.
+    [self skipSpaces];
+
+    // Read exactly two characters for the unit.
+    NSMutableString* unit = [NSMutableString string];
+    for (int i = 0; i < 2 && [self hasCharacters]; i++) {
+        unichar c = [self getNextCharacter];
+        [unit appendString:[NSString stringWithCharacters:&c length:1]];
+    }
+
+    CGFloat factor;
+    if ([unit isEqualToString:@"em"]) {
+        if (!allowEm) {
+            [self setError:MTParseErrorInvalidCommand
+                   message:[NSString stringWithFormat:@"\\%@ expects mu units", cmd]];
+            return NO;
+        }
+        factor = 18;
+    } else if ([unit isEqualToString:@"mu"]) {
+        factor = 1;
+    } else {
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"\\%@ expects em or mu units, got: %@", cmd, unit]];
+        return NO;
+    }
+
+    // If braced, skip whitespace and consume the closing '}'.
+    if (braced) {
+        [self skipSpaces];
+        if (![self hasCharacters] || [self getNextCharacter] != '}') {
+            [self setError:MTParseErrorInvalidCommand
+                   message:[NSString stringWithFormat:@"\\%@ missing closing brace", cmd]];
+            return NO;
+        }
+    }
+
+    *outMu = sign * num.doubleValue * factor;
+    return YES;
 }
 
 - (void) skipSpaces
@@ -623,10 +821,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 - (NSString*) readCommand
 {
     static NSSet<NSNumber*>* singleCharCommands = nil;
-    if (!singleCharCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         NSArray* singleChars = @[ @'{', @'}', @'$', @'#', @'%', @'_', @'|', @' ', @',', @'>', @';', @'!', @'\\' ];
         singleCharCommands = [[NSSet alloc] initWithArray:singleChars];
-    }
+    });
     if ([self hasCharacters]) {
         // Check if we have a single character command.
         unichar ch = [self getNextCharacter];
@@ -686,6 +885,50 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return env;
 }
 
+// Environments that take a mandatory raw {…} argument after \begin{env}.
+// This is the same generic gate the array LLD calls environmentsRequiringColumnSpec;
+// if both features land they must converge on one mechanism (LLD §5).
++ (NSSet<NSString*>*) environmentsTakingArgument
+{
+    static NSSet<NSString*>* envs = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        envs = [NSSet setWithObjects:@"alignedat", nil];
+    });
+    return envs;
+}
+
+// Reads the raw {…} argument after \begin{env}: require {, capture raw chars to },
+// require }. Returns the raw inside string (e.g. @"2"); interpretation happens later
+// in -buildTable:argument:firstList:row:. On a malformed argument, sets the error and
+// returns nil.
+- (nullable NSString*) readEnvironmentArgument
+{
+    if (![self expectCharacter:'{']) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        return nil;
+    }
+    NSMutableString* arg = [NSMutableString string];
+    while ([self hasCharacters]) {
+        unichar ch = [self getNextCharacter];
+        if (ch == '}') {
+            [self unlookCharacter];
+            break;
+        }
+        [arg appendString:[NSString stringWithCharacters:&ch length:1]];
+    }
+    if (![self expectCharacter:'}']) {
+        [self setError:MTParseErrorInvalidCommand
+               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        return nil;
+    }
+    // Strip surrounding whitespace (TeX's argument scanner ignores it), matching
+    // -readColor's skipSpaces. Interior whitespace is preserved so malformed args
+    // like {2 3} still fail the digit check downstream.
+    return [arg stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
 {
     NSString* delim = [self readDelimiter];
@@ -701,6 +944,30 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         return nil;
     }
     return boundary;
+}
+
+// Maps each phantom/smash/lap command to its MTMathBox flag set.
+// keys: kW=keepWidth, kH=keepHeight, kD=keepDepth, draw=drawChild, hAlign, acceptsTB, synthParen
++ (NSDictionary<NSString*, NSDictionary*>*) boxCommands
+{
+    static NSDictionary* commands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commands = @{
+            @"phantom":   @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@NO},
+            @"hphantom":  @{@"kW":@YES, @"kH":@NO,  @"kD":@NO,  @"draw":@NO},
+            @"vphantom":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@NO},
+            @"mathstrut": @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@NO, @"synthParen":@YES},
+            @"smash":     @{@"kW":@YES, @"kH":@NO,  @"kD":@NO,  @"draw":@YES, @"acceptsTB":@YES},
+            @"llap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignRight)},
+            @"rlap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignLeft)},
+            @"clap":      @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignCenter)},
+            @"mathllap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignRight)},
+            @"mathrlap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignLeft)},
+            @"mathclap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignCenter)},
+        };
+    });
+    return commands;
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -840,37 +1107,131 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         if (!env) {
             return nil;
         }
-        MTMathAtom* table = [self buildTable:env firstList:nil row:NO];
+        NSString* argument = nil;
+        if ([[MTMathListBuilder environmentsTakingArgument] containsObject:env]) {
+            argument = [self readEnvironmentArgument];
+            if (!argument) {
+                // readEnvironmentArgument already set the error.
+                return nil;
+            }
+        }
+        MTMathAtom* table = [self buildTable:env argument:argument firstList:nil row:NO];
         return table;
-    } else if ([command isEqualToString:@"color"]) {
-        // A color command has 2 arguments
+    } else if ([command isEqualToString:@"color"] || [command isEqualToString:@"textcolor"]) {
+        // \color and its alias \textcolor are 2-argument commands: a color
+        // followed by the content group that the color applies to.
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColor* mathColor = [[MTMathColor alloc] init];
-        mathColor.colorString = [self readColor];
+        mathColor.colorString = colorStr;
         mathColor.innerList = [self buildInternal:true];
         return mathColor;
     } else if ([command isEqualToString:@"colorbox"]) {
-        // A color command has 2 arguments
+        // A colorbox command has 2 arguments
+        NSString* colorStr = [self readColor];
+        if (!colorStr) {
+            // readColor already set the error.
+            return nil;
+        }
         MTMathColorbox* mathColorbox = [[MTMathColorbox alloc] init];
-        mathColorbox.colorString = [self readColor];
+        mathColorbox.colorString = colorStr;
         mathColorbox.innerList = [self buildInternal:true];
         return mathColorbox;
-    } else {
+    }
+
+    // Spacing commands: \kern, \hspace[*], \hskip, \mkern, \mskip, \mspace.
+    // The table maps each command name to @YES (em or mu allowed) or @NO (mu only).
+    NSNumber* allowEm = [MTMathListBuilder spacingCommands][command];
+    if (allowEm) {
+        // \hspace* is identical to \hspace; the '*' is left in the stream by the
+        // lexer (readString stops at '*' since it is not alphabetic), so consume it.
+        // TeX tolerates whitespace before the '*' (e.g. "\hspace *{1em}"), so skip
+        // spaces first; any skipped run is harmless when no '*' follows because
+        // readDimensionIntoMu:allowEm:command: also skips leading whitespace.
+        if ([command isEqualToString:@"hspace"]) {
+            [self skipSpaces];
+            if ([self hasCharacters]) {
+                unichar c = [self getNextCharacter];
+                if (c != '*') {
+                    [self unlookCharacter];
+                }
+            }
+        }
+        CGFloat mu = 0;
+        if (![self readDimensionIntoMu:&mu allowEm:allowEm.boolValue command:command]) {
+            return nil;   // _error already set by readDimensionIntoMu:
+        }
+        return [[MTMathSpace alloc] initWithSpace:mu];
+    }
+
+    NSDictionary* boxSpec = [MTMathListBuilder boxCommands][command];
+    if (boxSpec) {
+        MTMathBox* box = [MTMathBox new];
+        box.keepWidth  = [boxSpec[@"kW"] boolValue];
+        box.keepHeight = [boxSpec[@"kH"] boolValue];
+        box.keepDepth  = [boxSpec[@"kD"] boolValue];
+        box.drawChild  = [boxSpec[@"draw"] boolValue];
+        box.hAlign     = (MTBoxHAlign)[boxSpec[@"hAlign"] unsignedIntegerValue];
+
+        if ([boxSpec[@"synthParen"] boolValue]) {
+            // \mathstrut: no argument; synthetic inner list with a single open paren.
+            MTMathList* inner = [MTMathList new];
+            MTMathAtom* paren = [MTMathAtomFactory atomForCharacter:'('];
+            [inner addAtom:paren];
+            box.innerList = inner;
+            return box;
+        }
+
+        if ([boxSpec[@"acceptsTB"] boolValue] && [self hasCharacters]) {
+            // \smash[t]/[b]: optional [t]/[b] before the {X} argument (\sqrt[…] pattern).
+            unichar ch = [self getNextCharacter];
+            if (ch == '[') {
+                NSMutableString* opt = [NSMutableString string];
+                BOOL foundClose = NO;
+                while ([self hasCharacters]) {
+                    unichar c = [self getNextCharacter];
+                    if (c == ']') { foundClose = YES; break; }
+                    [opt appendString:[NSString stringWithCharacters:&c length:1]];
+                }
+                if (!foundClose) {
+                    // Mirror \sqrt[…]: a missing ']' is a parse error, not a silent recovery.
+                    [self setError:MTParseErrorCharacterNotFound message:@"Expected character not found: ]"];
+                    return nil;
+                }
+                NSString* o = [opt stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                if ([o isEqualToString:@"t"]) { box.keepHeight = NO; box.keepDepth = YES; }
+                else if ([o isEqualToString:@"b"]) { box.keepHeight = YES; box.keepDepth = NO; }
+                // any other value: ignore, leave smash-both flags (no crash).
+            } else {
+                [self unlookCharacter];
+            }
+        }
+
+        box.innerList = [self buildInternal:true];
+        return box;
+    }
+
+    {
         NSString* errorMessage = [NSString stringWithFormat:@"Invalid command \\%@", command];
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
         return nil;
     }
 }
 
-- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar
+- (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar oneChar:(BOOL) oneChar
 {
     static NSDictionary<NSString*, NSArray*>* fractionCommands = nil;
-    if (!fractionCommands) {
+    static dispatch_once_t fractionCommandsOnce;
+    dispatch_once(&fractionCommandsOnce, ^{
         fractionCommands = @{ @"over" : @[],
                               @"atop" : @[],
                               @"choose" : @[ @"(", @")"],
                               @"brack" : @[ @"[", @"]"],
                               @"brace" : @[ @"{", @"}"]};
-    }
+    });
     if ([command isEqualToString:@"right"]) {
         if (!_currentInnerAtom) {
             NSString* errorMessage = @"Missing \\left";
@@ -884,6 +1245,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         // return the list read so far.
         return list;
     } else if ([fractionCommands objectForKey:command]) {
+        if (oneChar) {
+            // REN-6: \over/\atop/\choose/\brack/\brace are illegal in a one-character
+            // argument slot (e.g. x^\over y). TeX rejects this too. Users who want a
+            // fraction in a script must use explicit braces: x^{a \over b}.
+            NSString* errorMessage = [NSString stringWithFormat:
+                @"\\%@ cannot be used in a one-character argument; "
+                @"wrap it in braces, e.g. x^{a \\%@ b}", command, command];
+            [self setError:MTParseErrorInvalidCommand message:errorMessage];
+            return nil;
+        }
         MTFraction* frac = nil;
         if ([command isEqualToString:@"over"]) {
             frac = [[MTFraction alloc] init];
@@ -902,6 +1273,12 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         MTMathList* fracList = [MTMathList new];
         [fracList addAtom:frac];
+        // Signal to the {…} branch that this group was transformed by a TeX
+        // group-transformation command (\over / \atop / \choose / \brack / \brace).
+        // The fraction should be inserted into the parent list directly (not wrapped
+        // in MTMathGroup), mirroring TeX's behavior where these commands replace the
+        // enclosing group with a generalized fraction.
+        _groupWasTransformedByStopCommand = YES;
         return fracList;
     } else if ([command isEqualToString:@"\\"] || [command isEqualToString:@"cr"]) {
         if (_currentEnv) {
@@ -910,7 +1287,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
             return list;
         } else {
             // Create a new table with the current list and a default env
-            MTMathAtom* table = [self buildTable:nil firstList:list row:YES];
+            MTMathAtom* table = [self buildTable:nil argument:nil firstList:list row:YES];
             return [MTMathList mathListWithAtoms:table, nil];
         }
     } else if ([command isEqualToString:@"end"]) {
@@ -970,11 +1347,12 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
 }
 
-- (MTMathAtom*) buildTable:(NSString*) env firstList:(MTMathList*) firstList row:(BOOL) isRow
+- (MTMathAtom*) buildTable:(NSString*) env argument:(NSString*) argument firstList:(MTMathList*) firstList row:(BOOL) isRow
 {
     // Save the current env till an new one gets built.
     MTEnvProperties* oldEnv = _currentEnv;
     _currentEnv = [[MTEnvProperties alloc] initWithName:env];
+    _currentEnv.argument = argument;
     NSInteger currentRow = 0;
     NSInteger currentCol = 0;
     NSMutableArray<NSMutableArray<MTMathList*>*>* rows = [NSMutableArray array];
@@ -1011,6 +1389,32 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
         return nil;
     }
+    if ([_currentEnv.envName isEqualToString:@"alignedat"]) {
+        // argument is the raw {n}; require a positive integer.
+        NSString* arg = _currentEnv.argument;
+        BOOL numeric = arg.length > 0;
+        for (NSUInteger i = 0; i < arg.length; i++) {
+            unichar c = [arg characterAtIndex:i];
+            if (c < '0' || c > '9') { numeric = NO; break; }
+        }
+        NSInteger n = arg.integerValue;
+        if (!numeric || n < 1) {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+            return nil;
+        }
+        NSInteger maxCols = 0;
+        for (NSArray<MTMathList*>* r in rows) {
+            if ((NSInteger) r.count > maxCols) { maxCols = r.count; }
+        }
+        if (maxCols != 2 * n) {
+            NSString* message = [NSString stringWithFormat:
+                @"alignedat declares {%ld} (%ld columns) but a row has %ld columns",
+                (long) n, (long) (2 * n), (long) maxCols];
+            [self setError:MTParseErrorInvalidNumColumns message:message];
+            return nil;
+        }
+    }
     NSError* error;
     MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
     if (!table && !_error) {
@@ -1025,7 +1429,8 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 + (NSDictionary*) spaceToCommands
 {
     static NSDictionary* spaceToCommands = nil;
-    if (!spaceToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         spaceToCommands = @{
                             @3 : @",",
                             @4 : @">",
@@ -1034,7 +1439,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                             @18 : @"quad",
                             @36 : @"qquad",
                     };
-    }
+    });
     return spaceToCommands;
 }
 
@@ -1109,15 +1514,34 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 + (NSDictionary*) styleToCommands
 {
     static NSDictionary* styleToCommands = nil;
-    if (!styleToCommands) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         styleToCommands = @{
                             @(kMTLineStyleDisplay) : @"displaystyle",
                             @(kMTLineStyleText) : @"textstyle",
                             @(kMTLineStyleScript) : @"scriptstyle",
                             @(kMTLineStyleScriptScript) : @"scriptscriptstyle",
                             };
-    }
+    });
     return styleToCommands;
+}
+
+// Maps each spacing command to whether em units are allowed (YES => em or mu; NO => mu only).
++ (NSDictionary<NSString*, NSNumber*>*) spacingCommands
+{
+    static NSDictionary* commands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commands = @{
+            @"kern":    @YES,   // em or mu
+            @"hspace":  @YES,   // also handles \hspace* (the '*' is consumed in the dispatch)
+            @"hskip":   @YES,
+            @"mkern":   @NO,    // mu only
+            @"mskip":   @NO,
+            @"mspace":  @NO,
+        };
+    });
+    return commands;
 }
 
 + (MTMathList *)buildFromString:(NSString *)str

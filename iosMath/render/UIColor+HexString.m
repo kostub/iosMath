@@ -21,13 +21,19 @@
         return nil;
     }
     
-    unsigned rgbValue = 0;
-    
-    NSScanner *scanner = [NSScanner scannerWithString:hexString];
-    if ([hexString characterAtIndex:0] == '#') {
-        [scanner setScanLocation:1];
+    // Drop the leading '#'.
+    NSString *hex = [hexString substringFromIndex:1];
+
+    // Expand CSS 3-digit shorthand #RGB → #RRGGBB (e.g. "f00" → "ff0000").
+    if (hex.length == 3) {
+        unichar r = [hex characterAtIndex:0];
+        unichar g = [hex characterAtIndex:1];
+        unichar b = [hex characterAtIndex:2];
+        hex = [NSString stringWithFormat:@"%C%C%C%C%C%C", r, r, g, g, b, b];
     }
-    
+
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hex];
     [scanner scanHexInt:&rgbValue];
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }

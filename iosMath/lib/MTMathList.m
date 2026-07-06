@@ -66,6 +66,10 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Stack";
         case kMTMathAtomText:
             return @"Text";
+        case kMTMathAtomBox:
+            return @"Box";
+        case kMTMathAtomOrdGroup:
+            return @"Ord Group";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -153,9 +157,15 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             return [[MTTextAtom alloc] initWithText:value ?: @""
                                              style:kMTTextStyleRoman];
 
+        case kMTMathAtomBox:
+            return [[MTMathBox alloc] init];
+
+        case kMTMathAtomOrdGroup:
+            return [[MTMathGroup alloc] init];
+
         case kMTMathAtomSpace:
             return [[MTMathSpace alloc] initWithSpace:0];
-        
+
         case kMTMathAtomColor:
             return [[MTMathColor alloc] init];
             
@@ -997,6 +1007,139 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 @end
 
 
+#pragma mark - MTMathBox
+
+@implementation MTMathBox
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomBox value:@""];
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomBox) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathBox initWithType:value:] cannot be called. Use [MTMathBox init] instead."
+                                 userInfo:nil];
+}
+
+// Lossy by design (LLD §3.4): pick the closest LaTeX command from the flag matrix.
+- (NSString *)stringValue
+{
+    NSString* cmd;
+    NSString* inner = self.innerList.stringValue ?: @"";
+    if (!self.drawChild) {
+        // phantom family
+        if (self.keepWidth && self.keepHeight && self.keepDepth)      cmd = @"\\phantom";
+        else if (self.keepWidth)                                       cmd = @"\\hphantom";
+        else                                                          cmd = @"\\vphantom"; // covers \mathstrut -> \vphantom{(}
+    } else if (!self.keepWidth) {
+        // lap family
+        switch (self.hAlign) {
+            case kMTBoxHAlignRight:  cmd = @"\\llap"; break;
+            case kMTBoxHAlignCenter: cmd = @"\\clap"; break;
+            case kMTBoxHAlignLeft:
+            default:                 cmd = @"\\rlap"; break;
+        }
+    } else {
+        // smash family
+        if (!self.keepHeight && !self.keepDepth)      cmd = @"\\smash";
+        else if (self.keepDepth && !self.keepHeight)  cmd = @"\\smash[t]";
+        else                                          cmd = @"\\smash[b]";
+    }
+    return [NSString stringWithFormat:@"%@{%@}", cmd, inner];
+}
+
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendString:self.stringValue];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathBox* op = [super copyWithZone:zone];
+    op.innerList = [self.innerList copyWithZone:zone];
+    op->_keepWidth = self.keepWidth;
+    op->_keepHeight = self.keepHeight;
+    op->_keepDepth = self.keepDepth;
+    op->_drawChild = self.drawChild;
+    op->_hAlign = self.hAlign;
+    return op;
+}
+
+- (instancetype)finalized
+{
+    MTMathBox *newBox = [super finalized];
+    newBox.innerList = newBox.innerList.finalized;
+    return newBox;
+}
+
+@end
+
+#pragma mark - MTMathGroup
+
+@implementation MTMathGroup
+
+- (instancetype)init
+{
+    self = [super initWithType:kMTMathAtomOrdGroup value:@""];
+    if (self) {
+        _innerList = [MTMathList new];
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString *)value
+{
+    if (type == kMTMathAtomOrdGroup) {
+        return [self init];
+    }
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMathGroup initWithType:value:] cannot be called. Use [MTMathGroup init] instead."
+                                 userInfo:nil];
+}
+
+// Standalone string (description / error messages): braces + this atom's scripts.
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithFormat:@"{%@}",
+                            [MTMathListBuilder mathListToString:self.innerList]];
+    if (self.superScript) {
+        [str appendFormat:@"^{%@}", self.superScript.stringValue];
+    }
+    if (self.subScript) {
+        [str appendFormat:@"_{%@}", self.subScript.stringValue];
+    }
+    return str;
+}
+
+// List serializer: emit ONLY {inner}. mathListToString: appends this atom's own
+// ^{…}/_{…} afterwards, so emitting scripts here would double them.
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:self.innerList]];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MTMathGroup* group = [super copyWithZone:zone];
+    group.innerList = [self.innerList copyWithZone:zone];
+    return group;
+}
+
+- (instancetype)finalized
+{
+    MTMathGroup* newGroup = [super finalized];
+    newGroup.innerList = newGroup.innerList.finalized;
+    return newGroup;
+}
+
+@end
+
 #pragma mark - MTMathTable
 
 @interface MTMathTable ()
@@ -1011,14 +1154,14 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 - (MTMathList *)serializedCellAtRow:(NSUInteger)row column:(NSUInteger)column
 {
     MTMathList* cell = self.cells[row][column];
-    if ([self.environment isEqualToString:@"matrix"]) {
-        if (cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomStyle) {
+    if ([self.environment isEqualToString:@"eqalign"] || [self.environment isEqualToString:@"aligned"] || [self.environment isEqualToString:@"split"]) {
+        if (column == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
             NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
             return [MTMathList mathListWithAtomsArray:atoms];
         }
     }
-    if ([self.environment isEqualToString:@"eqalign"] || [self.environment isEqualToString:@"aligned"] || [self.environment isEqualToString:@"split"]) {
-        if (column == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
+    if ([self.environment isEqualToString:@"alignedat"]) {
+        if (column % 2 == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == kMTMathAtomOrdinary && cell.atoms[0].nucleus.length == 0) {
             NSArray* atoms = [cell.atoms subarrayWithRange:NSMakeRange(1, cell.atoms.count - 1)];
             return [MTMathList mathListWithAtomsArray:atoms];
         }
@@ -1034,6 +1177,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         self.cells = [NSMutableArray array];
         self.interRowAdditionalSpacing = 0;
         self.interColumnSpacing = 0;
+        self.cellStyle = kMTLineStyleInherit;
         _environment = env;
     }
     return self;
@@ -1059,6 +1203,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathTable* op = [super copyWithZone:zone];
     op.interRowAdditionalSpacing = self.interRowAdditionalSpacing;
     op.interColumnSpacing = self.interColumnSpacing;
+    op.cellStyle = self.cellStyle;
     op->_environment = self.environment;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
     // Perform a deep copy of the cells.
@@ -1139,6 +1284,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     if (self.environment) {
         [str appendFormat:@"\\begin{%@}", self.environment];
+        if ([self.environment isEqualToString:@"alignedat"]) {
+            [str appendFormat:@"{%ld}", (long) (self.numColumns / 2)];
+        }
     }
     for (NSUInteger i = 0; i < self.numRows; i++) {
         NSArray<MTMathList*>* row = self.cells[i];
