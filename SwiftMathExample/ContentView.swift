@@ -146,7 +146,7 @@ private struct ExampleCard: View {
         .padding()
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(color: Color(.label).opacity(0.06), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.primary.opacity(0.06), radius: 4, x: 0, y: 2)
     }
 }
 
