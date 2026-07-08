@@ -94,7 +94,6 @@ static const NSUInteger kMacFontCount = 8;
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scrollView.hasVerticalScroller = YES;
     scrollView.hasHorizontalScroller = NO;
-    scrollView.backgroundColor = NSColor.whiteColor;
     scrollView.drawsBackground = YES;
     [mainView addSubview:scrollView];
 
@@ -102,7 +101,6 @@ static const NSUInteger kMacFontCount = 8;
     CGFloat docWidth = scrollView.contentSize.width;
     MTFlippedView* contentView = [[MTFlippedView alloc] initWithFrame:NSMakeRect(0, 0, docWidth, 100)];
     contentView.autoresizingMask = NSViewWidthSizable;
-    contentView.backgroundColor = NSColor.whiteColor;
     scrollView.documentView = contentView;
     self.documentContentView = contentView;
 
@@ -170,7 +168,7 @@ static const NSUInteger kMacFontCount = 8;
     contentView.frame = NSMakeRect(0, 0, docWidth, documentHeight);
 
     // Rendering properties that are not shared (alignment, mode, color, insets, fontSize).
-    NSColor* highlight = [NSColor colorWithHue:0.15 saturation:0.2 brightness:1.0 alpha:1.0];
+    NSColor* highlight = [NSColor colorWithHue:0.15 saturation:0.5 brightness:1.0 alpha:0.5];
     self.labels[0].backgroundColor = highlight;
     self.labels[1].backgroundColor = highlight;
     self.labels[1].textAlignment = kMTTextAlignmentCenter;

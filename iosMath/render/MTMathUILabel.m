@@ -51,7 +51,7 @@
     _displayErrorInline = true;
     self.backgroundColor = [MTColor clearColor];
     
-    _textColor = [MTColor blackColor];
+    _textColor = [MTColor labelColor];
     _errorLabel = [[MTLabel alloc] init];
     _errorLabel.hidden = YES;
     _errorLabel.layer.geometryFlipped = YES;

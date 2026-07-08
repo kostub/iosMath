@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  SwiftMathExample
+//  SwiftUIMathExample
 //
 //  The original single-page gallery showed only the raw rendering test suite —
 //  useful for verifying correctness but not as a beginner reference. This file
@@ -144,9 +144,9 @@ private struct ExampleCard: View {
             }
         }
         .padding()
-        .background(Color(white: 1))
+        .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .shadow(color: Color(.label).opacity(0.06), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -174,7 +174,7 @@ private struct PlaygroundTab: View {
                     .frame(minWidth: 0, maxWidth: .infinity, minHeight: 100)
                     .padding(.horizontal, 12)
                 }
-                .background(Color(white: 1))
+                .background(.background)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
 
@@ -272,7 +272,7 @@ private struct GalleryTab: View {
                 }
                 .padding(.vertical, 10)
             }
-            .background(Color.white)
+            .background(.background)
             .navigationTitle("Gallery")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
