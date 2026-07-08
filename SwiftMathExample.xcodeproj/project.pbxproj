@@ -9,21 +9,21 @@
 /* Begin PBXBuildFile section */
 		492A82302F8CA9A8008CE825 /* iosMath in Frameworks */ = {isa = PBXBuildFile; productRef = 492A822F2F8CA9A8008CE825 /* iosMath */; };
 		492A82322F8CA9EB008CE825 /* iosMath in Frameworks */ = {isa = PBXBuildFile; productRef = 492A82312F8CA9EB008CE825 /* iosMath */; };
-		CC000034 /* SwiftUIMathExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000030 /* SwiftUIMathExampleApp.swift */; };
+		CC000034 /* SwiftMathExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000030 /* SwiftMathExampleApp.swift */; };
 		CC000035 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000031 /* ContentView.swift */; };
 		CC000036 /* MathLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000032 /* MathLabel.swift */; };
-		CC000037 /* SwiftUIMathExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000030 /* SwiftUIMathExampleApp.swift */; };
+		CC000037 /* SwiftMathExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000030 /* SwiftMathExampleApp.swift */; };
 		CC000038 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000031 /* ContentView.swift */; };
 		CC000039 /* MathLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000032 /* MathLabel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CC000010 /* SwiftUIMathExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftUIMathExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC000020 /* SwiftUIMathExampleMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftUIMathExampleMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC000030 /* SwiftUIMathExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIMathExampleApp.swift; sourceTree = "<group>"; };
+		CC000010 /* SwiftMathExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftMathExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC000020 /* SwiftMathExampleMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftMathExampleMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC000030 /* SwiftMathExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftMathExampleApp.swift; sourceTree = "<group>"; };
 		CC000031 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CC000032 /* MathLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathLabel.swift; sourceTree = "<group>"; };
-		CC000033 /* SwiftUIMathExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftUIMathExample-Bridging-Header.h"; sourceTree = "<group>"; };
+		CC000033 /* SwiftMathExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftMathExample-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,27 +49,27 @@
 		CC000002 = {
 			isa = PBXGroup;
 			children = (
-				CC000003 /* SwiftUIMathExample */,
+				CC000003 /* SwiftMathExample */,
 				CC000004 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		CC000003 /* SwiftUIMathExample */ = {
+		CC000003 /* SwiftMathExample */ = {
 			isa = PBXGroup;
 			children = (
-				CC000030 /* SwiftUIMathExampleApp.swift */,
+				CC000030 /* SwiftMathExampleApp.swift */,
 				CC000031 /* ContentView.swift */,
 				CC000032 /* MathLabel.swift */,
-				CC000033 /* SwiftUIMathExample-Bridging-Header.h */,
+				CC000033 /* SwiftMathExample-Bridging-Header.h */,
 			);
-			path = SwiftUIMathExample;
+			path = SwiftMathExample;
 			sourceTree = "<group>";
 		};
 		CC000004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CC000010 /* SwiftUIMathExample.app */,
-				CC000020 /* SwiftUIMathExampleMac.app */,
+				CC000010 /* SwiftMathExample.app */,
+				CC000020 /* SwiftMathExampleMac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -77,9 +77,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CC000050 /* SwiftUIMathExample */ = {
+		CC000050 /* SwiftMathExample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CC000082 /* Build configuration list for PBXNativeTarget "SwiftUIMathExample" */;
+			buildConfigurationList = CC000082 /* Build configuration list for PBXNativeTarget "SwiftMathExample" */;
 			buildPhases = (
 				CC000051 /* Sources */,
 				CC000052 /* Frameworks */,
@@ -89,17 +89,17 @@
 			);
 			dependencies = (
 			);
-			name = SwiftUIMathExample;
+			name = SwiftMathExample;
 			packageProductDependencies = (
 				492A822F2F8CA9A8008CE825 /* iosMath */,
 			);
 			productName = SwiftMathExample;
-			productReference = CC000010 /* SwiftUIMathExample.app */;
+			productReference = CC000010 /* SwiftMathExample.app */;
 			productType = "com.apple.product-type.application";
 		};
-		CC000060 /* SwiftUIMathExampleMac */ = {
+		CC000060 /* SwiftMathExampleMac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CC000092 /* Build configuration list for PBXNativeTarget "SwiftUIMathExampleMac" */;
+			buildConfigurationList = CC000092 /* Build configuration list for PBXNativeTarget "SwiftMathExampleMac" */;
 			buildPhases = (
 				CC000061 /* Sources */,
 				CC000062 /* Frameworks */,
@@ -109,12 +109,12 @@
 			);
 			dependencies = (
 			);
-			name = SwiftUIMathExampleMac;
+			name = SwiftMathExampleMac;
 			packageProductDependencies = (
 				492A82312F8CA9EB008CE825 /* iosMath */,
 			);
 			productName = SwiftMathExampleMac;
-			productReference = CC000020 /* SwiftUIMathExampleMac.app */;
+			productReference = CC000020 /* SwiftMathExampleMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -135,7 +135,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CC000072 /* Build configuration list for PBXProject "SwiftUIMathExample" */;
+			buildConfigurationList = CC000072 /* Build configuration list for PBXProject "SwiftMathExample" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -151,8 +151,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CC000050 /* SwiftUIMathExample */,
-				CC000060 /* SwiftUIMathExampleMac */,
+				CC000050 /* SwiftMathExample */,
+				CC000060 /* SwiftMathExampleMac */,
 			);
 		};
 /* End PBXProject section */
@@ -179,7 +179,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC000034 /* SwiftUIMathExampleApp.swift in Sources */,
+				CC000034 /* SwiftMathExampleApp.swift in Sources */,
 				CC000035 /* ContentView.swift in Sources */,
 				CC000036 /* MathLabel.swift in Sources */,
 			);
@@ -189,7 +189,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC000037 /* SwiftUIMathExampleApp.swift in Sources */,
+				CC000037 /* SwiftMathExampleApp.swift in Sources */,
 				CC000038 /* ContentView.swift in Sources */,
 				CC000039 /* MathLabel.swift in Sources */,
 			);
@@ -322,12 +322,12 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.mathchat.SwiftUIMathExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mathchat.SwiftMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "SwiftUIMathExample/SwiftUIMathExample-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftMathExample/SwiftMathExample-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -361,12 +361,12 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.mathchat.SwiftUIMathExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mathchat.SwiftMathExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "SwiftUIMathExample/SwiftUIMathExample-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftMathExample/SwiftMathExample-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -445,7 +445,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CC000072 /* Build configuration list for PBXProject "SwiftUIMathExample" */ = {
+		CC000072 /* Build configuration list for PBXProject "SwiftMathExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC000070 /* Debug */,
@@ -454,7 +454,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CC000082 /* Build configuration list for PBXNativeTarget "SwiftUIMathExample" */ = {
+		CC000082 /* Build configuration list for PBXNativeTarget "SwiftMathExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC000080 /* Debug */,
@@ -463,7 +463,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CC000092 /* Build configuration list for PBXNativeTarget "SwiftUIMathExampleMac" */ = {
+		CC000092 /* Build configuration list for PBXNativeTarget "SwiftMathExampleMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC000090 /* Debug */,

@@ -1,6 +1,6 @@
 //
 //  MathLabel.swift
-//  SwiftUIMathExample
+//  SwiftMathExample
 //
 //  SwiftUI wrapper for MTMathUILabel, cross-platform (iOS + macOS).
 //

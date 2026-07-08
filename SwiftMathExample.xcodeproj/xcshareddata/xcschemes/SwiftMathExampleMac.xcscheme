@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "CC000060"
-               BuildableName = "SwiftUIMathExampleMac.app"
-               BlueprintName = "SwiftUIMathExampleMac"
-               ReferencedContainer = "container:SwiftUIMathExample.xcodeproj">
+               BuildableName = "SwiftMathExampleMac.app"
+               BlueprintName = "SwiftMathExampleMac"
+               ReferencedContainer = "container:SwiftMathExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "CC000060"
-            BuildableName = "SwiftUIMathExampleMac.app"
-            BlueprintName = "SwiftUIMathExampleMac"
-            ReferencedContainer = "container:SwiftUIMathExample.xcodeproj">
+            BuildableName = "SwiftMathExampleMac.app"
+            BlueprintName = "SwiftMathExampleMac"
+            ReferencedContainer = "container:SwiftMathExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "CC000060"
-            BuildableName = "SwiftUIMathExampleMac.app"
-            BlueprintName = "SwiftUIMathExampleMac"
-            ReferencedContainer = "container:SwiftUIMathExample.xcodeproj">
+            BuildableName = "SwiftMathExampleMac.app"
+            BlueprintName = "SwiftMathExampleMac"
+            ReferencedContainer = "container:SwiftMathExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

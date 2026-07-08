@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  SwiftUIMathExample
+//  SwiftMathExample
 //
 //  The original single-page gallery showed only the raw rendering test suite —
 //  useful for verifying correctness but not as a beginner reference. This file
