@@ -134,7 +134,7 @@ private struct _MathLabelRepresentable: NSViewRepresentable {
         label.textAlignment = alignment
         label.contentInsets = NSEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
         label.backgroundColor = highlighted
-            ? NSColor(hue: 0.15, saturation: 0.2, brightness: 1.0, alpha: 1.0)
+            ? NSColor(hue: 0.15, saturation: 0.5, brightness: 1.0, alpha: 0.5)
             : .clear
     }
 
