@@ -210,6 +210,21 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  matrix environments are have builtin delimiters added to the table and hence are returned as inner atoms.
  */
 + (nullable MTMathAtom*) tableWithEnvironment:(nullable NSString*) env rows:(NSArray<NSArray<MTMathList*>*>*) rows error:(NSError**) error;
+
+/**
+ Construct a bare `array`-environment table from already-validated structured input.
+ The parser owns all column-spec syntax validation; this method only validates row
+ cell counts against `columnAlignments.count` and assembles the table.
+ @param columnAlignments one MTColumnAlignment per declared column.
+ @param verticalLines `|` counts per column boundary (length columnAlignments.count+1).
+ @param horizontalLines `\hline` counts per row boundary (normalized here to numRows+1).
+ @returns a bare MTMathTable (no delimiters), or nil + error on too-many-cells.
+ */
++ (nullable MTMathAtom*) arrayTableWithAlignments:(NSArray<NSNumber*>*) columnAlignments
+                                    verticalLines:(NSArray<NSNumber*>*) verticalLines
+                                  horizontalLines:(NSArray<NSNumber*>*) horizontalLines
+                                             rows:(NSArray<NSArray<MTMathList*>*>*) rows
+                                            error:(NSError**) error;
 @end
 
 NS_ASSUME_NONNULL_END

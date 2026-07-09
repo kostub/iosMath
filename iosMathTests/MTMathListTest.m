@@ -302,6 +302,130 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     [MTMathListTest checkListCopy:list2 original:list forTest:self];
 }
 
+- (void)testMathTableVerticalHorizontalLinesDefaultAndCopy
+{
+    MTMathTable* table = [[MTMathTable alloc] init];
+    // Default: both empty (inert — existing envs unaffected).
+    XCTAssertNotNil(table.verticalLines);
+    XCTAssertNotNil(table.horizontalLines);
+    XCTAssertEqual(table.verticalLines.count, 0);
+    XCTAssertEqual(table.horizontalLines.count, 0);
+
+    table.verticalLines = @[ @1, @0, @2 ];
+    table.horizontalLines = @[ @1, @0 ];
+    MTMathTable* copy = [table copy];
+    XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
+    XCTAssertEqualObjects(copy.horizontalLines, (@[ @1, @0 ]));
+    // Mutating the original's field must not affect the copy.
+    table.verticalLines = @[ @9 ];
+    XCTAssertEqualObjects(copy.verticalLines, (@[ @1, @0, @2 ]));
+
+    // The properties take an immutable snapshot: mutating a mutable array
+    // *after* assigning it must not change the stored value (copy semantics).
+    NSMutableArray<NSNumber*>* mutV = [@[ @1, @2 ] mutableCopy];
+    NSMutableArray<NSNumber*>* mutH = [@[ @3 ] mutableCopy];
+    table.verticalLines = mutV;
+    table.horizontalLines = mutH;
+    [mutV addObject:@99];
+    [mutH addObject:@99];
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @2 ]));
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @3 ]));
+}
+
+- (void)testArrayTableFactoryBuildsBareTextstyleTable
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    MTMathList* c = [MTMathListBuilder buildFromString:@"c"];
+    MTMathList* d = [MTMathListBuilder buildFromString:@"d"];
+    NSArray* rows = @[ @[ a, b ], @[ c, d ] ];
+
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentRight), @(kMTColumnAlignmentLeft) ]
+                   verticalLines:@[ @1, @0, @1 ]
+                 horizontalLines:@[ @1 ]
+                            rows:rows
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    // Bare table — no MTInner / delimiters wrapping.
+    XCTAssertEqual(atom.type, kMTMathAtomTable);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numRows, 2);
+    XCTAssertEqual(table.numColumns, 2);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @0, @1 ]));
+    // horizontalLines normalized to numRows+1 == 3.
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @1, @0, @0 ]));
+    XCTAssertEqual(table.interColumnSpacing, 18);
+    XCTAssertEqual(table.interRowAdditionalSpacing, 0);
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+}
+
+- (void)testArrayTableFactoryRejectsTooManyCells
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    // Spec declares 1 column but the row has 2 cells.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @0, @0 ]
+                 horizontalLines:@[]
+                            rows:@[ @[ a, b ] ]
+                           error:&error];
+    XCTAssertNil(atom);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorInvalidNumColumns);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array row has 2 cells but column specification declares 1 columns");
+}
+
+- (void)testArrayTableFactoryAcceptsShortRows
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    // Spec declares 3 columns; row has 1 cell — allowed. The short row is padded out
+    // to 3 cells so the declared trailing columns (alignment + vertical rule) survive.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @0, @0, @0, @0 ]
+                 horizontalLines:@[]
+                            rows:@[ @[ a ] ]
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table.cells[0] count], 3);
+}
+
+- (void)testArrayTableFactoryNormalizesVerticalLines
+{
+    MTMathList* a = [MTMathListBuilder buildFromString:@"a"];
+    MTMathList* b = [MTMathListBuilder buildFromString:@"b"];
+    // Caller passes a too-short verticalLines (and nil horizontalLines); the factory
+    // pads verticalLines to numCols+1 and tolerates nil rather than crashing.
+    NSError* error = nil;
+    MTMathAtom* atom = [MTMathAtomFactory
+        arrayTableWithAlignments:@[ @(kMTColumnAlignmentCenter),
+                                    @(kMTColumnAlignmentCenter) ]
+                   verticalLines:@[ @1 ]
+                 horizontalLines:nil
+                            rows:@[ @[ a, b ] ]
+                           error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(atom);
+    MTMathTable* table = (MTMathTable*) atom;
+    XCTAssertEqual(table.verticalLines.count, 3);   // numCols(2) + 1
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @0, @0 ]));
+}
+
 @end
 
 @interface MTMathAtomTest : XCTestCase

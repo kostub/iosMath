@@ -1178,6 +1178,8 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         self.interRowAdditionalSpacing = 0;
         self.interColumnSpacing = 0;
         self.cellStyle = kMTLineStyleInherit;
+        self.verticalLines = [NSArray array];
+        self.horizontalLines = [NSArray array];
         _environment = env;
     }
     return self;
@@ -1206,6 +1208,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     op.cellStyle = self.cellStyle;
     op->_environment = self.environment;
     op.alignments = [NSMutableArray arrayWithArray:self.alignments];
+    // The copy setters take an immutable snapshot, so a plain assignment suffices.
+    op.verticalLines = self.verticalLines;
+    op.horizontalLines = self.horizontalLines;
     // Perform a deep copy of the cells.
     NSMutableArray* cellCopy = [NSMutableArray arrayWithCapacity:self.cells.count];
     for (NSMutableArray* row in self.cells) {
