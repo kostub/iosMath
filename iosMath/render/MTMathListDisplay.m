@@ -10,34 +10,12 @@
 //
 
 #import <CoreText/CoreText.h>
-#include <sys/param.h>
-#include <sys/sysctl.h>
 
 #import "MTMathListDisplay.h"
 #import "MTFontMathTable.h"
 #import "MTFontManager.h"
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
-
-static BOOL isIos6Supported(void) {
-    static BOOL initialized = false;
-    static BOOL supported = false;
-    if (!initialized) {
-#if TARGET_OS_IPHONE
-        NSString *reqSysVer = @"6.0";
-        NSString *currSysVer = [UIDevice currentDevice].systemVersion;
-        
-        if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) {
-            supported = true;
-        }
-#else
-        supported = true;
-#endif
-        
-        initialized = true;
-    }
-    return supported;
-}
 
 #pragma mark MTDisplay
 
@@ -102,16 +80,11 @@ static BOOL isIos6Supported(void) {
         _atoms = atoms;
         // We can't use typographic bounds here as the ascent and descent returned are for the font and not for the line.
         self.width = CTLineGetTypographicBounds(_line, NULL, NULL, NULL);
-        if (isIos6Supported()) {
-            CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
-            self.ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
-            self.descent = MAX(0, 0 - CGRectGetMinY(bounds));
-            // TODO: Should we use this width vs the typographic width? They are slightly different. Don't know why.
-            // _width = CGRectGetMaxX(bounds);
-        } else {
-            // Our own implementation of the ios6 function to get glyph path bounds.
-            [self computeDimensions:font];
-        }
+        CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
+        self.ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
+        self.descent = MAX(0, 0 - CGRectGetMinY(bounds));
+        // TODO: Should we use this width vs the typographic width? They are slightly different. Don't know why.
+        // _width = CGRectGetMaxX(bounds);
     }
     return self;
 }
@@ -132,27 +105,6 @@ static BOOL isIos6Supported(void) {
     [attrStr addAttribute:(NSString*)kCTForegroundColorAttributeName value:(id)self.textColor.CGColor
                     range:NSMakeRange(0, attrStr.length)];
     self.attributedString = attrStr;
-}
-
-- (void) computeDimensions:(MTFont*) font
-{
-    NSArray* runs = (__bridge NSArray *)(CTLineGetGlyphRuns(_line));
-    for (id obj in runs) {
-        CTRunRef run = (__bridge CTRunRef)(obj);
-        CFIndex numGlyphs = CTRunGetGlyphCount(run);
-        CGGlyph glyphs[numGlyphs];
-        CTRunGetGlyphs(run, CFRangeMake(0, numGlyphs), glyphs);
-        CGRect bounds = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, glyphs, NULL, numGlyphs);
-        CGFloat ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
-        // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
-        CGFloat descent = MAX(0, 0 - CGRectGetMinY(bounds));
-        if (ascent > self.ascent) {
-            self.ascent = ascent;
-        }
-        if (descent > self.descent) {
-            self.descent = descent;
-        }
-    }
 }
 
 - (void)dealloc

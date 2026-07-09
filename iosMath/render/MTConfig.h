@@ -42,8 +42,7 @@ typedef NSBezierPath    MTBezierPath;
 typedef NSEdgeInsets    MTEdgeInsets;
 typedef NSRect          MTRect;
 
-// For backward compatibility, DO NOT use NSEdgeInsetsZero (Available from OS X 10.10).
-#define MTEdgeInsetsZero (NSEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f));
+#define MTEdgeInsetsZero NSEdgeInsetsZero
 #define MTGraphicsGetCurrentContext() ([[NSGraphicsContext currentContext] CGContext])
 #define MTLineCapStyleRound NSLineCapStyleRound
 
