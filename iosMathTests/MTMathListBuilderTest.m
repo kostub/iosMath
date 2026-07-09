@@ -3854,6 +3854,15 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(table2.verticalLines, (@[ @2, @2, @1 ]));
     XCTAssertEqual([table2 getAlignmentForColumn:0], kMTColumnAlignmentCenter);
     XCTAssertEqual([table2 getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+
+    // Whitespace inside the column spec is ignored (LaTeX behavior): {c | c} == {c|c}.
+    MTMathList* list3 = [MTMathListBuilder buildFromString:@"\\begin{array}{c | c} a & b \\end{array}"];
+    XCTAssertNotNil(list3);
+    MTMathTable* table3 = list3.atoms[0];
+    XCTAssertEqual(table3.numColumns, 2);
+    XCTAssertEqual([table3 getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table3 getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqualObjects(table3.verticalLines, (@[ @0, @1, @0 ]));
 }
 
 - (void)testArrayEmptySpecAndBadSpecifierAreErrors

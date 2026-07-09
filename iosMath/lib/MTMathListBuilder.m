@@ -922,8 +922,9 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // consumes no cell content. Returns NO (and sets the error) if not in such an environment.
 - (BOOL) recordHorizontalLine
 {
-    if (_currentEnv && [[MTMathListBuilder environmentsAllowingHorizontalLines]
-                            containsObject:_currentEnv.envName]) {
+    if (_currentEnv && _currentEnv.envName
+            && [[MTMathListBuilder environmentsAllowingHorizontalLines]
+                    containsObject:_currentEnv.envName]) {
         NSUInteger boundary = _currentEnv.numRows;
         while (_currentEnv.hLines.count <= boundary) {
             [_currentEnv.hLines addObject:@0];
@@ -990,6 +991,12 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     for (NSUInteger i = 0; i < raw.length; i++) {
         unichar c = [raw characterAtIndex:i];
         switch (c) {
+            // Whitespace inside a column spec is ignored in LaTeX (e.g. {c | c}).
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+                break;
             case 'l': [alignments addObject:@(kMTColumnAlignmentLeft)];   [vLines addObject:@0]; break;
             case 'c': [alignments addObject:@(kMTColumnAlignmentCenter)]; [vLines addObject:@0]; break;
             case 'r': [alignments addObject:@(kMTColumnAlignmentRight)];  [vLines addObject:@0]; break;
