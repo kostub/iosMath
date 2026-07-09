@@ -20,6 +20,7 @@ NSString *const MTParseError = @"ParseError";
 @property (nonatomic) NSString* argument;
 @property (nonatomic) BOOL ended;
 @property (nonatomic) NSInteger numRows;
+@property (nonatomic) NSMutableArray<NSNumber*>* hLines;
 
 @end
 
@@ -33,6 +34,7 @@ NSString *const MTParseError = @"ParseError";
         _argument = nil;
         _numRows = 0;
         _ended = NO;
+        _hLines = [NSMutableArray array];
     }
     return self;
 }
@@ -283,6 +285,13 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '\\') {
             // \ means a command
             NSString* command = [self readCommand];
+            if ([command isEqualToString:@"hline"]) {
+                // \hline is a no-op boundary marker: record it and keep reading the same cell.
+                if (![self recordHorizontalLine]) {
+                    return nil;   // error already set
+                }
+                continue;
+            }
             MTMathList* done = [self stopCommand:command list:list stopChar:stop oneChar:oneCharOnly];
             if (done) {
                 return done;
@@ -893,20 +902,56 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     static NSSet<NSString*>* envs = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        envs = [NSSet setWithObjects:@"alignedat", nil];
+        envs = [NSSet setWithObjects:@"alignedat", @"array", nil];
     });
     return envs;
+}
+
++ (NSSet<NSString*>*) environmentsAllowingHorizontalLines
+{
+    static NSSet<NSString*>* envs = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        envs = [NSSet setWithObjects:@"array", nil];
+    });
+    return envs;
+}
+
+// Record a \hline at the current row boundary (== _currentEnv.numRows). Allowed only
+// inside an environment that permits horizontal lines (array). \hline emits no atom and
+// consumes no cell content. Returns NO (and sets the error) if not in such an environment.
+- (BOOL) recordHorizontalLine
+{
+    if (_currentEnv && _currentEnv.envName
+            && [[MTMathListBuilder environmentsAllowingHorizontalLines]
+                    containsObject:_currentEnv.envName]) {
+        NSUInteger boundary = _currentEnv.numRows;
+        while (_currentEnv.hLines.count <= boundary) {
+            [_currentEnv.hLines addObject:@0];
+        }
+        _currentEnv.hLines[boundary] = @(_currentEnv.hLines[boundary].integerValue + 1);
+        return YES;
+    }
+    [self setError:MTParseErrorInvalidCommand
+           message:@"\\hline is only valid inside an array environment"];
+    return NO;
 }
 
 // Reads the raw {…} argument after \begin{env}: require {, capture raw chars to },
 // require }. Returns the raw inside string (e.g. @"2"); interpretation happens later
 // in -buildTable:argument:firstList:row:. On a malformed argument, sets the error and
 // returns nil.
-- (nullable NSString*) readEnvironmentArgument
+- (nullable NSString*) readEnvironmentArgument:(NSString*) env
 {
+    BOOL isArray = [env isEqualToString:@"array"];
     if (![self expectCharacter:'{']) {
-        [self setError:MTParseErrorInvalidCommand
-               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        if (isArray) {
+            [self setError:MTParseErrorMissingColumnSpec
+                   message:@"array environment requires a column specification"];
+        } else {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        }
         return nil;
     }
     NSMutableString* arg = [NSMutableString string];
@@ -919,14 +964,61 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [arg appendString:[NSString stringWithCharacters:&ch length:1]];
     }
     if (![self expectCharacter:'}']) {
-        [self setError:MTParseErrorInvalidCommand
-               message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        if (isArray) {
+            [self setError:MTParseErrorInvalidColumnSpec
+                   message:@"array column specification is missing a closing brace"];
+        } else {
+            [self setError:MTParseErrorInvalidCommand
+                   message:@"alignedat requires a numeric argument, e.g. \\begin{alignedat}{2}"];
+        }
         return nil;
     }
     // Strip surrounding whitespace (TeX's argument scanner ignores it), matching
     // -readColor's skipSpaces. Interior whitespace is preserved so malformed args
     // like {2 3} still fail the digit check downstream.
     return [arg stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
+// Interpret a raw array column-spec string (e.g. "|r|c|l|") into structured
+// alignments + per-boundary vertical-line counts. l/c/r append an alignment and
+// open a new boundary slot; | increments the current (rightmost) boundary slot.
+// Any other char, or zero declared columns, is a loud error. Returns NO on error.
+- (BOOL) interpretArrayColumnSpec:(NSString*) raw
+                   intoAlignments:(NSMutableArray<NSNumber*>*) alignments
+                    verticalLines:(NSMutableArray<NSNumber*>*) vLines
+{
+    [vLines addObject:@0];   // boundary before column 0
+    for (NSUInteger i = 0; i < raw.length; i++) {
+        unichar c = [raw characterAtIndex:i];
+        switch (c) {
+            // Whitespace inside a column spec is ignored in LaTeX (e.g. {c | c}).
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+                break;
+            case 'l': [alignments addObject:@(kMTColumnAlignmentLeft)];   [vLines addObject:@0]; break;
+            case 'c': [alignments addObject:@(kMTColumnAlignmentCenter)]; [vLines addObject:@0]; break;
+            case 'r': [alignments addObject:@(kMTColumnAlignmentRight)];  [vLines addObject:@0]; break;
+            case '|': {
+                NSUInteger idx = vLines.count - 1;
+                vLines[idx] = @(vLines[idx].integerValue + 1);
+                break;
+            }
+            default: {
+                NSString* message = [NSString stringWithFormat:
+                    @"Unsupported array column specifier: %C", c];
+                [self setError:MTParseErrorInvalidColumnSpec message:message];
+                return NO;
+            }
+        }
+    }
+    if (alignments.count == 0) {
+        [self setError:MTParseErrorInvalidColumnSpec
+               message:@"array environment must declare at least one column"];
+        return NO;
+    }
+    return YES;
 }
 
 - (MTMathAtom*) getBoundaryAtom:(NSString*) delimiterType
@@ -1109,7 +1201,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         NSString* argument = nil;
         if ([[MTMathListBuilder environmentsTakingArgument] containsObject:env]) {
-            argument = [self readEnvironmentArgument];
+            argument = [self readEnvironmentArgument:env];
             if (!argument) {
                 // readEnvironmentArgument already set the error.
                 return nil;
@@ -1389,6 +1481,23 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorMissingEnd message:@"Missing \\end"];
         return nil;
     }
+    if ([_currentEnv.envName isEqualToString:@"array"] && rows.count > 0) {
+        // A trailing "\\" is needed so a bottom \hline is recognized before \end (it
+        // opens a new row boundary). If nothing but \hline/whitespace followed that
+        // trailing "\\", the row it opened has no real content — drop it so it isn't
+        // counted as an extra (blank) array row.
+        NSArray<MTMathList*>* lastRow = rows.lastObject;
+        BOOL lastRowEmpty = YES;
+        for (MTMathList* cell in lastRow) {
+            if (cell.atoms.count > 0) {
+                lastRowEmpty = NO;
+                break;
+            }
+        }
+        if (lastRowEmpty) {
+            [rows removeLastObject];
+        }
+    }
     if ([_currentEnv.envName isEqualToString:@"alignedat"]) {
         // argument is the raw {n}; require a positive integer.
         NSString* arg = _currentEnv.argument;
@@ -1416,7 +1525,23 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
     }
     NSError* error;
-    MTMathAtom* table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    MTMathAtom* table;
+    if ([_currentEnv.envName isEqualToString:@"array"]) {
+        NSMutableArray<NSNumber*>* alignments = [NSMutableArray array];
+        NSMutableArray<NSNumber*>* vLines = [NSMutableArray array];
+        if ([self interpretArrayColumnSpec:_currentEnv.argument
+                            intoAlignments:alignments
+                             verticalLines:vLines]) {
+            table = [MTMathAtomFactory arrayTableWithAlignments:alignments
+                                                  verticalLines:vLines
+                                                horizontalLines:(_currentEnv.hLines ?: @[])
+                                                           rows:rows
+                                                          error:&error];
+        }
+        // else: interpretArrayColumnSpec set _error; table stays nil.
+    } else {
+        table = [MTMathAtomFactory tableWithEnvironment:_currentEnv.envName rows:rows error:&error];
+    }
     if (!table && !_error) {
         _error = error;
         return nil;

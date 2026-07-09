@@ -1287,13 +1287,37 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
+    BOOL isArray = [self.environment isEqualToString:@"array"];
     if (self.environment) {
         [str appendFormat:@"\\begin{%@}", self.environment];
         if ([self.environment isEqualToString:@"alignedat"]) {
             [str appendFormat:@"{%ld}", (long) (self.numColumns / 2)];
+        } else if (isArray) {
+            [str appendString:@"{"];
+            NSUInteger cols = self.numColumns;
+            for (NSUInteger i = 0; i <= cols; i++) {
+                NSInteger v = (i < self.verticalLines.count) ? self.verticalLines[i].integerValue : 0;
+                for (NSInteger k = 0; k < v; k++) { [str appendString:@"|"]; }
+                if (i < cols) {
+                    switch ([self getAlignmentForColumn:i]) {
+                        case kMTColumnAlignmentLeft:   [str appendString:@"l"]; break;
+                        case kMTColumnAlignmentCenter: [str appendString:@"c"]; break;
+                        case kMTColumnAlignmentRight:  [str appendString:@"r"]; break;
+                    }
+                }
+            }
+            [str appendString:@"}"];
         }
     }
-    for (NSUInteger i = 0; i < self.numRows; i++) {
+    NSUInteger numRows = self.numRows;
+    NSInteger bottomHLines = (isArray && numRows < self.horizontalLines.count)
+        ? self.horizontalLines[numRows].integerValue : 0;
+    for (NSUInteger i = 0; i < numRows; i++) {
+        if (isArray && i < self.horizontalLines.count) {
+            for (NSInteger k = 0; k < self.horizontalLines[i].integerValue; k++) {
+                [str appendString:@"\\hline "];
+            }
+        }
         NSArray<MTMathList*>* row = self.cells[i];
         for (NSUInteger j = 0; j < row.count; j++) {
             [str appendString:[MTMathListBuilder mathListToString:[self serializedCellAtRow:i column:j]]];
@@ -1301,8 +1325,17 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
                 [str appendString:@"&"];
             }
         }
-        if (i < self.numRows - 1) {
+        BOOL lastRow = (i == numRows - 1);
+        if (!lastRow) {
             [str appendString:@"\\\\ "];
+        } else if (bottomHLines > 0) {
+            // A bottom \hline needs a row terminator before it.
+            [str appendString:@"\\\\ "];
+        }
+    }
+    if (isArray) {
+        for (NSInteger k = 0; k < bottomHLines; k++) {
+            [str appendString:@"\\hline "];
         }
     }
     if (self.environment) {

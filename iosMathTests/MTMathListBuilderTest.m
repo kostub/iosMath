@@ -1703,6 +1703,13 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{alignedat}{-1} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],     // negative (leading '-' fails digit check)
               @[@"\\begin{alignedat}{} a&b \\end{alignedat}", @(MTParseErrorInvalidCommand)],       // empty braces
               @[@"\\begin{alignedat}{2} a&b&c \\end{alignedat}", @(MTParseErrorInvalidNumColumns)], // 3 cols != 2n
+              @[@"\\begin{array} a \\end{array}", @(MTParseErrorMissingColumnSpec)],
+              @[@"\\begin{array}{} a \\end{array}", @(MTParseErrorInvalidColumnSpec)],
+              @[@"\\begin{array}{p} a \\end{array}", @(MTParseErrorInvalidColumnSpec)],
+              @[@"\\begin{array}{c} a & b \\end{array}", @(MTParseErrorInvalidNumColumns)],
+              @[@"\\begin{array}{c} a", @(MTParseErrorMissingEnd)],
+              @[@"\\hline a", @(MTParseErrorInvalidCommand)],
+              @[@"\\begin{matrix} \\hline a \\end{matrix}", @(MTParseErrorInvalidCommand)],
               ];
 };
 
@@ -3815,6 +3822,145 @@ static NSArray* getTestDataLargeDelimiters() {
     // Round-trip: \over normalizes to \frac{}{} on serialization (existing
     // behavior); the superscript stays on the fraction.
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\frac{a}{b}^{2}");
+}
+
+- (void)testArrayMissingColumnSpecIsError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array} a \\end{array}" error:&error];
+    XCTAssertNil(list);
+    XCTAssertNotNil(error);
+    XCTAssertEqual(error.code, MTParseErrorMissingColumnSpec);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array environment requires a column specification");
+}
+
+- (void)testArrayColumnSpecInterpretation
+{
+    // {rcl} -> 3 cols R/C/L, no rules.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{rcl} a & b & c \\end{array}"];
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table getAlignmentForColumn:2], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @0, @0, @0, @0 ]));
+
+    // {||c||c|} -> vertical-line counts 2/2/1.
+    MTMathList* list2 = [MTMathListBuilder buildFromString:@"\\begin{array}{||c||c|} a & b \\end{array}"];
+    MTMathTable* table2 = list2.atoms[0];
+    XCTAssertEqualObjects(table2.verticalLines, (@[ @2, @2, @1 ]));
+    XCTAssertEqual([table2 getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table2 getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+
+    // Whitespace inside the column spec is ignored (LaTeX behavior): {c | c} == {c|c}.
+    MTMathList* list3 = [MTMathListBuilder buildFromString:@"\\begin{array}{c | c} a & b \\end{array}"];
+    XCTAssertNotNil(list3);
+    MTMathTable* table3 = list3.atoms[0];
+    XCTAssertEqual(table3.numColumns, 2);
+    XCTAssertEqual([table3 getAlignmentForColumn:0], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table3 getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqualObjects(table3.verticalLines, (@[ @0, @1, @0 ]));
+}
+
+- (void)testArrayEmptySpecAndBadSpecifierAreErrors
+{
+    NSError* e1 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{} a \\end{array}" error:&e1]);
+    XCTAssertEqual(e1.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e1.localizedDescription,
+        @"array environment must declare at least one column");
+
+    NSError* e2 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{||} a \\end{array}" error:&e2]);
+    XCTAssertEqual(e2.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e2.localizedDescription,
+        @"array environment must declare at least one column");
+
+    NSError* e3 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{array}{p} a \\end{array}" error:&e3]);
+    XCTAssertEqual(e3.code, MTParseErrorInvalidColumnSpec);
+    XCTAssertEqualObjects(e3.localizedDescription,
+        @"Unsupported array column specifier: p");
+}
+
+- (void)testArrayHorizontalLineCounting
+{
+    // \hline at top, middle, and bottom boundaries; bottom needs a trailing \\.
+    NSString* str = @"\\begin{array}{c} \\hline a \\\\ \\hline b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.numRows, 2);
+    // Boundaries: 0 (top)=1, 1 (middle)=1, 2 (bottom)=1.
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @1, @1, @1 ]));
+}
+
+- (void)testHlineOutsideArrayIsError
+{
+    NSError* e1 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\hline a" error:&e1]);
+    XCTAssertEqual(e1.code, MTParseErrorInvalidCommand);
+    XCTAssertEqualObjects(e1.localizedDescription,
+        @"\\hline is only valid inside an array environment");
+
+    NSError* e2 = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\begin{matrix} \\hline a \\end{matrix}" error:&e2]);
+    XCTAssertEqual(e2.code, MTParseErrorInvalidCommand);
+    XCTAssertEqualObjects(e2.localizedDescription,
+        @"\\hline is only valid inside an array environment");
+}
+
+- (void)testArrayFullSpecParse
+{
+    NSString* str = @"\\begin{array}{|r|c|l|} 10 & = & 7 + 3 \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, 1);
+    MTMathTable* table = list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqualObjects(table.environment, @"array");
+    XCTAssertEqual(table.numRows, 1);
+    XCTAssertEqual(table.numColumns, 3);
+    XCTAssertEqual([table getAlignmentForColumn:0], kMTColumnAlignmentRight);
+    XCTAssertEqual([table getAlignmentForColumn:1], kMTColumnAlignmentCenter);
+    XCTAssertEqual([table getAlignmentForColumn:2], kMTColumnAlignmentLeft);
+    XCTAssertEqualObjects(table.verticalLines, (@[ @1, @1, @1, @1 ]));
+    // No \hline -> horizontalLines all zero (length numRows+1).
+    XCTAssertEqualObjects(table.horizontalLines, (@[ @0, @0 ]));
+    // Bare table, textstyle cells.
+    XCTAssertEqual(table.cellStyle, kMTLineStyleText);
+    XCTAssertEqual(table.interColumnSpacing, 18);
+}
+
+- (void)testArrayTooManyCellsIsError
+{
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{c} a & b \\end{array}" error:&error];
+    XCTAssertNil(list);
+    XCTAssertEqual(error.code, MTParseErrorInvalidNumColumns);
+    XCTAssertEqualObjects(error.localizedDescription,
+        @"array row has 2 cells but column specification declares 1 columns");
+}
+
+- (void)testArrayRoundTrip
+{
+    // \hline at top boundary, two rows, leading+trailing vertical rules.
+    NSString* str = @"\\begin{array}{|c|} \\hline a \\\\ b \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{array}{|c|}\\hline a\\\\ b\\end{array}");
+}
+
+- (void)testArrayRoundTripMixedAlignmentNoRules
+{
+    NSString* str = @"\\begin{array}{rcl} a & b & c \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    NSString* latex = [MTMathListBuilder mathListToString:list];
+    XCTAssertEqualObjects(latex, @"\\begin{array}{rcl}a&b&c\\end{array}");
 }
 
 @end
