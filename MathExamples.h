@@ -86,6 +86,18 @@ static inline NSArray<NSString*>* MathDemoFormulas(void) {
         @"f(x) = \\begin{cases}\\frac{e^x}{2} & x \\geq 0 \\\\1 & x < 0\\end{cases}",
         // 20: Ridge regression — argmin via \underset
         @"\\hat\\theta = \\underset{\\theta}{\\arg\\min}\\, \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|^2",
+        // 21: Augmented matrix of a linear system (array with a vertical rule)
+        @"\\left[\\begin{array}{cc|c}"
+         "2 & 1 & 5 \\\\"
+         "1 & 3 & 10"
+         "\\end{array}\\right]",
+        // 22: Ruled multiplication table (array with \hline and vertical rules)
+        @"\\begin{array}{|c|c|c|}"
+         "\\hline \\times & 1 & -1 \\\\"
+         "\\hline 1 & 1 & -1 \\\\"
+         "\\hline -1 & -1 & 1 \\\\"
+         "\\hline"
+         "\\end{array}",
     ];
 }
 
@@ -285,6 +297,14 @@ static inline NSArray<NSString*>* MathTestFormulas(void) {
         @"a \\stackrel{?}{c} b \\quad a \\overset{?}{c} b",
         // 91: Nested stacks — \overset inside the over-arg of \stackrel
         @"a \\stackrel{\\overset{n}{\\to}}{=} b",
+        // 92: Array column alignment — left / centre / right in one table
+        @"\\begin{array}{lcr} a & bb & ccc \\\\ ccc & bb & a \\end{array}",
+        // 93: Array with interior vertical rules only
+        @"\\begin{array}{c|c|c} a & b & c \\\\ d & e & f \\end{array}",
+        // 94: Array full grid — \hline on every boundary plus outer/interior verticals
+        @"\\begin{array}{|c|c|} \\hline a & b \\\\ \\hline c & d \\\\ \\hline \\end{array}",
+        // 95: Partitioned (block) matrix — array with a vertical rule inside \left(...\right)
+        @"\\left(\\begin{array}{cc|cc} 1 & 0 & a & b \\\\ 0 & 1 & c & d \\end{array}\\right)",
     ];
 }
 
