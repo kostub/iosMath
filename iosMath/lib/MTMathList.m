@@ -1032,6 +1032,18 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     NSString* cmd;
     NSString* inner = self.innerList.stringValue ?: @"";
+    if (self.strikeStyle != kMTStrikeNone) {
+        NSString* c;
+        switch (self.strikeStyle) {
+            case kMTStrikeForward:    c = @"\\cancel";  break;
+            case kMTStrikeBackward:   c = @"\\bcancel"; break;
+            case kMTStrikeCross:      c = @"\\xcancel"; break;
+            case kMTStrikeHorizontal: c = @"\\sout";    break;
+            case kMTStrikeNone:       // unreachable (guarded above)
+            default:                  c = @"\\cancel";  break;
+        }
+        return [NSString stringWithFormat:@"%@{%@}", c, inner];
+    }
     if (!self.drawChild) {
         // phantom family
         if (self.keepWidth && self.keepHeight && self.keepDepth)      cmd = @"\\phantom";

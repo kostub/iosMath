@@ -3753,6 +3753,32 @@ static NSArray* getTestDataLargeDelimiters() {
         [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
 }
 
+- (void) testCancelRoundTrip
+{
+    for (NSString* latex in @[@"\\cancel{x}", @"\\bcancel{x}", @"\\xcancel{x}", @"\\sout{x}"]) {
+        XCTAssertEqualObjects(
+            [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:latex]],
+            latex, @"%@", latex);
+    }
+
+    // multi-atom inner round-trips
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{x+y}"]],
+        @"\\cancel{x+y}");
+
+    // scripts are appended by the mathListToString: driver after appendLaTeXToString:;
+    // this pins that the strikeStyle branch runs under the scripted case too.
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{x}^2"]],
+        @"\\cancel{x}^{2}");
+
+    // unbalanced braces surface a non-nil parse error (fail-loud, LLD §6/§8)
+    NSError* error = nil;
+    MTMathList* bad = [MTMathListBuilder buildFromString:@"\\cancel{x" error:&error];
+    XCTAssertNil(bad);
+    XCTAssertNotNil(error);
+}
+
 - (void)testBraceGrouping
 {
     // x{\scriptstyle y}z — the issue #177 case. The group is a distinct atom;
