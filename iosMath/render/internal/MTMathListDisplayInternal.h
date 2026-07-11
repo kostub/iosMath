@@ -140,6 +140,8 @@ NS_ASSUME_NONNULL_BEGIN
 // so -recomputeDimensions folds it into the enclosing table's bounds.
 @interface MTRuleDisplay : MTDisplay
 
+- (instancetype)init NS_UNAVAILABLE;
+
 // `start` is in table-local coordinates. For a horizontal rule `length` extends
 // rightward (+x); for a vertical rule it extends upward (+y). Stroke is centred on
 // the path, so callers offset `start` by thickness/2 where edge alignment matters.
