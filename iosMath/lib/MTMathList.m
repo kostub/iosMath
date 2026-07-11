@@ -1068,6 +1068,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     op->_keepDepth = self.keepDepth;
     op->_drawChild = self.drawChild;
     op->_hAlign = self.hAlign;
+    op->_strikeStyle = self.strikeStyle;
     return op;
 }
 

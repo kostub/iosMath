@@ -1077,6 +1077,22 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertThrows([[MTMathBox alloc] initWithType:kMTMathAtomOrdinary value:@""]);
 }
 
+- (void) testMathBoxStrikeStyleCopy
+{
+    MTMathBox* box = [MTMathBox new];
+    box.keepWidth = YES; box.keepHeight = YES; box.keepDepth = YES; box.drawChild = YES;
+    box.strikeStyle = kMTStrikeCross;
+    MTMathList* inner = [MTMathList new];
+    [inner addAtom:[MTMathAtomFactory atomForCharacter:'x']];
+    box.innerList = inner;
+
+    MTMathBox* copy = [box copy];
+    XCTAssertEqual(copy.strikeStyle, kMTStrikeCross);
+    XCTAssertEqual(copy.innerList.atoms.count, 1);
+    XCTAssertNotEqual(copy, box);          // deep copy
+    XCTAssertNotEqual(copy.innerList, box.innerList);
+}
+
 - (void)testMathGroupAtom
 {
     // Factory returns an MTMathGroup for the OrdGroup type.
