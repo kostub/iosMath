@@ -3422,4 +3422,53 @@
     XCTAssertEqual(tableDisp.subDisplays.count, 2);   // exactly two row displays
 }
 
+- (void)testArrayRuleGeometryIsDeterministic
+{
+    // Count/ordering tests miss a constant offset applied to every rule. Pin absolute
+    // geometry: a vertical rule's x and the \hline y are deterministic from font metrics.
+    // {|cc|} single row with top+bottom \hline -> 2 outer verticals + 2 horizontals.
+    NSString* str = @"\\begin{array}{|cc|} \\hline a & b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+
+    // Metrics the typesetter uses: padding = kArrayRulePaddingMultiplier (0.2) x fontSize,
+    // pinned here on purpose so a multiplier change must consciously update this test.
+    CGFloat padding = 0.2 * self.font.fontSize;
+    CGFloat thickness = self.font.mathTable.fractionRuleThickness;
+
+    NSMutableArray<MTRuleDisplay*>* verticals = [NSMutableArray array];
+    NSMutableArray<MTRuleDisplay*>* horizontals = [NSMutableArray array];
+    CGFloat contentTop = -CGFLOAT_MAX;
+    CGFloat contentBot = CGFLOAT_MAX;
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        if ([sub isKindOfClass:[MTRuleDisplay class]]) {
+            MTRuleDisplay* r = (MTRuleDisplay*) sub;
+            // vertical rule: width == thickness; horizontal rule: ascent == thickness.
+            if (r.width == thickness) { [verticals addObject:r]; }
+            else { [horizontals addObject:r]; }
+        } else {
+            contentTop = MAX(contentTop, sub.position.y + sub.ascent);
+            contentBot = MIN(contentBot, sub.position.y - sub.descent);
+        }
+    }
+    XCTAssertEqual(verticals.count, 2u);
+    XCTAssertEqual(horizontals.count, 2u);
+
+    // Leftmost vertical (boundary 0, base 0): x == padding + thickness/2 (edge-centred stroke).
+    CGFloat leftmostX = CGFLOAT_MAX;
+    for (MTRuleDisplay* v in verticals) { leftmostX = MIN(leftmostX, v.position.x); }
+    XCTAssertEqualWithAccuracy(leftmostX, padding + thickness / 2, 0.01);
+
+    // Top \hline sits padding above the content top; bottom \hline padding below content bottom.
+    CGFloat topY = -CGFLOAT_MAX;
+    CGFloat botY = CGFLOAT_MAX;
+    for (MTRuleDisplay* h in horizontals) {
+        topY = MAX(topY, h.position.y);
+        botY = MIN(botY, h.position.y);
+    }
+    XCTAssertEqualWithAccuracy(topY, contentTop + padding, 0.01);
+    XCTAssertEqualWithAccuracy(botY, contentBot - padding, 0.01);
+}
+
 @end

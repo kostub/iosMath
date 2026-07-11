@@ -2295,7 +2295,14 @@ static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule cleara
     }
 
     // Horizontal rules — span full content width so they meet the outer verticals.
+    // The +arrayTableWithAlignments: factory normalizes horizontalLines to exactly
+    // numRows+1 boundaries. Boundaries past that are harmless here (the b >= numRows
+    // branch below draws them all at frameBot, no rows access), but they mean redundant
+    // overlapping bottom rules — a silently-malformed model. Fail loud on the invariant.
     NSUInteger numRows = table.numRows;
+    NSAssert(hLines.count <= numRows + 1,
+             @"horizontalLines has %lu boundaries, expected at most numRows+1 (%lu)",
+             (unsigned long) hLines.count, (unsigned long) (numRows + 1));
     for (NSUInteger b = 0; b < hLines.count; b++) {
         NSInteger count = hLines[b].integerValue;
         if (count == 0) { continue; }
