@@ -3680,6 +3680,46 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertTrue(!sx.keepHeight && !sx.keepDepth);
 }
 
+- (void) testParseCancelFamily
+{
+    NSDictionary<NSString*, NSNumber*>* cases = @{
+        @"\\cancel{x}":  @(kMTStrikeForward),
+        @"\\bcancel{x}": @(kMTStrikeBackward),
+        @"\\xcancel{x}": @(kMTStrikeCross),
+        @"\\sout{x}":    @(kMTStrikeHorizontal),
+    };
+    for (NSString* latex in cases) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        [self checkAtomTypes:list types:@[@(kMTMathAtomBox)] desc:latex];
+        MTMathBox* box = list.atoms[0];
+        XCTAssertTrue(box.keepWidth && box.keepHeight && box.keepDepth && box.drawChild, @"%@", latex);
+        XCTAssertEqual(box.strikeStyle, (MTStrikeStyle)cases[latex].unsignedIntegerValue, @"%@", latex);
+        XCTAssertEqual(box.innerList.atoms.count, 1);
+    }
+
+    // multi-atom inner list
+    MTMathBox* sum = [MTMathListBuilder buildFromString:@"\\cancel{x+y}"].atoms[0];
+    XCTAssertEqual(sum.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(sum.innerList.atoms.count, 3);
+
+    // nested structure inner list (a fraction)
+    MTMathBox* frac = [MTMathListBuilder buildFromString:@"\\cancel{\\frac{a}{b}}"].atoms[0];
+    XCTAssertEqual(frac.innerList.atoms.count, 1);
+    XCTAssertEqual(((MTMathAtom*)frac.innerList.atoms[0]).type, kMTMathAtomFraction);
+
+    // single-token (no-brace) argument, consistent with \phantom x
+    MTMathBox* tok = [MTMathListBuilder buildFromString:@"\\cancel x"].atoms[0];
+    XCTAssertEqual(tok.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(tok.innerList.atoms.count, 1);
+
+    // \cancel at EOF: empty inner, no crash (LLD §6)
+    MTMathList* eof = [MTMathListBuilder buildFromString:@"\\cancel"];
+    XCTAssertNotNil(eof);
+    MTMathBox* eofBox = eof.atoms[0];
+    XCTAssertEqual(eofBox.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(eofBox.innerList.atoms.count, 0);
+}
+
 - (void) testParseLaps
 {
     NSDictionary<NSString*, NSNumber*>* cases = @{
