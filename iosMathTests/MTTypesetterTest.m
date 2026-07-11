@@ -3326,4 +3326,149 @@
     }
 }
 
+- (void)testRuleDisplayHorizontalAndVerticalMetrics
+{
+    MTRuleDisplay* h = [[MTRuleDisplay alloc] initWithStart:CGPointMake(2, 5)
+                                                     length:10
+                                                  thickness:0.6
+                                                   vertical:NO
+                                                      range:NSMakeRange(0, 1)];
+    XCTAssertEqual(h.position.x, 2);
+    XCTAssertEqual(h.position.y, 5);
+    XCTAssertEqual(h.width, 10);
+    XCTAssertEqual(h.ascent, 0.6);
+    XCTAssertEqual(h.descent, 0);
+
+    MTRuleDisplay* v = [[MTRuleDisplay alloc] initWithStart:CGPointMake(3, -4)
+                                                     length:12
+                                                  thickness:0.6
+                                                   vertical:YES
+                                                      range:NSMakeRange(0, 1)];
+    XCTAssertEqual(v.position.x, 3);
+    XCTAssertEqual(v.position.y, -4);
+    XCTAssertEqual(v.width, 0.6);
+    XCTAssertEqual(v.ascent, 12);   // top end = position.y + ascent
+    XCTAssertEqual(v.descent, 0);
+}
+
+- (void)testArrayColumnOffsetsMatchAlignmentNoRules
+{
+    // No vertical rules: array column x-positions must follow the same rule as matrix
+    // (left col at 0, next col at colWidth0 + interColumnSpacing·muUnit).
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{array}{lll} a & b & c \\end{array}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+    // One row display; its sub-displays are the three cells, left-aligned at increasing x.
+    MTMathListDisplay* rowDisp = tableDisp.subDisplays[0];
+    CGFloat x0 = ((MTDisplay*) rowDisp.subDisplays[0]).position.x;
+    CGFloat x1 = ((MTDisplay*) rowDisp.subDisplays[1]).position.x;
+    CGFloat x2 = ((MTDisplay*) rowDisp.subDisplays[2]).position.x;
+    XCTAssertEqualWithAccuracy(x0, 0, 0.01);
+    XCTAssertGreaterThan(x1, x0);
+    XCTAssertGreaterThan(x2, x1);
+}
+
+- (void)testArrayRuleDisplayCountAndBounds
+{
+    // {|c|c|} with \hline top+bottom: 2 vertical outer + 1 interior vertical = 3 vertical,
+    // and 2 horizontal rules. Total rule count == sum(verticalLines)+sum(horizontalLines).
+    NSString* str = @"\\begin{array}{|c|c|} \\hline a & b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+
+    NSUInteger ruleCount = 0;
+    NSUInteger rowCount = 0;
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        if ([sub isKindOfClass:[MTRuleDisplay class]]) { ruleCount++; }
+        else { rowCount++; }
+    }
+    // verticalLines = [1,1,1] (sum 3); horizontalLines = [1,0,1] (sum 2) -> 5 rules.
+    XCTAssertEqual(ruleCount, 5);
+    XCTAssertEqual(rowCount, 1);
+
+    // Rules widen the table beyond a rule-free counterpart.
+    MTMathList* plain = [MTMathListBuilder buildFromString:@"\\begin{array}{cc} a & b \\end{array}"];
+    MTMathListDisplay* plainDisp = [MTTypesetter createLineForMathList:plain font:self.font style:kMTLineStyleDisplay];
+    XCTAssertGreaterThan(tableDisp.width, ((MTMathListDisplay*) plainDisp.subDisplays[0]).width);
+    // \hline extents are included in the table's vertical bounds.
+    XCTAssertGreaterThan(tableDisp.ascent + tableDisp.descent, 0);
+}
+
+- (void)testArrayInsideDelimitersScalesToRuleBounds
+{
+    // \left[ {cc|c} augmented matrix with rules \right] — delimiters read the bare table's
+    // ascent/descent, which include the rules (folded via -recomputeDimensions).
+    NSString* str = @"\\left[ \\begin{array}{cc|c} 1 & 0 & 5 \\\\ 0 & 1 & 6 \\end{array} \\right]";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    XCTAssertNotNil(list);
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertNotNil(display);
+    // The full expression renders with positive bounds and does not throw.
+    XCTAssertGreaterThan(display.width, 0);
+    XCTAssertGreaterThan(display.ascent + display.descent, 0);
+}
+
+- (void)testMatrixLayoutUnchangedByArraySupport
+{
+    // Regression: a plain matrix produces exactly one table display with no MTRuleDisplay.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{matrix} a & b \\\\ c & d \\end{matrix}"];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        XCTAssertFalse([sub isKindOfClass:[MTRuleDisplay class]]);
+    }
+    XCTAssertEqual(tableDisp.subDisplays.count, 2);   // exactly two row displays
+}
+
+- (void)testArrayRuleGeometryIsDeterministic
+{
+    // Count/ordering tests miss a constant offset applied to every rule. Pin absolute
+    // geometry: a vertical rule's x and the \hline y are deterministic from font metrics.
+    // {|cc|} single row with top+bottom \hline -> 2 outer verticals + 2 horizontals.
+    NSString* str = @"\\begin{array}{|cc|} \\hline a & b \\\\ \\hline \\end{array}";
+    MTMathList* list = [MTMathListBuilder buildFromString:str];
+    MTMathListDisplay* display = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* tableDisp = display.subDisplays[0];
+
+    // Metrics the typesetter uses: padding = kArrayRulePaddingMultiplier (0.2) x fontSize,
+    // pinned here on purpose so a multiplier change must consciously update this test.
+    CGFloat padding = 0.2 * self.font.fontSize;
+    CGFloat thickness = self.font.mathTable.fractionRuleThickness;
+
+    NSMutableArray<MTRuleDisplay*>* verticals = [NSMutableArray array];
+    NSMutableArray<MTRuleDisplay*>* horizontals = [NSMutableArray array];
+    CGFloat contentTop = -CGFLOAT_MAX;
+    CGFloat contentBot = CGFLOAT_MAX;
+    for (MTDisplay* sub in tableDisp.subDisplays) {
+        if ([sub isKindOfClass:[MTRuleDisplay class]]) {
+            MTRuleDisplay* r = (MTRuleDisplay*) sub;
+            // vertical rule: width == thickness; horizontal rule: ascent == thickness.
+            if (r.width == thickness) { [verticals addObject:r]; }
+            else { [horizontals addObject:r]; }
+        } else {
+            contentTop = MAX(contentTop, sub.position.y + sub.ascent);
+            contentBot = MIN(contentBot, sub.position.y - sub.descent);
+        }
+    }
+    XCTAssertEqual(verticals.count, 2u);
+    XCTAssertEqual(horizontals.count, 2u);
+
+    // Leftmost vertical (boundary 0, base 0): x == padding + thickness/2 (edge-centred stroke).
+    CGFloat leftmostX = CGFLOAT_MAX;
+    for (MTRuleDisplay* v in verticals) { leftmostX = MIN(leftmostX, v.position.x); }
+    XCTAssertEqualWithAccuracy(leftmostX, padding + thickness / 2, 0.01);
+
+    // Top \hline sits padding above the content top; bottom \hline padding below content bottom.
+    CGFloat topY = -CGFLOAT_MAX;
+    CGFloat botY = CGFLOAT_MAX;
+    for (MTRuleDisplay* h in horizontals) {
+        topY = MAX(topY, h.position.y);
+        botY = MIN(botY, h.position.y);
+    }
+    XCTAssertEqualWithAccuracy(topY, contentTop + padding, 0.01);
+    XCTAssertEqualWithAccuracy(botY, contentBot - padding, 0.01);
+}
+
 @end

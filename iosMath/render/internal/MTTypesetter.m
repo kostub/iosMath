@@ -2197,6 +2197,10 @@ static const CGFloat kLineSkipMultiplier = 0.1;  // default is 1pt for 10pt font
 static const CGFloat kLineSkipLimitMultiplier = 0;
 static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
 
+// Array rule geometry. Starting values (font-scaled), tuned by snapshot tests.
+static const CGFloat kArrayRuleGapMultiplier = 0.2;     // ≈ \doublerulesep (2pt at 10pt)
+static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule clearance
+
 - (MTDisplay*) makeTable:(MTMathTable*) table
 {
     NSUInteger numColumns = table.numColumns;
@@ -2204,7 +2208,7 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         // Empty table
         return [[MTMathListDisplay alloc] initWithDisplays:[NSArray array] range:table.indexRange];
     }
-    
+
     CGFloat *columnWidths = calloc(numColumns, sizeof(CGFloat));
     NSAssert(columnWidths != NULL, @"Failed to allocate columnWidths");
     // Wrap in @try/@finally so columnWidths is released on all exit paths.
@@ -2214,21 +2218,167 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     @try {
         NSArray<NSArray<MTDisplay*>*>* displays = [self typesetCells:table columnWidths:columnWidths];
 
+        MTLineStyle cellStyle = [self cellStyleForTable:table];
+        CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
+        CGFloat thickness = _styleFont.mathTable.fractionRuleThickness;
+        NSMutableArray<NSArray<NSNumber*>*>* vRuleXs = [NSMutableArray array];
+        CGFloat contentWidth = 0;
+        NSArray<NSNumber*>* columnOffsets = [self columnOffsetsForTable:table
+                                                          columnWidths:columnWidths
+                                                             thickness:thickness
+                                                       cellStyleMuUnit:cellStyleMuUnit
+                                                               vRuleXs:vRuleXs
+                                                          contentWidth:&contentWidth];
+
         // Position all the columns in each row
         NSMutableArray<MTDisplay*>* rowDisplays = [NSMutableArray arrayWithCapacity:table.cells.count];
         for (NSArray<MTDisplay*>* row in displays) {
-            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths];
+            MTMathListDisplay* rowDisplay = [self makeRowWithColumns:row forTable:table columnWidths:columnWidths columnOffsets:columnOffsets];
             [rowDisplays addObject:rowDisplay];
         }
 
         // Position all the rows
         [self positionRows:rowDisplays forTable:table];
+        NSArray<MTRuleDisplay*>* rules = [self makeRuleDisplaysForTable:table
+                                                                  rows:rowDisplays
+                                                               vRuleXs:vRuleXs
+                                                          contentWidth:contentWidth
+                                                             thickness:thickness];
+        [rowDisplays addObjectsFromArray:rules];
         tableDisplay = [[MTMathListDisplay alloc] initWithDisplays:rowDisplays range:table.indexRange];
         tableDisplay.position = _currentPosition;
     } @finally {
         free(columnWidths);
     }
     return tableDisplay;
+}
+
+// Build vertical + horizontal rule displays for an array table from the positioned rows.
+// Vertical rules span the shared frame (frameBot..frameTop); horizontals span the full
+// content width so outer rules meet at the corners by construction. Returns @[] when the
+// table has no rules (every non-array table, and arrays without rules) — fast path.
+- (NSArray<MTRuleDisplay*>*) makeRuleDisplaysForTable:(MTMathTable*) table
+                                                rows:(NSArray<MTDisplay*>*) rows
+                                             vRuleXs:(NSArray<NSArray<NSNumber*>*>*) vRuleXs
+                                        contentWidth:(CGFloat) contentWidth
+                                           thickness:(CGFloat) thickness
+{
+    NSArray<NSNumber*>* vLines = table.verticalLines;
+    NSArray<NSNumber*>* hLines = table.horizontalLines;
+    BOOL anyV = NO; for (NSNumber* n in vLines) { if (n.integerValue > 0) { anyV = YES; break; } }
+    BOOL anyH = NO; for (NSNumber* n in hLines) { if (n.integerValue > 0) { anyH = YES; break; } }
+    if (!anyV && !anyH) { return @[]; }
+
+    CGFloat padding = kArrayRulePaddingMultiplier * _styleFont.fontSize;
+    CGFloat ruleGap = kArrayRuleGapMultiplier * _styleFont.fontSize;
+    NSMutableArray<MTRuleDisplay*>* rules = [NSMutableArray array];
+
+    // Centred content box from the positioned rows.
+    CGFloat contentTop = -CGFLOAT_MAX;
+    CGFloat contentBot = CGFLOAT_MAX;
+    for (MTDisplay* row in rows) {
+        contentTop = MAX(contentTop, row.position.y + row.ascent);
+        contentBot = MIN(contentBot, row.position.y - row.descent);
+    }
+    CGFloat frameTop = contentTop + padding;
+    CGFloat frameBot = contentBot - padding;
+
+    // Vertical rules — span the whole frame so they meet the top/bottom horizontals.
+    for (NSUInteger i = 0; i < vRuleXs.count; i++) {
+        for (NSNumber* xn in vRuleXs[i]) {
+            [rules addObject:[[MTRuleDisplay alloc] initWithStart:CGPointMake(xn.doubleValue, frameBot)
+                                                          length:(frameTop - frameBot)
+                                                       thickness:thickness
+                                                        vertical:YES
+                                                           range:table.indexRange]];
+        }
+    }
+
+    // Horizontal rules — span full content width so they meet the outer verticals.
+    // The +arrayTableWithAlignments: factory normalizes horizontalLines to exactly
+    // numRows+1 boundaries. Boundaries past that are harmless here (the b >= numRows
+    // branch below draws them all at frameBot, no rows access), but they mean redundant
+    // overlapping bottom rules — a silently-malformed model. Fail loud on the invariant.
+    NSUInteger numRows = table.numRows;
+    NSAssert(hLines.count <= numRows + 1,
+             @"horizontalLines has %lu boundaries, expected at most numRows+1 (%lu)",
+             (unsigned long) hLines.count, (unsigned long) (numRows + 1));
+    for (NSUInteger b = 0; b < hLines.count; b++) {
+        NSInteger count = hLines[b].integerValue;
+        if (count == 0) { continue; }
+        CGFloat y0;
+        if (b == 0) {
+            y0 = frameTop;
+        } else if (b >= numRows) {
+            y0 = frameBot;
+        } else {
+            MTDisplay* above = rows[b - 1];   // upper row (higher y)
+            MTDisplay* below = rows[b];       // lower row
+            CGFloat gapBot = above.position.y - above.descent;
+            CGFloat gapTop = below.position.y + below.ascent;
+            y0 = (gapTop + gapBot) / 2;
+        }
+        for (NSInteger k = 0; k < count; k++) {
+            CGFloat yk;
+            if (b == 0) {
+                yk = y0 - k * (thickness + ruleGap);           // stack downward
+            } else if (b >= numRows) {
+                yk = y0 + k * (thickness + ruleGap);           // stack upward
+            } else {
+                NSInteger step = (k % 2 == 0 ? 1 : -1) * ((k + 1) / 2);
+                yk = y0 + step * (thickness + ruleGap);        // symmetric
+            }
+            [rules addObject:[[MTRuleDisplay alloc] initWithStart:CGPointMake(0, yk)
+                                                          length:contentWidth
+                                                       thickness:thickness
+                                                        vertical:NO
+                                                           range:table.indexRange]];
+        }
+    }
+    return rules;
+}
+
+// Compute per-column start x-offsets shared by cells and vertical rules, so they cannot
+// drift. For each vertical boundary i (0..numColumns) with verticalLines[i] > 0, widen the
+// gap by 2·padding + the rule block and record each rule's centre x in vRuleXs[i]. With no
+// rules this reduces to -makeRowWithColumns:'s exact running sum (matrix path unchanged).
+- (NSArray<NSNumber*>*) columnOffsetsForTable:(MTMathTable*) table
+                                 columnWidths:(CGFloat[]) columnWidths
+                                    thickness:(CGFloat) thickness
+                              cellStyleMuUnit:(CGFloat) cellStyleMuUnit
+                                      vRuleXs:(NSMutableArray<NSArray<NSNumber*>*>*) vRuleXs
+                                 contentWidth:(CGFloat*) outWidth
+{
+    NSUInteger numColumns = table.numColumns;
+    NSArray<NSNumber*>* vLines = table.verticalLines;
+    CGFloat padding = kArrayRulePaddingMultiplier * _styleFont.fontSize;
+    CGFloat ruleGap = kArrayRuleGapMultiplier * _styleFont.fontSize;
+    NSMutableArray<NSNumber*>* offsets = [NSMutableArray arrayWithCapacity:numColumns];
+    CGFloat x = 0;
+    for (NSUInteger i = 0; i <= numColumns; i++) {
+        CGFloat base = (i == 0 || i == numColumns)
+            ? 0 : table.interColumnSpacing * cellStyleMuUnit;
+        NSInteger count = (i < vLines.count) ? vLines[i].integerValue : 0;
+        NSMutableArray<NSNumber*>* xs = [NSMutableArray array];
+        if (count > 0) {
+            CGFloat ruleAreaStart = x + padding + base / 2;
+            for (NSInteger k = 0; k < count; k++) {
+                CGFloat cx = ruleAreaStart + k * (thickness + ruleGap) + thickness / 2;
+                [xs addObject:@(cx)];
+            }
+            CGFloat ruleBlock = count * thickness + (count - 1) * ruleGap;
+            x += base + 2 * padding + ruleBlock;
+        } else {
+            x += base;
+        }
+        [vRuleXs addObject:xs];
+        if (i < numColumns) {
+            [offsets addObject:@(x)];
+            x += columnWidths[i];
+        }
+    }
+    *outWidth = x;
+    return offsets;
 }
 
 // Typeset every cell in the table. As a side-effect calculate the max column width of each column.
@@ -2262,29 +2412,25 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
     return table.cellStyle == kMTLineStyleInherit ? _style : table.cellStyle;
 }
 
-- (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths
+- (MTMathListDisplay*) makeRowWithColumns:(NSArray<MTDisplay*>*) cols forTable:(MTMathTable*) table columnWidths:(CGFloat[]) columnWidths columnOffsets:(NSArray<NSNumber*>*) columnOffsets
 {
-    CGFloat columnStart = 0;
-    MTLineStyle cellStyle = [self cellStyleForTable:table];
-    // muUnit == fontSize/18 (see -[MTFontMathTable muUnit]). Don't copy a CTFont just to
-    // read a scalar that is a pure function of _font + cellStyle.
-    CGFloat cellStyleMuUnit = [[self class] getStyleSize:cellStyle font:_font] / 18.0;
     NSRange rowRange = NSMakeRange(NSNotFound, 0);
     for (int i = 0; i < cols.count; i++) {
         MTDisplay* col = cols[i];
         CGFloat colWidth = columnWidths[i];
+        CGFloat columnStart = columnOffsets[i].doubleValue;
         MTColumnAlignment alignment = [table getAlignmentForColumn:i];
-        
+
         CGFloat cellPos = columnStart;
         switch (alignment) {
             case kMTColumnAlignmentRight:
                 cellPos += colWidth - col.width;
                 break;
-                
+
             case kMTColumnAlignmentCenter:
                 cellPos += (colWidth - col.width) / 2;
                 break;
-                
+
             case kMTColumnAlignmentLeft:
                 // No changes if left aligned
                 break;
@@ -2294,9 +2440,8 @@ static const CGFloat kJotMultiplier = 0.3; // A jot is 3pt for a 10pt font.
         } else {
             rowRange = col.range;
         }
-        
+
         col.position = CGPointMake(cellPos, 0);
-        columnStart += colWidth + table.interColumnSpacing * cellStyleMuUnit;
     };
     // Create a display for the row
     MTMathListDisplay* rowDisplay = [[MTMathListDisplay alloc] initWithDisplays:cols range:rowRange];
