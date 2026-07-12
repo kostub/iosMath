@@ -149,7 +149,7 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
     // Demo formulae — LaTeX strings from MathExamples.h
     static const CGFloat demoHeights[] = {
         60, 40, 120, 60, 40, 40, 40, 40, 60, 40, 40, 60, 60, 60, 70, 70, 140, 60, 90, 60,
-        60
+        60, 70, 110
     };
     NSArray<NSString*>* demoFormulas = MathDemoFormulas();
     for (NSUInteger i = 0; i < demoFormulas.count; i++) {
@@ -186,7 +186,8 @@ static CGFloat HeightAtIndex(const CGFloat *heights, NSUInteger count, NSUIntege
         40, 40, 40, 40, 40, 50, 50, 60, 50, 50, 40, 70,
         80, 150, 60, 60, 50, 60, 50,
         40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60,
-        70, 40, 40, 50, 40, 50
+        70, 40, 40, 50, 40, 50,
+        50, 50, 70, 70
     };
     NSArray<NSString*>* testFormulas = MathTestFormulas();
     for (NSUInteger i = 0; i < testFormulas.count; i++) {

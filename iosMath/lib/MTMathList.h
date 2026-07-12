@@ -632,6 +632,16 @@ typedef NS_ENUM(NSUInteger, MTBoxHAlign) {
     kMTBoxHAlignRight,      ///< \llap: child right edge at origin, offset -childWidth
 };
 
+/** Overlay strike drawn across an otherwise-unchanged box: the cancel/sout family.
+ Selects stroke geometry only; kMTStrikeNone leaves phantom/smash/lap behavior intact. */
+typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
+    kMTStrikeNone = 0,      ///< ordinary box (phantom/smash/lap) — no overlay
+    kMTStrikeForward,       ///< \cancel   : '/'  (lower-left → upper-right)
+    kMTStrikeBackward,      ///< \bcancel  : '\'  (upper-left → lower-right)
+    kMTStrikeCross,         ///< \xcancel  : both diagonals
+    kMTStrikeHorizontal,    ///< \sout     : horizontal rule near x-height
+};
+
 /** An atom representing a box element: the phantom/smash/lap family.
  @note As with `MTMathColorbox`, the usual nucleus/script fields are unused;
  the content lives in `innerList` and the flags below select the variant. */
@@ -655,6 +665,8 @@ typedef NS_ENUM(NSUInteger, MTBoxHAlign) {
 @property (nonatomic) BOOL drawChild;
 /// Horizontal draw offset applied when keepWidth == NO (laps).
 @property (nonatomic) MTBoxHAlign hAlign;
+/// Overlay strike drawn across the box; kMTStrikeNone (default) = no strike.
+@property (nonatomic) MTStrikeStyle strikeStyle;
 
 @end
 

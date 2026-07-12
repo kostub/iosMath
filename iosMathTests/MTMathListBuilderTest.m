@@ -3680,6 +3680,46 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertTrue(!sx.keepHeight && !sx.keepDepth);
 }
 
+- (void) testParseCancelFamily
+{
+    NSDictionary<NSString*, NSNumber*>* cases = @{
+        @"\\cancel{x}":  @(kMTStrikeForward),
+        @"\\bcancel{x}": @(kMTStrikeBackward),
+        @"\\xcancel{x}": @(kMTStrikeCross),
+        @"\\sout{x}":    @(kMTStrikeHorizontal),
+    };
+    for (NSString* latex in cases) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        [self checkAtomTypes:list types:@[@(kMTMathAtomBox)] desc:latex];
+        MTMathBox* box = list.atoms[0];
+        XCTAssertTrue(box.keepWidth && box.keepHeight && box.keepDepth && box.drawChild, @"%@", latex);
+        XCTAssertEqual(box.strikeStyle, (MTStrikeStyle)cases[latex].unsignedIntegerValue, @"%@", latex);
+        XCTAssertEqual(box.innerList.atoms.count, 1);
+    }
+
+    // multi-atom inner list
+    MTMathBox* sum = [MTMathListBuilder buildFromString:@"\\cancel{x+y}"].atoms[0];
+    XCTAssertEqual(sum.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(sum.innerList.atoms.count, 3);
+
+    // nested structure inner list (a fraction)
+    MTMathBox* frac = [MTMathListBuilder buildFromString:@"\\cancel{\\frac{a}{b}}"].atoms[0];
+    XCTAssertEqual(frac.innerList.atoms.count, 1);
+    XCTAssertEqual(((MTMathAtom*)frac.innerList.atoms[0]).type, kMTMathAtomFraction);
+
+    // single-token (no-brace) argument, consistent with \phantom x
+    MTMathBox* tok = [MTMathListBuilder buildFromString:@"\\cancel x"].atoms[0];
+    XCTAssertEqual(tok.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(tok.innerList.atoms.count, 1);
+
+    // \cancel at EOF: empty inner, no crash (LLD §6)
+    MTMathList* eof = [MTMathListBuilder buildFromString:@"\\cancel"];
+    XCTAssertNotNil(eof);
+    MTMathBox* eofBox = eof.atoms[0];
+    XCTAssertEqual(eofBox.strikeStyle, kMTStrikeForward);
+    XCTAssertEqual(eofBox.innerList.atoms.count, 0);
+}
+
 - (void) testParseLaps
 {
     NSDictionary<NSString*, NSNumber*>* cases = @{
@@ -3708,9 +3748,45 @@ static NSArray* getTestDataLargeDelimiters() {
 {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:
         [MTMathListBuilder buildFromString:@"\\phantom{x}"]], @"\\phantom{x}");
+    // symbol atoms in a box inner serialize as LaTeX commands, not raw glyphs
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\phantom{\\alpha}"]], @"\\phantom{\\alpha }");
     // \mathstrut serializes lossily to \vphantom{(}
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:
         [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
+}
+
+- (void) testCancelRoundTrip
+{
+    for (NSString* latex in @[@"\\cancel{x}", @"\\bcancel{x}", @"\\xcancel{x}", @"\\sout{x}"]) {
+        XCTAssertEqualObjects(
+            [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:latex]],
+            latex, @"%@", latex);
+    }
+
+    // multi-atom inner round-trips
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{x+y}"]],
+        @"\\cancel{x+y}");
+
+    // symbol atoms in the inner list must serialize as LaTeX commands (\alpha),
+    // not their raw Unicode glyph — appendLaTeXToString: routes the inner through
+    // mathListToString: rather than the lossy stringValue form.
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{\\alpha}"]],
+        @"\\cancel{\\alpha }");
+
+    // scripts are appended by the mathListToString: driver after appendLaTeXToString:;
+    // this pins that the strikeStyle branch runs under the scripted case too.
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{x}^2"]],
+        @"\\cancel{x}^{2}");
+
+    // unbalanced braces surface a non-nil parse error (fail-loud, LLD §6/§8)
+    NSError* error = nil;
+    MTMathList* bad = [MTMathListBuilder buildFromString:@"\\cancel{x" error:&error];
+    XCTAssertNil(bad);
+    XCTAssertNotNil(error);
 }
 
 - (void)testBraceGrouping
