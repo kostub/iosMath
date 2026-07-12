@@ -701,6 +701,9 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                                                                          keepDepth:boxAtom.keepDepth
                                                                          drawChild:boxAtom.drawChild
                                                                             hAlign:boxAtom.hAlign
+                                                                       strikeStyle:boxAtom.strikeStyle
+                                                                   strikeThickness:_styleFont.mathTable.fractionRuleThickness
+                                                              strikeVerticalOffset:0.55 * _styleFont.mathTable.accentBaseHeight
                                                                              range:atom.indexRange];
                 display.position = _currentPosition;
                 _currentPosition.x += display.width;   // 0 for vphantom/laps

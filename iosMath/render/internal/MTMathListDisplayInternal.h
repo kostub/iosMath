@@ -189,12 +189,18 @@ NS_ASSUME_NONNULL_BEGIN
                      keepDepth:(BOOL) keepDepth
                      drawChild:(BOOL) drawChild
                         hAlign:(MTBoxHAlign) hAlign
+                   strikeStyle:(MTStrikeStyle) strikeStyle
+               strikeThickness:(CGFloat) strikeThickness
+          strikeVerticalOffset:(CGFloat) strikeVerticalOffset
                          range:(NSRange) range NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic) MTMathListDisplay* child;
 @property (nonatomic) BOOL drawChild;
 @property (nonatomic) BOOL keepWidth;
 @property (nonatomic) MTBoxHAlign hAlign;
+@property (nonatomic) MTStrikeStyle strikeStyle;
+@property (nonatomic) CGFloat strikeThickness;
+@property (nonatomic) CGFloat strikeVerticalOffset;   ///< y-offset above baseline for \sout
 
 @end
 

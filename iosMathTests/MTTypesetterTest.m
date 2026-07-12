@@ -3036,6 +3036,31 @@
     XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01);
 }
 
+- (void) testCancelStrikeDisplay
+{
+    MTMathBoxDisplay* box = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\xcancel{x}"];
+    XCTAssertTrue([box isKindOfClass:[MTMathBoxDisplay class]]);
+    XCTAssertEqual(box.strikeStyle, kMTStrikeCross);
+    XCTAssertGreaterThan(box.strikeThickness, 0);
+}
+
+- (void) testCancelMetricsMatchArgument
+{
+    MTDisplay* x = [self singleDisplayForLaTeX:@"x"];
+    for (NSString* latex in @[@"\\cancel{x}", @"\\bcancel{x}", @"\\xcancel{x}", @"\\sout{x}"]) {
+        MTDisplay* box = [self singleDisplayForLaTeX:latex];
+        XCTAssertEqualWithAccuracy(box.width,   x.width,   0.01, @"%@", latex);
+        XCTAssertEqualWithAccuracy(box.ascent,  x.ascent,  0.01, @"%@", latex);
+        XCTAssertEqualWithAccuracy(box.descent, x.descent, 0.01, @"%@", latex);
+    }
+}
+
+- (void) testCancelScriptsCompose
+{
+    MTMathListDisplay* line = [self displayForLaTeX:@"\\cancel{x}^2"];
+    XCTAssertEqual(line.subDisplays.count, 2);   // box + superscript sub-display
+}
+
 - (void) testHPhantomMetrics
 {
     MTDisplay* box = [self singleDisplayForLaTeX:@"\\hphantom{x}"];

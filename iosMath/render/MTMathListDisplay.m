@@ -998,6 +998,9 @@
                      keepDepth:(BOOL) keepDepth
                      drawChild:(BOOL) drawChild
                         hAlign:(MTBoxHAlign) hAlign
+                   strikeStyle:(MTStrikeStyle) strikeStyle
+               strikeThickness:(CGFloat) strikeThickness
+          strikeVerticalOffset:(CGFloat) strikeVerticalOffset
                          range:(NSRange) range
 {
     self = [super init];
@@ -1006,6 +1009,9 @@
         _drawChild = drawChild;
         _keepWidth = keepWidth;
         _hAlign = hAlign;
+        _strikeStyle = strikeStyle;
+        _strikeThickness = strikeThickness;
+        _strikeVerticalOffset = strikeVerticalOffset;
         self.width   = keepWidth  ? child.width   : 0;
         self.ascent  = keepHeight ? child.ascent  : 0;
         self.descent = keepDepth  ? child.descent : 0;
@@ -1048,9 +1054,49 @@
     if (!self.drawChild) {
         return;                         // phantom: geometry already flowed up at measure time
     }
-    // Child holds its own absolute position (set in setPosition:); it translates
-    // the CTM by that position itself, so there is nothing to do here but draw it.
-    [self.child draw:context];
+    [self.child draw:context];          // child holds its own absolute position (set in setPosition:)
+
+    if (self.strikeStyle == kMTStrikeNone) {
+        return;                         // smash/lap: no overlay
+    }
+    // Overlay stroke over the box's own reported bounds, in the inherited text color
+    // (mirrors MTLineDisplay -draw:). x=left edge, y=baseline; y grows upward.
+    CGContextSaveGState(context);
+    [self.textColor setStroke];
+    CGFloat x   = self.position.x;
+    CGFloat y   = self.position.y;
+    CGFloat w   = self.width;
+    CGFloat top = y + self.ascent;
+    CGFloat bot = y - self.descent;
+    MTBezierPath* path = [MTBezierPath bezierPath];
+    switch (self.strikeStyle) {
+        case kMTStrikeForward:
+            [path moveToPoint:CGPointMake(x, bot)];
+            [path addLineToPoint:CGPointMake(x + w, top)];
+            break;
+        case kMTStrikeBackward:
+            [path moveToPoint:CGPointMake(x, top)];
+            [path addLineToPoint:CGPointMake(x + w, bot)];
+            break;
+        case kMTStrikeCross:
+            [path moveToPoint:CGPointMake(x, bot)];
+            [path addLineToPoint:CGPointMake(x + w, top)];
+            [path moveToPoint:CGPointMake(x, top)];
+            [path addLineToPoint:CGPointMake(x + w, bot)];
+            break;
+        case kMTStrikeHorizontal: {
+            CGFloat m = y + self.strikeVerticalOffset;
+            [path moveToPoint:CGPointMake(x, m)];
+            [path addLineToPoint:CGPointMake(x + w, m)];
+            break;
+        }
+        case kMTStrikeNone:             // unreachable (guarded above)
+        default:
+            break;
+    }
+    path.lineWidth = self.strikeThickness;
+    [path stroke];
+    CGContextRestoreGState(context);
 }
 
 @end
