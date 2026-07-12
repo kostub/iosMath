@@ -3328,15 +3328,17 @@
 
 - (void)testRuleDisplayHorizontalAndVerticalMetrics
 {
+    // `start` is a point on the stroke's centre-line. The box straddles it by thickness/2
+    // on the thickness axis, so position (the box origin) is inset by thickness/2 there.
     MTRuleDisplay* h = [[MTRuleDisplay alloc] initWithStart:CGPointMake(2, 5)
                                                      length:10
                                                   thickness:0.6
                                                    vertical:NO
                                                       range:NSMakeRange(0, 1)];
-    XCTAssertEqual(h.position.x, 2);
-    XCTAssertEqual(h.position.y, 5);
+    XCTAssertEqual(h.position.x, 2);          // length axis: start unchanged
+    XCTAssertEqual(h.position.y, 5 - 0.3);    // thickness axis: centre-line 5 → box bottom 4.7
     XCTAssertEqual(h.width, 10);
-    XCTAssertEqual(h.ascent, 0.6);
+    XCTAssertEqual(h.ascent, 0.6);            // box spans y ∈ [4.7, 5.3], centred on 5
     XCTAssertEqual(h.descent, 0);
 
     MTRuleDisplay* v = [[MTRuleDisplay alloc] initWithStart:CGPointMake(3, -4)
@@ -3344,10 +3346,10 @@
                                                   thickness:0.6
                                                    vertical:YES
                                                       range:NSMakeRange(0, 1)];
-    XCTAssertEqual(v.position.x, 3);
-    XCTAssertEqual(v.position.y, -4);
-    XCTAssertEqual(v.width, 0.6);
-    XCTAssertEqual(v.ascent, 12);   // top end = position.y + ascent
+    XCTAssertEqual(v.position.x, 3 - 0.3);    // thickness axis: centre-line 3 → box left 2.7
+    XCTAssertEqual(v.position.y, -4);         // length axis: start unchanged
+    XCTAssertEqual(v.width, 0.6);             // box spans x ∈ [2.7, 3.3], centred on 3
+    XCTAssertEqual(v.ascent, 12);             // top end = position.y + ascent
     XCTAssertEqual(v.descent, 0);
 }
 
@@ -3455,34 +3457,41 @@
     XCTAssertEqual(verticals.count, 2u);
     XCTAssertEqual(horizontals.count, 2u);
 
-    // Outer vertical rules sit flush with the box edges (no padding *outside* the outer
-    // rules): the leftmost rule's stroke left edge is at x=0. Padding lives only *inside*,
-    // between rule and content. (v.position.x is the stroke centre; the stroke spans
-    // position.x ± thickness/2.)
-    CGFloat leftmostX = CGFLOAT_MAX;
-    CGFloat rightmostX = -CGFLOAT_MAX;
+    // A rule's box is [position.x, position.x+width] x [position.y, position.y+ascent] and
+    // exactly covers the drawn stroke (position is the box origin, stroke straddles the
+    // centre-line). Outer vertical rules sit flush with the box edges: no padding *outside*
+    // the outer rules, so the leftmost box-left is at x=0 and the rightmost box-right is at
+    // the content edge. Padding lives only *inside*, between rule and content.
+    CGFloat vLeft = CGFLOAT_MAX;
+    CGFloat vRight = -CGFLOAT_MAX;
     for (MTRuleDisplay* v in verticals) {
-        leftmostX = MIN(leftmostX, v.position.x);
-        rightmostX = MAX(rightmostX, v.position.x);
+        vLeft = MIN(vLeft, v.position.x);
+        vRight = MAX(vRight, v.position.x + v.width);
     }
-    XCTAssertEqualWithAccuracy(leftmostX - thickness / 2, 0, 0.01);
+    XCTAssertEqualWithAccuracy(vLeft, 0, 0.01);
+    // The table's reported width matches the true content edge — no phantom half-thickness
+    // of trailing space (the vertical-rule box straddles its centre-line, so position.x+width
+    // is the real right edge, not centre+thickness).
+    XCTAssertEqualWithAccuracy(vRight, tableDisp.width, 0.01);
 
-    // Corners meet flush: each horizontal rule's ends coincide with the outer verticals'
-    // stroke edges rather than overhanging them (the bug: h-rules ran past the box edges).
+    // Corners meet flush: each horizontal rule spans exactly the box edges [0, width], so its
+    // ends coincide with the outer verticals rather than overhanging them (the overhang bug).
     for (MTRuleDisplay* h in horizontals) {
-        XCTAssertEqualWithAccuracy(h.position.x, leftmostX - thickness / 2, 0.01);
-        XCTAssertEqualWithAccuracy(h.position.x + h.width, rightmostX + thickness / 2, 0.01);
+        XCTAssertEqualWithAccuracy(h.position.x, vLeft, 0.01);
+        XCTAssertEqualWithAccuracy(h.position.x + h.width, vRight, 0.01);
     }
 
-    // Top \hline sits padding above the content top; bottom \hline padding below content bottom.
-    CGFloat topY = -CGFLOAT_MAX;
-    CGFloat botY = CGFLOAT_MAX;
+    // Top \hline sits padding above the content top; bottom \hline padding below content
+    // bottom. The stroke centre-line is position.y + thickness/2 (box straddles the line).
+    CGFloat topLine = -CGFLOAT_MAX;
+    CGFloat botLine = CGFLOAT_MAX;
     for (MTRuleDisplay* h in horizontals) {
-        topY = MAX(topY, h.position.y);
-        botY = MIN(botY, h.position.y);
+        CGFloat line = h.position.y + thickness / 2;
+        topLine = MAX(topLine, line);
+        botLine = MIN(botLine, line);
     }
-    XCTAssertEqualWithAccuracy(topY, contentTop + padding, 0.01);
-    XCTAssertEqualWithAccuracy(botY, contentBot - padding, 0.01);
+    XCTAssertEqualWithAccuracy(topLine, contentTop + padding, 0.01);
+    XCTAssertEqualWithAccuracy(botLine, contentBot - padding, 0.01);
 }
 
 @end

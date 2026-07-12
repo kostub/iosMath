@@ -799,13 +799,19 @@
         _length = length;
         _thickness = thickness;
         _vertical = isVertical;
-        self.position = start;
         self.range = range;
+        // `start` is a point on the stroke's centre-line; a stroked path straddles it by
+        // thickness/2 on each side of the thickness axis. Record `position` as the box's
+        // lower-left origin so the display's bounds exactly cover the drawn stroke (else the
+        // parent over-reports its width/ascent by thickness/2 — see -draw:, which re-derives
+        // the centre-line). The length axis uses a butt cap, so it isn't inset.
         if (isVertical) {
+            self.position = CGPointMake(start.x - thickness / 2, start.y);
             self.width = thickness;
             self.ascent = length;
             self.descent = 0;
         } else {
+            self.position = CGPointMake(start.x, start.y - thickness / 2);
             self.width = length;
             self.ascent = thickness;
             self.descent = 0;
@@ -820,10 +826,15 @@
     CGContextSaveGState(context);
     [self.textColor setStroke];
     MTBezierPath* path = [MTBezierPath bezierPath];
-    [path moveToPoint:self.position];
+    // position is the box origin; the stroke runs along the centre-line, offset thickness/2
+    // from the box edge on the thickness axis (the axis init inset when recording position).
+    CGPoint begin = _vertical
+        ? CGPointMake(self.position.x + _thickness / 2, self.position.y)
+        : CGPointMake(self.position.x, self.position.y + _thickness / 2);
+    [path moveToPoint:begin];
     CGPoint end = _vertical
-        ? CGPointMake(self.position.x, self.position.y + _length)
-        : CGPointMake(self.position.x + _length, self.position.y);
+        ? CGPointMake(begin.x, begin.y + _length)
+        : CGPointMake(begin.x + _length, begin.y);
     [path addLineToPoint:end];
     path.lineWidth = _thickness;
     [path stroke];
