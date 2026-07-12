@@ -3455,10 +3455,24 @@
     XCTAssertEqual(verticals.count, 2u);
     XCTAssertEqual(horizontals.count, 2u);
 
-    // Leftmost vertical (boundary 0, base 0): x == padding + thickness/2 (edge-centred stroke).
+    // Outer vertical rules sit flush with the box edges (no padding *outside* the outer
+    // rules): the leftmost rule's stroke left edge is at x=0. Padding lives only *inside*,
+    // between rule and content. (v.position.x is the stroke centre; the stroke spans
+    // position.x ± thickness/2.)
     CGFloat leftmostX = CGFLOAT_MAX;
-    for (MTRuleDisplay* v in verticals) { leftmostX = MIN(leftmostX, v.position.x); }
-    XCTAssertEqualWithAccuracy(leftmostX, padding + thickness / 2, 0.01);
+    CGFloat rightmostX = -CGFLOAT_MAX;
+    for (MTRuleDisplay* v in verticals) {
+        leftmostX = MIN(leftmostX, v.position.x);
+        rightmostX = MAX(rightmostX, v.position.x);
+    }
+    XCTAssertEqualWithAccuracy(leftmostX - thickness / 2, 0, 0.01);
+
+    // Corners meet flush: each horizontal rule's ends coincide with the outer verticals'
+    // stroke edges rather than overhanging them (the bug: h-rules ran past the box edges).
+    for (MTRuleDisplay* h in horizontals) {
+        XCTAssertEqualWithAccuracy(h.position.x, leftmostX - thickness / 2, 0.01);
+        XCTAssertEqualWithAccuracy(h.position.x + h.width, rightmostX + thickness / 2, 0.01);
+    }
 
     // Top \hline sits padding above the content top; bottom \hline padding below content bottom.
     CGFloat topY = -CGFLOAT_MAX;
