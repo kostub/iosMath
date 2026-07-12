@@ -1048,6 +1048,52 @@
     self.child.position = CGPointMake(self.position.x + offset, self.position.y);
 }
 
+static NSValue* MTBoxPointValue(CGPoint p) {
+    return [NSValue value:&p withObjCType:@encode(CGPoint)];
+}
+
+static CGPoint MTBoxPointFromValue(NSValue* v) {
+    CGPoint p = CGPointZero;
+    [v getValue:&p size:sizeof(p)];
+    return p;
+}
+
+- (NSArray<NSValue*>*) strikeSegmentPoints
+{
+    if (self.strikeStyle == kMTStrikeNone) {
+        return @[];                     // smash/lap: no overlay
+    }
+    // Geometry over the box's own reported bounds. x=left edge, y=baseline; y
+    // grows upward. Endpoints are absolute (self.position based) so a test can
+    // assert the exact stroke direction.
+    CGFloat x   = self.position.x;
+    CGFloat y   = self.position.y;
+    CGFloat w   = self.width;
+    CGFloat top = y + self.ascent;
+    CGFloat bot = y - self.descent;
+    switch (self.strikeStyle) {
+        case kMTStrikeForward:
+            return @[MTBoxPointValue(CGPointMake(x, bot)),
+                     MTBoxPointValue(CGPointMake(x + w, top))];
+        case kMTStrikeBackward:
+            return @[MTBoxPointValue(CGPointMake(x, top)),
+                     MTBoxPointValue(CGPointMake(x + w, bot))];
+        case kMTStrikeCross:
+            return @[MTBoxPointValue(CGPointMake(x, bot)),
+                     MTBoxPointValue(CGPointMake(x + w, top)),
+                     MTBoxPointValue(CGPointMake(x, top)),
+                     MTBoxPointValue(CGPointMake(x + w, bot))];
+        case kMTStrikeHorizontal: {
+            CGFloat m = y + self.strikeVerticalOffset;
+            return @[MTBoxPointValue(CGPointMake(x, m)),
+                     MTBoxPointValue(CGPointMake(x + w, m))];
+        }
+        case kMTStrikeNone:             // unreachable (guarded above)
+        default:
+            return @[];
+    }
+}
+
 - (void)draw:(CGContextRef)context
 {
     [super draw:context];               // base draws only localBackgroundColor (a no-op here)
@@ -1056,43 +1102,18 @@
     }
     [self.child draw:context];          // child holds its own absolute position (set in setPosition:)
 
-    if (self.strikeStyle == kMTStrikeNone) {
-        return;                         // smash/lap: no overlay
+    NSArray<NSValue*>* points = [self strikeSegmentPoints];
+    if (points.count == 0) {
+        return;                         // smash/lap or kMTStrikeNone: no overlay
     }
-    // Overlay stroke over the box's own reported bounds, in the inherited text color
-    // (mirrors MTLineDisplay -draw:). x=left edge, y=baseline; y grows upward.
+    // Overlay stroke in the inherited text color (mirrors MTLineDisplay -draw:).
+    // Points come pairwise from -strikeSegmentPoints; each pair is one segment.
     CGContextSaveGState(context);
     [self.textColor setStroke];
-    CGFloat x   = self.position.x;
-    CGFloat y   = self.position.y;
-    CGFloat w   = self.width;
-    CGFloat top = y + self.ascent;
-    CGFloat bot = y - self.descent;
     MTBezierPath* path = [MTBezierPath bezierPath];
-    switch (self.strikeStyle) {
-        case kMTStrikeForward:
-            [path moveToPoint:CGPointMake(x, bot)];
-            [path addLineToPoint:CGPointMake(x + w, top)];
-            break;
-        case kMTStrikeBackward:
-            [path moveToPoint:CGPointMake(x, top)];
-            [path addLineToPoint:CGPointMake(x + w, bot)];
-            break;
-        case kMTStrikeCross:
-            [path moveToPoint:CGPointMake(x, bot)];
-            [path addLineToPoint:CGPointMake(x + w, top)];
-            [path moveToPoint:CGPointMake(x, top)];
-            [path addLineToPoint:CGPointMake(x + w, bot)];
-            break;
-        case kMTStrikeHorizontal: {
-            CGFloat m = y + self.strikeVerticalOffset;
-            [path moveToPoint:CGPointMake(x, m)];
-            [path addLineToPoint:CGPointMake(x + w, m)];
-            break;
-        }
-        case kMTStrikeNone:             // unreachable (guarded above)
-        default:
-            break;
+    for (NSUInteger i = 0; i + 1 < points.count; i += 2) {
+        [path moveToPoint:MTBoxPointFromValue(points[i])];
+        [path addLineToPoint:MTBoxPointFromValue(points[i + 1])];
     }
     path.lineWidth = self.strikeThickness;
     [path stroke];

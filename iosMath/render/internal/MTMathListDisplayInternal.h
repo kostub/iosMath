@@ -202,6 +202,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) CGFloat strikeThickness;
 @property (nonatomic) CGFloat strikeVerticalOffset;   ///< y-offset above baseline for \sout
 
+/// Strike overlay geometry as a flat list of absolute endpoints, consumed
+/// pairwise: each even/odd pair is one stroked segment (moveTo then addLineTo).
+/// Empty when strikeStyle == kMTStrikeNone. -draw: builds its path from this, so
+/// asserting it in a test guards the actual stroke direction without rendering.
+- (NSArray<NSValue*>*) strikeSegmentPoints;
+
 @end
 
 @interface MTInnerDisplay ()

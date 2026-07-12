@@ -3094,6 +3094,61 @@
     CGColorSpaceRelease(cs);
 }
 
+- (void) testCancelStrokeDirection
+{
+    // Pin the exact stroke geometry so a swapped forward/backward diagonal (which
+    // -draw: and testCancelDrawDoesNotCrash would both accept) fails the suite.
+    // -draw: builds its path from -strikeSegmentPoints, so this guards what draws.
+    MTMathBoxDisplay* fwd = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\cancel{x}"];
+    CGFloat x = fwd.position.x, w = fwd.width;
+    CGFloat top = fwd.position.y + fwd.ascent;
+    CGFloat bot = fwd.position.y - fwd.descent;
+    XCTAssertGreaterThan(w, 0);          // otherwise the direction check is vacuous
+    XCTAssertGreaterThan(top, bot);
+
+    // forward "/" : bottom-left up to top-right
+    NSArray<NSValue*>* f = [fwd strikeSegmentPoints];
+    XCTAssertEqual(f.count, 2u);
+    [self assertSegmentFrom:f start:0 to:1 x0:x y0:bot x1:x + w y1:top];
+
+    // backward "\" : top-left down to bottom-right
+    MTMathBoxDisplay* bwd = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\bcancel{x}"];
+    NSArray<NSValue*>* b = [bwd strikeSegmentPoints];
+    XCTAssertEqual(b.count, 2u);
+    [self assertSegmentFrom:b start:0 to:1
+                          x0:bwd.position.x y0:bwd.position.y + bwd.ascent
+                          x1:bwd.position.x + bwd.width y1:bwd.position.y - bwd.descent];
+
+    // cross "X" : forward diagonal followed by backward diagonal
+    MTMathBoxDisplay* crs = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\xcancel{x}"];
+    NSArray<NSValue*>* c = [crs strikeSegmentPoints];
+    XCTAssertEqual(c.count, 4u);
+    CGFloat cx = crs.position.x, cw = crs.width;
+    CGFloat ctop = crs.position.y + crs.ascent, cbot = crs.position.y - crs.descent;
+    [self assertSegmentFrom:c start:0 to:1 x0:cx y0:cbot x1:cx + cw y1:ctop];
+    [self assertSegmentFrom:c start:2 to:3 x0:cx y0:ctop x1:cx + cw y1:cbot];
+
+    // horizontal "-" : flat strike, both endpoints at the same y
+    MTMathBoxDisplay* hor = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\sout{x}"];
+    NSArray<NSValue*>* h = [hor strikeSegmentPoints];
+    XCTAssertEqual(h.count, 2u);
+    CGFloat m = hor.position.y + hor.strikeVerticalOffset;
+    [self assertSegmentFrom:h start:0 to:1
+                          x0:hor.position.x y0:m x1:hor.position.x + hor.width y1:m];
+}
+
+- (void) assertSegmentFrom:(NSArray<NSValue*>*)pts start:(NSUInteger)s to:(NSUInteger)e
+                        x0:(CGFloat)x0 y0:(CGFloat)y0 x1:(CGFloat)x1 y1:(CGFloat)y1
+{
+    CGPoint start = CGPointZero, end = CGPointZero;
+    [pts[s] getValue:&start size:sizeof(start)];
+    [pts[e] getValue:&end   size:sizeof(end)];
+    XCTAssertEqualWithAccuracy(start.x, x0, 0.01);
+    XCTAssertEqualWithAccuracy(start.y, y0, 0.01);
+    XCTAssertEqualWithAccuracy(end.x,   x1, 0.01);
+    XCTAssertEqualWithAccuracy(end.y,   y1, 0.01);
+}
+
 - (void) testHPhantomMetrics
 {
     MTDisplay* box = [self singleDisplayForLaTeX:@"\\hphantom{x}"];
