@@ -3061,6 +3061,39 @@
     XCTAssertEqual(line.subDisplays.count, 2);   // box + superscript sub-display
 }
 
+- (void) testCancelEdgeCases
+{
+    // empty content: zero-size box, strokes degenerate harmlessly
+    MTMathBoxDisplay* empty = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\cancel{}"];
+    XCTAssertEqual(empty.strikeStyle, kMTStrikeForward);
+    XCTAssertEqualWithAccuracy(empty.width, 0, 0.01);
+
+    // \cancel at EOF: empty inner list, still an MTMathBoxDisplay
+    MTMathBoxDisplay* eof = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\cancel"];
+    XCTAssertEqual(eof.strikeStyle, kMTStrikeForward);
+
+    // nested cancels: outer box whose child line contains an inner box display
+    MTMathBoxDisplay* outer = (MTMathBoxDisplay*)[self singleDisplayForLaTeX:@"\\cancel{\\bcancel{x}}"];
+    XCTAssertEqual(outer.strikeStyle, kMTStrikeForward);
+    MTMathListDisplay* childLine = (MTMathListDisplay*)outer.child;
+    MTMathBoxDisplay* inner = childLine.subDisplays.firstObject;
+    XCTAssertTrue([inner isKindOfClass:[MTMathBoxDisplay class]]);
+    XCTAssertEqual(inner.strikeStyle, kMTStrikeBackward);
+}
+
+- (void) testCancelDrawDoesNotCrash
+{
+    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 50, 8, 0, cs, kCGImageAlphaPremultipliedLast);
+    for (NSString* latex in @[@"\\cancel{x}", @"\\bcancel{x}", @"\\xcancel{x+y}",
+                              @"\\sout{x}", @"\\cancel{}", @"\\cancel{\\bcancel{x}}"]) {
+        MTMathListDisplay* line = [self displayForLaTeX:latex];
+        XCTAssertNoThrow([line draw:ctx], @"%@", latex);
+    }
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(cs);
+}
+
 - (void) testHPhantomMetrics
 {
     MTDisplay* box = [self singleDisplayForLaTeX:@"\\hphantom{x}"];
