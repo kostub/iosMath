@@ -85,6 +85,8 @@ private let namedExampleMeta: [NamedFormulaMeta] = [
     NamedFormulaMeta(title: "EM algorithm Q-function"),
     NamedFormulaMeta(title: "Piecewise function"),
     NamedFormulaMeta(title: "Ridge regression"),
+    NamedFormulaMeta(title: "Augmented matrix"),
+    NamedFormulaMeta(title: "Multiplication table"),
 ]
 
 private let namedExamples: [NamedFormula] = {
@@ -239,7 +241,8 @@ private struct GalleryTab: View {
         40, 40, 40, 40, 40, 50, 50, 60, 50, 50, 40, 70,
         80, 150, 60, 60, 50, 60, 50,
         40, 60, 60, 70, 60, 60, 70, 60, 60, 60, 60,
-        70, 40, 40, 50, 40, 50
+        70, 40, 40, 50, 40, 50,
+        50, 50, 70, 70
     ]
 
     private static let testFormulas: [String] = {
