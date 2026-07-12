@@ -1057,6 +1057,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
             @"mathllap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignRight)},
             @"mathrlap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignLeft)},
             @"mathclap":  @{@"kW":@NO,  @"kH":@YES, @"kD":@YES, @"draw":@YES, @"hAlign":@(kMTBoxHAlignCenter)},
+            @"cancel":    @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@YES, @"strike":@(kMTStrikeForward)},
+            @"bcancel":   @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@YES, @"strike":@(kMTStrikeBackward)},
+            @"xcancel":   @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@YES, @"strike":@(kMTStrikeCross)},
+            @"sout":      @{@"kW":@YES, @"kH":@YES, @"kD":@YES, @"draw":@YES, @"strike":@(kMTStrikeHorizontal)},
         };
     });
     return commands;
@@ -1267,6 +1271,8 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         box.keepDepth  = [boxSpec[@"kD"] boolValue];
         box.drawChild  = [boxSpec[@"draw"] boolValue];
         box.hAlign     = (MTBoxHAlign)[boxSpec[@"hAlign"] unsignedIntegerValue];
+        // absent "strike" key → 0 → kMTStrikeNone, so phantom/smash/lap are unaffected
+        box.strikeStyle = (MTStrikeStyle)[boxSpec[@"strike"] unsignedIntegerValue];
 
         if ([boxSpec[@"synthParen"] boolValue]) {
             // \mathstrut: no argument; synthetic inner list with a single open paren.
