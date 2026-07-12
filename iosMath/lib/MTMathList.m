@@ -1027,48 +1027,57 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
                                  userInfo:nil];
 }
 
-// Lossy by design (LLD §3.4): pick the closest LaTeX command from the flag matrix.
-- (NSString *)stringValue
+// Closest LaTeX command for this box variant (cancel / phantom / lap / smash),
+// picked from the flag matrix. Shared by stringValue and appendLaTeXToString:.
+- (NSString *)latexCommand
 {
-    NSString* cmd;
-    NSString* inner = self.innerList.stringValue ?: @"";
     if (self.strikeStyle != kMTStrikeNone) {
-        NSString* c;
         switch (self.strikeStyle) {
-            case kMTStrikeForward:    c = @"\\cancel";  break;
-            case kMTStrikeBackward:   c = @"\\bcancel"; break;
-            case kMTStrikeCross:      c = @"\\xcancel"; break;
-            case kMTStrikeHorizontal: c = @"\\sout";    break;
+            case kMTStrikeForward:    return @"\\cancel";
+            case kMTStrikeBackward:   return @"\\bcancel";
+            case kMTStrikeCross:      return @"\\xcancel";
+            case kMTStrikeHorizontal: return @"\\sout";
             case kMTStrikeNone:       // unreachable (guarded above)
-            default:                  c = @"\\cancel";  break;
+            default:
+                NSAssert(NO, @"Unknown MTStrikeStyle %lu", (unsigned long)self.strikeStyle);
+                return @"\\cancel";
         }
-        return [NSString stringWithFormat:@"%@{%@}", c, inner];
     }
     if (!self.drawChild) {
         // phantom family
-        if (self.keepWidth && self.keepHeight && self.keepDepth)      cmd = @"\\phantom";
-        else if (self.keepWidth)                                       cmd = @"\\hphantom";
-        else                                                          cmd = @"\\vphantom"; // covers \mathstrut -> \vphantom{(}
+        if (self.keepWidth && self.keepHeight && self.keepDepth)      return @"\\phantom";
+        else if (self.keepWidth)                                       return @"\\hphantom";
+        else                                                          return @"\\vphantom"; // covers \mathstrut -> \vphantom{(}
     } else if (!self.keepWidth) {
         // lap family
         switch (self.hAlign) {
-            case kMTBoxHAlignRight:  cmd = @"\\llap"; break;
-            case kMTBoxHAlignCenter: cmd = @"\\clap"; break;
+            case kMTBoxHAlignRight:  return @"\\llap";
+            case kMTBoxHAlignCenter: return @"\\clap";
             case kMTBoxHAlignLeft:
-            default:                 cmd = @"\\rlap"; break;
+            default:                 return @"\\rlap";
         }
     } else {
         // smash family
-        if (!self.keepHeight && !self.keepDepth)      cmd = @"\\smash";
-        else if (self.keepDepth && !self.keepHeight)  cmd = @"\\smash[t]";
-        else                                          cmd = @"\\smash[b]";
+        if (!self.keepHeight && !self.keepDepth)      return @"\\smash";
+        else if (self.keepDepth && !self.keepHeight)  return @"\\smash[t]";
+        else                                          return @"\\smash[b]";
     }
-    return [NSString stringWithFormat:@"%@{%@}", cmd, inner];
 }
 
+// Lossy by design (LLD §3.4): the inner list uses the simplified stringValue form
+// (symbols rendered as their Unicode glyph, not their LaTeX command).
+- (NSString *)stringValue
+{
+    return [NSString stringWithFormat:@"%@{%@}", self.latexCommand, self.innerList.stringValue ?: @""];
+}
+
+// Round-trip serializer: unlike stringValue, serialize the inner list via
+// mathListToString: (as every other container atom does) so a symbol atom emits
+// e.g. \alpha rather than the raw glyph α.
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
-    [str appendString:self.stringValue];
+    [str appendFormat:@"%@{%@}", self.latexCommand,
+     [MTMathListBuilder mathListToString:self.innerList]];
 }
 
 - (id)copyWithZone:(NSZone *)zone

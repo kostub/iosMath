@@ -3748,6 +3748,9 @@ static NSArray* getTestDataLargeDelimiters() {
 {
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:
         [MTMathListBuilder buildFromString:@"\\phantom{x}"]], @"\\phantom{x}");
+    // symbol atoms in a box inner serialize as LaTeX commands, not raw glyphs
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:
+        [MTMathListBuilder buildFromString:@"\\phantom{\\alpha}"]], @"\\phantom{\\alpha }");
     // \mathstrut serializes lossily to \vphantom{(}
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:
         [MTMathListBuilder buildFromString:@"\\mathstrut"]], @"\\vphantom{(}");
@@ -3765,6 +3768,13 @@ static NSArray* getTestDataLargeDelimiters() {
     XCTAssertEqualObjects(
         [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{x+y}"]],
         @"\\cancel{x+y}");
+
+    // symbol atoms in the inner list must serialize as LaTeX commands (\alpha),
+    // not their raw Unicode glyph — appendLaTeXToString: routes the inner through
+    // mathListToString: rather than the lossy stringValue form.
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\cancel{\\alpha}"]],
+        @"\\cancel{\\alpha }");
 
     // scripts are appended by the mathListToString: driver after appendLaTeXToString:;
     // this pins that the strikeStyle branch runs under the scripted case too.
