@@ -2343,8 +2343,12 @@ static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule cleara
 
 // Compute per-column start x-offsets shared by cells and vertical rules, so they cannot
 // drift. For each vertical boundary i (0..numColumns) with verticalLines[i] > 0, widen the
-// gap by 2·padding + the rule block and record each rule's centre x in vRuleXs[i]. With no
-// rules this reduces to -makeRowWithColumns:'s exact running sum (matrix path unchanged).
+// gap by the rule block plus padding and record each rule's centre x in vRuleXs[i]. Interior
+// boundaries get padding on both sides; the outer boundaries (i==0, i==numColumns) get padding
+// only on the inside so the outermost rules sit flush at x==0 / x==contentWidth — the same box
+// edges the horizontal rules span, so corners meet instead of the h-rules overhanging (LaTeX
+// behaviour). With no rules this reduces to -makeRowWithColumns:'s exact running sum (matrix
+// path unchanged).
 - (NSArray<NSNumber*>*) columnOffsetsForTable:(MTMathTable*) table
                                  columnWidths:(CGFloat[]) columnWidths
                                     thickness:(CGFloat) thickness
@@ -2364,13 +2368,16 @@ static const CGFloat kArrayRulePaddingMultiplier = 0.2; // content↔rule cleara
         NSInteger count = (i < vLines.count) ? vLines[i].integerValue : 0;
         NSMutableArray<NSNumber*>* xs = [NSMutableArray array];
         if (count > 0) {
-            CGFloat ruleAreaStart = x + padding + base / 2;
+            // No padding outside the outermost rules so they sit flush at the box edges.
+            CGFloat padLeft = (i == 0) ? 0 : padding;
+            CGFloat padRight = (i == numColumns) ? 0 : padding;
+            CGFloat ruleAreaStart = x + padLeft + base / 2;
             for (NSInteger k = 0; k < count; k++) {
                 CGFloat cx = ruleAreaStart + k * (thickness + ruleGap) + thickness / 2;
                 [xs addObject:@(cx)];
             }
             CGFloat ruleBlock = count * thickness + (count - 1) * ruleGap;
-            x += base + 2 * padding + ruleBlock;
+            x += base + padLeft + padRight + ruleBlock;
         } else {
             x += base;
         }

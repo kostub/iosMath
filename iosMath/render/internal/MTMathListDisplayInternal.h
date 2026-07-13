@@ -142,9 +142,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init NS_UNAVAILABLE;
 
-// `start` is in table-local coordinates. For a horizontal rule `length` extends
-// rightward (+x); for a vertical rule it extends upward (+y). Stroke is centred on
-// the path, so callers offset `start` by thickness/2 where edge alignment matters.
+// `start` is a point on the stroke's centre-line, in table-local coordinates. For a
+// horizontal rule `length` extends rightward (+x); for a vertical rule it extends upward
+// (+y). The stroke straddles the centre-line by thickness/2, so the initializer records
+// `position` as the box's lower-left origin (inset by thickness/2 on the thickness axis);
+// callers pass the raw centre-line and must not pre-offset for edge alignment.
 - (instancetype) initWithStart:(CGPoint) start
                         length:(CGFloat) length
                      thickness:(CGFloat) thickness
