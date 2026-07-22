@@ -214,10 +214,10 @@ static CGFloat ceilToPixel(CGFloat value, CGFloat scale) {
                 textX = self.contentInsets.left;
                 break;
             case kMTTextAlignmentCenter:
-                textX = (self.bounds.size.width - self.contentInsets.left - self.contentInsets.right - _displayList.width) / 2 + self.contentInsets.left;
+                textX = (self.bounds.size.width - self.contentInsets.left - self.contentInsets.right - _displayList.inkWidth) / 2 + self.contentInsets.left;
                 break;
             case kMTTextAlignmentRight:
-                textX = (self.bounds.size.width - _displayList.width - self.contentInsets.right);
+                textX = (self.bounds.size.width - _displayList.inkWidth - self.contentInsets.right);
                 break;
         }
         

@@ -53,4 +53,23 @@
     XCTAssertEqualWithAccuracy(size.height, ceil(tb * scale) / scale, 0.001);
 }
 
+- (void)testAlignmentUsesInkWidth {
+    NSString* latex = @"V";   // heavy right overhang (advance 11.66, ink 15.38)
+    for (NSNumber* alignN in @[@(kMTTextAlignmentLeft), @(kMTTextAlignmentCenter), @(kMTTextAlignmentRight)]) {
+        MTMathUILabel* label = [[MTMathUILabel alloc] init];
+        label.latex = latex;
+        label.textAlignment = (MTTextAlignment)alignN.integerValue;
+        CGSize size = [label sizeThatFits:CGSizeZero];
+        label.frame = CGRectMake(0, 0, size.width, size.height);
+        [label layoutSubviews];
+
+        MTMathListDisplay* d = label.displayList;
+        CGFloat inkRight = d.position.x + d.inkWidth;
+        CGFloat frameRight = size.width - label.contentInsets.right;
+        // Ink right edge must sit within the (inset) frame for every alignment.
+        XCTAssertLessThanOrEqual(inkRight, frameRight + 0.01,
+            @"alignment %@ clips ink: inkRight %.2f > frameRight %.2f", alignN, inkRight, frameRight);
+    }
+}
+
 @end

@@ -25,6 +25,12 @@ NS_ASSUME_NONNULL_BEGIN
 // it cross-platform without changing the public API surface.
 - (CGSize)sizeThatFits:(CGSize)size;
 
+// Same story as sizeThatFits: above — public UIView API on iOS, but
+// implemented (not declared) on MTMathUILabel for macOS, where NSView uses
+// layout/layoutSubtreeIfNeeded instead. Redeclared here so tests can drive
+// layout directly and cross-platform.
+- (void)layoutSubviews;
+
 @end
 
 NS_ASSUME_NONNULL_END
