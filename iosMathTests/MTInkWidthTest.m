@@ -74,6 +74,18 @@
     XCTAssertGreaterThanOrEqual(glyph.inkWidth, glyph.width - 0.01);
 }
 
+// Tall delimiters build an MTGlyphConstructionDisplay (vertical stack, x-offsets 0).
+// Deeply nested fractions are needed to exceed the font's largest pre-built
+// paren variant and force the multi-part glyph assembly.
+- (void)testGlyphConstructionLeafInk {
+    MTMathListDisplay* d = [self displayFor:@"\\left(\\frac{1}{\\frac{1}{\\frac{1}{\\frac{1}{2}}}}\\right)"];
+    MTGlyphConstructionDisplay* g =
+        (MTGlyphConstructionDisplay*)[self findDisplayOfClass:[MTGlyphConstructionDisplay class] in:d];
+    XCTAssertNotNil(g, @"expected an MTGlyphConstructionDisplay");
+    XCTAssertGreaterThan(g.inkMaxX, 0);
+    XCTAssertGreaterThanOrEqual(g.inkWidth, g.width - 0.01);
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

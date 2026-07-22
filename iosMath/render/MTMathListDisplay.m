@@ -581,6 +581,13 @@
         }
         _font = font;
         self.position = CGPointZero;
+        // x-offsets are 0 for vertical stacking, so ink max-x is the widest glyph bbox.
+        CGFloat maxX = 0;
+        for (int i = 0; i < _numGlyphs; i++) {
+            CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyphs[i], NULL, 1);
+            maxX = MAX(maxX, _positions[i].x + CGRectGetMaxX(bbox));
+        }
+        self.inkMaxX = maxX;
     }
     return self;
 }
