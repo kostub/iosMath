@@ -4,6 +4,15 @@
 #import "MTMathUILabelInternal.h"
 #import "MTMathListDisplay.h"
 
+// Forces a known device-pixel scale so the pixel-grid assertions exercise 2x/3x
+// rounding rather than the tautological scale==1 case.
+@interface MTScaledInkLabel : MTMathUILabel
+@property (nonatomic) CGFloat forcedScale;
+@end
+@implementation MTScaledInkLabel
+- (CGFloat)screenScale { return self.forcedScale; }
+@end
+
 @interface MTInkClippingRenderTest : XCTestCase
 @end
 
@@ -50,7 +59,10 @@ static int inkInColumn(uint8_t* buf, size_t W, size_t H, size_t col) {
 }
 
 - (MTMathUILabel*)laidOutLabel:(NSString*)latex alignment:(MTTextAlignment)align {
-    MTMathUILabel* label = [[MTMathUILabel alloc] init];
+    return [self laidOutLabel:latex alignment:align label:[[MTMathUILabel alloc] init]];
+}
+
+- (MTMathUILabel*)laidOutLabel:(NSString*)latex alignment:(MTTextAlignment)align label:(MTMathUILabel*)label {
     label.latex = latex;
     label.textAlignment = align;
     CGSize size = [label sizeThatFits:CGSizeZero];
@@ -88,18 +100,23 @@ static int inkInColumn(uint8_t* buf, size_t W, size_t H, size_t col) {
 // origin; that is deferred (LLD §2.8) and is not exercised by this integer-origin
 // render harness.
 - (void)testTallConstructsPixelAlignedAndContained {
-    for (NSString* latex in @[@"\\quad", @"\\frac{1}{2}", @"\\int_0^1", @"P"]) {
-        MTMathUILabel* label = [self laidOutLabel:latex alignment:kMTTextAlignmentLeft];
-        CGSize size = label.bounds.size;
-        CGFloat scale = [label screenScale];
-        CGFloat wPixels = size.width * scale;
-        CGFloat hPixels = size.height * scale;
-        XCTAssertEqualWithAccuracy(wPixels, round(wPixels), 1e-6, @"%@ width not pixel-aligned", latex);
-        XCTAssertEqualWithAccuracy(hPixels, round(hPixels), 1e-6, @"%@ height not pixel-aligned", latex);
-        size_t W, H; uint8_t* buf = [self renderLabel:label width:&W height:&H];
-        if (!buf) continue;
-        XCTAssertEqual(inkInColumn(buf, W, H, W - 1), 0, @"%@ right edge clipped", latex);
-        free(buf);
+    for (NSNumber* scaleN in @[@2.0, @3.0]) {
+        CGFloat scale = scaleN.doubleValue;
+        for (NSString* latex in @[@"\\sqrt{2}", @"\\frac{1}{2}", @"\\int_0^1", @"P"]) {
+            MTScaledInkLabel* scaled = [[MTScaledInkLabel alloc] init];
+            scaled.forcedScale = scale;
+            MTMathUILabel* label = [self laidOutLabel:latex alignment:kMTTextAlignmentLeft label:scaled];
+            CGSize size = label.bounds.size;
+            CGFloat wPixels = size.width * scale;
+            CGFloat hPixels = size.height * scale;
+            XCTAssertEqualWithAccuracy(wPixels, round(wPixels), 1e-6, @"%@ @%.0fx width not pixel-aligned", latex, scale);
+            XCTAssertEqualWithAccuracy(hPixels, round(hPixels), 1e-6, @"%@ @%.0fx height not pixel-aligned", latex, scale);
+            size_t W, H; uint8_t* buf = [self renderLabel:label width:&W height:&H];
+            XCTAssertTrue(buf != NULL, @"%@ did not render into a bitmap", latex);
+            if (!buf) continue;
+            XCTAssertEqual(inkInColumn(buf, W, H, W - 1), 0, @"%@ @%.0fx right edge clipped", latex, scale);
+            free(buf);
+        }
     }
 }
 

@@ -15,6 +15,15 @@
 - (void)invalidateIntrinsicContentSize { self.invalidateCount++; [super invalidateIntrinsicContentSize]; }
 @end
 
+// Forces a known device-pixel scale so the grid-rounding assertions exercise
+// 2x/3x rounding rather than the tautological scale==1 case.
+@interface MTScaledLabel : MTMathUILabel
+@property (nonatomic) CGFloat forcedScale;
+@end
+@implementation MTScaledLabel
+- (CGFloat)screenScale { return self.forcedScale; }
+@end
+
 @interface MTMathUILabelSizingTest : XCTestCase
 @end
 
@@ -27,19 +36,25 @@
 }
 
 // Reported width covers the ink extent and lands on the device-pixel grid.
+// Run at 1x/2x/3x so the grid-rounding assertions are exercised where they can
+// actually fail, not just the tautological scale==1 case.
 - (void)testSizeThatFitsInkAndGrid {
-    for (NSString* latex in @[@"P", @"V", @"\\frac{1}{2}", @"\\int_0^1", @"x"]) {
-        MTMathUILabel* label = [self labelFor:latex];
-        CGFloat scale = [label screenScale];
-        MTMathListDisplay* d =
-            [MTTypesetter createLineForMathList:[MTMathListBuilder buildFromString:latex]
-                                           font:label.font style:label.labelMode == kMTMathUILabelModeDisplay ? kMTLineStyleDisplay : kMTLineStyleText];
-        CGSize size = [label sizeThatFits:CGSizeZero];
-        // (a) covers the ink (insets are >= 0, so >= inkWidth alone).
-        XCTAssertGreaterThanOrEqual(size.width, d.inkWidth - 0.001, @"%@", latex);
-        // (b) both axes are whole device pixels.
-        XCTAssertEqualWithAccuracy(size.width * scale,  round(size.width * scale),  0.001, @"%@", latex);
-        XCTAssertEqualWithAccuracy(size.height * scale, round(size.height * scale), 0.001, @"%@", latex);
+    for (NSNumber* scaleN in @[@1.0, @2.0, @3.0]) {
+        CGFloat scale = scaleN.doubleValue;
+        for (NSString* latex in @[@"P", @"V", @"\\frac{1}{2}", @"\\int_0^1", @"x"]) {
+            MTScaledLabel* label = [[MTScaledLabel alloc] init];
+            label.forcedScale = scale;
+            label.latex = latex;
+            MTMathListDisplay* d =
+                [MTTypesetter createLineForMathList:[MTMathListBuilder buildFromString:latex]
+                                               font:label.font style:label.labelMode == kMTMathUILabelModeDisplay ? kMTLineStyleDisplay : kMTLineStyleText];
+            CGSize size = [label sizeThatFits:CGSizeZero];
+            // (a) covers the ink (insets are >= 0, so >= inkWidth alone).
+            XCTAssertGreaterThanOrEqual(size.width, d.inkWidth - 0.001, @"%@ @%.0fx", latex, scale);
+            // (b) both axes are whole device pixels.
+            XCTAssertEqualWithAccuracy(size.width * scale,  round(size.width * scale),  0.001, @"%@ @%.0fx", latex, scale);
+            XCTAssertEqualWithAccuracy(size.height * scale, round(size.height * scale), 0.001, @"%@ @%.0fx", latex, scale);
+        }
     }
 }
 

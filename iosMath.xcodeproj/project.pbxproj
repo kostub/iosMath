@@ -21,6 +21,8 @@
 		498730A417D547450041B02B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49965F2617CBBA2700A555C5 /* InfoPlist.strings */; };
 		498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */; };
 		C01DEC0DE20260612000001 /* MTColorDecoderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C01DEC0DE20260612000002 /* MTColorDecoderTest.m */; };
+		C01DEC0DE20260722000101 /* MTInkClippingRenderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C01DEC0DE20260722000102 /* MTInkClippingRenderTest.m */; };
+		C01DEC0DE20260722000103 /* MTMathUILabelSizingTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C01DEC0DE20260722000104 /* MTMathUILabelSizingTest.m */; };
 		498730A817D548190041B02B /* MTMathListTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B83EF517CF046A0014B739 /* MTMathListTest.m */; };
 		498730A917D548CA0041B02B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49965EFF17CBBA2700A555C5 /* UIKit.framework */; };
 		498730AA17D548D40041B02B /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49B83EF217CE74620014B739 /* CoreText.framework */; };
@@ -104,6 +106,8 @@
 		49A27B0218EBF5B30030B7EF /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilderTest.m; sourceTree = "<group>"; };
 		C01DEC0DE20260612000002 /* MTColorDecoderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTColorDecoderTest.m; sourceTree = "<group>"; };
+		C01DEC0DE20260722000102 /* MTInkClippingRenderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInkClippingRenderTest.m; sourceTree = "<group>"; };
+		C01DEC0DE20260722000104 /* MTMathUILabelSizingTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathUILabelSizingTest.m; sourceTree = "<group>"; };
 		49B83EF217CE74620014B739 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		49B83EF517CF046A0014B739 /* MTMathListTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListTest.m; sourceTree = "<group>"; };
 		49B83EF817CF2AE90014B739 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = example/AppDelegate.h; sourceTree = "<group>"; };
@@ -250,6 +254,8 @@
 			children = (
 				49B83EEF17CE71AC0014B739 /* MTMathListBuilderTest.m */,
 				C01DEC0DE20260612000002 /* MTColorDecoderTest.m */,
+				C01DEC0DE20260722000102 /* MTInkClippingRenderTest.m */,
+				C01DEC0DE20260722000104 /* MTMathUILabelSizingTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
 				49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */,
@@ -527,6 +533,8 @@
 			files = (
 				498730A717D548190041B02B /* MTMathListBuilderTest.m in Sources */,
 				C01DEC0DE20260612000001 /* MTColorDecoderTest.m in Sources */,
+				C01DEC0DE20260722000101 /* MTInkClippingRenderTest.m in Sources */,
+				C01DEC0DE20260722000103 /* MTMathUILabelSizingTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
 				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
 				49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */,
