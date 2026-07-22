@@ -129,6 +129,10 @@
     [self assertComposite:[MTLineDisplay class] bare:@"\\overline{V}" shifted:@"a\\overline{V}"];
 }
 
+- (void)testAccentInk {
+    [self assertComposite:[MTAccentDisplay class] bare:@"\\hat{V}" shifted:@"a\\hat{V}"];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

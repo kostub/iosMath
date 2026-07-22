@@ -927,6 +927,12 @@
     self.accentee.position = CGPointMake(self.position.x, self.position.y);
 }
 
+- (CGFloat)inkWidth
+{
+    // width is set to accentee.width by the typesetter; accentee holds an absolute position.
+    return MAX(self.width, (self.accentee.position.x - self.position.x) + self.accentee.inkWidth);
+}
+
 - (void)draw:(CGContextRef)context
 {
     [super draw:context];
