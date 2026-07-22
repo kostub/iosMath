@@ -38,6 +38,11 @@
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
 }
 
+- (CGFloat)inkWidth
+{
+    return MAX(self.width, self.inkMaxX);
+}
+
 // Debug method skipped for MAC.
 #if TARGET_OS_IPHONE
 - (id)debugQuickLookObject
