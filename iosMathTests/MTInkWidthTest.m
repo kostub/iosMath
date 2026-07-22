@@ -121,6 +121,10 @@
     [self assertComposite:[MTFractionDisplay class] bare:@"\\frac{1}{V}" shifted:@"a\\frac{1}{V}"];
 }
 
+- (void)testRadicalInk {
+    [self assertComposite:[MTRadicalDisplay class] bare:@"\\sqrt{V}" shifted:@"a\\sqrt{V}"];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

@@ -460,6 +460,17 @@
     [self updateRadicandPosition];
 }
 
+- (CGFloat)inkWidth
+{
+    // The √ glyph is always to the left of the radicand, so only the radicand can
+    // trail. Radicand stores an absolute position (updateRadicandPosition).
+    CGFloat result = self.width;
+    if (self.radicand) {
+        result = MAX(result, (self.radicand.position.x - self.position.x) + self.radicand.inkWidth);
+    }
+    return result;
+}
+
 - (void) setPosition:(CGPoint)position
 {
     super.position = position;
