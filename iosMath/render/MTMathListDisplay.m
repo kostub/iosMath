@@ -267,12 +267,13 @@
     CGFloat max_ascent = 0;
     CGFloat max_descent = 0;
     CGFloat max_width = 0;
+    CGFloat max_inkMaxX = 0;
     for (MTDisplay* atom in self.subDisplays) {
         CGFloat ascent = MAX(0, atom.position.y + atom.ascent);
         if (ascent > max_ascent) {
             max_ascent = ascent;
         }
-        
+
         CGFloat descent = MAX(0, 0 - (atom.position.y - atom.descent));
         if (descent > max_descent) {
             max_descent = descent;
@@ -281,10 +282,15 @@
         if (width > max_width) {
             max_width = width;
         }
+        CGFloat inkRight = atom.position.x + atom.inkWidth;   // ink twin of width
+        if (inkRight > max_inkMaxX) {
+            max_inkMaxX = inkRight;
+        }
     }
     self.ascent = max_ascent;
     self.descent = max_descent;
     self.width = max_width;
+    self.inkMaxX = max_inkMaxX;
 }
 
 

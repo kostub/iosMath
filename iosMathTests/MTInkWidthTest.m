@@ -96,6 +96,27 @@
     XCTAssertGreaterThanOrEqual(h.inkWidth, h.width - 0.01);
 }
 
+// Top-level rollup folds trailing-leaf ink AND trailing-script ink, while the
+// advance width and script positions stay exactly as before (layout invariance).
+- (void)testRollupAndLayoutInvariance {
+    // Trailing overhang leaf rolls up to the top.
+    MTMathListDisplay* dP = [self displayFor:@"P"];
+    XCTAssertGreaterThanOrEqual(dP.inkWidth, 15.08 - 0.01);
+
+    // Control with no overhang: inkWidth stays the advance.
+    MTMathListDisplay* dx = [self displayFor:@"x"];
+    XCTAssertEqualWithAccuracy(dx.inkWidth, 11.44, 0.01);
+
+    // Scripts append to the top-level displays, so they roll up too.
+    MTMathListDisplay* dxsq = [self displayFor:@"x^2"];
+    XCTAssertGreaterThanOrEqual(dxsq.inkWidth, dxsq.width - 0.01);
+    // Layout invariance: advance width and superscript position unchanged.
+    XCTAssertEqualWithAccuracy(dxsq.width, 18.44, 0.01);
+    MTMathListDisplay* script = (MTMathListDisplay*)dxsq.subDisplays.lastObject;
+    XCTAssertEqualWithAccuracy(script.position.x, 11.44, 0.01);
+    XCTAssertEqualWithAccuracy(script.position.y, 7.26, 0.01);
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;
