@@ -17,6 +17,18 @@
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
 
+// Ink max-x of a glyph run: the widest per-glyph bbox right edge, each shifted by
+// its own x-offset. Shared by the two glyph-array displays so they can't drift.
+static CGFloat MTInkMaxXForGlyphRun(const CGGlyph* glyphs, const CGPoint* positions, NSInteger count, MTFont* font)
+{
+    CGFloat maxX = 0;
+    for (NSInteger i = 0; i < count; i++) {
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &glyphs[i], NULL, 1);
+        maxX = MAX(maxX, positions[i].x + CGRectGetMaxX(bbox));
+    }
+    return maxX;
+}
+
 #pragma mark MTDisplay
 
 @implementation MTDisplay
@@ -36,6 +48,11 @@
 - (CGRect) displayBounds
 {
     return CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent);
+}
+
+- (CGFloat)inkWidth
+{
+    return MAX(self.width, self.inkMaxX);
 }
 
 // Debug method skipped for MAC.
@@ -83,8 +100,9 @@
         CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
         self.ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
         self.descent = MAX(0, 0 - CGRectGetMinY(bounds));
-        // TODO: Should we use this width vs the typographic width? They are slightly different. Don't know why.
-        // _width = CGRectGetMaxX(bounds);
+        // Horizontal twin of ascent/descent: ink max-x from the glyph path. Reported via
+        // inkWidth (MAX with the advance width above). Advance still positions.
+        self.inkMaxX = CGRectGetMaxX(bounds);
     }
     return self;
 }
@@ -155,6 +173,7 @@
         CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
         self.ascent  = MAX(0, CGRectGetMaxY(bounds));
         self.descent = MAX(0, -CGRectGetMinY(bounds));
+        self.inkMaxX = CGRectGetMaxX(bounds);   // ink extent
     }
     return self;
 }
@@ -260,12 +279,13 @@
     CGFloat max_ascent = 0;
     CGFloat max_descent = 0;
     CGFloat max_width = 0;
+    CGFloat max_inkMaxX = 0;
     for (MTDisplay* atom in self.subDisplays) {
         CGFloat ascent = MAX(0, atom.position.y + atom.ascent);
         if (ascent > max_ascent) {
             max_ascent = ascent;
         }
-        
+
         CGFloat descent = MAX(0, 0 - (atom.position.y - atom.descent));
         if (descent > max_descent) {
             max_descent = descent;
@@ -274,10 +294,15 @@
         if (width > max_width) {
             max_width = width;
         }
+        CGFloat inkRight = atom.position.x + atom.inkWidth;   // ink twin of width
+        if (inkRight > max_inkMaxX) {
+            max_inkMaxX = inkRight;
+        }
     }
     self.ascent = max_ascent;
     self.descent = max_descent;
     self.width = max_width;
+    self.inkMaxX = max_inkMaxX;
 }
 
 
@@ -313,6 +338,16 @@
 - (CGFloat)width
 {
     return MAX(_numerator.width, _denominator.width);
+}
+
+- (CGFloat)inkWidth
+{
+    // Children store absolute positions (updateDenominatorPosition adds self.position.x),
+    // so subtract self.position.x to get the extent from this display's origin.
+    CGFloat result = self.width;
+    result = MAX(result, (_numerator.position.x   - self.position.x) + _numerator.inkWidth);
+    result = MAX(result, (_denominator.position.x - self.position.x) + _denominator.inkWidth);
+    return result;
 }
 
 - (void)setDenominatorDown:(CGFloat)denominatorDown
@@ -437,6 +472,21 @@
     [self updateRadicandPosition];
 }
 
+- (CGFloat)inkWidth
+{
+    // The √ glyph is left of the radicand and the degree sits upper-left, so the
+    // radicand normally trails; fold in every child anyway for consistency. Both
+    // store absolute positions (updateRadicandPosition / setDegree:).
+    CGFloat result = self.width;
+    if (self.radicand) {
+        result = MAX(result, (self.radicand.position.x - self.position.x) + self.radicand.inkWidth);
+    }
+    if (self.degree) {
+        result = MAX(result, (self.degree.position.x - self.position.x) + self.degree.inkWidth);
+    }
+    return result;
+}
+
 - (void) setPosition:(CGPoint)position
 {
     super.position = position;
@@ -511,9 +561,12 @@
     if (self) {
         _font = font;
         _glyph = glyph;
-        
+
         self.position = CGPointZero;
         self.range = range;
+        // Ink extent measured next to draw: so no typesetter call site can forget it.
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyph, NULL, 1);
+        self.inkMaxX = CGRectGetMaxX(bbox);
     }
     return self;
 }
@@ -571,6 +624,8 @@
         }
         _font = font;
         self.position = CGPointZero;
+        // x-offsets are 0 for vertical stacking, so ink max-x is the widest glyph bbox.
+        self.inkMaxX = MTInkMaxXForGlyphRun(_glyphs, _positions, _numGlyphs, font);
     }
     return self;
 }
@@ -726,6 +781,21 @@
     [_nucleus draw:context];
 }
 
+- (CGFloat)inkWidth
+{
+    // Nucleus and limits hold absolute positions (updateNucleus/Upper/LowerLimitPosition,
+    // each including _limitShift). Nucleus is folded in via _nucleus directly.
+    CGFloat result = self.width;
+    result = MAX(result, (_nucleus.position.x - self.position.x) + _nucleus.inkWidth);
+    if (self.upperLimit) {
+        result = MAX(result, (self.upperLimit.position.x - self.position.x) + self.upperLimit.inkWidth);
+    }
+    if (self.lowerLimit) {
+        result = MAX(result, (self.lowerLimit.position.x - self.position.x) + self.lowerLimit.inkWidth);
+    }
+    return result;
+}
+
 @end
 
 #pragma mark - MTLineDisplay
@@ -780,6 +850,12 @@
 - (void) updateInnerPosition
 {
     self.inner.position = CGPointMake(self.position.x, self.position.y);
+}
+
+- (CGFloat)inkWidth
+{
+    // _inner is drawn at its own absolute position (updateInnerPosition).
+    return MAX(self.width, (_inner.position.x - self.position.x) + _inner.inkWidth);
 }
 
 @end
@@ -877,6 +953,18 @@
     self.accentee.position = CGPointMake(self.position.x, self.position.y);
 }
 
+- (CGFloat)inkWidth
+{
+    // width is set to accentee.width by the typesetter. Both children hold absolute
+    // positions; the accent glyph is offset by skew and can overhang the accentee,
+    // so it has to be folded in too.
+    CGFloat result = MAX(self.width, (self.accentee.position.x - self.position.x) + self.accentee.inkWidth);
+    if (self.accent) {
+        result = MAX(result, (self.accent.position.x - self.position.x) + self.accent.inkWidth);
+    }
+    return result;
+}
+
 - (void)draw:(CGContextRef)context
 {
     [super draw:context];
@@ -923,6 +1011,16 @@
     if (_under) {
         _under.position = CGPointMake(_under.position.x + delta.x, _under.position.y + delta.y);
     }
+}
+
+- (CGFloat)inkWidth
+{
+    // base/over/under carry absolute positions after setPosition: shifts them.
+    CGFloat result = self.width;
+    if (_base)  result = MAX(result, (_base.position.x  - self.position.x) + _base.inkWidth);
+    if (_over)  result = MAX(result, (_over.position.x  - self.position.x) + _over.inkWidth);
+    if (_under) result = MAX(result, (_under.position.x - self.position.x) + _under.inkWidth);
+    return result;
 }
 
 - (void)setTextColor:(MTColor *)textColor
@@ -972,6 +1070,7 @@
         _font = font;
         self.range = range;
         self.position = CGPointZero;
+        self.inkMaxX = MTInkMaxXForGlyphRun(_glyphs, _positions, _numGlyphs, font);
     }
     return self;
 }
@@ -1223,6 +1322,20 @@ static CGPoint MTBoxPointFromValue(NSValue* v) {
     w += _rightDelimiter.width;
   }
   return w;
+}
+
+- (CGFloat)inkWidth
+{
+  // Delimiters and inner hold absolute positions after setPosition:.
+  CGFloat result = self.width;
+  if (_leftDelimiter) {
+      result = MAX(result, (_leftDelimiter.position.x - self.position.x) + _leftDelimiter.inkWidth);
+  }
+  result = MAX(result, (_inner.position.x - self.position.x) + _inner.inkWidth);
+  if (_rightDelimiter) {
+      result = MAX(result, (_rightDelimiter.position.x - self.position.x) + _rightDelimiter.inkWidth);
+  }
+  return result;
 }
 
 - (void)setTextColor:(MTColor *)textColor
