@@ -137,6 +137,15 @@
     [self assertComposite:[MTLargeOpLimitsDisplay class] bare:@"\\sum^{VVV}" shifted:@"a\\sum^{VVV}"];
 }
 
+- (void)testStackInk {
+    // \overrightarrow{V} alone doesn't overhang: the target width is the base's
+    // *advance* (not ink), so the stretchy-arrow variant step can land wide
+    // enough that centering the base within it absorbs the base's ink overhang.
+    // A two-character base (VV) has enough advance that the same variant step
+    // no longer fully covers the extra ink, restoring a real overhang.
+    [self assertComposite:[MTStackDisplay class] bare:@"\\overrightarrow{VV}" shifted:@"a\\overrightarrow{VV}"];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

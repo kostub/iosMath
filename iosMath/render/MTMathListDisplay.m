@@ -996,6 +996,16 @@
     }
 }
 
+- (CGFloat)inkWidth
+{
+    // base/over/under carry absolute positions after setPosition: shifts them.
+    CGFloat result = self.width;
+    if (_base)  result = MAX(result, (_base.position.x  - self.position.x) + _base.inkWidth);
+    if (_over)  result = MAX(result, (_over.position.x  - self.position.x) + _over.inkWidth);
+    if (_under) result = MAX(result, (_under.position.x - self.position.x) + _under.inkWidth);
+    return result;
+}
+
 - (void)setTextColor:(MTColor *)textColor
 {
     [super setTextColor:textColor];
