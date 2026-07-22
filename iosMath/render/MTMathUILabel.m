@@ -265,4 +265,26 @@ static CGFloat ceilToPixel(CGFloat value, CGFloat scale) {
     return [self sizeThatFits:CGSizeZero];
 }
 
+#if TARGET_OS_IPHONE
+- (void)didMoveToWindow
+{
+    [super didMoveToWindow];
+    // Backing scale may have changed; re-query so the pixel-rounded size is right.
+    [self invalidateIntrinsicContentSize];
+}
+#else
+- (void)viewDidMoveToWindow
+{
+    [super viewDidMoveToWindow];
+    [self invalidateIntrinsicContentSize];
+}
+
+- (void)viewDidChangeBackingProperties
+{
+    [super viewDidChangeBackingProperties];
+    // window.backingScaleFactor is now known; the earlier fallback answer is stale.
+    [self invalidateIntrinsicContentSize];
+}
+#endif
+
 @end

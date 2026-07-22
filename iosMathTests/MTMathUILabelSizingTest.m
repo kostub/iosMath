@@ -8,6 +8,13 @@
 #import "MTFontManager.h"
 #import "MTMathListBuilder.h"
 
+@interface MTSpyLabel : MTMathUILabel
+@property (nonatomic) NSInteger invalidateCount;
+@end
+@implementation MTSpyLabel
+- (void)invalidateIntrinsicContentSize { self.invalidateCount++; [super invalidateIntrinsicContentSize]; }
+@end
+
 @interface MTMathUILabelSizingTest : XCTestCase
 @end
 
@@ -70,6 +77,19 @@
         XCTAssertLessThanOrEqual(inkRight, frameRight + 0.01,
             @"alignment %@ clips ink: inkRight %.2f > frameRight %.2f", alignN, inkRight, frameRight);
     }
+}
+
+- (void)testScaleLifecycleInvalidates {
+    MTSpyLabel* label = [[MTSpyLabel alloc] init];
+    label.latex = @"P";
+    label.invalidateCount = 0;
+#if TARGET_OS_IPHONE
+    [label didMoveToWindow];
+#else
+    [label viewDidChangeBackingProperties];
+    [label viewDidMoveToWindow];
+#endif
+    XCTAssertGreaterThan(label.invalidateCount, 0);
 }
 
 @end
