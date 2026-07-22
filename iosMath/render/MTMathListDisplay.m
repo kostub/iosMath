@@ -518,9 +518,12 @@
     if (self) {
         _font = font;
         _glyph = glyph;
-        
+
         self.position = CGPointZero;
         self.range = range;
+        // Ink extent measured next to draw: so no typesetter call site can forget it.
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyph, NULL, 1);
+        self.inkMaxX = CGRectGetMaxX(bbox);
     }
     return self;
 }

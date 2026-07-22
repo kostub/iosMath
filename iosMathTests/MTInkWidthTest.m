@@ -64,4 +64,68 @@
     XCTAssertGreaterThanOrEqual(text.inkWidth, text.width - 0.01);
 }
 
+// A large-op glyph (e.g. \int) renders as an MTGlyphDisplay; its inkMaxX comes
+// from the glyph bounding box, independent of the shiftDown y-adjustment.
+- (void)testGlyphLeafInk {
+    MTMathListDisplay* d = [self displayFor:@"\\int"];
+    MTGlyphDisplay* glyph = (MTGlyphDisplay*)[self findDisplayOfClass:[MTGlyphDisplay class] in:d];
+    XCTAssertNotNil(glyph, @"expected an MTGlyphDisplay");
+    XCTAssertGreaterThan(glyph.inkMaxX, 0);
+    XCTAssertGreaterThanOrEqual(glyph.inkWidth, glyph.width - 0.01);
+}
+
+// Depth-first: the first display of the given class, or nil.
+- (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
+    if ([d isKindOfClass:cls]) return d;
+    if ([d respondsToSelector:@selector(subDisplays)]) {
+        for (MTDisplay* sub in [(id)d subDisplays]) {
+            MTDisplay* hit = [self findDisplayOfClass:cls in:sub];
+            if (hit) return hit;
+        }
+    }
+    // Composites hold children outside subDisplays; probe the public accessors.
+    for (MTDisplay* child in [self childrenOf:d]) {
+        if (!child) continue;
+        MTDisplay* hit = [self findDisplayOfClass:cls in:child];
+        if (hit) return hit;
+    }
+    return nil;
+}
+
+// Public composite children (nucleus of large-op is private and omitted).
+- (NSArray<MTDisplay*>*)childrenOf:(MTDisplay*)d {
+    if ([d isKindOfClass:[MTFractionDisplay class]]) {
+        MTFractionDisplay* f = (MTFractionDisplay*)d;
+        return @[f.numerator, f.denominator];
+    } else if ([d isKindOfClass:[MTRadicalDisplay class]]) {
+        MTRadicalDisplay* r = (MTRadicalDisplay*)d;
+        return r.degree ? @[r.radicand, r.degree] : @[r.radicand];
+    } else if ([d isKindOfClass:[MTLargeOpLimitsDisplay class]]) {
+        MTLargeOpLimitsDisplay* o = (MTLargeOpLimitsDisplay*)d;
+        NSMutableArray* a = [NSMutableArray array];
+        if (o.upperLimit) [a addObject:o.upperLimit];
+        if (o.lowerLimit) [a addObject:o.lowerLimit];
+        return a;
+    } else if ([d isKindOfClass:[MTLineDisplay class]]) {
+        return @[((MTLineDisplay*)d).inner];
+    } else if ([d isKindOfClass:[MTAccentDisplay class]]) {
+        MTAccentDisplay* a = (MTAccentDisplay*)d;
+        return @[a.accentee, a.accent];
+    } else if ([d isKindOfClass:[MTStackDisplay class]]) {
+        MTStackDisplay* s = (MTStackDisplay*)d;
+        NSMutableArray* a = [NSMutableArray arrayWithObject:s.base];
+        if (s.over) [a addObject:s.over];
+        if (s.under) [a addObject:s.under];
+        return a;
+    } else if ([d isKindOfClass:[MTInnerDisplay class]]) {
+        MTInnerDisplay* i = (MTInnerDisplay*)d;
+        NSMutableArray* a = [NSMutableArray array];
+        if (i.leftDelimiter) [a addObject:i.leftDelimiter];
+        [a addObject:i.inner];
+        if (i.rightDelimiter) [a addObject:i.rightDelimiter];
+        return a;
+    }
+    return @[];
+}
+
 @end
