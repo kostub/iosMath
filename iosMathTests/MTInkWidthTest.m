@@ -117,6 +117,10 @@
     XCTAssertEqualWithAccuracy(script.position.y, 7.26, 0.01);
 }
 
+- (void)testFractionInk {
+    [self assertComposite:[MTFractionDisplay class] bare:@"\\frac{1}{V}" shifted:@"a\\frac{1}{V}"];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;
@@ -169,6 +173,32 @@
         return a;
     }
     return @[];
+}
+
+// True ink-right of a composite, composed from its public children in the
+// composite's own absolute-position basis. This is the guarantee lower bound.
+- (CGFloat)composedInkRightOf:(MTDisplay*)d {
+    CGFloat r = d.width;
+    for (MTDisplay* child in [self childrenOf:d]) {
+        if (!child) continue;
+        r = MAX(r, (child.position.x - d.position.x) + child.inkWidth);
+    }
+    return r;
+}
+
+// Assert (a) the getter covers the composed child ink (guarantee), (b) it strictly
+// exceeds the advance for an overhang child, and (c) the overhang (inkWidth - width)
+// is invariant to the composite's absolute x — catching a wrong coordinate basis.
+- (void)assertComposite:(Class)cls bare:(NSString*)bare shifted:(NSString*)shifted {
+    MTDisplay* b = [self findDisplayOfClass:cls in:[self displayFor:bare]];
+    MTDisplay* s = [self findDisplayOfClass:cls in:[self displayFor:shifted]];
+    XCTAssertNotNil(b, @"no %@ in %@", NSStringFromClass(cls), bare);
+    XCTAssertNotNil(s, @"no %@ in %@", NSStringFromClass(cls), shifted);
+    XCTAssertGreaterThanOrEqual(b.inkWidth, [self composedInkRightOf:b] - 0.01);
+    XCTAssertGreaterThanOrEqual(s.inkWidth, [self composedInkRightOf:s] - 0.01);
+    XCTAssertGreaterThan(b.inkWidth, b.width);            // trailing child overhangs
+    XCTAssertGreaterThan(s.position.x, b.position.x);     // shifted variant is further right
+    XCTAssertEqualWithAccuracy(s.inkWidth - s.width, b.inkWidth - b.width, 0.02);  // basis-invariant
 }
 
 @end

@@ -328,6 +328,16 @@
     return MAX(_numerator.width, _denominator.width);
 }
 
+- (CGFloat)inkWidth
+{
+    // Children store absolute positions (updateDenominatorPosition adds self.position.x),
+    // so subtract self.position.x to get the extent from this display's origin.
+    CGFloat result = self.width;
+    result = MAX(result, (_numerator.position.x   - self.position.x) + _numerator.inkWidth);
+    result = MAX(result, (_denominator.position.x - self.position.x) + _denominator.inkWidth);
+    return result;
+}
+
 - (void)setDenominatorDown:(CGFloat)denominatorDown
 {
     _denominatorDown = denominatorDown;
