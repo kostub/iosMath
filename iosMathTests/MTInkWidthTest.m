@@ -230,4 +230,23 @@
     XCTAssertEqualWithAccuracy(s.inkWidth - s.width, b.inkWidth - b.width, 0.02);  // basis-invariant
 }
 
+- (void)testPostInitWidthMutationGuard {
+    MTMathListDisplay* d = [self displayFor:@"\\left( a+b \\right)"];
+    XCTAssertGreaterThanOrEqual(d.inkWidth, d.width - 0.01);
+    // The mutation absorbs into inkWidth via the getter, not a stale frozen value:
+    // walk every sub-display and assert the invariant holds everywhere.
+    [self assertInkInvariant:d];
+}
+
+- (void)assertInkInvariant:(MTDisplay*)d {
+    XCTAssertGreaterThanOrEqual(d.inkWidth, d.width - 0.01,
+        @"%@ inkWidth %.2f < width %.2f", NSStringFromClass([d class]), d.inkWidth, d.width);
+    if ([d respondsToSelector:@selector(subDisplays)]) {
+        for (MTDisplay* sub in [(id)d subDisplays]) { [self assertInkInvariant:sub]; }
+    }
+    for (MTDisplay* child in [self childrenOf:d]) {
+        if (child) [self assertInkInvariant:child];
+    }
+}
+
 @end
