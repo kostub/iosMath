@@ -18,16 +18,24 @@
 
 @implementation MTInkClippingRenderTest
 
-// Render the laid-out label's display tree into a white RGBA bitmap sized to the
-// reported frame. Returns a malloc'd coverage buffer (0=white .. 255=full ink coverage
-// on any channel below white). DeviceGray was tried first, but the display tree sets
-// its foreground color via a DeviceRGB CGColor (MTColor/NSColor blackColor.CGColor);
-// drawing that into a DeviceGray bitmap context mismatches color spaces and produces
-// garbage coverage, so the harness uses DeviceRGB to match what the tree actually paints.
-- (uint8_t*)renderLabel:(MTMathUILabel*)label width:(size_t*)outW height:(size_t*)outH {
+// Render the laid-out label's display tree into a white RGBA bitmap. The bitmap is
+// `rightPad` pixels WIDER than the reported frame so that any trailing ink which
+// escapes the frame's right edge is captured in the padding instead of being clipped
+// away by the bitmap bounds — that is what lets the tests distinguish "contained"
+// from "clipped". Returns a malloc'd coverage buffer (0=white .. 255=full ink coverage
+// on any channel below white), the frame width (column index of the frame's right
+// edge) in *outFrameW, and the full bitmap width in *outW.
+//
+// DeviceGray was tried first, but the display tree sets its foreground color via a
+// DeviceRGB CGColor (MTColor/NSColor blackColor.CGColor); drawing that into a
+// DeviceGray bitmap context mismatches color spaces and produces garbage coverage, so
+// the harness uses DeviceRGB to match what the tree actually paints.
+- (uint8_t*)renderLabel:(MTMathUILabel*)label rightPad:(size_t)rightPad
+             frameWidth:(size_t*)outFrameW width:(size_t*)outW height:(size_t*)outH {
     CGSize s = label.bounds.size;
-    size_t W = (size_t)ceil(s.width), H = (size_t)ceil(s.height);
-    if (W == 0 || H == 0) { *outW = W; *outH = H; return NULL; }
+    size_t FW = (size_t)ceil(s.width), H = (size_t)ceil(s.height);
+    if (FW == 0 || H == 0) { *outFrameW = FW; *outW = FW; *outH = H; return NULL; }
+    size_t W = FW + rightPad;
     size_t bytesPerRow = W * 4;
     uint8_t* buf = calloc(bytesPerRow * H, 1);
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
@@ -41,7 +49,7 @@
     CGContextScaleCTM(ctx, 1, -1);
     [label.displayList draw:ctx];
     CGContextRelease(ctx);
-    *outW = W; *outH = H;
+    *outFrameW = FW; *outW = W; *outH = H;
     return buf;
 }
 
@@ -58,6 +66,13 @@ static int inkInColumn(uint8_t* buf, size_t W, size_t H, size_t col) {
     return n;
 }
 
+// Total ink in columns [fromCol, W) — used to assert nothing escapes past a boundary.
+static int inkAtOrAfterColumn(uint8_t* buf, size_t W, size_t H, size_t fromCol) {
+    int n = 0;
+    for (size_t col = fromCol; col < W; col++) n += inkInColumn(buf, W, H, col);
+    return n;
+}
+
 - (MTMathUILabel*)laidOutLabel:(NSString*)latex alignment:(MTTextAlignment)align {
     return [self laidOutLabel:latex alignment:align label:[[MTMathUILabel alloc] init]];
 }
@@ -71,15 +86,31 @@ static int inkInColumn(uint8_t* buf, size_t W, size_t H, size_t col) {
     return label;
 }
 
-// Cluster A: trailing overhang glyph must not clip the right border, any alignment.
+// Cluster A: trailing overhang glyphs must stay INSIDE the reported frame — no ink
+// may escape past the frame's right edge — at any alignment. This is the exact
+// pre-fix bug: with an advance-based width, a glyph whose ink is wider than its
+// advance (e.g. V: advance 11.66 vs ink 15.38) spills past the frame.
+//
+// The label is rendered into a right-padded bitmap and we assert the beyond-frame
+// region is empty. Asserting containment this way is robust to the antialiasing
+// fringe that a flush-right ink edge (right alignment, zero right inset) legitimately
+// paints into the last IN-frame column — that fringe is contained, not clipped, so it
+// must not fail the test. (An earlier "zero ink in the last frame column" form failed
+// on rasterizers where screenScale resolves to 1 for an unparented label, because the
+// flush edge then lands exactly on a whole-pixel boundary.) screenScale is forced to 1
+// so the frame edge lands on a whole bitmap column deterministically across environments.
 - (void)testNoRightEdgeClip {
+    const size_t kRightPad = 8;
     for (NSString* latex in @[@"P", @"V", @"f"]) {
         for (NSNumber* a in @[@(kMTTextAlignmentLeft), @(kMTTextAlignmentCenter), @(kMTTextAlignmentRight)]) {
-            MTMathUILabel* label = [self laidOutLabel:latex alignment:(MTTextAlignment)a.integerValue];
-            size_t W, H; uint8_t* buf = [self renderLabel:label width:&W height:&H];
-            XCTAssertTrue(buf != NULL);
-            XCTAssertEqual(inkInColumn(buf, W, H, W - 1), 0,
-                @"%@ align %@ clips right border", latex, a);
+            MTScaledInkLabel* scaled = [[MTScaledInkLabel alloc] init];
+            scaled.forcedScale = 1;
+            MTMathUILabel* label = [self laidOutLabel:latex alignment:(MTTextAlignment)a.integerValue label:scaled];
+            size_t FW, W, H; uint8_t* buf = [self renderLabel:label rightPad:kRightPad frameWidth:&FW width:&W height:&H];
+            XCTAssertTrue(buf != NULL, @"%@ align %@ did not render into a bitmap", latex, a);
+            if (!buf) continue;
+            XCTAssertEqual(inkAtOrAfterColumn(buf, W, H, FW), 0,
+                @"%@ align %@ ink escapes past the frame right edge", latex, a);
             free(buf);
         }
     }
@@ -111,10 +142,10 @@ static int inkInColumn(uint8_t* buf, size_t W, size_t H, size_t col) {
             CGFloat hPixels = size.height * scale;
             XCTAssertEqualWithAccuracy(wPixels, round(wPixels), 1e-6, @"%@ @%.0fx width not pixel-aligned", latex, scale);
             XCTAssertEqualWithAccuracy(hPixels, round(hPixels), 1e-6, @"%@ @%.0fx height not pixel-aligned", latex, scale);
-            size_t W, H; uint8_t* buf = [self renderLabel:label width:&W height:&H];
+            size_t FW, W, H; uint8_t* buf = [self renderLabel:label rightPad:8 frameWidth:&FW width:&W height:&H];
             XCTAssertTrue(buf != NULL, @"%@ did not render into a bitmap", latex);
             if (!buf) continue;
-            XCTAssertEqual(inkInColumn(buf, W, H, W - 1), 0, @"%@ @%.0fx right edge clipped", latex, scale);
+            XCTAssertEqual(inkAtOrAfterColumn(buf, W, H, FW), 0, @"%@ @%.0fx ink escapes past the frame right edge", latex, scale);
             free(buf);
         }
     }
