@@ -36,4 +36,19 @@
     XCTAssertEqualWithAccuracy(d.inkWidth, 10, 0.001);   // inkMaxX < width → width
 }
 
+// The MTCTLineDisplay leaf of an overhang glyph reports ink past its advance.
+- (void)testCTLineLeafInk {
+    MTMathListDisplay* dP = [self displayFor:@"P"];
+    MTCTLineDisplay* lineP = (MTCTLineDisplay*)dP.subDisplays.firstObject;
+    XCTAssertTrue([lineP isKindOfClass:[MTCTLineDisplay class]]);
+    XCTAssertGreaterThanOrEqual(lineP.inkWidth, 15.08 - 0.01);   // P ink right = 15.08
+    XCTAssertGreaterThan(lineP.inkWidth, lineP.width);           // 15.08 > advance 12.84
+
+    // Control: x ink (10.54) < advance (11.44) → inkWidth stays the advance.
+    MTMathListDisplay* dx = [self displayFor:@"x"];
+    MTCTLineDisplay* lineX = (MTCTLineDisplay*)dx.subDisplays.firstObject;
+    XCTAssertEqualWithAccuracy(lineX.inkWidth, 11.44, 0.01);
+    XCTAssertEqualWithAccuracy(lineX.width, 11.44, 0.01);
+}
+
 @end

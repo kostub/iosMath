@@ -88,8 +88,9 @@
         CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
         self.ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
         self.descent = MAX(0, 0 - CGRectGetMinY(bounds));
-        // TODO: Should we use this width vs the typographic width? They are slightly different. Don't know why.
-        // _width = CGRectGetMaxX(bounds);
+        // Horizontal twin of ascent/descent: ink max-x from the glyph path. Reported via
+        // inkWidth (MAX with the advance width above); see LLD §3.1. Advance still positions.
+        self.inkMaxX = CGRectGetMaxX(bounds);
     }
     return self;
 }
