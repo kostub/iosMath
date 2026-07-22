@@ -86,6 +86,16 @@
     XCTAssertGreaterThanOrEqual(g.inkWidth, g.width - 0.01);
 }
 
+// A wide over-arrow assembles horizontally; ink max-x folds per-part x offsets.
+- (void)testHorizontalAssemblyLeafInk {
+    MTMathListDisplay* d = [self displayFor:@"\\overleftrightarrow{ABCDEFG}"];
+    MTHorizontalGlyphAssemblyDisplay* h =
+        (MTHorizontalGlyphAssemblyDisplay*)[self findDisplayOfClass:[MTHorizontalGlyphAssemblyDisplay class] in:d];
+    XCTAssertNotNil(h, @"expected an MTHorizontalGlyphAssemblyDisplay");
+    XCTAssertGreaterThan(h.inkMaxX, 0);
+    XCTAssertGreaterThanOrEqual(h.inkWidth, h.width - 0.01);
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

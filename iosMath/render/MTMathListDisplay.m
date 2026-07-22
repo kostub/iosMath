@@ -989,6 +989,12 @@
         _font = font;
         self.range = range;
         self.position = CGPointZero;
+        CGFloat maxX = 0;
+        for (int i = 0; i < _numGlyphs; i++) {
+            CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyphs[i], NULL, 1);
+            maxX = MAX(maxX, _positions[i].x + CGRectGetMaxX(bbox));
+        }
+        self.inkMaxX = maxX;
     }
     return self;
 }
