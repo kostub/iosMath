@@ -161,6 +161,7 @@
         CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
         self.ascent  = MAX(0, CGRectGetMaxY(bounds));
         self.descent = MAX(0, -CGRectGetMinY(bounds));
+        self.inkMaxX = CGRectGetMaxX(bounds);   // ink extent; see LLD §3.1
     }
     return self;
 }

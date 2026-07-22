@@ -51,4 +51,17 @@
     XCTAssertEqualWithAccuracy(lineX.width, 11.44, 0.01);
 }
 
+// \text{...} produces an MTTextDisplay leaf; its inkMaxX must be populated and
+// the invariant inkWidth >= width must hold.
+- (void)testTextLeafInk {
+    MTMathListDisplay* d = [self displayFor:@"\\text{Wf}"];
+    MTTextDisplay* text = nil;
+    for (MTDisplay* sub in d.subDisplays) {
+        if ([sub isKindOfClass:[MTTextDisplay class]]) { text = (MTTextDisplay*)sub; break; }
+    }
+    XCTAssertNotNil(text, @"expected an MTTextDisplay");
+    XCTAssertGreaterThan(text.inkMaxX, 0);
+    XCTAssertGreaterThanOrEqual(text.inkWidth, text.width - 0.01);
+}
+
 @end
