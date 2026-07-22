@@ -17,6 +17,18 @@
 #import "MTFont+Internal.h"
 #import "MTMathListDisplayInternal.h"
 
+// Ink max-x of a glyph run: the widest per-glyph bbox right edge, each shifted by
+// its own x-offset. Shared by the two glyph-array displays so they can't drift.
+static CGFloat MTInkMaxXForGlyphRun(const CGGlyph* glyphs, const CGPoint* positions, NSInteger count, MTFont* font)
+{
+    CGFloat maxX = 0;
+    for (NSInteger i = 0; i < count; i++) {
+        CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &glyphs[i], NULL, 1);
+        maxX = MAX(maxX, positions[i].x + CGRectGetMaxX(bbox));
+    }
+    return maxX;
+}
+
 #pragma mark MTDisplay
 
 @implementation MTDisplay
@@ -89,7 +101,7 @@
         self.ascent = MAX(0, CGRectGetMaxY(bounds) - 0);
         self.descent = MAX(0, 0 - CGRectGetMinY(bounds));
         // Horizontal twin of ascent/descent: ink max-x from the glyph path. Reported via
-        // inkWidth (MAX with the advance width above); see LLD §3.1. Advance still positions.
+        // inkWidth (MAX with the advance width above). Advance still positions.
         self.inkMaxX = CGRectGetMaxX(bounds);
     }
     return self;
@@ -161,7 +173,7 @@
         CGRect bounds = CTLineGetBoundsWithOptions(_line, kCTLineBoundsUseGlyphPathBounds);
         self.ascent  = MAX(0, CGRectGetMaxY(bounds));
         self.descent = MAX(0, -CGRectGetMinY(bounds));
-        self.inkMaxX = CGRectGetMaxX(bounds);   // ink extent; see LLD §3.1
+        self.inkMaxX = CGRectGetMaxX(bounds);   // ink extent
     }
     return self;
 }
@@ -462,11 +474,15 @@
 
 - (CGFloat)inkWidth
 {
-    // The √ glyph is always to the left of the radicand, so only the radicand can
-    // trail. Radicand stores an absolute position (updateRadicandPosition).
+    // The √ glyph is left of the radicand and the degree sits upper-left, so the
+    // radicand normally trails; fold in every child anyway for consistency. Both
+    // store absolute positions (updateRadicandPosition / setDegree:).
     CGFloat result = self.width;
     if (self.radicand) {
         result = MAX(result, (self.radicand.position.x - self.position.x) + self.radicand.inkWidth);
+    }
+    if (self.degree) {
+        result = MAX(result, (self.degree.position.x - self.position.x) + self.degree.inkWidth);
     }
     return result;
 }
@@ -609,12 +625,7 @@
         _font = font;
         self.position = CGPointZero;
         // x-offsets are 0 for vertical stacking, so ink max-x is the widest glyph bbox.
-        CGFloat maxX = 0;
-        for (int i = 0; i < _numGlyphs; i++) {
-            CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyphs[i], NULL, 1);
-            maxX = MAX(maxX, _positions[i].x + CGRectGetMaxX(bbox));
-        }
-        self.inkMaxX = maxX;
+        self.inkMaxX = MTInkMaxXForGlyphRun(_glyphs, _positions, _numGlyphs, font);
     }
     return self;
 }
@@ -944,8 +955,14 @@
 
 - (CGFloat)inkWidth
 {
-    // width is set to accentee.width by the typesetter; accentee holds an absolute position.
-    return MAX(self.width, (self.accentee.position.x - self.position.x) + self.accentee.inkWidth);
+    // width is set to accentee.width by the typesetter. Both children hold absolute
+    // positions; the accent glyph is offset by skew and can overhang the accentee,
+    // so it has to be folded in too.
+    CGFloat result = MAX(self.width, (self.accentee.position.x - self.position.x) + self.accentee.inkWidth);
+    if (self.accent) {
+        result = MAX(result, (self.accent.position.x - self.position.x) + self.accent.inkWidth);
+    }
+    return result;
 }
 
 - (void)draw:(CGContextRef)context
@@ -1053,12 +1070,7 @@
         _font = font;
         self.range = range;
         self.position = CGPointZero;
-        CGFloat maxX = 0;
-        for (int i = 0; i < _numGlyphs; i++) {
-            CGRect bbox = CTFontGetBoundingRectsForGlyphs(font.ctFont, kCTFontOrientationDefault, &_glyphs[i], NULL, 1);
-            maxX = MAX(maxX, _positions[i].x + CGRectGetMaxX(bbox));
-        }
-        self.inkMaxX = maxX;
+        self.inkMaxX = MTInkMaxXForGlyphRun(_glyphs, _positions, _numGlyphs, font);
     }
     return self;
 }

@@ -18,10 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) CGFloat descent;
 @property (nonatomic) CGFloat width;
 // Raw glyph-path ink max-x measured from this display's own origin. Default 0.
-// See docs/lld/2026-07-06-ink-aware-width.md §3.1.
 @property (nonatomic) CGFloat inkMaxX;
 // Read-time ink extent: MAX(width, inkMaxX). A getter (not a frozen value) so it
-// tracks post-init width mutations in the typesetter (LLD §2.4).
+// tracks post-init width mutations in the typesetter.
 @property (nonatomic, readonly) CGFloat inkWidth;
 @property (nonatomic) NSRange range;
 @property (nonatomic) BOOL hasScript;

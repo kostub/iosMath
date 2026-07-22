@@ -133,6 +133,25 @@
     [self assertComposite:[MTAccentDisplay class] bare:@"\\hat{V}" shifted:@"a\\hat{V}"];
 }
 
+// \hat{V} above lets the accentee (V) trail, so it passes even if the accent glyph
+// is ignored. \vec{f} is the opposite: the skewed arrow glyph overhangs past the
+// accentee's ink, so the accent glyph itself must drive inkWidth.
+- (void)testAccentGlyphInk {
+    MTAccentDisplay* a = (MTAccentDisplay*)[self findDisplayOfClass:[MTAccentDisplay class]
+                                                                 in:[self displayFor:@"\\vec{f}"]];
+    XCTAssertNotNil(a);
+    // True painted ink-right of the accent glyph in the accent display's basis.
+    // Use the raw bbox max-x (inkMaxX), not accent.inkWidth, since the accent glyph's
+    // advance is ~0 and would otherwise clamp away the real overhang.
+    CGFloat accentInkRight  = (a.accent.position.x   - a.position.x) + a.accent.inkMaxX;
+    CGFloat accenteeInkRight = (a.accentee.position.x - a.position.x) + a.accentee.inkWidth;
+    // The accent glyph is the trailing source: it overhangs the accentee and the advance.
+    XCTAssertGreaterThan(accentInkRight, accenteeInkRight);
+    XCTAssertGreaterThan(accentInkRight, a.width);
+    // The getter must cover the accent glyph's real ink.
+    XCTAssertGreaterThanOrEqual(a.inkWidth, accentInkRight - 0.01);
+}
+
 - (void)testLargeOpLimitsInk {
     [self assertComposite:[MTLargeOpLimitsDisplay class] bare:@"\\sum^{VVV}" shifted:@"a\\sum^{VVV}"];
 }
@@ -232,6 +251,11 @@
 
 - (void)testPostInitWidthMutationGuard {
     MTMathListDisplay* d = [self displayFor:@"\\left( a+b \\right)"];
+    XCTAssertGreaterThanOrEqual(d.inkWidth, d.width - 0.01);
+    // Actually mutate width post-init: because inkWidth is a getter (not a value
+    // frozen at construction), the invariant must still hold after width grows
+    // past the original inkMaxX. A frozen implementation would fail here.
+    d.width = d.width * 2;
     XCTAssertGreaterThanOrEqual(d.inkWidth, d.width - 0.01);
     // The mutation absorbs into inkWidth via the getter, not a stale frozen value:
     // walk every sub-display and assert the invariant holds everywhere.

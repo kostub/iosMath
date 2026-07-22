@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
+		49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */; };
 		490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465C01D23DA8400F82033 /* MTFontManagerTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
 		492EED0917DAEDD200939107 /* MTFontMathTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECF817DAED9000939107 /* MTFontMathTable.m */; };
@@ -74,6 +75,7 @@
 
 /* Begin PBXFileReference section */
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
+		49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInkWidthTest.m; sourceTree = "<group>"; };
 		490465C01D23DA8400F82033 /* MTFontManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManagerTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
 		492EECF417DAED9000939107 /* MTMathUILabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathUILabel.h; sourceTree = "<group>"; };
@@ -250,6 +252,7 @@
 				C01DEC0DE20260612000002 /* MTColorDecoderTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
+				49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */,
 				490465C01D23DA8400F82033 /* MTFontManagerTest.m */,
 				49965F2417CBBA2700A555C5 /* Supporting Files */,
 			);
@@ -526,6 +529,7 @@
 				C01DEC0DE20260612000001 /* MTColorDecoderTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
 				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
+				49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */,
 				490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
