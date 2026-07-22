@@ -826,6 +826,12 @@
     self.inner.position = CGPointMake(self.position.x, self.position.y);
 }
 
+- (CGFloat)inkWidth
+{
+    // _inner is drawn at its own absolute position (updateInnerPosition).
+    return MAX(self.width, (_inner.position.x - self.position.x) + _inner.inkWidth);
+}
+
 @end
 
 #pragma mark - MTRuleDisplay
