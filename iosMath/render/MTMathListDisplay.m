@@ -1312,6 +1312,20 @@ static CGPoint MTBoxPointFromValue(NSValue* v) {
   return w;
 }
 
+- (CGFloat)inkWidth
+{
+  // Delimiters and inner hold absolute positions after setPosition:.
+  CGFloat result = self.width;
+  if (_leftDelimiter) {
+      result = MAX(result, (_leftDelimiter.position.x - self.position.x) + _leftDelimiter.inkWidth);
+  }
+  result = MAX(result, (_inner.position.x - self.position.x) + _inner.inkWidth);
+  if (_rightDelimiter) {
+      result = MAX(result, (_rightDelimiter.position.x - self.position.x) + _rightDelimiter.inkWidth);
+  }
+  return result;
+}
+
 - (void)setTextColor:(MTColor *)textColor
 {
   [super setTextColor:textColor];

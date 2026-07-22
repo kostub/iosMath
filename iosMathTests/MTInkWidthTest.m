@@ -146,6 +146,10 @@
     [self assertComposite:[MTStackDisplay class] bare:@"\\overrightarrow{VV}" shifted:@"a\\overrightarrow{VV}"];
 }
 
+- (void)testInnerInk {
+    [self assertComposite:[MTInnerDisplay class] bare:@"\\left( V \\right." shifted:@"a\\left( V \\right."];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;
