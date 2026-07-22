@@ -133,6 +133,10 @@
     [self assertComposite:[MTAccentDisplay class] bare:@"\\hat{V}" shifted:@"a\\hat{V}"];
 }
 
+- (void)testLargeOpLimitsInk {
+    [self assertComposite:[MTLargeOpLimitsDisplay class] bare:@"\\sum^{VVV}" shifted:@"a\\sum^{VVV}"];
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

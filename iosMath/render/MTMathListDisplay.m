@@ -770,6 +770,21 @@
     [_nucleus draw:context];
 }
 
+- (CGFloat)inkWidth
+{
+    // Nucleus and limits hold absolute positions (updateNucleus/Upper/LowerLimitPosition,
+    // each including _limitShift). Nucleus is folded in via _nucleus directly.
+    CGFloat result = self.width;
+    result = MAX(result, (_nucleus.position.x - self.position.x) + _nucleus.inkWidth);
+    if (self.upperLimit) {
+        result = MAX(result, (self.upperLimit.position.x - self.position.x) + self.upperLimit.inkWidth);
+    }
+    if (self.lowerLimit) {
+        result = MAX(result, (self.lowerLimit.position.x - self.position.x) + self.lowerLimit.inkWidth);
+    }
+    return result;
+}
+
 @end
 
 #pragma mark - MTLineDisplay
