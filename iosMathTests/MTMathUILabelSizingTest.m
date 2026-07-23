@@ -10,8 +10,10 @@
 
 @interface MTSpyLabel : MTMathUILabel
 @property (nonatomic) NSInteger invalidateCount;
+@property (nonatomic) CGFloat forcedScale;   // simulate a known backing scale
 @end
 @implementation MTSpyLabel
+- (CGFloat)screenScale { return self.forcedScale; }
 - (void)invalidateIntrinsicContentSize { self.invalidateCount++; [super invalidateIntrinsicContentSize]; }
 @end
 
@@ -94,9 +96,21 @@
     }
 }
 
+// An actual backing-scale change re-queries the intrinsic size end to end: the
+// platform lifecycle hook fires invalidateIntrinsicContentSize, and because
+// intrinsicContentSize is uncached (recomputed per query) the next read reflects the
+// new scale's device-pixel grid. The hook invalidates unconditionally — it does not
+// diff scales (see MTMathUILabel didMoveToWindow / viewDidChangeBackingProperties) —
+// so this drives the whole path: 1x size → scale becomes 3x → hook → 3x-grid re-query.
 - (void)testScaleLifecycleInvalidates {
     MTSpyLabel* label = [[MTSpyLabel alloc] init];
-    label.latex = @"P";
+    label.forcedScale = 1;
+    label.latex = @"V";   // ink overhang; its 1x and 3x rounded widths differ
+    CGSize sizeAt1x = label.intrinsicContentSize;
+    XCTAssertEqualWithAccuracy(sizeAt1x.width, round(sizeAt1x.width), 0.001, @"1x width off grid");
+
+    // Backing scale becomes 3x, then fire the platform lifecycle hook.
+    label.forcedScale = 3;
     label.invalidateCount = 0;
 #if TARGET_OS_IPHONE
     [label didMoveToWindow];
@@ -104,7 +118,12 @@
     [label viewDidChangeBackingProperties];
     [label viewDidMoveToWindow];
 #endif
-    XCTAssertGreaterThan(label.invalidateCount, 0);
+    XCTAssertGreaterThan(label.invalidateCount, 0, @"scale-change lifecycle hook must invalidate intrinsic size");
+
+    // Re-query now lands on the 3x grid and differs from the 1x answer.
+    CGSize sizeAt3x = label.intrinsicContentSize;
+    XCTAssertEqualWithAccuracy(sizeAt3x.width * 3, round(sizeAt3x.width * 3), 0.001, @"3x width off grid");
+    XCTAssertNotEqualWithAccuracy(sizeAt3x.width, sizeAt1x.width, 0.001, @"re-query did not adopt the new scale");
 }
 
 @end
