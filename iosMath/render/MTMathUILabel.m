@@ -10,10 +10,18 @@
 //
 
 #import "MTMathUILabel.h"
+#import "MTMathUILabelInternal.h"
 #import "MTMathListDisplay.h"
+#import "MTFont+Internal.h"
+#import "MTMathListDisplayInternal.h"
 #import "MTFontManager.h"
 #import "MTMathListBuilder.h"
 #import "MTTypesetter.h"
+
+static CGFloat ceilToPixel(CGFloat value, CGFloat scale) {
+    if (scale <= 0) { scale = 1; }
+    return ceil(value * scale) / scale;
+}
 
 @implementation MTMathUILabel {
     MTLabel* _errorLabel;
@@ -158,6 +166,22 @@
     }
 }
 
+- (CGFloat)screenScale
+{
+#if TARGET_OS_IPHONE
+    CGFloat scale = self.contentScaleFactor;
+    return scale > 0 ? scale : 1;
+#else
+    if (self.window && self.window.backingScaleFactor > 0) {
+        return self.window.backingScaleFactor;
+    }
+    if (self.layer && self.layer.contentsScale > 0) {
+        return self.layer.contentsScale;
+    }
+    return 1;
+#endif
+}
+
 // Only override drawRect: if you perform custom drawing.
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(MTRect)rect
@@ -190,10 +214,10 @@
                 textX = self.contentInsets.left;
                 break;
             case kMTTextAlignmentCenter:
-                textX = (self.bounds.size.width - self.contentInsets.left - self.contentInsets.right - _displayList.width) / 2 + self.contentInsets.left;
+                textX = (self.bounds.size.width - self.contentInsets.left - self.contentInsets.right - _displayList.inkWidth) / 2 + self.contentInsets.left;
                 break;
             case kMTTextAlignmentRight:
-                textX = (self.bounds.size.width - _displayList.width - self.contentInsets.right);
+                textX = (self.bounds.size.width - _displayList.inkWidth - self.contentInsets.right);
                 break;
         }
         
@@ -227,9 +251,12 @@
     if (_mathList) {
         displayList = [MTTypesetter createLineForMathList:_mathList font:_font style:self.currentStyle];
     }
-    
-    size.width = displayList.width + self.contentInsets.left + self.contentInsets.right;
-    size.height = displayList.ascent + displayList.descent + self.contentInsets.top + self.contentInsets.bottom;
+
+    CGFloat scale = [self screenScale];
+    CGFloat rawWidth  = displayList.inkWidth + self.contentInsets.left + self.contentInsets.right;
+    CGFloat rawHeight = displayList.ascent + displayList.descent + self.contentInsets.top + self.contentInsets.bottom;
+    size.width  = ceilToPixel(rawWidth,  scale);
+    size.height = ceilToPixel(rawHeight, scale);
     return size;
 }
 
@@ -237,5 +264,27 @@
 {
     return [self sizeThatFits:CGSizeZero];
 }
+
+#if TARGET_OS_IPHONE
+- (void)didMoveToWindow
+{
+    [super didMoveToWindow];
+    // Backing scale may have changed; re-query so the pixel-rounded size is right.
+    [self invalidateIntrinsicContentSize];
+}
+#else
+- (void)viewDidMoveToWindow
+{
+    [super viewDidMoveToWindow];
+    [self invalidateIntrinsicContentSize];
+}
+
+- (void)viewDidChangeBackingProperties
+{
+    [super viewDidChangeBackingProperties];
+    // window.backingScaleFactor is now known; the earlier fallback answer is stale.
+    [self invalidateIntrinsicContentSize];
+}
+#endif
 
 @end
