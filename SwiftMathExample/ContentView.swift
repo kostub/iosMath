@@ -146,9 +146,9 @@ private struct ExampleCard: View {
             }
         }
         .padding()
-        .background(Color(white: 1))
+        .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .shadow(color: .primary.opacity(0.06), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -176,9 +176,9 @@ private struct PlaygroundTab: View {
                     .frame(minWidth: 0, maxWidth: .infinity, minHeight: 100)
                     .padding(.horizontal, 12)
                 }
-                .background(Color(white: 1))
+                .background(.background)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+                .shadow(color: .primary.opacity(0.06), radius: 4, x: 0, y: 2)
 
                 // Font switcher + size stepper. Spacer + fixedSize keep the
                 // stepper pinned to the trailing edge so it doesn't shift as the
@@ -275,7 +275,7 @@ private struct GalleryTab: View {
                 }
                 .padding(.vertical, 10)
             }
-            .background(Color.white)
+            .background(.background)
             .navigationTitle("Gallery")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

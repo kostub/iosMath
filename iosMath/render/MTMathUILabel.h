@@ -88,7 +88,7 @@ IB_DESIGNABLE @interface MTMathUILabel : MTView
 /** Convenience method to just set the size of the font without changing the fontface. */
 @property (nonatomic) IBInspectable CGFloat fontSize;
 
-/** This sets the text color of the rendered math formula. The default color is black. */
+/** This sets the text color of the rendered math formula. The default color is label, i.e. black in light mode, white in dark mode. */
 @property (nonatomic, nonnull) IBInspectable MTColor* textColor;
 
 /** The minimum distance from the margin of the view to the rendered math. This value is
