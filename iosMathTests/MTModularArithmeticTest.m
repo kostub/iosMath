@@ -623,4 +623,107 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}^{2}");
 }
 
+#pragma mark - Equivalence helpers
+
+static NSString* ListSignature(MTMathList* list);
+
+// A structural fingerprint: type + nucleus + space value + font style + scripts.
+// Serialization is not usable for this — latexSymbolNameForAtom: maps Unary back
+// through the Bin cell, so "\bmod" and a demoted "\bmod" stringify identically and
+// the Bin/Unary distinction (the whole point of these tests) would be invisible.
+static NSString* AtomSignature(MTMathAtom* atom)
+{
+    NSMutableString* sig = [NSMutableString string];
+    if (atom.type == kMTMathAtomSpace) {
+        [sig appendFormat:@"Space(%g)", [(MTMathSpace*)atom space]];
+    } else {
+        [sig appendFormat:@"%lu:%@", (unsigned long)atom.type, atom.nucleus];
+    }
+    if (atom.fontStyle != kMTFontStyleDefault) {
+        [sig appendFormat:@"/f%lu", (unsigned long)atom.fontStyle];
+    }
+    if (atom.superScript) {
+        [sig appendFormat:@"^%@", ListSignature(atom.superScript)];
+    }
+    if (atom.subScript) {
+        [sig appendFormat:@"_%@", ListSignature(atom.subScript)];
+    }
+    return sig;
+}
+
+static NSString* ListSignature(MTMathList* list)
+{
+    NSMutableArray<NSString*>* parts = [NSMutableArray arrayWithCapacity:list.atoms.count];
+    for (MTMathAtom* atom in list.atoms) {
+        [parts addObject:AtomSignature(atom)];
+    }
+    return [NSString stringWithFormat:@"[%@]", [parts componentsJoinedByString:@", "]];
+}
+
+#pragma mark - One-pass equivalence (model layer)
+
+// Wraps `latex` around a hand-built \mod macro and returns the finalized signature.
+- (NSString*)signatureForModMacroWithArgument:(NSString*)arg
+                                     prefix:(NSString*)prefix
+                                     suffix:(NSString*)suffix
+{
+    MTMathList* list = [MTMathList new];
+    [list append:[MTMathListBuilder buildFromString:prefix]];
+    [list addAtom:ModMacroWithArgument(arg)];
+    [list append:[MTMathListBuilder buildFromString:suffix]];
+    return ListSignature(list.finalized);
+}
+
+// The expansion typed out directly, for comparison. \mathrm{mod} is written as
+// three Roman Variables to match ModTemplate() exactly.
+- (NSString*)signatureForWrittenOutModWithArgument:(NSString*)arg
+                                          prefix:(NSString*)prefix
+                                          suffix:(NSString*)suffix
+{
+    NSString* latex = [NSString stringWithFormat:@"%@\\mkern12mu\\mathrm{mod}\\mkern6mu%@%@",
+                       prefix, arg, suffix];
+    MTMathList* list = [MTMathListBuilder buildFromString:latex];
+    XCTAssertNotNil(list, @"%@", latex);
+    return ListSignature(list.finalized);
+}
+
+// x\mod{n+}y : the + sits between n and y in the flat stream and stays Bin. A
+// design that finalized each expansion on its own would demote it to Unary —
+// this is exactly the case the r1 design got wrong (LLD §3.4 Flow 3).
+- (void)testTrailingBinaryOperatorInArgumentStaysBinary
+{
+    XCTAssertEqualObjects([self signatureForModMacroWithArgument:@"n+" prefix:@"x" suffix:@"y"],
+                          [self signatureForWrittenOutModWithArgument:@"n+" prefix:@"x" suffix:@"y"]);
+}
+
+// x\mod{-n}y : the leading - has no left operand inside the flat stream either
+// (it follows a Space, whose predecessor is "mod"), so both sides must agree.
+- (void)testLeadingUnaryInArgumentAgrees
+{
+    XCTAssertEqualObjects([self signatureForModMacroWithArgument:@"-n" prefix:@"x" suffix:@"y"],
+                          [self signatureForWrittenOutModWithArgument:@"-n" prefix:@"x" suffix:@"y"]);
+}
+
+// 1\mod{2}3 : number fusion must see the same neighbours on both sides.
+- (void)testNumberFusionAcrossExpansionAgrees
+{
+    XCTAssertEqualObjects([self signatureForModMacroWithArgument:@"2" prefix:@"1" suffix:@"3"],
+                          [self signatureForWrittenOutModWithArgument:@"2" prefix:@"1" suffix:@"3"]);
+}
+
+- (void)testPlainExpansionsAgree
+{
+    for (NSString* arg in @[ @"n", @"n+1", @"2^k" ]) {
+        XCTAssertEqualObjects([self signatureForModMacroWithArgument:arg prefix:@"" suffix:@""],
+                              [self signatureForWrittenOutModWithArgument:arg prefix:@"" suffix:@""],
+                              @"arg %@", arg);
+    }
+}
+
+- (void)testEquivalenceInsideCongruence
+{
+    XCTAssertEqualObjects([self signatureForModMacroWithArgument:@"n" prefix:@"a\\equiv b" suffix:@""],
+                          [self signatureForWrittenOutModWithArgument:@"n" prefix:@"a\\equiv b" suffix:@""]);
+}
+
 @end
