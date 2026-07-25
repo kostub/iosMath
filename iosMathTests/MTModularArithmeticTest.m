@@ -1045,4 +1045,93 @@ static NSString* ListSignature(MTMathList* list)
     }
 }
 
+#pragma mark - Parsing the three macros
+
+- (void)testPmodParsesToASingleMacroAtom
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"a \\equiv b \\pmod{n}"];
+    XCTAssertNotNil(list);
+    // a, ≡, b, macro — the macro is ONE atom in the raw list.
+    XCTAssertEqual(list.atoms.count, 4ul);
+    MTMathAtom* last = list.atoms[3];
+    XCTAssertEqual(last.type, kMTMathAtomMacro);
+    MTMacroAtom* macro = (MTMacroAtom*)last;
+    XCTAssertEqualObjects(macro.command, @"pmod");
+    XCTAssertEqual(macro.arguments.count, 1ul);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+    XCTAssertEqual(macro.templateExpression.atoms.count, 8ul);
+}
+
+- (void)testAllThreeMacrosParse
+{
+    NSDictionary<NSString*, NSNumber*>* expectedTemplateLengths = @{
+        @"pmod": @8,   // Space8 ( m o d Space6 #1 )
+        @"mod":  @6,   // Space12 m o d Space6 #1
+        @"pod":  @4,   // Space8 ( #1 )
+    };
+    for (NSString* command in expectedTemplateLengths) {
+        NSString* latex = [NSString stringWithFormat:@"x \\%@{n}", command];
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        XCTAssertEqual(list.atoms.count, 2ul, @"%@", latex);
+        MTMacroAtom* macro = (MTMacroAtom*)list.atoms[1];
+        XCTAssertEqual(macro.type, kMTMathAtomMacro, @"%@", latex);
+        XCTAssertEqualObjects(macro.command, command);
+        XCTAssertEqual(macro.templateExpression.atoms.count,
+                       expectedTemplateLengths[command].unsignedIntegerValue, @"%@", latex);
+    }
+}
+
+// The shared dispatch tail attaches ^/_ to whatever single atom the chain yields —
+// no new script logic needed for macros (LLD §2.6).
+- (void)testMacroCarriesScriptsFromSharedTail
+{
+    MTMacroAtom* macro = (MTMacroAtom*)[MTMathListBuilder buildFromString:@"\\pmod{n}^2"].atoms[0];
+    XCTAssertEqual(macro.type, kMTMathAtomMacro);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.superScript], @"2");
+}
+
+- (void)testUnbracedArgument
+{
+    MTMacroAtom* macro = (MTMacroAtom*)[MTMathListBuilder buildFromString:@"\\pmod n"].atoms[0];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+}
+
+- (void)testEmptyArgumentIsAllowed
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\pmod{}"];
+    XCTAssertNotNil(list);
+    MTMacroAtom* macro = (MTMacroAtom*)list.atoms[0];
+    XCTAssertEqual([macro.arguments[0] atoms].count, 0ul);
+}
+
+- (void)testMissingArgumentIsAnError
+{
+    for (NSString* latex in @[ @"\\pmod", @"\\mod", @"\\pod", @"a \\pmod ",
+                               @"{\\pmod}", @"\\pmod^2" ]) {
+        NSError* error = nil;
+        XCTAssertNil([MTMathListBuilder buildFromString:latex error:&error], @"%@", latex);
+        XCTAssertEqual(error.code, MTParseErrorMissingArgument, @"%@", latex);
+    }
+}
+
+- (void)testMalformedArgumentPropagates
+{
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\pmod{\\notacommand}" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
+// Non-macro commands must be untouched: macroAtomForCommand: returns nil without
+// setting an error, and dispatch falls through to atomForCommand:.
+- (void)testNonMacroCommandsUnaffected
+{
+    XCTAssertNotNil([MTMathListBuilder buildFromString:@"\\frac{1}{2}"]);
+    XCTAssertNotNil([MTMathListBuilder buildFromString:@"\\sqrt{2}"]);
+    XCTAssertNotNil([MTMathListBuilder buildFromString:@"17 \\bmod 5"]);
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\notacommand" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
+}
+
 @end

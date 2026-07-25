@@ -412,7 +412,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 }
                 continue;
             }
-            atom = [self atomForCommand:command];
+            // Macros first: one MTMacroAtom flows through the shared script-attach +
+            // append + oneCharOnly tail below with no new logic (LLD §2.6).
+            atom = [self macroAtomForCommand:command];
+            if (!atom) {
+                if (_error) {
+                    return nil;
+                }
+                atom = [self atomForCommand:command];
+            }
             if (atom == nil) {
                 // this was an unknown command,
                 // we flag an error and return
@@ -1153,6 +1161,41 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         };
     });
     return commands;
+}
+
+// Returns nil WITHOUT setting an error when `command` is not a macro, so the caller
+// can fall through to -atomForCommand:. Returns nil WITH _error set when the
+// command is a macro whose arguments failed to parse.
+- (nullable MTMacroAtom*) macroAtomForCommand:(NSString*) command
+{
+    MTMacroDefinition* def = [MTMathListBuilder builtinMacros][command];
+    if (!def) {
+        return nil;
+    }
+    // Arguments are read with the EXISTING reader (the one \frac/\sqrt use), so
+    // they are parsed directly from the user's input — never re-parsed out of a
+    // generated string (LLD §4.1).
+    NSMutableArray<MTMathList*>* args = [NSMutableArray arrayWithCapacity:def.argumentCount];
+    for (NSUInteger i = 0; i < def.argumentCount; i++) {
+        MTMathList* arg = [self requiredArgumentWithError:MTParseErrorMissingArgument];
+        if (!arg) {
+            return nil;   // _error already set
+        }
+        [args addObject:arg];
+    }
+    // Parsed with a FRESH builder instance, so the in-flight parse's state is never
+    // swapped or restored.
+    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString];
+    // A built-in template is a compile-time constant, never user input: failing to
+    // parse it is a programming mistake, so fail loud.
+    NSAssert(golden != nil, @"Built-in macro template for \\%@ failed to parse: %@",
+             command, def.templateString);
+    if (!golden) {
+        [self setError:MTParseErrorInternalError
+               message:[NSString stringWithFormat:@"Built-in macro template for \\%@ failed to parse", command]];
+        return nil;
+    }
+    return [[MTMacroAtom alloc] initWithCommand:command arguments:args templateExpression:golden];
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
