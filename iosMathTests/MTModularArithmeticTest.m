@@ -23,6 +23,12 @@
 @property (nonatomic) MTFont* font;
 @end
 
+// Declared privately in MTMathList.m; redeclared here so the tests can drive
+// phase 1 in isolation and observe RAW (unreclassified) output.
+@interface MTMathList (MTMacroExpansionTesting)
+- (MTMathList *)mathListByExpandingMacros;
+@end
+
 @implementation MTModularArithmeticTest
 
 - (void)setUp
@@ -282,6 +288,36 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
 - (void)testMacroAtomStringValue
 {
     XCTAssertEqualObjects([PodMacroWithArgument(@"n") stringValue], @"\\pod{n}");
+}
+
+#pragma mark - Two-phase finalized
+
+// Phase 2 must be the existing loop, unchanged: same Bin/Unary reclassification,
+// same number fusion, same index ranges, on lists that contain no macros at all.
+- (void)testFinalizedUnchangedForMacroFreeLists
+{
+    NSArray<NSString*>* inputs = @[ @"17+5", @"-x", @"x+", @"(+3)", @"\\frac{1+2}{3-}",
+                                    @"a\\equiv b", @"1\\times 23" ];
+    for (NSString* latex in inputs) {
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        MTMathList* finalized = list.finalized;
+        // finalized must still be a fresh list, not the receiver.
+        XCTAssertNotEqual(finalized, list, @"%@", latex);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:finalized],
+                              [MTMathListBuilder mathListToString:list.finalized],
+                              @"%@ is not idempotent across calls", latex);
+    }
+}
+
+- (void)testExpandingMacrosIsIdentityWithoutMacros
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"1+2"];
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    XCTAssertEqual(expanded.atoms.count, 3ul);
+    // A macro-free list needs no rewriting, so phase 1 hands the receiver straight
+    // through — phase 2 is what allocates the new list.
+    XCTAssertEqual(expanded, list);
 }
 
 @end

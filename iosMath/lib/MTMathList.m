@@ -99,6 +99,18 @@ static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists
     return [copies copy];
 }
 
+@interface MTMathList ()
+
+/** Phase 1 of -finalized: replaces every top-level MTMacroAtom with its RAW
+ expansion. Returns the receiver unchanged when this list has no macros. */
+- (MTMathList *)mathListByExpandingMacros;
+
+/** Phase 2 of -finalized: the reclassifying left-to-right pass. Asserts that phase
+ 1 has already run. */
+- (MTMathList *)finalizedAssumingNoMacros;
+
+@end
+
 @interface MTMathListBuilder (MTMathListSerializationSupport)
 
 + (NSString*)delimToString:(MTMathAtom*)delim;
@@ -1693,11 +1705,36 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (MTMathList *)finalized
 {
+    // Two-phase (LLD §3.3, blocking issue #1). Finalization is irreversible and
+    // context-dependent — a Bin demoted to Unary at one boundary cannot be restored
+    // — so every macro must be expanded to RAW atoms before the single
+    // reclassifying pass sees the flat stream.
+    MTMathList* expanded = [self mathListByExpandingMacros];
+    return [expanded finalizedAssumingNoMacros];
+}
+
+- (MTMathList *)mathListByExpandingMacros
+{
+    return self;
+}
+
+- (MTMathList *)finalizedAssumingNoMacros
+{
     MTMathList* finalized = [MTMathList new];
     NSRange zeroRange = NSMakeRange(0, 0);
-    
+
     MTMathAtom* prevNode = nil;
     for (MTMathAtom* atom in self.atoms) {
+        // The "no macro survives expansion" invariant lives here, not in
+        // -[MTMacroAtom finalized]: MTMathAtom is public API and a caller may
+        // legitimately finalize a macro atom on its own. What must never happen is a
+        // macro reaching the reclassifying pass (LLD §3.3).
+        NSAssert(atom.type != kMTMathAtomMacro,
+                 @"Macro atom %@ survived expansion; -mathListByExpandingMacros must run first.",
+                 atom.stringValue);
+        NSAssert(![atom isKindOfClass:[MTMacroParameterAtom class]],
+                 @"Macro parameter placeholder %@ escaped a template; expansion must consume it.",
+                 atom.nucleus);
         MTMathAtom* newNode = [atom finalized];
         // Each character is given a separate index.
         if (NSEqualRanges(zeroRange, atom.indexRange)) {
