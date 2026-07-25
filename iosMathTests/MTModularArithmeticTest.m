@@ -1325,4 +1325,61 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
     XCTAssertEqual(macro.templateExpression.atoms[2].fontStyle, kMTFontStyleRoman);
 }
 
+#pragma mark - Serialization
+
+- (void)testSerializationRoundTrips
+{
+    NSDictionary<NSString*, NSString*>* cases = @{
+        @"\\pmod{n}":      @"\\pmod{n}",
+        @"\\mod{n}":       @"\\mod{n}",
+        @"\\pod{n}":       @"\\pod{n}",
+        @"\\mod{n+1}":     @"\\mod{n+1}",
+        @"\\pmod n":       @"\\pmod{n}",     // unbraced serializes canonically
+        @"\\mod{ n }":     @"\\mod{n}",      // whitespace is canonicalized
+        @"\\pmod{n}^2":    @"\\pmod{n}^{2}",
+        @"\\pod{n}_k":     @"\\pod{n}_{k}",
+        @"\\pmod{}":       @"\\pmod{}",
+        @"a\\equiv b\\pmod{n}": @"a\\equiv b\\pmod{n}",
+    };
+    for (NSString* input in cases) {
+        MTMathList* list = [MTMathListBuilder buildFromString:input];
+        XCTAssertNotNil(list, @"%@", input);
+        NSString* out = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(out, cases[input], @"%@", input);
+
+        // And it re-parses to the same thing — the round trip is stable.
+        MTMathList* reparsed = [MTMathListBuilder buildFromString:out];
+        XCTAssertNotNil(reparsed, @"reparse of %@", out);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:reparsed], out, @"%@", input);
+    }
+}
+
+// The raw list serializes the COMMAND; only the finalized list shows the expansion.
+// This split is the seam the whole design rests on (LLD §2.7).
+//
+// Deviation from the plan's literal expected string: the plan expected "(n)", but
+// the `\pod` template's leading 8mu kern has no named LaTeX command, so it
+// serializes via the `\mkern%.1fmu` fallback (per the plan's documented known
+// deviation) rather than disappearing. "\mkern8.0mu(n)" is the correct output.
+- (void)testRawSerializesCommandFinalizedSerializesExpansion
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\pod{n}"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list.finalized], @"\\mkern8.0mu(n)");
+}
+
+// Deviation from the plan (see the NOTE next to the parse-error table in
+// MTMathListBuilderTest.m): `\pmod{\frac}` is NOT a parse error. The macro
+// argument reader (`requiredArgumentWithError:`) uses the same one-token
+// `buildInternal:YES` reader that `\frac` itself uses to read its numerator and
+// denominator, so `\frac`'s own reads immediately see the closing `}` and each
+// come back as an empty argument — exactly like bare top-level `\frac` at EOF.
+- (void)testFracWithNoArgumentsIsNotAnErrorInsideMacroArgument
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\pmod{\\frac}"];
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pmod{\\frac{}{}}");
+    XCTAssertNoThrow([list finalized]);
+}
+
 @end

@@ -1710,6 +1710,28 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\begin{array}{c} a", @(MTParseErrorMissingEnd)],
               @[@"\\hline a", @(MTParseErrorInvalidCommand)],
               @[@"\\begin{matrix} \\hline a \\end{matrix}", @(MTParseErrorInvalidCommand)],
+              // Item 15: modular-arithmetic macro parse errors
+              @[@"\\pmod", @(MTParseErrorMissingArgument)],
+              @[@"\\mod", @(MTParseErrorMissingArgument)],
+              @[@"\\pod", @(MTParseErrorMissingArgument)],
+              @[@"a \\pmod ", @(MTParseErrorMissingArgument)],   // trailing space, still EOF
+              @[@"{\\pmod}", @(MTParseErrorMissingArgument)],
+              @[@"\\pmod^2", @(MTParseErrorMissingArgument)],
+              // NOTE: the plan's literal case here was `\pmod{\frac}`, expected to
+              // propagate MTParseErrorMismatchBraces. In fact `\frac` with no
+              // operands is not an error at all (same as bare top-level `\frac`,
+              // which degrades to `\frac{}{}`): `requiredArgumentWithError:` reads
+              // one argument via the SAME `buildInternal:YES` reader `\frac` itself
+              // uses, so `\frac`'s own numerator/denominator reads see the closing
+              // `}` immediately and each come back as an empty (not missing)
+              // argument. `\pmod{\frac}` therefore parses successfully to
+              // `\pmod{\frac{}{}}` — verified directly; see
+              // -testFracWithNoArgumentsIsNotAnErrorInsideMacroArgument in
+              // MTModularArithmeticTest.m. Swapped in a genuinely malformed
+              // argument (an unbalanced brace) that does propagate
+              // MTParseErrorMismatchBraces, which is what this row is actually
+              // meant to characterize (LLD §6: an inner parse error propagates).
+              @[@"\\pmod{{n}", @(MTParseErrorMismatchBraces)],
               ];
 };
 
