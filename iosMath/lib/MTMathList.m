@@ -111,6 +111,13 @@ static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists
 
 @end
 
+@interface MTMacroAtom ()
+
+/** The RAW (non-finalized) atom stream this invocation stands for. */
+- (MTMathList *)expansion;
+
+@end
+
 @interface MTMathListBuilder (MTMathListSerializationSupport)
 
 + (NSString*)delimToString:(MTMathAtom*)delim;
@@ -1715,7 +1722,31 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (MTMathList *)mathListByExpandingMacros
 {
-    return self;
+    BOOL hasMacro = NO;
+    for (MTMathAtom* atom in self.atoms) {
+        if (atom.type == kMTMathAtomMacro) {
+            hasMacro = YES;
+            break;
+        }
+    }
+    if (!hasMacro) {
+        return self;
+    }
+
+    MTMathList* expanded = [MTMathList new];
+    for (MTMathAtom* atom in self.atoms) {
+        if (atom.type != kMTMathAtomMacro) {
+            // Carried through untouched, WITHOUT descending into sub-lists
+            // (numerator/denominator/radicand/innerList/cells/scripts). Every
+            // container's -finalized already calls the public -finalized on its
+            // children, which re-enters phase 1 + phase 2 for those lists — so this
+            // code needs to understand zero container types (LLD §3.3).
+            [expanded addAtom:atom];
+            continue;
+        }
+        [expanded append:[(MTMacroAtom*)atom expansion]];
+    }
+    return expanded;
 }
 
 - (MTMathList *)finalizedAssumingNoMacros
@@ -1861,6 +1892,32 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     for (MTMathList* arg in self.arguments) {
         [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:arg]];
     }
+}
+
+- (MTMathList *)expansion
+{
+    MTMathList* out = [MTMathList new];
+    for (MTMathAtom* templateAtom in self.templateList.atoms) {
+        if (![templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
+            // Deep copies throughout, so the stored template and arguments stay
+            // pristine for serialization, for post-parse mutation, and for repeated
+            // -finalized calls.
+            [out addAtom:[templateAtom copy]];
+            continue;
+        }
+        NSUInteger index = [(MTMacroParameterAtom*)templateAtom argumentIndex];
+        NSAssert(index >= 1 && index <= self.arguments.count,
+                 @"Macro \\%@ template references #%lu but %lu argument(s) were parsed.",
+                 self.command, (unsigned long)index, (unsigned long)self.arguments.count);
+        if (index < 1 || index > self.arguments.count) {
+            continue;
+        }
+        [out append:[self.arguments[index - 1] copy]];
+    }
+    // The template, or an argument, may itself contain a macro. Re-scan so the
+    // returned list is macro-free at its top level — and so script transfer below
+    // targets a real atom rather than an unexpanded MTMacroAtom.
+    return [out mathListByExpandingMacros];
 }
 
 @end
