@@ -836,6 +836,12 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
                      @"vee" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2228"],
                      @"cap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2229"],
                      @"cup" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u222A"],
+                     // \bmod: LaTeX kernel's binary "mod". The nucleus is plain ASCII
+                     // "mod", which renders upright because changeFont's italic remap
+                     // only touches Variable/Number atoms (MTTypesetter.m:539-545).
+                     // iosMath's automatic Bin spacing (4mu text/display, 0 in scripts)
+                     // stands in for amsmath's hand-tuned 5mu -- LLD section 4.3.
+                     @"bmod" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"mod"],
                      @"wr" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2240"],
                      @"uplus" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u228E"],
                      @"sqcap" : [MTMathAtom atomWithType:kMTMathAtomBinaryOperator value:@"\u2293"],
