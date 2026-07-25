@@ -31,6 +31,12 @@
 // Defined under "Equivalence helpers" below.
 static NSString* ListSignature(MTMathList* list);
 
+// Declared privately in MTMathListBuilder.m; redeclared here so the required-argument
+// guard tests can drive it directly.
+@interface MTMathListBuilder (MTRequiredArgumentTesting)
+- (nullable MTMathList *)requiredArgumentWithError:(MTParseErrors)error;
+@end
+
 @implementation MTModularArithmeticTest
 
 - (void)setUp
@@ -900,6 +906,61 @@ static NSString* ListSignature(MTMathList* list)
 {
     XCTAssertEqualObjects([self signatureForModMacroWithArgument:@"n" prefix:@"a\\equiv b" suffix:@""],
                           [self signatureForWrittenOutModWithArgument:@"n" prefix:@"a\\equiv b" suffix:@""]);
+}
+
+#pragma mark - Required-argument guard
+
+- (void)testRequiredArgumentReadsBracedArgument
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:@"{n+1}"];
+    MTMathList* arg = [builder requiredArgumentWithError:MTParseErrorMissingArgument];
+    XCTAssertNotNil(arg);
+    XCTAssertNil(builder.error);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:arg], @"n+1");
+}
+
+- (void)testRequiredArgumentReadsUnbracedToken
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:@"n"];
+    MTMathList* arg = [builder requiredArgumentWithError:MTParseErrorMissingArgument];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:arg], @"n");
+}
+
+- (void)testRequiredArgumentAllowsEmptyBraces
+{
+    // \pmod{} is legal LaTeX and renders "( mod )" (LLD §4.4).
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:@"{}"];
+    MTMathList* arg = [builder requiredArgumentWithError:MTParseErrorMissingArgument];
+    XCTAssertNotNil(arg);
+    XCTAssertNil(builder.error);
+    XCTAssertEqual(arg.atoms.count, 0ul);
+}
+
+- (void)testRequiredArgumentFailsAtEOF
+{
+    for (NSString* input in @[ @"", @"   " ]) {
+        MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:input];
+        XCTAssertNil([builder requiredArgumentWithError:MTParseErrorMissingArgument],
+                     @"input %@", input);
+        XCTAssertEqual(builder.error.code, MTParseErrorMissingArgument, @"input %@", input);
+    }
+}
+
+- (void)testRequiredArgumentFailsOnDelimiterInArgumentPosition
+{
+    for (NSString* input in @[ @"}", @"^2", @"_2", @"&x" ]) {
+        MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:input];
+        XCTAssertNil([builder requiredArgumentWithError:MTParseErrorMissingArgument],
+                     @"input %@", input);
+        XCTAssertEqual(builder.error.code, MTParseErrorMissingArgument, @"input %@", input);
+    }
+}
+
+- (void)testRequiredArgumentPropagatesInnerError
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:@"{\\notacommand}"];
+    XCTAssertNil([builder requiredArgumentWithError:MTParseErrorMissingArgument]);
+    XCTAssertEqual(builder.error.code, MTParseErrorInvalidCommand);
 }
 
 @end

@@ -154,6 +154,35 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return YES;
 }
 
+// Reads one mandatory argument, failing loud when there isn't one.
+//
+// -buildInternal:YES on its own is silently permissive: at EOF it returns an empty
+// list with no error, and it leaves a following }/^/_/& unlooked for the caller
+// (see -build and -buildInternal:oneCharOnly:stopChar: above). That is fine for
+// \sqrt, which has always behaved that way, but a macro invocation with no
+// argument must be an error.
+//
+// Factored out rather than inlined so future command categories can adopt it.
+// Scope: only macros route through it today; migrating \sqrt and friends is a
+// separate, behavior-affecting change.
+- (nullable MTMathList *)requiredArgumentWithError:(MTParseErrors)error
+{
+    [self skipSpaces];
+    if (![self hasCharacters]) {
+        [self setError:error message:@"Missing required argument at end of input"];
+        return nil;
+    }
+    unichar ch = [self getNextCharacter];
+    [self unlookCharacter];
+    if (ch == '}' || ch == '^' || ch == '_' || ch == '&') {
+        [self setError:error
+               message:[NSString stringWithFormat:@"Missing required argument before '%c'", ch]];
+        return nil;
+    }
+    // An empty {} is a valid, empty argument (LaTeX parity) — not a missing one.
+    return [self buildInternal:YES];
+}
+
 - (MTMathList *)build
 {
     MTMathList* list = [self buildInternal:false];
