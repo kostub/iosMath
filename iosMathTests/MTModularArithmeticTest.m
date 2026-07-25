@@ -472,4 +472,155 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{m}");
 }
 
+#pragma mark - Script transfer
+
+// \pod{n}^2 -> the ")" carries the superscript.
+- (void)testScriptTransfersToLastScriptableAtom
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    XCTAssertEqual(expanded.atoms.count, 4ul);
+    MTMathAtom* close = expanded.atoms[3];
+    XCTAssertEqual(close.type, kMTMathAtomClose);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:close.superScript], @"2");
+    XCTAssertNil([expanded.atoms[2] superScript]);
+}
+
+- (void)testSubscriptTransfers
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    macro.subScript = [MTMathListBuilder buildFromString:@"k"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+    MTMathAtom* close = [list mathListByExpandingMacros].atoms[3];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:close.subScript], @"k");
+}
+
+// \mod{n\;}^2: the trailing space is not scriptable, so the script skips it and
+// lands on n. It is never dropped (LLD §6, §7.3).
+- (void)testScriptSkipsTrailingSpace
+{
+    MTMacroAtom* macro = ModMacroWithArgument(@"n\\;");
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    XCTAssertEqual([expanded.atoms.lastObject type], kMTMathAtomSpace);
+    XCTAssertNil([expanded.atoms.lastObject superScript]);
+
+    MTMathAtom* n = expanded.atoms[expanded.atoms.count - 2];
+    XCTAssertEqualObjects(n.nucleus, @"n");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:n.superScript], @"2");
+}
+
+// Collision: n already has ^2, so ^3 goes on an appended empty Ordinary — exactly
+// what the builder does for x^2^3 (MTMathListBuilder.m:211-216). \mod{n^2}^3 is
+// therefore \mod{n^2}{}^3.
+- (void)testSuperscriptCollisionAppendsEmptyOrdinary
+{
+    MTMacroAtom* macro = ModMacroWithArgument(@"n^2");
+    macro.superScript = [MTMathListBuilder buildFromString:@"3"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    MTMathAtom* appended = expanded.atoms.lastObject;
+    XCTAssertEqual(appended.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(appended.nucleus, @"");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:appended.superScript], @"3");
+
+    MTMathAtom* n = expanded.atoms[expanded.atoms.count - 2];
+    XCTAssertEqualObjects(n.nucleus, @"n");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:n.superScript], @"2");
+}
+
+- (void)testSubscriptCollisionAppendsEmptyOrdinary
+{
+    MTMacroAtom* macro = ModMacroWithArgument(@"n_1");
+    macro.subScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathAtom* appended = [list mathListByExpandingMacros].atoms.lastObject;
+    XCTAssertEqual(appended.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:appended.subScript], @"2");
+}
+
+// \mod{n^2}_3 is NOT a collision: the subscript slot on n is free.
+- (void)testNonCollidingSubscriptAttachesDirectly
+{
+    MTMacroAtom* macro = ModMacroWithArgument(@"n^2");
+    macro.subScript = [MTMathListBuilder buildFromString:@"3"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    MTMathAtom* n = expanded.atoms.lastObject;
+    XCTAssertEqualObjects(n.nucleus, @"n", @"no empty Ordinary should have been appended");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:n.superScript], @"2");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:n.subScript], @"3");
+}
+
+// Slots are evaluated as a unit: if either needed slot is taken, BOTH scripts move
+// to the appended atom, so a ^/_ pair is never split across two atoms.
+- (void)testCollidingPairStaysTogether
+{
+    MTMacroAtom* macro = ModMacroWithArgument(@"n^2");
+    macro.superScript = [MTMathListBuilder buildFromString:@"3"];
+    macro.subScript = [MTMathListBuilder buildFromString:@"k"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    MTMathAtom* appended = expanded.atoms.lastObject;
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:appended.superScript], @"3");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:appended.subScript], @"k");
+
+    MTMathAtom* n = expanded.atoms[expanded.atoms.count - 2];
+    XCTAssertNil(n.subScript, @"the pair must not be split across two atoms");
+}
+
+// No scriptable atom anywhere in the expansion. Unreachable for the three built-in
+// templates (all end in a scriptable atom — see the plan's "Known LLD discrepancy"
+// note), but it is the branch LLD §6 asks for and the one \newcommand (§8.2) makes
+// reachable, so it is covered here with a spaces-only template.
+- (void)testNoScriptableTargetAppendsEmptyOrdinary
+{
+    MTMathList* spacesOnly = [MTMathList new];
+    [spacesOnly addAtom:[[MTMathSpace alloc] initWithSpace:8]];
+    [spacesOnly addAtom:[[MTMathSpace alloc] initWithSpace:6]];
+    MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"spacesonly"
+                                                    arguments:@[]
+                                                 templateList:spacesOnly];
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    MTMathList* expanded = [list mathListByExpandingMacros];
+    XCTAssertEqual(expanded.atoms.count, 3ul);
+    MTMathAtom* appended = expanded.atoms.lastObject;
+    XCTAssertEqual(appended.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:appended.superScript], @"2");
+}
+
+// Transferring must not mutate the macro atom's own scripts: finalizing twice is
+// stable, and serialization still reports \pod{n}^{2}.
+- (void)testScriptTransferLeavesMacroAtomPristine
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+
+    NSString* first = [MTMathListBuilder mathListToString:list.finalized];
+    NSString* second = [MTMathListBuilder mathListToString:list.finalized];
+    XCTAssertEqualObjects(first, second);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}^{2}");
+}
+
 @end

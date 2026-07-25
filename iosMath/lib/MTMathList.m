@@ -116,6 +116,10 @@ static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists
 /** The RAW (non-finalized) atom stream this invocation stands for. */
 - (MTMathList *)expansion;
 
+/** Moves this atom's scripts onto the last scriptable atom of `expansion`,
+ appending an empty Ordinary when there is no free target. */
+- (void)transferScriptsToExpansion:(MTMathList *)expansion;
+
 @end
 
 @interface MTMathListBuilder (MTMathListSerializationSupport)
@@ -1917,7 +1921,43 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     // The template, or an argument, may itself contain a macro. Re-scan so the
     // returned list is macro-free at its top level — and so script transfer below
     // targets a real atom rather than an unexpanded MTMacroAtom.
-    return [out mathListByExpandingMacros];
+    MTMathList* flat = [out mathListByExpandingMacros];
+    [self transferScriptsToExpansion:flat];
+    return flat;
+}
+
+- (void)transferScriptsToExpansion:(MTMathList *)expansion
+{
+    if (!self.superScript && !self.subScript) {
+        return;
+    }
+    MTMathAtom* target = nil;
+    for (MTMathAtom* candidate in expansion.atoms.reverseObjectEnumerator) {
+        // -scriptsAllowed is type < kMTMathAtomBoundary, which already excludes
+        // Space (201), Style (202) and every other non-noad (MTMathList.m:222-225).
+        if (candidate.scriptsAllowed) {
+            target = candidate;
+            break;
+        }
+    }
+    // Slots are evaluated as a unit: if there is no target, or either slot we need
+    // is taken, BOTH scripts go on a fresh empty Ordinary so a ^/_ pair is never
+    // split. This is what the builder already does for x^2^3 and for a leading ^2
+    // (MTMathListBuilder.m:211-216, 224-228), so \mod{n^2}^3 behaves like
+    // \mod{n^2}{}^3 — iosMath's long-standing divergence from TeX, not a new one.
+    BOOL collides = (target == nil)
+        || (self.superScript && target.superScript)
+        || (self.subScript && target.subScript);
+    if (collides) {
+        target = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
+        [expansion addAtom:target];
+    }
+    if (self.superScript) {
+        target.superScript = [self.superScript copy];
+    }
+    if (self.subScript) {
+        target.subScript = [self.subScript copy];
+    }
 }
 
 @end
