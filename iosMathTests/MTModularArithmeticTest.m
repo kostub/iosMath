@@ -1134,4 +1134,195 @@ static NSString* ListSignature(MTMathList* list)
     XCTAssertEqual(error.code, MTParseErrorInvalidCommand);
 }
 
+#pragma mark - End-to-end equivalence
+
+// The registry's templates, written out by hand. If these drift from
+// +builtinMacros the equivalence tests fail — which is the point.
+static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
+{
+    if ([command isEqualToString:@"pmod"]) {
+        return [NSString stringWithFormat:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu%@)", arg];
+    } else if ([command isEqualToString:@"mod"]) {
+        return [NSString stringWithFormat:@"\\mkern12mu\\mathrm{mod}\\mkern6mu%@", arg];
+    } else if ([command isEqualToString:@"pod"]) {
+        return [NSString stringWithFormat:@"\\mkern8mu(%@)", arg];
+    }
+    return nil;
+}
+
+- (void)assertEquivalentCommand:(NSString*)command
+                       argument:(NSString*)arg
+                         prefix:(NSString*)prefix
+                         suffix:(NSString*)suffix
+{
+    NSString* macroLatex = [NSString stringWithFormat:@"%@\\%@{%@}%@", prefix, command, arg, suffix];
+    NSString* writtenLatex = [NSString stringWithFormat:@"%@%@%@",
+                              prefix, WrittenOutExpansion(command, arg), suffix];
+    MTMathList* macroList = [MTMathListBuilder buildFromString:macroLatex];
+    MTMathList* writtenList = [MTMathListBuilder buildFromString:writtenLatex];
+    XCTAssertNotNil(macroList, @"%@", macroLatex);
+    XCTAssertNotNil(writtenList, @"%@", writtenLatex);
+    XCTAssertEqualObjects(ListSignature(macroList.finalized),
+                          ListSignature(writtenList.finalized),
+                          @"%@  !=  %@", macroLatex, writtenLatex);
+    // And the invariant: no macro survives.
+    for (MTMathAtom* atom in macroList.finalized.atoms) {
+        XCTAssertNotEqual(atom.type, kMTMathAtomMacro, @"%@", macroLatex);
+    }
+}
+
+// The boundary-sensitive cases: a trailing Bin in the argument must stay Bin
+// because it sees the following y in the flat stream; a leading - must agree; and
+// numbers must fuse identically on both sides (LLD §7.1).
+- (void)testEquivalenceBoundarySensitive
+{
+    for (NSString* command in @[ @"pmod", @"mod", @"pod" ]) {
+        [self assertEquivalentCommand:command argument:@"n+" prefix:@"x" suffix:@"y"];
+        [self assertEquivalentCommand:command argument:@"-n" prefix:@"x" suffix:@"y"];
+        [self assertEquivalentCommand:command argument:@"2"  prefix:@"1" suffix:@"3"];
+    }
+}
+
+- (void)testEquivalencePlain
+{
+    for (NSString* command in @[ @"pmod", @"mod", @"pod" ]) {
+        for (NSString* arg in @[ @"n", @"n+1", @"2^k", @"\\frac{a}{b}", @"" ]) {
+            [self assertEquivalentCommand:command argument:arg prefix:@"" suffix:@""];
+        }
+    }
+}
+
+- (void)testEquivalenceInCongruence
+{
+    [self assertEquivalentCommand:@"pmod" argument:@"n" prefix:@"a\\equiv b" suffix:@""];
+}
+
+// Nested: phase 1 flattens both before phase 2, so no expansion is ever finalized
+// on its own (LLD §7.4).
+- (void)testNestedMacrosEquivalence
+{
+    MTMathList* nested = [MTMathListBuilder buildFromString:@"\\pmod{\\pmod{n}}"];
+    XCTAssertNotNil(nested);
+    NSString* inner = WrittenOutExpansion(@"pmod", @"n");
+    MTMathList* written = [MTMathListBuilder buildFromString:WrittenOutExpansion(@"pmod", inner)];
+    XCTAssertNotNil(written);
+    XCTAssertEqualObjects(ListSignature(nested.finalized), ListSignature(written.finalized));
+}
+
+#pragma mark - Scripts end to end
+
+- (void)testScriptOnPmodLandsOnClosingParen
+{
+    MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\pmod{n}^2"].finalized;
+    MTMathAtom* last = finalized.atoms.lastObject;
+    XCTAssertEqual(last.type, kMTMathAtomClose);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:last.superScript], @"2");
+}
+
+- (void)testSubscriptOnPodLandsOnClosingParen
+{
+    MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\pod{n}_k"].finalized;
+    MTMathAtom* last = finalized.atoms.lastObject;
+    XCTAssertEqual(last.type, kMTMathAtomClose);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:last.subScript], @"k");
+}
+
+- (void)testScriptOnModSkipsTrailingSpace
+{
+    MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\mod{n\\;}^2"].finalized;
+    XCTAssertEqual([finalized.atoms.lastObject type], kMTMathAtomSpace);
+    XCTAssertNil([finalized.atoms.lastObject superScript]);
+    MTMathAtom* n = finalized.atoms[finalized.atoms.count - 2];
+    XCTAssertEqualObjects(n.nucleus, @"n");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:n.superScript], @"2");
+}
+
+// \mod{n^2}^3 == \mod{n^2}{}^3 -- the same shape iosMath already produces for
+// x^2^3 vs x^2{}^3 (getTestDataSuperScript() in MTMathListBuilderTest.m: both
+// "x^2^3" and "{}^2" alone serialize to the same "{}^{...}" text). The two
+// sides are NOT byte-identical at the ListSignature level: the collision path
+// (MTMathListBuilder.m ^/_ handling) appends a bare kMTMathAtomOrdinary, while
+// a literal "{}" in the source always builds an MTMathGroup (kMTMathAtomOrdGroup)
+// -- same precedent the codebase already establishes for plain "^2" vs "{}^2".
+// mathListToString is what unifies them (both render "{}"), so that -- not
+// ListSignature -- is the right equivalence check here.
+- (void)testScriptCollisionMatchesExistingEmptyOrdBehavior
+{
+    MTMathList* collided = [MTMathListBuilder buildFromString:@"\\mod{n^2}^3"];
+    MTMathList* explicit = [MTMathListBuilder buildFromString:@"\\mod{n^2}{}^3"];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:collided.finalized],
+                          [MTMathListBuilder mathListToString:explicit.finalized]);
+
+    // And the precedent it mirrors.
+    MTMathList* precedent = [MTMathListBuilder buildFromString:@"x^2^3"];
+    MTMathAtom* precedentLast = precedent.finalized.atoms.lastObject;
+    XCTAssertEqual(precedentLast.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(precedentLast.nucleus, @"");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:precedentLast.superScript], @"3");
+}
+
+// See testScriptCollisionMatchesExistingEmptyOrdBehavior above: same bare-Ordinary-
+// vs-OrdGroup distinction, so mathListToString is the equivalence check, not
+// ListSignature.
+- (void)testSubscriptCollisionMatchesExistingBehavior
+{
+    XCTAssertEqualObjects(
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\mod{n_1}_2"].finalized],
+        [MTMathListBuilder mathListToString:[MTMathListBuilder buildFromString:@"\\mod{n_1}{}_2"].finalized]);
+}
+
+// \mod{n^2}_3 is NOT a collision: the subscript slot on n is free.
+- (void)testNonCollidingSubscriptEndToEnd
+{
+    MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\mod{n^2}_3"].finalized;
+    MTMathAtom* last = finalized.atoms.lastObject;
+    XCTAssertEqualObjects(last.nucleus, @"n", @"no empty Ordinary should have been appended");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:last.superScript], @"2");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:last.subScript], @"3");
+}
+
+// See the plan's "Known LLD discrepancy" note: LLD §6 lists this as the
+// no-scriptable-target case, but the \mod template's own "mod" letters ARE
+// scriptable, so ^2 lands on the d. What matters — and what §6 was protecting —
+// is that the script is never dropped. The genuine no-target branch is covered by
+// -testNoScriptableTargetAppendsEmptyOrdinary (item 8).
+- (void)testScriptOnAllSpaceArgumentIsNotDropped
+{
+    MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\mod{\\;}^2"].finalized;
+    MTMathAtom* carrier = nil;
+    for (MTMathAtom* atom in finalized.atoms) {
+        if (atom.superScript) { carrier = atom; break; }
+    }
+    XCTAssertNotNil(carrier, @"the superscript was dropped");
+    XCTAssertEqualObjects(carrier.nucleus, @"d", @"expected the last letter of \"mod\"");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:carrier.superScript], @"2");
+}
+
+// Degenerate but benign: one atom means oneCharOnly makes the whole macro the
+// superscript. TeX errors here; iosMath renders it (documented divergence, LLD §6).
+- (void)testMacroAsSuperscriptRendersBenignly
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"x^\\pmod{n}"];
+    XCTAssertNotNil(list);
+    XCTAssertEqual([list.atoms[0] superScript].atoms.count, 1ul);
+    XCTAssertEqual([[list.atoms[0] superScript].atoms[0] type], kMTMathAtomMacro);
+    XCTAssertNoThrow([list finalized]);
+}
+
+// The argument is parsed under the enclosing font style; the parens and spaces come
+// from the template, which is parsed by a fresh builder at default style (LLD §6).
+- (void)testMacroInsideFontStyleGroup
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\mathbf{x \\pmod{n}}"];
+    XCTAssertNotNil(list);
+    MTMacroAtom* macro = nil;
+    for (MTMathAtom* atom in list.atoms) {
+        if (atom.type == kMTMathAtomMacro) { macro = (MTMacroAtom*)atom; break; }
+    }
+    XCTAssertNotNil(macro);
+    XCTAssertEqual([macro.arguments[0] atoms][0].fontStyle, kMTFontStyleBold);
+    // "mod" stays Roman regardless — it comes from \mathrm in the template.
+    XCTAssertEqual(macro.templateExpression.atoms[2].fontStyle, kMTFontStyleRoman);
+}
+
 @end
