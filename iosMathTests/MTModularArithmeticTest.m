@@ -17,6 +17,7 @@
 #import "MTFontManager.h"
 #import "MTMathListDisplay.h"
 #import "MTMathListDisplayInternal.h"
+#import "MTMacroParameterAtom.h"
 
 @interface MTModularArithmeticTest : XCTestCase
 @property (nonatomic) MTFont* font;
@@ -137,6 +138,39 @@
 {
     MTMathList* finalized = [MTMathListBuilder buildFromString:@"\\bmod 5"].finalized;
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:finalized], @"\\bmod 5");
+}
+
+#pragma mark - MTMacroParameterAtom
+
+- (void)testMacroParameterAtomBasics
+{
+    MTMacroParameterAtom* p = [[MTMacroParameterAtom alloc] initWithArgumentIndex:3];
+    XCTAssertEqual(p.argumentIndex, 3ul);
+    // Type stays Ordinary: the placeholder is a sentinel that never survives
+    // expansion, so it deliberately adds no value to the public MTMathAtomType enum.
+    XCTAssertEqual(p.type, kMTMathAtomOrdinary);
+    XCTAssertEqualObjects(p.nucleus, @"#3");
+}
+
+- (void)testMacroParameterAtomCopyPreservesIndex
+{
+    MTMacroParameterAtom* p = [[MTMacroParameterAtom alloc] initWithArgumentIndex:1];
+    MTMacroParameterAtom* copy = [p copy];
+    XCTAssertTrue([copy isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual(copy.argumentIndex, 1ul);
+    XCTAssertEqualObjects(copy.nucleus, @"#1");
+}
+
+// A template list is deep-copied wholesale during expansion, so the placeholder
+// must survive MTMathList's deep copy too (MTMathList.m:216-220 copies items).
+- (void)testMacroParameterAtomSurvivesListCopy
+{
+    MTMathList* list = [MTMathList new];
+    [list addAtom:[[MTMacroParameterAtom alloc] initWithArgumentIndex:2]];
+    MTMathList* copy = [list copy];
+    MTMathAtom* copied = copy.atoms[0];
+    XCTAssertTrue([copied isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual([(MTMacroParameterAtom*)copied argumentIndex], 2ul);
 }
 
 @end
