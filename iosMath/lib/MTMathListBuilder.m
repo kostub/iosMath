@@ -11,6 +11,7 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMacroParameterAtom.h"
 
 NSString *const MTParseError = @"ParseError";
 
@@ -60,6 +61,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
     // every buildInternal call so the check is always fresh.
     BOOL _groupWasTransformedByStopCommand;
+    // YES only while parsing a built-in macro's template string. Enables #1...#9
+    // placeholder atoms. Never set for user input, so '#' keeps raising
+    // MTParseErrorInvalidCharacter there. See buildTemplate: below.
+    BOOL _templateMode;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -441,6 +446,22 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '~') {
             // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
+        } else if (_templateMode && ch == '#') {
+            // Macro argument reference. Only recognized inside a macro template; in
+            // user input '#' falls through to the invalid-character error below.
+            if (![self hasCharacters]) {
+                [self setError:MTParseErrorInvalidCharacter
+                       message:@"Macro template ended with a trailing '#'"];
+                return nil;
+            }
+            unichar digit = [self getNextCharacter];
+            if (digit < '1' || digit > '9') {
+                [self unlookCharacter];
+                [self setError:MTParseErrorInvalidCharacter
+                       message:[NSString stringWithFormat:@"Expected an argument number 1-9 after '#', got '%c'", digit]];
+                return nil;
+            }
+            atom = [[MTMacroParameterAtom alloc] initWithArgumentIndex:(NSUInteger)(digit - '0')];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
@@ -1708,6 +1729,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
     return builder.build;
+}
+
+// Parses a macro template with a FRESH builder instance: its own _chars/_currentChar,
+// so nothing about the in-flight parse is swapped or restored. This is what lets the
+// template be parsed at parse time without a parser in the model layer (LLD §3.3).
++ (nullable MTMathList *)buildTemplate:(NSString *)templateString
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:templateString];
+    builder->_templateMode = YES;
+    return [builder build];
 }
 
 + (MTMathList *)buildFromString:(NSString *)str error:(NSError *__autoreleasing *)error

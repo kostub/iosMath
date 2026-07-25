@@ -37,6 +37,10 @@ static NSString* ListSignature(MTMathList* list);
 - (nullable MTMathList *)requiredArgumentWithError:(MTParseErrors)error;
 @end
 
+@interface MTMathListBuilder (MTTemplateModeTesting)
++ (nullable MTMathList *)buildTemplate:(NSString *)templateString;
+@end
+
 @implementation MTModularArithmeticTest
 
 - (void)setUp
@@ -961,6 +965,66 @@ static NSString* ListSignature(MTMathList* list)
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:@"{\\notacommand}"];
     XCTAssertNil([builder requiredArgumentWithError:MTParseErrorMissingArgument]);
     XCTAssertEqual(builder.error.code, MTParseErrorInvalidCommand);
+}
+
+#pragma mark - Template mode
+
+- (void)testBuildTemplateParsesPodExpansion
+{
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(#1)"];
+    XCTAssertNotNil(t);
+    XCTAssertEqual(t.atoms.count, 4ul);
+    XCTAssertEqual([t.atoms[0] type], kMTMathAtomSpace);
+    XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[0] space], 8, 0.001);
+    XCTAssertEqual([t.atoms[1] type], kMTMathAtomOpen);
+    XCTAssertTrue([t.atoms[2] isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual([(MTMacroParameterAtom*)t.atoms[2] argumentIndex], 1ul);
+    XCTAssertEqual([t.atoms[3] type], kMTMathAtomClose);
+}
+
+- (void)testBuildTemplateParsesPmodExpansion
+{
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"];
+    XCTAssertNotNil(t);
+    // Space8, "(", m, o, d, Space6, #1, ")"
+    XCTAssertEqual(t.atoms.count, 8ul);
+    XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[0] space], 8, 0.001);
+    XCTAssertEqual([t.atoms[1] type], kMTMathAtomOpen);
+    for (NSUInteger i = 2; i <= 4; i++) {
+        // \mathrm yields Roman-styled atoms; changeFont maps them to upright Latin
+        // at layout time (MTTypesetter.m:539-545).
+        XCTAssertEqual([t.atoms[i] fontStyle], kMTFontStyleRoman, @"atom %lu", (unsigned long)i);
+    }
+    XCTAssertEqualObjects([t.atoms[2] nucleus], @"m");
+    XCTAssertEqualObjects([t.atoms[3] nucleus], @"o");
+    XCTAssertEqualObjects([t.atoms[4] nucleus], @"d");
+    XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[5] space], 6, 0.001);
+    XCTAssertTrue([t.atoms[6] isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual([t.atoms[7] type], kMTMathAtomClose);
+}
+
+- (void)testBuildTemplateParsesModExpansion
+{
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"];
+    XCTAssertEqual(t.atoms.count, 6ul);
+    XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[0] space], 12, 0.001);
+    XCTAssertTrue([t.atoms[5] isKindOfClass:[MTMacroParameterAtom class]]);
+}
+
+// Template mode is opt-in: '#' in user input keeps raising the same error it
+// always has, so no user-facing parsing changes.
+- (void)testHashIsStillInvalidInUserInput
+{
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"a#1" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCharacter);
+}
+
+- (void)testBuildTemplateRejectsMalformedPlaceholder
+{
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#x)"]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#0)"]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#"]);
 }
 
 @end
