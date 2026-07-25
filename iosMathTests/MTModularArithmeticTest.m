@@ -17,6 +17,7 @@
 #import "MTMathListDisplay.h"
 #import "MTMathListDisplayInternal.h"
 #import "internal/MTMacroParameterAtom.h"
+#import "MTFontMathTable.h"
 
 @interface MTModularArithmeticTest : XCTestCase
 @property (nonatomic) MTFont* font;
@@ -1380,6 +1381,83 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
     XCTAssertNotNil(list);
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pmod{\\frac{}{}}");
     XCTAssertNoThrow([list finalized]);
+}
+
+#pragma mark - Rendering
+
+- (void)testPmodRendersUprightMod
+{
+    NSString* text = [self renderedTextForDisplay:[self displayForLaTeX:@"a \\equiv b \\pmod{n}"]];
+    XCTAssertTrue([text containsString:@"mod"], @"got %@", text);
+    // \mathrm{mod} must not be remapped to the italic mathematical alphanumerics.
+    XCTAssertFalse([text containsString:@"\U0001D45A"], @"italic m in %@", text);   // 𝑚
+    XCTAssertFalse([text containsString:@"\U0001D45C"], @"italic o in %@", text);   // 𝑜
+    XCTAssertFalse([text containsString:@"\U0001D451"], @"italic d in %@", text);   // 𝑑
+}
+
+// Geometry, not substring presence: the macro must lay out exactly like its
+// expansion typed out by hand.
+- (void)testMacroLayoutMatchesWrittenOutExpansion
+{
+    NSArray<NSArray<NSString*>*>* cases = @[
+        @[ @"pmod", @"n",   @"a\\equiv b", @"" ],
+        @[ @"mod",  @"n",   @"x",          @"" ],
+        @[ @"pod",  @"n",   @"x",          @"" ],
+        @[ @"mod",  @"n+1", @"x",          @"y" ],
+    ];
+    for (NSArray<NSString*>* c in cases) {
+        NSString* macroLatex = [NSString stringWithFormat:@"%@\\%@{%@}%@", c[2], c[0], c[1], c[3]];
+        NSString* writtenLatex = [NSString stringWithFormat:@"%@%@%@",
+                                  c[2], WrittenOutExpansion(c[0], c[1]), c[3]];
+        MTMathListDisplay* macroDisplay = [self displayForLaTeX:macroLatex];
+        MTMathListDisplay* writtenDisplay = [self displayForLaTeX:writtenLatex];
+
+        XCTAssertEqualWithAccuracy(macroDisplay.width, writtenDisplay.width, 0.001,
+                                   @"width: %@", macroLatex);
+        XCTAssertEqualWithAccuracy(macroDisplay.ascent, writtenDisplay.ascent, 0.001,
+                                   @"ascent: %@", macroLatex);
+        XCTAssertEqualWithAccuracy(macroDisplay.descent, writtenDisplay.descent, 0.001,
+                                   @"descent: %@", macroLatex);
+        XCTAssertEqualObjects([self renderedTextForDisplay:macroDisplay],
+                              [self renderedTextForDisplay:writtenDisplay],
+                              @"text: %@", macroLatex);
+
+        XCTAssertEqual(macroDisplay.subDisplays.count, writtenDisplay.subDisplays.count,
+                       @"subdisplay count: %@", macroLatex);
+        for (NSUInteger i = 0; i < MIN(macroDisplay.subDisplays.count,
+                                       writtenDisplay.subDisplays.count); i++) {
+            MTDisplay* a = macroDisplay.subDisplays[i];
+            MTDisplay* b = writtenDisplay.subDisplays[i];
+            XCTAssertEqualWithAccuracy(a.position.x, b.position.x, 0.001,
+                                       @"subdisplay %lu x: %@", (unsigned long)i, macroLatex);
+            XCTAssertEqualWithAccuracy(a.position.y, b.position.y, 0.001,
+                                       @"subdisplay %lu y: %@", (unsigned long)i, macroLatex);
+            XCTAssertEqualWithAccuracy(a.width, b.width, 0.001,
+                                       @"subdisplay %lu width: %@", (unsigned long)i, macroLatex);
+        }
+    }
+}
+
+// The leading gap really is 8mu / 12mu wider than the same expression with no gap.
+- (void)testLeadingGapWidths
+{
+    CGFloat muUnit = self.font.mathTable.muUnit;
+    MTMathListDisplay* bare = [self displayForLaTeX:@"x(\\mathrm{mod}\\mkern6mu n)"];
+    MTMathListDisplay* pmod = [self displayForLaTeX:@"x\\pmod{n}"];
+    XCTAssertEqualWithAccuracy(pmod.width - bare.width, 8 * muUnit, 0.01);
+
+    MTMathListDisplay* bareMod = [self displayForLaTeX:@"x\\mathrm{mod}\\mkern6mu n"];
+    MTMathListDisplay* mod = [self displayForLaTeX:@"x\\mod{n}"];
+    XCTAssertEqualWithAccuracy(mod.width - bareMod.width, 12 * muUnit, 0.01);
+}
+
+- (void)testMacrosBuildWithoutAsserting
+{
+    for (NSString* latex in @[ @"\\pmod{n}", @"\\mod{n}", @"\\pod{n}",
+                               @"a \\equiv b \\pmod{n}", @"(\\pmod{n}",
+                               @"\\pmod{n}^2", @"\\pmod{\\pmod{n}}", @"\\pmod{}" ]) {
+        XCTAssertNoThrow([self displayForLaTeX:latex], @"%@", latex);
+    }
 }
 
 @end
