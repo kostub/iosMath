@@ -173,4 +173,79 @@
     XCTAssertEqual([(MTMacroParameterAtom*)copied argumentIndex], 2ul);
 }
 
+#pragma mark - MTMacroAtom
+
+// Builds the golden template list for \pod: [Space8, Open "(", #1, Close ")"].
+// Hand-built so PR 2 is independent of the parser (which lands in PR 3).
+static MTMathList* PodTemplate(void)
+{
+    MTMathList* t = [MTMathList new];
+    [t addAtom:[[MTMathSpace alloc] initWithSpace:8]];
+    [t addAtom:[MTMathAtom atomWithType:kMTMathAtomOpen value:@"("]];
+    [t addAtom:[[MTMacroParameterAtom alloc] initWithArgumentIndex:1]];
+    [t addAtom:[MTMathAtom atomWithType:kMTMathAtomClose value:@")"]];
+    return t;
+}
+
+static MTMacroAtom* PodMacroWithArgument(NSString* latex)
+{
+    MTMathList* arg = [MTMathListBuilder buildFromString:latex];
+    return [[MTMacroAtom alloc] initWithCommand:@"pod"
+                                      arguments:@[ arg ]
+                                   templateList:PodTemplate()];
+}
+
+- (void)testMacroAtomBasics
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    XCTAssertEqual(macro.type, kMTMathAtomMacro);
+    XCTAssertEqualObjects(macro.command, @"pod");
+    XCTAssertEqual(macro.arguments.count, 1ul);
+    XCTAssertEqual(macro.templateList.atoms.count, 4ul);
+    // 22 sits just past kMTMathAtomOrdGroup (21), the last script-capable value,
+    // so a macro can carry ^/_ at parse time (MTMathList.h:74-78).
+    XCTAssertTrue(macro.scriptsAllowed);
+}
+
+// NSArray's -copy is shallow. The initializer must deep-copy, or a caller can
+// mutate the list it handed in and silently mutate the atom (LLD §3.1).
+- (void)testMacroAtomDeepCopiesAtInit
+{
+    MTMathList* arg = [MTMathListBuilder buildFromString:@"n"];
+    MTMathList* templ = PodTemplate();
+    MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"pod"
+                                                    arguments:@[ arg ]
+                                                 templateList:templ];
+    [arg addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
+    [templ addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
+
+    XCTAssertEqual([macro.arguments[0] atoms].count, 1ul, @"argument was not deep-copied");
+    XCTAssertEqual(macro.templateList.atoms.count, 4ul, @"template was not deep-copied");
+}
+
+- (void)testMacroAtomCopyIsDeep
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMacroAtom* copy = [macro copy];
+
+    XCTAssertTrue([copy isKindOfClass:[MTMacroAtom class]]);
+    XCTAssertEqualObjects(copy.command, @"pod");
+    XCTAssertNotEqual(copy.arguments[0], macro.arguments[0]);
+    XCTAssertNotEqual(copy.templateList, macro.templateList);
+    XCTAssertEqual(copy.templateList.atoms.count, 4ul);
+    XCTAssertNotNil(copy.superScript);
+
+    [macro.arguments[0] addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
+    XCTAssertEqual([copy.arguments[0] atoms].count, 1ul);
+}
+
+// A macro atom has no valid zero-argument construction, so the generic
+// initializer must fail loud (guard idiom of MTMathColorbox, MTMathList.m:975-983).
+- (void)testMacroAtomRejectsGenericInitializer
+{
+    XCTAssertThrows([[MTMacroAtom alloc] initWithType:kMTMathAtomMacro value:@""]);
+    XCTAssertThrows([[MTMacroAtom alloc] initWithType:kMTMathAtomOrdinary value:@"x"]);
+}
+
 @end

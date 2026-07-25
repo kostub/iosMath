@@ -72,6 +72,12 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// sub-mlist (== TeX Ord noad with sub_mlist / KaTeX "ordgroup").
     /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
     kMTMathAtomOrdGroup = 21,
+    /// An unexpanded macro invocation (\pmod, \mod, \pod). Holds the command name,
+    /// its parsed arguments, and an argument-free golden template list. Expanded
+    /// away by -[MTMathList finalized] phase 1, so it never reaches the typesetter.
+    /// Script-capable (< kMTMathAtomBoundary): ^/_ attaches at parse time and is
+    /// transferred onto the expansion.
+    kMTMathAtomMacro = 22,
 
     // Atoms after this point do not support subscripts or superscripts
 
@@ -685,6 +691,43 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
 /// The grouped math content.
 @property (nonatomic, nonnull) MTMathList* innerList;
+
+@end
+
+/** An unexpanded macro invocation.
+
+ `\pmod{n}` parses to exactly one `MTMacroAtom`, which keeps the raw list small
+ (trivial serialization, and `^`/`_` attach through the builder's shared tail).
+ It carries an argument-free `templateList` holding `#N` placeholders — parsed once,
+ at parse time — so it is not a second source of truth for `arguments`: the
+ expansion is re-derived from (`templateList`, current `arguments`) every time
+ `-[MTMathList finalized]` runs.
+
+ Design: docs/lld/2026-07-13-modular-arithmetic.md §3.1.
+ */
+@interface MTMacroAtom : MTMathAtom
+
+/** The command name without the leading backslash, e.g. `@"pmod"`. */
+@property (nonatomic, copy, readonly) NSString* command;
+
+/** The parsed arguments, in order. The array identity is immutable; the contained
+ `MTMathList`s stay mutable and are owned by this atom (deep-copied at init). */
+@property (nonatomic, copy, readonly) NSArray<MTMathList*>* arguments;
+
+/** The golden expansion template: a raw (non-finalized) list whose `#N` references
+ are placeholder atoms. Argument-free. */
+@property (nonatomic, strong, readonly) MTMathList* templateList;
+
+- (instancetype)initWithCommand:(NSString*)command
+                      arguments:(NSArray<MTMathList*>*)arguments
+                   templateList:(MTMathList*)templateList NS_DESIGNATED_INITIALIZER;
+
+/// Overridden to fail loud: see -[MTMacroAtom initWithType:value:] in MTMathList.m
+/// (same guard idiom as MTMathColorbox, which likewise does not mark this
+/// NS_UNAVAILABLE — doing so would make the guard a compile-time error instead of
+/// the intended runtime one, and MTMathAtom's generic factories/-copyWithZone
+/// call this selector polymorphically).
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value;
 
 @end
 

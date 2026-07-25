@@ -71,6 +71,8 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Box";
         case kMTMathAtomOrdGroup:
             return @"Ord Group";
+        case kMTMathAtomMacro:
+            return @"Macro";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -84,6 +86,17 @@ static NSString* typeToText(MTMathAtomType type) {
         case kMTMathAtomTable:
             return @"Table";
     }
+}
+
+// NSArray's -copy is shallow: it copies the array but shares the (mutable)
+// MTMathList elements. MTMathList's own -copyWithZone: is already deep.
+static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists)
+{
+    NSMutableArray<MTMathList*>* copies = [NSMutableArray arrayWithCapacity:lists.count];
+    for (MTMathList* list in lists) {
+        [copies addObject:[list copy]];
+    }
+    return [copies copy];
 }
 
 @interface MTMathListBuilder (MTMathListSerializationSupport)
@@ -1737,6 +1750,68 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathList* list = [[[self class] allocWithZone:zone] init];
     list->_atoms = [[NSMutableArray alloc] initWithArray:self.atoms copyItems:YES];
     return list;
+}
+
+@end
+
+#pragma mark - MTMacroAtom
+
+@implementation MTMacroAtom
+
+- (instancetype)initWithCommand:(NSString*)command
+                      arguments:(NSArray<MTMathList*>*)arguments
+                   templateList:(MTMathList*)templateList
+{
+    NSParameterAssert(command);
+    NSParameterAssert(arguments);
+    NSParameterAssert(templateList);
+    self = [super initWithType:kMTMathAtomMacro value:@""];
+    if (self) {
+        _command = [command copy];
+        _arguments = MTDeepCopyMathListArray(arguments);
+        _templateList = [templateList copy];
+    }
+    return self;
+}
+
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value
+{
+    // Unlike MTInner/MTMathColorbox there is no valid zero-argument construction to
+    // fall back to — command, arguments and templateList are all required — so this
+    // always throws rather than redirecting to a bare -init.
+    @throw [NSException exceptionWithName:@"InvalidMethod"
+                                   reason:@"[MTMacroAtom initWithType:value:] cannot be called. Use -initWithCommand:arguments:templateList: instead."
+                                 userInfo:nil];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    // Cannot route through [super copyWithZone:], which would call the throwing
+    // -initWithType:value:. The designated initializer already deep-copies both
+    // arguments and templateList, so only the MTMathAtom fields need carrying over.
+    MTMacroAtom* copy = [[MTMacroAtom allocWithZone:zone] initWithCommand:self.command
+                                                                arguments:self.arguments
+                                                             templateList:self.templateList];
+    copy.subScript = [self.subScript copyWithZone:zone];
+    copy.superScript = [self.superScript copyWithZone:zone];
+    copy.indexRange = self.indexRange;
+    copy.fontStyle = self.fontStyle;
+    return copy;
+}
+
+- (NSString *)stringValue
+{
+    NSMutableString* str = [NSMutableString stringWithFormat:@"\\%@", self.command];
+    for (MTMathList* arg in self.arguments) {
+        [str appendFormat:@"{%@}", arg.stringValue];
+    }
+    if (self.superScript) {
+        [str appendFormat:@"^{%@}", self.superScript.stringValue];
+    }
+    if (self.subScript) {
+        [str appendFormat:@"_{%@}", self.subScript.stringValue];
+    }
+    return str;
 }
 
 @end
