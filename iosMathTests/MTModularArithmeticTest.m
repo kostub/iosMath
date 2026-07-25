@@ -248,4 +248,40 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
     XCTAssertThrows([[MTMacroAtom alloc] initWithType:kMTMathAtomOrdinary value:@"x"]);
 }
 
+- (void)testMacroAtomSerializesCommandFaithfully
+{
+    MTMathList* list = [MTMathList new];
+    [list addAtom:PodMacroWithArgument(@"n+1")];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n+1}");
+}
+
+- (void)testMacroAtomSerializesWithScripts
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    macro.superScript = [MTMathListBuilder buildFromString:@"2"];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}^{2}");
+}
+
+// The template is not a source of truth for the arguments: mutating a parsed
+// argument must show up in serialization (LLD §7.2, blocking issue #2).
+- (void)testMacroAtomSerializationTracksArgumentMutation
+{
+    MTMacroAtom* macro = PodMacroWithArgument(@"n");
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}");
+
+    MTMathList* arg = macro.arguments[0];
+    [arg removeAtomAtIndex:0];
+    [arg addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"m"]];
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{m}");
+}
+
+- (void)testMacroAtomStringValue
+{
+    XCTAssertEqualObjects([PodMacroWithArgument(@"n") stringValue], @"\\pod{n}");
+}
+
 @end

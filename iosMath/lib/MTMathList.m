@@ -1814,6 +1814,18 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return str;
 }
 
+- (void)appendLaTeXToString:(NSMutableString *)str
+{
+    // Command-faithful, argument-canonical (LLD §4.5): the invocation round-trips as
+    // \pmod{…}, and the argument is re-serialized by the usual serializer rather
+    // than preserved character-for-character. +mathListToString: appends the
+    // ^{…}/_{…} tail for us (MTMathListBuilder.m:1730-1737).
+    [str appendFormat:@"\\%@", self.command];
+    for (MTMathList* arg in self.arguments) {
+        [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:arg]];
+    }
+}
+
 @end
 
 #pragma mark - MTMacroParameterAtom
