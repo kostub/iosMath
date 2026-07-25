@@ -42,6 +42,45 @@ NSString *const MTParseError = @"ParseError";
 
 @end
 
+#pragma mark - MTMacroDefinition
+
+// A built-in macro: how many arguments it takes, and the LaTeX it stands for
+// (with #1...#9 referencing arguments).
+//
+// Parser-owned and file-private on purpose. The model layer needs NO registry
+// access: MTMacroAtom carries its already-parsed template list, so the dependency
+// runs one way (MTMathListBuilder -> MTMacroDefinition, at parse time) and
+// MTMathList.m never calls into the builder. A consequence worth keeping: an
+// invocation is bound to the expansion as it existed when parsed, so a future
+// mutable/user-defined registry (LLD §8.2) cannot retroactively change an
+// already-parsed atom. See LLD §3.3.
+@interface MTMacroDefinition : NSObject
+
+@property (nonatomic, readonly) NSUInteger argumentCount;      // declared, not inferred
+@property (nonatomic, copy, readonly) NSString* templateString;
+
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString NS_DESIGNATED_INITIALIZER;
+- (instancetype)init NS_UNAVAILABLE;
+
+@end
+
+@implementation MTMacroDefinition
+
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString
+{
+    NSParameterAssert(templateString);
+    self = [super init];
+    if (self) {
+        _argumentCount = argumentCount;
+        _templateString = [templateString copy];
+    }
+    return self;
+}
+
+@end
+
 // Maximum recursion depth for -buildInternal:oneCharOnly:stopChar:.
 // 150 is comfortably deeper than any realistic human-authored expression yet
 // far below the thousands of frames needed to overflow a 1 MB stack.
@@ -1690,6 +1729,39 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         };
     });
     return fractionMacroCommands;
+}
+
+// The built-in macro registry. Each entry is amsmath's exact INLINE expansion
+// (LLD §3.3): the 8mu/12mu leading and 6mu inner gaps are amsmath's literal \mkern
+// values, not approximations. What is not reproduced is amsmath's \if@display
+// switch to an 18mu leading gap, because a macro expands at parse time, before the
+// render style is known (LLD §4.2, PRD non-goal §3.1).
+//
+// The upright "mod" comes from \mathrm{mod} in the template — no manual Roman flag,
+// and the whole expansion stays expressible as one readable LaTeX string.
+//
+// This dispatch_once builds STRINGS ONLY. Nothing is parsed inside it, so there is
+// no reentrancy with buildTemplate:.
++ (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
+{
+    static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        macros = @{
+            @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
+                                                       templateString:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"],
+            @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                                                       templateString:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"],
+            @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                                                       templateString:@"\\mkern8mu(#1)"],
+        };
+    });
+    return macros;
+}
+
++ (NSArray<NSString *> *) supportedMacroNames
+{
+    return [MTMathListBuilder builtinMacros].allKeys;
 }
 
 + (NSDictionary*) styleToCommands

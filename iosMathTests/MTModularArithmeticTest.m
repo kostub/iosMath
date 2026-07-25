@@ -1027,4 +1027,22 @@ static NSString* ListSignature(MTMathList* list)
     XCTAssertNil([MTMathListBuilder buildTemplate:@"(#"]);
 }
 
+#pragma mark - Macro registry
+
+- (void)testSupportedMacroNames
+{
+    NSArray<NSString*>* names = [MTMathListBuilder supportedMacroNames];
+    XCTAssertEqual(names.count, 3ul);
+    for (NSString* name in @[ @"pmod", @"mod", @"pod" ]) {
+        XCTAssertTrue([names containsObject:name], @"missing %@", name);
+    }
+    // \bmod is a symbol, not a macro. The two discovery surfaces stay disjoint.
+    XCTAssertFalse([names containsObject:@"bmod"]);
+    XCTAssertTrue([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:@"bmod"]);
+    for (NSString* name in names) {
+        XCTAssertFalse([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:name],
+                       @"%@ must not be a symbol too", name);
+    }
+}
+
 @end
