@@ -73,8 +73,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
     kMTMathAtomOrdGroup = 21,
     /// An unexpanded macro invocation (\pmod, \mod, \pod). Holds the command name,
-    /// its parsed arguments, and an argument-free golden template list. Expanded
-    /// away by -[MTMathList finalized] phase 1, so it never reaches the typesetter.
+    /// its parsed arguments, and an argument-free golden template. Expanded away by
+    /// -[MTMathList finalized], so it never reaches the typesetter.
     /// Script-capable (< kMTMathAtomBoundary): ^/_ attaches at parse time and is
     /// transferred onto the expansion.
     kMTMathAtomMacro = 22,
@@ -698,12 +698,10 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
  `\pmod{n}` parses to exactly one `MTMacroAtom`, which keeps the raw list small
  (trivial serialization, and `^`/`_` attach through the builder's shared tail).
- It carries an argument-free `templateList` holding `#N` placeholders — parsed once,
- at parse time — so it is not a second source of truth for `arguments`: the
- expansion is re-derived from (`templateList`, current `arguments`) every time
- `-[MTMathList finalized]` runs.
-
- Design: docs/lld/2026-07-13-modular-arithmetic.md §3.1.
+ It carries an argument-free `templateExpression` holding `#N` placeholders —
+ parsed once, at parse time — so it is not a second source of truth for
+ `arguments`: the expansion is re-derived from (`templateExpression`, current
+ `arguments`) every time `-[MTMathList finalized]` runs.
  */
 @interface MTMacroAtom : MTMathAtom
 
@@ -714,20 +712,19 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
  `MTMathList`s stay mutable and are owned by this atom (deep-copied at init). */
 @property (nonatomic, copy, readonly) NSArray<MTMathList*>* arguments;
 
-/** The golden expansion template: a raw (non-finalized) list whose `#N` references
- are placeholder atoms. Argument-free. */
-@property (nonatomic, strong, readonly) MTMathList* templateList;
+/** The golden expansion template: a raw (non-finalized) expression whose `#N`
+ references are placeholder atoms. Argument-free, and flat with respect to those
+ placeholders — a `#N` nested inside a sub-list is rejected by the initializer. */
+@property (nonatomic, strong, readonly) MTMathList* templateExpression;
 
 - (instancetype)initWithCommand:(NSString*)command
                       arguments:(NSArray<MTMathList*>*)arguments
-                   templateList:(MTMathList*)templateList NS_DESIGNATED_INITIALIZER;
+             templateExpression:(MTMathList*)templateExpression NS_DESIGNATED_INITIALIZER;
 
-/// Overridden to fail loud: see -[MTMacroAtom initWithType:value:] in MTMathList.m
-/// (same guard idiom as MTMathColorbox, which likewise does not mark this
-/// NS_UNAVAILABLE — doing so would make the guard a compile-time error instead of
-/// the intended runtime one, and MTMathAtom's generic factories/-copyWithZone
-/// call this selector polymorphically).
-- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value;
+/// A macro atom has no valid zero-argument construction — command, arguments and
+/// template are all required — so the generic initializer is unavailable. The
+/// implementation additionally throws, to catch dynamic (`id`-typed) callers.
+- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value NS_UNAVAILABLE;
 
 @end
 

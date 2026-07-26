@@ -24,6 +24,7 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("."),
                 .headerSearchPath("lib"),
+                .headerSearchPath("lib/internal"),
                 .headerSearchPath("render"),
                 .headerSearchPath("render/internal"),
             ]
@@ -36,6 +37,7 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("../iosMath"),
                 .headerSearchPath("../iosMath/lib"),
+                .headerSearchPath("../iosMath/lib/internal"),
                 .headerSearchPath("../iosMath/render"),
                 .headerSearchPath("../iosMath/render/internal"),
             ]
@@ -47,6 +49,7 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("../iosMath"),
                 .headerSearchPath("../iosMath/lib"),
+                .headerSearchPath("../iosMath/lib/internal"),
                 .headerSearchPath("../iosMath/render"),
                 .headerSearchPath("../iosMath/render/internal"),
             ],

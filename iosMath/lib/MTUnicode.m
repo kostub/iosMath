@@ -9,7 +9,7 @@
 //  MIT license. See the LICENSE file for details.
 //
 
-#import "MTUnicode.h"
+#import "internal/MTUnicode.h"
 
 @implementation NSString (Unicode)
 
