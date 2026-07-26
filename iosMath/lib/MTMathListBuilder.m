@@ -223,8 +223,37 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                message:[NSString stringWithFormat:@"Missing required argument before '%c'", ch]];
         return nil;
     }
+    if (ch == '\\') {
+        // A stop command terminates the enclosing list instead of producing an
+        // atom, so none of them can begin an argument. Without this check
+        // -buildInternal:YES hands them to -stopCommand:, which for \\ and \cr
+        // ends the row and returns it as the "argument" — silently swallowing a
+        // row break (`\begin{matrix}a\pmod\\b\end{matrix}` loses a row) — and for
+        // \right / \end returns an empty list with NO error. Wrong output rather
+        // than a diagnostic, which is exactly what this method exists to prevent.
+        NSString* command = [self peekCommand];
+        if ([[MTMathListBuilder stopCommands] containsObject:command]) {
+            [self setError:error
+                   message:[NSString stringWithFormat:@"Missing required argument before \\%@", command]];
+            return nil;
+        }
+    }
     // An empty {} is a valid, empty argument (LaTeX parity) — not a missing one.
     return [self buildInternal:YES];
+}
+
+// Reads the command at the current position (which must be on the '\') and
+// restores the read position, so the caller can dispatch on it without consuming
+// it. Returns nil if there is no command there.
+- (nullable NSString *)peekCommand
+{
+    int saved = _currentChar;
+    NSString* command = nil;
+    if ([self hasCharacters] && [self getNextCharacter] == '\\') {
+        command = [self readCommand];
+    }
+    _currentChar = saved;
+    return command;
 }
 
 - (MTMathList *)build
@@ -1185,9 +1214,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
     // Parsed with a FRESH builder instance, so the in-flight parse's state is never
     // swapped or restored.
-    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString];
+    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString
+                                            argumentCount:def.argumentCount];
     // A built-in template is a compile-time constant, never user input: failing to
-    // parse it is a programming mistake, so fail loud.
+    // parse or validate it is a programming mistake, so fail loud.
     NSAssert(golden != nil, @"Built-in macro template for \\%@ failed to parse: %@",
              command, def.templateString);
     if (!golden) {
@@ -1449,6 +1479,20 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         [self setError:MTParseErrorInvalidCommand message:errorMessage];
         return nil;
     }
+}
+
+// Every command -stopCommand: below recognizes. These end the list being built
+// rather than contributing an atom to it, so they are illegal in an argument
+// slot — see -requiredArgumentWithError:. Keep in sync with -stopCommand:.
++ (NSSet<NSString*>*) stopCommands
+{
+    static NSSet<NSString*>* commands = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        commands = [NSSet setWithArray:@[ @"right", @"over", @"atop", @"choose",
+                                          @"brack", @"brace", @"\\", @"cr", @"end" ]];
+    });
+    return commands;
 }
 
 - (MTMathList*) stopCommand:(NSString*) command list:(MTMathList*) list stopChar:(unichar) stopChar oneChar:(BOOL) oneChar
@@ -1784,7 +1828,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // and the whole expansion stays expressible as one readable LaTeX string.
 //
 // This dispatch_once builds STRINGS ONLY. Nothing is parsed inside it, so there is
-// no reentrancy with buildTemplate:.
+// no reentrancy with buildTemplate:. That is also why the parsed template is NOT
+// cached here: parsing one reaches -macroAtomForCommand: (every command does),
+// which calls back into this method — re-entering its own dispatch_once on the same
+// thread deadlocks. Templates are re-parsed per invocation instead, which is ~8
+// atoms; MTMacroAtom deep-copies the result anyway.
 + (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
 {
     static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
@@ -1804,7 +1852,9 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 
 + (NSArray<NSString *> *) supportedMacroNames
 {
-    return [MTMathListBuilder builtinMacros].allKeys;
+    // Sorted, not raw -allKeys: NSDictionary key order is unspecified and can vary
+    // between runs, which would make any ordered assertion by a caller flaky.
+    return [[MTMathListBuilder builtinMacros].allKeys sortedArrayUsingSelector:@selector(compare:)];
 }
 
 + (NSDictionary*) styleToCommands
@@ -1849,11 +1899,62 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // Parses a macro template with a FRESH builder instance: its own _chars/_currentChar,
 // so nothing about the in-flight parse is swapped or restored. This is what lets the
 // template be parsed at parse time without a parser in the model layer (LLD §3.3).
+//
+// `argumentCount` is the arity the registry DECLARES for this macro; the template
+// independently contains #N references. Nothing else checks that the two agree, so
+// this is where they meet.
 + (nullable MTMathList *)buildTemplate:(NSString *)templateString
+                         argumentCount:(NSUInteger)argumentCount
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:templateString];
     builder->_templateMode = YES;
-    return [builder build];
+    MTMathList* parsed = [builder build];
+    if (!parsed || ![self validateTemplate:parsed argumentCount:argumentCount]) {
+        return nil;
+    }
+    return parsed;
+}
+
+// Checks the two invariants -[MTMacroAtom expansion] relies on but cannot enforce.
+// A template is a compile-time constant in +builtinMacros, so no user input can
+// reach either failure: both are programming errors and assert loudly. Rejecting
+// them here is what keeps them from becoming silently wrong OUTPUT downstream,
+// where a placeholder that survives expansion renders as a literal "#1" in Release.
++ (BOOL)validateTemplate:(MTMathList*)parsed argumentCount:(NSUInteger)argumentCount
+{
+    for (MTMathAtom* atom in parsed.atoms) {
+        if ([atom isKindOfClass:[MTMacroParameterAtom class]]) {
+            NSUInteger index = [(MTMacroParameterAtom*)atom argumentIndex];
+            if (index > argumentCount) {
+                NSAssert(NO, @"Macro template references #%lu but declares only %lu argument(s).",
+                         (unsigned long)index, (unsigned long)argumentCount);
+                return NO;
+            }
+            // -expansion replaces the placeholder with the argument list wholesale,
+            // which would drop scripts the placeholder itself carries. Write #1^2 as
+            // {#1}^2 — except that nests the placeholder, which the next check
+            // rejects. In other words: a scripted placeholder is not expressible, so
+            // say so here instead of dropping it at expansion time.
+            if (atom.superScript || atom.subScript) {
+                NSAssert(NO, @"Macro template places a script on #%lu; -expansion cannot carry it.",
+                         (unsigned long)index);
+                return NO;
+            }
+            continue;
+        }
+        // -expansion substitutes only TOP-LEVEL placeholders, so a #N below one —
+        // inside a group, a script, a fraction — survives into the finalized list.
+        // amsmath's own \pmod nests exactly this way
+        // (\pod{{\operator@font mod}\mkern6mu#1}), so the flattened template here is
+        // correct only by deliberate choice, and nothing recorded that. Enforce it
+        // rather than depending on whoever edits the registry next.
+        if (MTContainsMacroParameter(atom)) {
+            NSAssert(NO, @"Macro template nests a #N placeholder inside %@; "
+                     @"-expansion only substitutes top-level placeholders.", [atom class]);
+            return NO;
+        }
+    }
+    return YES;
 }
 
 + (MTMathList *)buildFromString:(NSString *)str error:(NSError *__autoreleasing *)error

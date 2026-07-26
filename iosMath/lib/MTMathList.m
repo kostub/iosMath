@@ -99,13 +99,13 @@ static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists
     return [copies copy];
 }
 
-/** YES if `object` is, or transitively holds, an MTMacroParameterAtom.
+/** Declared in MTMacroParameterAtom.h.
 
  Duck-typed on the accessor names the containers in MTMathList.h share, rather
  than switched on -type: -innerList alone is declared on nine unrelated classes
  with no common protocol, and a container added later that follows the same
  naming is covered for free. */
-static BOOL MTContainsMacroParameter(id object)
+BOOL MTContainsMacroParameter(id object)
 {
     if ([object isKindOfClass:[MTMacroParameterAtom class]]) {
         return YES;

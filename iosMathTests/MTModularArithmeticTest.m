@@ -39,7 +39,8 @@ static NSString* ListSignature(MTMathList* list);
 @end
 
 @interface MTMathListBuilder (MTTemplateModeTesting)
-+ (nullable MTMathList *)buildTemplate:(NSString *)templateString;
++ (nullable MTMathList *)buildTemplate:(NSString *)templateString
+                         argumentCount:(NSUInteger)argumentCount;
 @end
 
 @implementation MTModularArithmeticTest
@@ -968,11 +969,68 @@ static NSString* ListSignature(MTMathList* list)
     XCTAssertEqual(builder.error.code, MTParseErrorInvalidCommand);
 }
 
+- (void)testRequiredArgumentFailsOnStopCommandInArgumentPosition
+{
+    // A stop command ends the enclosing list rather than producing an atom, so it
+    // cannot begin an argument. Every command -stopCommand: recognizes is covered.
+    for (NSString* input in @[ @"\\\\ y", @"\\cr y", @"\\right) ", @"\\end{matrix}",
+                               @"\\over y", @"\\atop y", @"\\choose y",
+                               @"\\brack y", @"\\brace y" ]) {
+        MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:input];
+        XCTAssertNil([builder requiredArgumentWithError:MTParseErrorMissingArgument],
+                     @"input %@", input);
+        XCTAssertEqual(builder.error.code, MTParseErrorMissingArgument, @"input %@", input);
+    }
+}
+
+- (void)testRequiredArgumentAllowsNonStopCommand
+{
+    // The stop-command guard must not reject ordinary commands in argument position.
+    for (NSString* input in @[ @"\\alpha", @"\\frac{a}{b}", @"\\sqrt{2}", @"\\left(x\\right)" ]) {
+        MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:input];
+        XCTAssertNotNil([builder requiredArgumentWithError:MTParseErrorMissingArgument],
+                        @"input %@", input);
+        XCTAssertNil(builder.error, @"input %@", input);
+    }
+}
+
+- (void)testStopCommandInMacroArgumentIsAnErrorNotSilentlyWrongOutput
+{
+    // Before the stop-command guard these all parsed "successfully" into wrong
+    // output: \left(\pmod\right) => \left( \pmod{}\right), x \pmod \\ y =>
+    // \pmod{\\ y} (a table nested inside the parens), and the matrix case
+    // silently lost a row. Fail loud instead (see the repo's no-silent-degradation
+    // rule).
+    for (NSString* latex in @[ @"\\left(\\pmod\\right)",
+                               @"x \\pmod \\\\ y",
+                               @"\\begin{matrix}a\\pmod\\\\b\\end{matrix}",
+                               @"\\begin{matrix}a\\mod\\\\b\\end{matrix}",
+                               @"\\begin{matrix}a\\pod\\\\b\\end{matrix}" ]) {
+        NSError* error = nil;
+        XCTAssertNil([MTMathListBuilder buildFromString:latex error:&error], @"%@", latex);
+        XCTAssertEqual(error.code, MTParseErrorMissingArgument, @"%@", latex);
+    }
+}
+
+- (void)testStopCommandAfterAMacroArgumentStillWorks
+{
+    // Only the argument POSITION is guarded — a stop command after a complete
+    // argument keeps its normal meaning, so the matrix still has two rows.
+    NSError* error = nil;
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\begin{matrix}a\\pmod{n}\\\\b\\end{matrix}"
+                                                   error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqual(list.atoms.count, 1ul);
+    MTMathTable* table = (MTMathTable*) list.atoms[0];
+    XCTAssertEqual(table.type, kMTMathAtomTable);
+    XCTAssertEqual(table.numRows, 2);
+}
+
 #pragma mark - Template mode
 
 - (void)testBuildTemplateParsesPodExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(#1)"];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(#1)" argumentCount:1];
     XCTAssertNotNil(t);
     XCTAssertEqual(t.atoms.count, 4ul);
     XCTAssertEqual([t.atoms[0] type], kMTMathAtomSpace);
@@ -985,7 +1043,7 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateParsesPmodExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)" argumentCount:1];
     XCTAssertNotNil(t);
     // Space8, "(", m, o, d, Space6, #1, ")"
     XCTAssertEqual(t.atoms.count, 8ul);
@@ -1006,7 +1064,7 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateParsesModExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1" argumentCount:1];
     XCTAssertEqual(t.atoms.count, 6ul);
     XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[0] space], 12, 0.001);
     XCTAssertTrue([t.atoms[5] isKindOfClass:[MTMacroParameterAtom class]]);
@@ -1023,9 +1081,68 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateRejectsMalformedPlaceholder
 {
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#x)"]);
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#0)"]);
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#"]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#x)" argumentCount:1]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#0)" argumentCount:1]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#" argumentCount:1]);
+}
+
+#pragma mark - Template validation
+
+// The three checks below all guard -[MTMacroAtom expansion]'s preconditions. Each
+// is a programming error in +builtinMacros, so each asserts (debug) rather than
+// producing a parse error — no LaTeX input can reach them.
+
+- (void)testBuildTemplateRejectsNestedPlaceholder
+{
+    // -expansion substitutes only top-level #N, so a nested one survives into the
+    // finalized list and renders as a literal "#1" with assertions off. This is
+    // exactly how amsmath writes \pmod — \pod{{\operator@font mod}\mkern6mu#1} —
+    // so the flattened built-in template is a deliberate choice, now enforced.
+    for (NSString* template in @[ @"\\mkern8mu({\\mathrm{mod}\\mkern6mu#1})",
+                                  @"\\frac{#1}{2}",
+                                  @"x^{#1}",
+                                  @"\\sqrt{#1}" ]) {
+        XCTAssertThrows([MTMathListBuilder buildTemplate:template argumentCount:1],
+                        @"%@", template);
+    }
+}
+
+- (void)testBuildTemplateRejectsPlaceholderAboveDeclaredArity
+{
+    // Template and declared argumentCount disagree: with assertions off, -expansion
+    // carries #2 through and it renders as a literal "#2".
+    XCTAssertThrows([MTMathListBuilder buildTemplate:@"(#1,#2)" argumentCount:1]);
+    XCTAssertThrows([MTMathListBuilder buildTemplate:@"(#1)" argumentCount:0]);
+}
+
+- (void)testBuildTemplateRejectsScriptedPlaceholder
+{
+    // -expansion replaces the placeholder with the argument list wholesale, which
+    // would drop a script the placeholder itself carries.
+    XCTAssertThrows([MTMathListBuilder buildTemplate:@"#1^2" argumentCount:1]);
+    XCTAssertThrows([MTMathListBuilder buildTemplate:@"#1_2" argumentCount:1]);
+}
+
+- (void)testBuildTemplateAcceptsTopLevelPlaceholders
+{
+    // The guard must not reject a legal template: a placeholder used more than
+    // once, out of order, or with the declared arity to spare.
+    for (NSString* template in @[ @"(#1)", @"#1+#1", @"#2-#1", @"\\mathrm{mod}\\mkern6mu#1" ]) {
+        XCTAssertNotNil([MTMathListBuilder buildTemplate:template argumentCount:2],
+                        @"%@", template);
+    }
+}
+
+- (void)testBuiltinTemplatesPassValidation
+{
+    // Every registered macro parses and validates — the check that keeps the guard
+    // honest about the templates actually shipped.
+    for (NSString* name in [MTMathListBuilder supportedMacroNames]) {
+        NSError* error = nil;
+        NSString* latex = [NSString stringWithFormat:@"\\%@{n}", name];
+        XCTAssertNotNil([MTMathListBuilder buildFromString:latex error:&error], @"%@", latex);
+        XCTAssertNil(error, @"%@", latex);
+    }
 }
 
 #pragma mark - Macro registry
@@ -1449,6 +1566,25 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
     MTMathListDisplay* bareMod = [self displayForLaTeX:@"x\\mathrm{mod}\\mkern6mu n"];
     MTMathListDisplay* mod = [self displayForLaTeX:@"x\\mod{n}"];
     XCTAssertEqualWithAccuracy(mod.width - bareMod.width, 12 * muUnit, 0.01);
+}
+
+- (void)testLeadingGapWidthsInScriptStyle
+{
+    // None of \pmod/\mod/\pod uses \nonscript, so in TeX the mu kerns survive into
+    // script style — but shrink with it, because mu is 1/18 of the CURRENT style's
+    // quad. iosMath matches: MTTypesetter reads _styleFont.mathTable.muUnit, and
+    // muUnit is fontSize/18 on the STYLE font. Locks in the shrink, which
+    // testLeadingGapWidths above (display style only) cannot see.
+    CGFloat scriptMu = self.font.mathTable.muUnit * self.font.mathTable.scriptScaleDown;
+    XCTAssertLessThan(scriptMu, self.font.mathTable.muUnit);
+
+    MTMathListDisplay* bare = [self displayForLaTeX:@"x^{(\\mathrm{mod}\\mkern6mu n)}"];
+    MTMathListDisplay* pmod = [self displayForLaTeX:@"x^{\\pmod{n}}"];
+    XCTAssertEqualWithAccuracy(pmod.width - bare.width, 8 * scriptMu, 0.01);
+
+    MTMathListDisplay* bareMod = [self displayForLaTeX:@"x^{\\mathrm{mod}\\mkern6mu n}"];
+    MTMathListDisplay* mod = [self displayForLaTeX:@"x^{\\mod{n}}"];
+    XCTAssertEqualWithAccuracy(mod.width - bareMod.width, 12 * scriptMu, 0.01);
 }
 
 - (void)testMacrosBuildWithoutAsserting
