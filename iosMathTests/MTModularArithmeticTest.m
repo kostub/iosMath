@@ -266,8 +266,22 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
     XCTAssertThrows([MTMathAtom atomWithType:kMTMathAtomMacro value:@""]);
 }
 
+// +atomWithType: is not the only door: -type is a settable public property, so a
+// plain MTMathAtom can be relabelled as a macro after the fact. Expansion dispatches
+// on class and carries it through untouched, and the typesetter would silently drop
+// it — so -finalized asserts on the way past.
+- (void)testFinalizedRejectsNonMacroAtomTypedAsMacro
+{
+    MTMathAtom* impostor = [MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"];
+    impostor.type = kMTMathAtomMacro;
+    MTMathList* list = [MTMathList new];
+    [list addAtom:impostor];
+    XCTAssertThrows([list finalized]);
+}
+
 // -expansion substitutes #N only at the top level, so a nested placeholder would
-// otherwise reach the finalized list and render as a literal "#1".
+// otherwise reach the finalized list and render as a literal "#1". Caught by an
+// assert at construction, which raises in this (assertions-enabled) build.
 - (void)testMacroAtomRejectsNestedPlaceholderInTemplate
 {
     MTMathGroup* group = [[MTMathGroup alloc] init];
@@ -332,11 +346,23 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
     MTMathList* shallow = [MTMathList new];
     [shallow addAtom:NestedPodChain(8)];
     XCTAssertNoThrow([shallow finalized]);
+
+    // Pin the boundary itself: the outermost macro expands at depth 0, so a chain of
+    // exactly kMTMaxMacroExpansionDepth (32) reaches depth 31 and is allowed, while
+    // 33 reaches the limit and fails.
+    MTMathList* atLimit = [MTMathList new];
+    [atLimit addAtom:NestedPodChain(32)];
+    XCTAssertNoThrow([atLimit finalized]);
+
+    MTMathList* pastLimit = [MTMathList new];
+    [pastLimit addAtom:NestedPodChain(33)];
+    XCTAssertThrows([pastLimit finalized]);
 }
 
-// An arity mismatch drops the argument from the output entirely if it is only an
-// NSAssert, since shipping builds compile with NS_BLOCK_ASSERTIONS.
-- (void)testExpansionThrowsOnOutOfRangeArgumentIndex
+// An arity mismatch between template and invocation is a bug in the macro table,
+// so it asserts (which raises here, where assertions are enabled). Builds with
+// NS_BLOCK_ASSERTIONS keep the placeholder instead, rendering a literal "#2".
+- (void)testExpansionRejectsOutOfRangeArgumentIndex
 {
     MTMathList* templ = [MTMathList new];
     [templ addAtom:[[MTMacroParameterAtom alloc] initWithArgumentIndex:2]];
@@ -518,6 +544,24 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     XCTAssertEqual(macro.templateExpression.atoms.count, 4ul);
     XCTAssertTrue([macro.templateExpression.atoms[2] isKindOfClass:[MTMacroParameterAtom class]]);
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+}
+
+// Re-finalizing an already-finalized list must be a no-op. The typesetter depends
+// on it, and it is the invariant that would break if expansion left anything behind
+// for a second reclassifying pass to act on.
+- (void)testRefinalizingExpandedListIsIdempotent
+{
+    MTMathList* list = [MTMathList new];
+    [list addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"]];
+    [list addAtom:ModMacroWithArgument(@"n+")];
+
+    MTMathList* once = list.finalized;
+    MTMathList* twice = once.finalized;
+    XCTAssertNotEqual(twice, once);
+    XCTAssertEqualObjects(ListSignature(twice), ListSignature(once));
+    // The trailing Bin was already demoted to Unary by the first pass; the second
+    // must find nothing left to reclassify.
+    XCTAssertEqual(once.atoms.lastObject.type, kMTMathAtomUnaryOperator);
 }
 
 // A macro nested inside another macro's argument is expanded by the same pass

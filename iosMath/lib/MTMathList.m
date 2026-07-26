@@ -12,7 +12,7 @@
 #import "MTMathList.h"
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
-#import "internal/MTMacroParameterAtom.h"
+#import "MTMacroParameterAtom.h"
 
 // Returns true if the current binary operator is not really binary.
 static BOOL isNotBinaryOperator(MTMathAtom* prevNode)
@@ -126,17 +126,24 @@ static BOOL MTContainsMacroParameter(id object)
         }
         return NO;
     }
+    // Keys and their selectors are both resolved once: this runs per visited object,
+    // and NSSelectorFromString on every key on every visit is pure overhead.
     static NSArray<NSString*>* childKeys = nil;
+    static SEL* childSelectors = NULL;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         childKeys = @[ @"innerList", @"numerator", @"denominator", @"radicand",
                        @"degree", @"superScript", @"subScript", @"cells",
                        @"over", @"under", @"list", @"arguments",
                        @"templateExpression" ];
+        childSelectors = calloc(childKeys.count, sizeof(SEL));
+        for (NSUInteger i = 0; i < childKeys.count; i++) {
+            childSelectors[i] = NSSelectorFromString(childKeys[i]);
+        }
     });
-    for (NSString* key in childKeys) {
-        if ([object respondsToSelector:NSSelectorFromString(key)]
-            && MTContainsMacroParameter([object valueForKey:key])) {
+    for (NSUInteger i = 0; i < childKeys.count; i++) {
+        if ([object respondsToSelector:childSelectors[i]]
+            && MTContainsMacroParameter([object valueForKey:childKeys[i]])) {
             return YES;
         }
     }
@@ -1788,6 +1795,13 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
     MTMathAtom* prevNode = nil;
     for (MTMathAtom* atom in expanded.atoms) {
+        // -expandMacros dispatches on class, so a real MTMacroAtom is already gone.
+        // What this catches is a plain MTMathAtom whose settable public -type was
+        // forced to kMTMathAtomMacro: it walks through expansion untouched and would
+        // otherwise reach the typesetter, which drops it.
+        NSAssert(atom.type != kMTMathAtomMacro,
+                 @"Atom %@ claims to be a macro but is not an MTMacroAtom; -type must not be set to kMTMathAtomMacro.",
+                 atom.stringValue);
         NSAssert(![atom isKindOfClass:[MTMacroParameterAtom class]],
                  @"Macro parameter placeholder %@ escaped a template; expansion must consume it.",
                  atom.nucleus);
@@ -1887,18 +1901,21 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     NSParameterAssert(templateExpression);
     // -expansion substitutes #N only at the top level of the template, so a
     // placeholder buried in a sub-list (\frac{#1}{2}, {#1}, x^{#1}) would survive
-    // into the finalized list and render as a literal "#1". Reject it here, where
-    // the mistake was made, rather than letting it surface as a confusing assert
-    // one recursion level down.
+    // into the finalized list and render as a literal "#1". Catch it here, where the
+    // mistake was made, rather than letting it surface one recursion level down.
+    //
+    // An assert, not an exception: templates are authored in this library, never by
+    // the person writing the LaTeX, so a nested placeholder is a programming error to
+    // be caught in testing. If assertions are compiled out, construction proceeds and
+    // the stray placeholder renders as a visible literal "#1" — wrong, but never
+    // silently dropped.
     for (MTMathAtom* templateAtom in templateExpression.atoms) {
         if ([templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
             continue;
         }
-        if (MTContainsMacroParameter(templateAtom)) {
-            @throw [NSException exceptionWithName:@"InvalidTemplate"
-                                           reason:[NSString stringWithFormat:@"Template for \\%@ nests a #N placeholder inside %@; macro templates must keep their argument references at the top level.", command, NSStringFromClass([templateAtom class])]
-                                         userInfo:nil];
-        }
+        NSAssert(!MTContainsMacroParameter(templateAtom),
+                 @"Template for \\%@ nests a #N placeholder inside %@; macro templates must keep their argument references at the top level.",
+                 command, NSStringFromClass([templateAtom class]));
     }
     self = [super initWithType:kMTMathAtomMacro value:@""];
     if (self) {
@@ -1994,13 +2011,15 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
         }
         NSUInteger index = [(MTMacroParameterAtom*)templateAtom argumentIndex];
         if (index < 1 || index > self.arguments.count) {
-            // An arity mismatch between template and invocation is unambiguously a
-            // programming error, so throw rather than assert-and-drop: dropping the
-            // placeholder makes the argument silently vanish from the output in any
-            // build compiled with NS_BLOCK_ASSERTIONS.
-            @throw [NSException exceptionWithName:@"InvalidMacroArgumentIndex"
-                                           reason:[NSString stringWithFormat:@"Macro \\%@ template references #%lu but %lu argument(s) were parsed.", self.command, (unsigned long)index, (unsigned long)self.arguments.count]
-                                         userInfo:nil];
+            // Template and invocation disagree on arity — a bug in the built-in macro
+            // table, not something the LaTeX author can cause, so it asserts. With
+            // assertions compiled out the placeholder is carried through instead of
+            // dropped, so the mismatch renders as a visible literal "#2" rather than
+            // making the argument silently vanish.
+            NSAssert(NO, @"Macro \\%@ template references #%lu but %lu argument(s) were parsed.",
+                     self.command, (unsigned long)index, (unsigned long)self.arguments.count);
+            [out addAtom:[templateAtom copy]];
+            continue;
         }
         [out append:[self.arguments[index - 1] copy]];
     }
@@ -2056,8 +2075,8 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     NSParameterAssert(argumentIndex >= 1 && argumentIndex <= 9);
     // Ordinary + a visible "#N" nucleus: if a placeholder ever did leak into a
-    // rendered list (it must not — finalizedAssumingNoMacros asserts), it shows up
-    // as literal "#1" rather than crashing on an unhandled enum value.
+    // rendered list (it must not — -finalized asserts), it shows up as literal "#1"
+    // rather than crashing on an unhandled enum value.
     self = [super initWithType:kMTMathAtomOrdinary
                          value:[NSString stringWithFormat:@"#%lu", (unsigned long)argumentIndex]];
     if (self) {

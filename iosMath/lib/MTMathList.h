@@ -702,6 +702,17 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
  parsed once, at parse time — so it is not a second source of truth for
  `arguments`: the expansion is re-derived from (`templateExpression`, current
  `arguments`) every time `-[MTMathList finalized]` runs.
+
+ @note Expansion happens in list context, so `-[MTMacroAtom finalized]` on a lone
+ atom returns another macro atom rather than the expansion. Only
+ `-[MTMathList finalized]` expands.
+
+ @note Templates must be flat with respect to their placeholders (see
+ `templateExpression`). A composite template such as `\frac{#1}{#2}` cannot be
+ expressed, since substitution only reaches the top level. The built-in templates
+ all satisfy this — `\mkern8mu(\mathrm{mod}\mkern6mu#1)` keeps `#1` at the top
+ level because `(` and `)` are separate atoms — but a future user-facing
+ `\newcommand` would need substitution to descend into sub-lists first.
  */
 @interface MTMacroAtom : MTMathAtom
 
@@ -714,7 +725,8 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
 /** The golden expansion template: a raw (non-finalized) expression whose `#N`
  references are placeholder atoms. Argument-free, and flat with respect to those
- placeholders — a `#N` nested inside a sub-list is rejected by the initializer. */
+ placeholders — a `#N` nested inside a sub-list trips an assert in the
+ initializer. */
 @property (nonatomic, strong, readonly) MTMathList* templateExpression;
 
 - (instancetype)initWithCommand:(NSString*)command
