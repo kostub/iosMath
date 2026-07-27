@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
-		C01DEC0DE20260726000003 /* MTModularArithmeticTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */; };
 		49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */; };
 		490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465C01D23DA8400F82033 /* MTFontManagerTest.m */; };
 		492EED0817DAEDD200939107 /* MTFontManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 492EECFA17DAED9000939107 /* MTFontManager.m */; };
@@ -78,8 +77,6 @@
 
 /* Begin PBXFileReference section */
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
-		C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTModularArithmeticTest.m; sourceTree = "<group>"; };
-		C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMacroParameterAtom.h; sourceTree = "<group>"; };
 		49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInkWidthTest.m; sourceTree = "<group>"; };
 		490465C01D23DA8400F82033 /* MTFontManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManagerTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
@@ -261,7 +258,6 @@
 				C01DEC0DE20260722000104 /* MTMathUILabelSizingTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
-				C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */,
 				49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */,
 				490465C01D23DA8400F82033 /* MTFontManagerTest.m */,
 				49965F2417CBBA2700A555C5 /* Supporting Files */,
@@ -289,7 +285,7 @@
 				492EED0317DAEDB500939107 /* MTMathList.m */,
 				492EED0417DAEDB500939107 /* MTMathListBuilder.h */,
 				492EECFF17DAEDB500939107 /* MTMathListBuilder.m */,
-				C01DEC0DE20260726000004 /* internal */,
+				49DA6BC319A05F850086B19F /* MTUnicode.h */,
 				49DA6BC619A062A30086B19F /* MTUnicode.m */,
 			);
 			path = lib;
@@ -345,15 +341,6 @@
 				492EECFA17DAED9000939107 /* MTFontManager.m */,
 			);
 			name = fonts;
-			sourceTree = "<group>";
-		};
-		C01DEC0DE20260726000004 /* internal */ = {
-			isa = PBXGroup;
-			children = (
-				C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */,
-				49DA6BC319A05F850086B19F /* MTUnicode.h */,
-			);
-			path = internal;
 			sourceTree = "<group>";
 		};
 		49EEFD791D19B616002D15C4 /* internal */ = {
@@ -550,7 +537,6 @@
 				C01DEC0DE20260722000103 /* MTMathUILabelSizingTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
 				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
-				C01DEC0DE20260726000003 /* MTModularArithmeticTest.m in Sources */,
 				49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */,
 				490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */,
 			);
@@ -649,7 +635,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
-					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
@@ -702,7 +687,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
-					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);

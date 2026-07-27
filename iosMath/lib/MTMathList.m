@@ -12,7 +12,6 @@
 #import "MTMathList.h"
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
-#import "MTMacroParameterAtom.h"
 
 // Returns true if the current binary operator is not really binary.
 static BOOL isNotBinaryOperator(MTMathAtom* prevNode)
@@ -71,8 +70,6 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Box";
         case kMTMathAtomOrdGroup:
             return @"Ord Group";
-        case kMTMathAtomMacro:
-            return @"Macro";
         case kMTMathAtomBoundary:
             return @"Boundary";
         case kMTMathAtomSpace:
@@ -87,100 +84,6 @@ static NSString* typeToText(MTMathAtomType type) {
             return @"Table";
     }
 }
-
-// NSArray's -copy is shallow: it copies the array but shares the (mutable)
-// MTMathList elements. MTMathList's own -copyWithZone: is already deep.
-static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists)
-{
-    NSMutableArray<MTMathList*>* copies = [NSMutableArray arrayWithCapacity:lists.count];
-    for (MTMathList* list in lists) {
-        [copies addObject:[list copy]];
-    }
-    return [copies copy];
-}
-
-/** YES if `object` is, or transitively holds, an MTMacroParameterAtom.
-
- Duck-typed on the accessor names the containers in MTMathList.h share, rather
- than switched on -type: -innerList alone is declared on nine unrelated classes
- with no common protocol, and a container added later that follows the same
- naming is covered for free. */
-static BOOL MTContainsMacroParameter(id object)
-{
-    if ([object isKindOfClass:[MTMacroParameterAtom class]]) {
-        return YES;
-    }
-    if ([object isKindOfClass:[MTMathList class]]) {
-        for (MTMathAtom* atom in [(MTMathList*)object atoms]) {
-            if (MTContainsMacroParameter(atom)) {
-                return YES;
-            }
-        }
-        return NO;
-    }
-    if ([object isKindOfClass:[NSArray class]]) {
-        for (id element in (NSArray*)object) {
-            if (MTContainsMacroParameter(element)) {
-                return YES;
-            }
-        }
-        return NO;
-    }
-    // Keys and their selectors are both resolved once: this runs per visited object,
-    // and NSSelectorFromString on every key on every visit is pure overhead.
-    static NSArray<NSString*>* childKeys = nil;
-    static SEL* childSelectors = NULL;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        childKeys = @[ @"innerList", @"numerator", @"denominator", @"radicand",
-                       @"degree", @"superScript", @"subScript", @"cells",
-                       @"over", @"under", @"list", @"arguments",
-                       @"templateExpression" ];
-        childSelectors = calloc(childKeys.count, sizeof(SEL));
-        for (NSUInteger i = 0; i < childKeys.count; i++) {
-            childSelectors[i] = NSSelectorFromString(childKeys[i]);
-        }
-    });
-    for (NSUInteger i = 0; i < childKeys.count; i++) {
-        if ([object respondsToSelector:childSelectors[i]]
-            && MTContainsMacroParameter([object valueForKey:childKeys[i]])) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
-/** How deep macro expansion may nest before it is declared runaway. Expansion
- recurses once per level of macro-inside-macro-argument nesting, so without a
- budget a deep enough chain runs the stack out instead of reporting anything. Real
- templates nest one or two levels. */
-static const NSUInteger kMTMaxMacroExpansionDepth = 32;
-
-@interface MTMathList ()
-
-/** Returns a copy of this list with every top-level MTMacroAtom replaced by its
- RAW (non-finalized) expansion. Non-macro atoms are carried over by reference. */
-- (MTMathList *)expandMacros;
-
-/** @param depth how many macro expansions are already on the stack. */
-- (MTMathList *)expandMacrosAtDepth:(NSUInteger)depth;
-
-@end
-
-@interface MTMacroAtom ()
-
-/** The RAW (non-finalized) atom stream this invocation stands for. */
-- (MTMathList *)expansion;
-
-/** @param depth how many macro expansions are already on the stack. Throws once
- it reaches kMTMaxMacroExpansionDepth. */
-- (MTMathList *)expansionAtDepth:(NSUInteger)depth;
-
-/** Moves this atom's scripts onto the last scriptable atom of `expansion`,
- appending an empty Ordinary when there is no free target. */
-- (void)transferScriptsToExpansion:(MTMathList *)expansion;
-
-@end
 
 @interface MTMathListBuilder (MTMathListSerializationSupport)
 
@@ -268,14 +171,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             
         case kMTMathAtomColorbox:
             return [[MTMathColorbox alloc] init];
-
-        case kMTMathAtomMacro:
-            // Falling through to the default would mint a plain MTMathAtom carrying
-            // type 22 — an atom that claims to be a macro but cannot expand.
-            @throw [NSException exceptionWithName:@"InvalidMethod"
-                                           reason:@"A macro atom cannot be created by type. Use -[MTMacroAtom initWithCommand:arguments:templateExpression:] instead."
-                                         userInfo:nil];
-
+            
         default:
             return [[MTMathAtom alloc] initWithType:type value:value];
     }
@@ -1781,30 +1677,13 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return self.atoms.description;
 }
 
-/** Reclassifies the list: demotes Bin to Unary at the boundaries where TeX does,
- fuses adjacent numbers, and assigns index ranges. Macros are expanded first —
- finalization is irreversible and context-dependent (a Bin demoted to Unary at one
- boundary cannot be restored), so the reclassifying pass must see the flat raw
- stream a macro stands for, not the macro atom. */
 - (MTMathList *)finalized
 {
-    MTMathList* expanded = [self expandMacros];
-
     MTMathList* finalized = [MTMathList new];
     NSRange zeroRange = NSMakeRange(0, 0);
-
+    
     MTMathAtom* prevNode = nil;
-    for (MTMathAtom* atom in expanded.atoms) {
-        // -expandMacros dispatches on class, so a real MTMacroAtom is already gone.
-        // What this catches is a plain MTMathAtom whose settable public -type was
-        // forced to kMTMathAtomMacro: it walks through expansion untouched and would
-        // otherwise reach the typesetter, which drops it.
-        NSAssert(atom.type != kMTMathAtomMacro,
-                 @"Atom %@ claims to be a macro but is not an MTMacroAtom; -type must not be set to kMTMathAtomMacro.",
-                 atom.stringValue);
-        NSAssert(![atom isKindOfClass:[MTMacroParameterAtom class]],
-                 @"Macro parameter placeholder %@ escaped a template; expansion must consume it.",
-                 atom.nucleus);
+    for (MTMathAtom* atom in self.atoms) {
         MTMathAtom* newNode = [atom finalized];
         // Each character is given a separate index.
         if (NSEqualRanges(zeroRange, atom.indexRange)) {
@@ -1849,33 +1728,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     return finalized;
 }
 
-- (MTMathList *)expandMacros
-{
-    return [self expandMacrosAtDepth:0];
-}
-
-- (MTMathList *)expandMacrosAtDepth:(NSUInteger)depth
-{
-    MTMathList* expanded = [MTMathList new];
-    for (MTMathAtom* atom in self.atoms) {
-        // isKindOfClass: rather than atom.type: `type` is a settable public property,
-        // so a plain MTMathAtom can carry kMTMathAtomMacro without responding to
-        // -expansion. Same idiom as the MTMacroParameterAtom check above.
-        if (![atom isKindOfClass:[MTMacroAtom class]]) {
-            // Carried through by reference and WITHOUT descending into sub-lists
-            // (numerator/denominator/radicand/innerList/cells/scripts). Every
-            // container's -finalized calls the public -finalized on its children,
-            // which expands those lists in turn — so this code needs to understand
-            // zero container types. Sharing is safe because -finalized copies every
-            // atom it keeps, via [atom finalized].
-            [expanded addAtom:atom];
-            continue;
-        }
-        [expanded append:[(MTMacroAtom*)atom expansionAtDepth:depth]];
-    }
-    return expanded;
-}
-
 #pragma mark NSCopying
 
 // Makes a deep copy of the list
@@ -1884,215 +1736,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     MTMathList* list = [[[self class] allocWithZone:zone] init];
     list->_atoms = [[NSMutableArray alloc] initWithArray:self.atoms copyItems:YES];
     return list;
-}
-
-@end
-
-#pragma mark - MTMacroAtom
-
-@implementation MTMacroAtom
-
-- (instancetype)initWithCommand:(NSString*)command
-                      arguments:(NSArray<MTMathList*>*)arguments
-             templateExpression:(MTMathList*)templateExpression
-{
-    NSParameterAssert(command);
-    NSParameterAssert(arguments);
-    NSParameterAssert(templateExpression);
-    // -expansion substitutes #N only at the top level of the template, so a
-    // placeholder buried in a sub-list (\frac{#1}{2}, {#1}, x^{#1}) would survive
-    // into the finalized list and render as a literal "#1". Catch it here, where the
-    // mistake was made, rather than letting it surface one recursion level down.
-    //
-    // An assert, not an exception: templates are authored in this library, never by
-    // the person writing the LaTeX, so a nested placeholder is a programming error to
-    // be caught in testing. If assertions are compiled out, construction proceeds and
-    // the stray placeholder renders as a visible literal "#1" — wrong, but never
-    // silently dropped.
-    for (MTMathAtom* templateAtom in templateExpression.atoms) {
-        if ([templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
-            continue;
-        }
-        NSAssert(!MTContainsMacroParameter(templateAtom),
-                 @"Template for \\%@ nests a #N placeholder inside %@; macro templates must keep their argument references at the top level.",
-                 command, NSStringFromClass([templateAtom class]));
-    }
-    self = [super initWithType:kMTMathAtomMacro value:@""];
-    if (self) {
-        _command = [command copy];
-        _arguments = MTDeepCopyMathListArray(arguments);
-        _templateExpression = [templateExpression copy];
-    }
-    return self;
-}
-
-- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value
-{
-    // NS_UNAVAILABLE in the header already blocks statically typed callers; this
-    // catches the dynamic ones. Unlike MTInner/MTMathColorbox there is no valid
-    // zero-argument construction to fall back to — command, arguments and template
-    // are all required — so it throws rather than redirecting to a bare -init.
-    @throw [NSException exceptionWithName:@"InvalidMethod"
-                                   reason:@"[MTMacroAtom initWithType:value:] cannot be called. Use -initWithCommand:arguments:templateExpression: instead."
-                                 userInfo:nil];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    // Cannot route through [super copyWithZone:], which would call the throwing
-    // -initWithType:value:. The designated initializer already deep-copies both
-    // arguments and template, so only the MTMathAtom fields need carrying over.
-    MTMacroAtom* copy = [[[self class] allocWithZone:zone] initWithCommand:self.command
-                                                                 arguments:self.arguments
-                                                        templateExpression:self.templateExpression];
-    copy.subScript = [self.subScript copyWithZone:zone];
-    copy.superScript = [self.superScript copyWithZone:zone];
-    copy.indexRange = self.indexRange;
-    copy.fontStyle = self.fontStyle;
-    return copy;
-}
-
-- (NSString *)stringValue
-{
-    NSMutableString* str = [NSMutableString stringWithFormat:@"\\%@", self.command];
-    for (MTMathList* arg in self.arguments) {
-        [str appendFormat:@"{%@}", arg.stringValue];
-    }
-    if (self.superScript) {
-        [str appendFormat:@"^{%@}", self.superScript.stringValue];
-    }
-    if (self.subScript) {
-        [str appendFormat:@"_{%@}", self.subScript.stringValue];
-    }
-    return str;
-}
-
-- (void)appendLaTeXToString:(NSMutableString *)str
-{
-    // Command-faithful, argument-canonical: the invocation round-trips as \pmod{…},
-    // and the argument is re-serialized by the usual serializer rather than
-    // preserved character-for-character. +mathListToString: appends the ^{…}/_{…}
-    // tail for us.
-    [str appendFormat:@"\\%@", self.command];
-    if (self.arguments.count == 0) {
-        // Nothing would terminate the command name otherwise, so a zero-argument
-        // \noargs followed by x would re-parse as the single command \noargsx.
-        [str appendString:@" "];
-    }
-    for (MTMathList* arg in self.arguments) {
-        [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:arg]];
-    }
-}
-
-- (MTMathList *)expansion
-{
-    return [self expansionAtDepth:0];
-}
-
-- (MTMathList *)expansionAtDepth:(NSUInteger)depth
-{
-    if (depth >= kMTMaxMacroExpansionDepth) {
-        // Note this does NOT catch a cyclic atom graph ([macro.arguments[0]
-        // addAtom:macro]). That overflows in -copyWithZone: before expansion runs,
-        // exactly as [group.innerList addAtom:group] does for MTMathGroup — every
-        // container here assumes a tree, which is a broader concern than macros.
-        @throw [NSException exceptionWithName:@"RunawayMacroExpansion"
-                                       reason:[NSString stringWithFormat:@"Expansion of \\%@ exceeded the maximum depth of %lu; check for a macro nested inside its own argument.", self.command, (unsigned long)kMTMaxMacroExpansionDepth]
-                                     userInfo:nil];
-    }
-    MTMathList* out = [MTMathList new];
-    for (MTMathAtom* templateAtom in self.templateExpression.atoms) {
-        if (![templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
-            // Deep copies throughout, so the stored template and arguments stay
-            // pristine for serialization, for post-parse mutation, and for repeated
-            // -finalized calls.
-            [out addAtom:[templateAtom copy]];
-            continue;
-        }
-        NSUInteger index = [(MTMacroParameterAtom*)templateAtom argumentIndex];
-        if (index < 1 || index > self.arguments.count) {
-            // Template and invocation disagree on arity — a bug in the built-in macro
-            // table, not something the LaTeX author can cause, so it asserts. With
-            // assertions compiled out the placeholder is carried through instead of
-            // dropped, so the mismatch renders as a visible literal "#2" rather than
-            // making the argument silently vanish.
-            NSAssert(NO, @"Macro \\%@ template references #%lu but %lu argument(s) were parsed.",
-                     self.command, (unsigned long)index, (unsigned long)self.arguments.count);
-            [out addAtom:[templateAtom copy]];
-            continue;
-        }
-        [out append:[self.arguments[index - 1] copy]];
-    }
-    // The template, or an argument, may itself contain a macro. Re-scan so the
-    // returned list is macro-free at its top level — and so script transfer below
-    // targets a real atom rather than an unexpanded MTMacroAtom.
-    MTMathList* flat = [out expandMacrosAtDepth:depth + 1];
-    [self transferScriptsToExpansion:flat];
-    return flat;
-}
-
-- (void)transferScriptsToExpansion:(MTMathList *)expansion
-{
-    if (!self.superScript && !self.subScript) {
-        return;
-    }
-    MTMathAtom* target = nil;
-    for (MTMathAtom* candidate in expansion.atoms.reverseObjectEnumerator) {
-        // -scriptsAllowed is type < kMTMathAtomBoundary, which already excludes
-        // Space (201), Style (202) and every other non-noad (MTMathList.m:222-225).
-        if (candidate.scriptsAllowed) {
-            target = candidate;
-            break;
-        }
-    }
-    // Slots are evaluated as a unit: if there is no target, or either slot we need
-    // is taken, BOTH scripts go on a fresh empty Ordinary so a ^/_ pair is never
-    // split. This is what the builder already does for x^2^3 and for a leading ^2
-    // (MTMathListBuilder.m:211-216, 224-228), so \mod{n^2}^3 behaves like
-    // \mod{n^2}{}^3 — iosMath's long-standing divergence from TeX, not a new one.
-    BOOL collides = (target == nil)
-        || (self.superScript && target.superScript)
-        || (self.subScript && target.subScript);
-    if (collides) {
-        target = [MTMathAtom atomWithType:kMTMathAtomOrdinary value:@""];
-        [expansion addAtom:target];
-    }
-    if (self.superScript) {
-        target.superScript = [self.superScript copy];
-    }
-    if (self.subScript) {
-        target.subScript = [self.subScript copy];
-    }
-}
-
-@end
-
-#pragma mark - MTMacroParameterAtom
-
-@implementation MTMacroParameterAtom
-
-- (instancetype)initWithArgumentIndex:(NSUInteger)argumentIndex
-{
-    NSParameterAssert(argumentIndex >= 1 && argumentIndex <= 9);
-    // Ordinary + a visible "#N" nucleus: if a placeholder ever did leak into a
-    // rendered list (it must not — -finalized asserts), it shows up as literal "#1"
-    // rather than crashing on an unhandled enum value.
-    self = [super initWithType:kMTMathAtomOrdinary
-                         value:[NSString stringWithFormat:@"#%lu", (unsigned long)argumentIndex]];
-    if (self) {
-        _argumentIndex = argumentIndex;
-    }
-    return self;
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    // MTMathAtom's -copyWithZone: allocates [self class] and calls
-    // -initWithType:value:, which this class does not override — so the copy is a
-    // MTMacroParameterAtom with the right nucleus but a zero index. Restore it.
-    MTMacroParameterAtom* copy = [super copyWithZone:zone];
-    copy->_argumentIndex = self.argumentIndex;
-    return copy;
 }
 
 @end

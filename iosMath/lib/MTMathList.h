@@ -72,12 +72,6 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// sub-mlist (== TeX Ord noad with sub_mlist / KaTeX "ordgroup").
     /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
     kMTMathAtomOrdGroup = 21,
-    /// An unexpanded macro invocation (\pmod, \mod, \pod). Holds the command name,
-    /// its parsed arguments, and an argument-free golden template. Expanded away by
-    /// -[MTMathList finalized], so it never reaches the typesetter.
-    /// Script-capable (< kMTMathAtomBoundary): ^/_ attaches at parse time and is
-    /// transferred onto the expansion.
-    kMTMathAtomMacro = 22,
 
     // Atoms after this point do not support subscripts or superscripts
 
@@ -691,52 +685,6 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
 /// The grouped math content.
 @property (nonatomic, nonnull) MTMathList* innerList;
-
-@end
-
-/** An unexpanded macro invocation.
-
- `\pmod{n}` parses to exactly one `MTMacroAtom`, which keeps the raw list small
- (trivial serialization, and `^`/`_` attach through the builder's shared tail).
- It carries an argument-free `templateExpression` holding `#N` placeholders —
- parsed once, at parse time — so it is not a second source of truth for
- `arguments`: the expansion is re-derived from (`templateExpression`, current
- `arguments`) every time `-[MTMathList finalized]` runs.
-
- @note Expansion happens in list context, so `-[MTMacroAtom finalized]` on a lone
- atom returns another macro atom rather than the expansion. Only
- `-[MTMathList finalized]` expands.
-
- @note Templates must be flat with respect to their placeholders (see
- `templateExpression`). A composite template such as `\frac{#1}{#2}` cannot be
- expressed, since substitution only reaches the top level. The built-in templates
- all satisfy this — `\mkern8mu(\mathrm{mod}\mkern6mu#1)` keeps `#1` at the top
- level because `(` and `)` are separate atoms — but a future user-facing
- `\newcommand` would need substitution to descend into sub-lists first.
- */
-@interface MTMacroAtom : MTMathAtom
-
-/** The command name without the leading backslash, e.g. `@"pmod"`. */
-@property (nonatomic, copy, readonly) NSString* command;
-
-/** The parsed arguments, in order. The array identity is immutable; the contained
- `MTMathList`s stay mutable and are owned by this atom (deep-copied at init). */
-@property (nonatomic, copy, readonly) NSArray<MTMathList*>* arguments;
-
-/** The golden expansion template: a raw (non-finalized) expression whose `#N`
- references are placeholder atoms. Argument-free, and flat with respect to those
- placeholders — a `#N` nested inside a sub-list trips an assert in the
- initializer. */
-@property (nonatomic, strong, readonly) MTMathList* templateExpression;
-
-- (instancetype)initWithCommand:(NSString*)command
-                      arguments:(NSArray<MTMathList*>*)arguments
-             templateExpression:(MTMathList*)templateExpression NS_DESIGNATED_INITIALIZER;
-
-/// A macro atom has no valid zero-argument construction — command, arguments and
-/// template are all required — so the generic initializer is unavailable. The
-/// implementation additionally throws, to catch dynamic (`id`-typed) callers.
-- (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value NS_UNAVAILABLE;
 
 @end
 

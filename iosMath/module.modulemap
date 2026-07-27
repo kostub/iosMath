@@ -1,6 +1,6 @@
 // Explicit module map for iosMath.
 // Only the intended public headers are listed here. Internal headers
-// (MTConfig.h, MTLabel.h, lib/internal/*, render/internal/*, category files)
+// (MTConfig.h, MTLabel.h, MTUnicode.h, render/internal/*, category files)
 // are deliberately excluded and will not appear in the Swift module interface.
 module iosMath {
     // Primary rendering API

@@ -12,7 +12,7 @@
 #import "MTFont+Internal.h"
 #import "MTFontManager.h"
 #import "MTMathListDisplayInternal.h"
-#import "MTUnicode.h"
+#import "../../lib/MTUnicode.h"
 
 #pragma mark Inter Element Spacing
 
@@ -616,9 +616,7 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             case kMTMathAtomNumber:
             case kMTMathAtomVariable:
             case kMTMathAtomUnaryOperator:
-            case kMTMathAtomMacro:
                 // These should never appear as they should have been removed by preprocessing
-                // (macros are expanded by -[MTMathList finalized] before typesetting).
                 NSAssert(NO, @"These types should never show here as they are removed by preprocessing.");
                 break;
                 
