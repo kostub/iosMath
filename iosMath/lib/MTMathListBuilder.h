@@ -51,6 +51,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// This converts the MTMathList to LaTeX.
 + (NSString *) mathListToString:(MTMathList *)ml;
 
+/** The names of the supported one-argument macro commands (`pmod`, `mod`, `pod`),
+ without the leading backslash.
+
+ These are macros, not symbols: they are absent from
+ `+[MTMathAtomFactory supportedLatexSymbolNames]`, which remains symbol-only. Check
+ both lists to enumerate everything the parser accepts. `\bmod` is a symbol and
+ appears in the symbol list, not here.
+ */
++ (NSArray<NSString *> *) supportedMacroNames;
+
 /**
  @typedef MTParseErrors
  @brief The error encountered when parsing a LaTeX string.
@@ -97,6 +107,9 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMissingColumnSpec,
     /// An array column specification was empty or used an unsupported specifier.
     MTParseErrorInvalidColumnSpec,
+    /// A command that requires an argument was given none — end of input, or a
+    /// `}`/`^`/`_`/`&` where the argument should be.
+    MTParseErrorMissingArgument,
 };
 
 @end
