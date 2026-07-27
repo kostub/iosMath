@@ -99,13 +99,13 @@ static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists
     return [copies copy];
 }
 
-/** Declared in MTMacroParameterAtom.h.
+/** YES if `object` is, or transitively holds, an MTMacroParameterAtom.
 
  Duck-typed on the accessor names the containers in MTMathList.h share, rather
  than switched on -type: -innerList alone is declared on nine unrelated classes
  with no common protocol, and a container added later that follows the same
  naming is covered for free. */
-BOOL MTContainsMacroParameter(id object)
+static BOOL MTContainsMacroParameter(id object)
 {
     if ([object isKindOfClass:[MTMacroParameterAtom class]]) {
         return YES;
@@ -150,31 +150,22 @@ BOOL MTContainsMacroParameter(id object)
     return NO;
 }
 
-/** How deep macro expansion may nest before it is declared runaway. Expansion
- recurses once per level of macro-inside-macro-argument nesting, so without a
- budget a deep enough chain runs the stack out instead of reporting anything. Real
- templates nest one or two levels. */
-static const NSUInteger kMTMaxMacroExpansionDepth = 32;
-
 @interface MTMathList ()
 
 /** Returns a copy of this list with every top-level MTMacroAtom replaced by its
  RAW (non-finalized) expansion. Non-macro atoms are carried over by reference. */
 - (MTMathList *)expandMacros;
 
-/** @param depth how many macro expansions are already on the stack. */
-- (MTMathList *)expandMacrosAtDepth:(NSUInteger)depth;
-
 @end
 
 @interface MTMacroAtom ()
 
-/** The RAW (non-finalized) atom stream this invocation stands for. */
-- (MTMathList *)expansion;
+/** The RAW (non-finalized) atom stream this invocation stands for.
 
-/** @param depth how many macro expansions are already on the stack. Throws once
- it reaches kMTMaxMacroExpansionDepth. */
-- (MTMathList *)expansionAtDepth:(NSUInteger)depth;
+ Recursion here is bounded by the nesting the parser accepted: a macro can only
+ land inside another macro's argument because the input nested them, and
+ -buildInternal: caps that at kMTMaxRecursionDepth. No separate budget needed. */
+- (MTMathList *)expansion;
 
 /** Moves this atom's scripts onto the last scriptable atom of `expansion`,
  appending an empty Ordinary when there is no free target. */
@@ -1851,11 +1842,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (MTMathList *)expandMacros
 {
-    return [self expandMacrosAtDepth:0];
-}
-
-- (MTMathList *)expandMacrosAtDepth:(NSUInteger)depth
-{
     MTMathList* expanded = [MTMathList new];
     for (MTMathAtom* atom in self.atoms) {
         // isKindOfClass: rather than atom.type: `type` is a settable public property,
@@ -1871,7 +1857,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             [expanded addAtom:atom];
             continue;
         }
-        [expanded append:[(MTMacroAtom*)atom expansionAtDepth:depth]];
+        [expanded append:[(MTMacroAtom*)atom expansion]];
     }
     return expanded;
 }
@@ -1911,6 +1897,14 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     // silently dropped.
     for (MTMathAtom* templateAtom in templateExpression.atoms) {
         if ([templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
+            // A top-level placeholder is the supported case, but -expansion swaps it
+            // out for the argument's atoms, so a script hung on the placeholder itself
+            // would go with it. Same reasoning as above: library-authored, so assert,
+            // and the compiled-out path merely loses the script rather than the
+            // argument.
+            NSAssert(!templateAtom.superScript && !templateAtom.subScript,
+                     @"Template for \\%@ puts a script on #%lu; scripts must go on an atom next to the placeholder, not on the placeholder itself.",
+                     command, (unsigned long)[(MTMacroParameterAtom*)templateAtom argumentIndex]);
             continue;
         }
         NSAssert(!MTContainsMacroParameter(templateAtom),
@@ -1986,20 +1980,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (MTMathList *)expansion
 {
-    return [self expansionAtDepth:0];
-}
-
-- (MTMathList *)expansionAtDepth:(NSUInteger)depth
-{
-    if (depth >= kMTMaxMacroExpansionDepth) {
-        // Note this does NOT catch a cyclic atom graph ([macro.arguments[0]
-        // addAtom:macro]). That overflows in -copyWithZone: before expansion runs,
-        // exactly as [group.innerList addAtom:group] does for MTMathGroup — every
-        // container here assumes a tree, which is a broader concern than macros.
-        @throw [NSException exceptionWithName:@"RunawayMacroExpansion"
-                                       reason:[NSString stringWithFormat:@"Expansion of \\%@ exceeded the maximum depth of %lu; check for a macro nested inside its own argument.", self.command, (unsigned long)kMTMaxMacroExpansionDepth]
-                                     userInfo:nil];
-    }
     MTMathList* out = [MTMathList new];
     for (MTMathAtom* templateAtom in self.templateExpression.atoms) {
         if (![templateAtom isKindOfClass:[MTMacroParameterAtom class]]) {
@@ -2026,7 +2006,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     // The template, or an argument, may itself contain a macro. Re-scan so the
     // returned list is macro-free at its top level — and so script transfer below
     // targets a real atom rather than an unexpanded MTMacroAtom.
-    MTMathList* flat = [out expandMacrosAtDepth:depth + 1];
+    MTMathList* flat = [out expandMacros];
     [self transferScriptsToExpansion:flat];
     return flat;
 }

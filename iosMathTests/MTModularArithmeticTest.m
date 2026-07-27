@@ -39,8 +39,7 @@ static NSString* ListSignature(MTMathList* list);
 @end
 
 @interface MTMathListBuilder (MTTemplateModeTesting)
-+ (nullable MTMathList *)buildTemplate:(NSString *)templateString
-                         argumentCount:(NSUInteger)argumentCount;
++ (nullable MTMathList *)buildTemplate:(NSString *)templateString;
 @end
 
 @implementation MTModularArithmeticTest
@@ -326,6 +325,25 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
                                       templateExpression:nestedScript]);
 }
 
+// A top-level #N is legal, but -expansion swaps it out for the argument's atoms, so
+// a script hung on the placeholder itself would go with it. The only place that can
+// be caught is construction — a nested {#1}^2 is rejected by the check above, so a
+// scripted placeholder is simply not expressible.
+- (void)testMacroAtomRejectsScriptedPlaceholder
+{
+    for (NSString* key in @[ @"superScript", @"subScript" ]) {
+        MTMacroParameterAtom* param = [[MTMacroParameterAtom alloc] initWithArgumentIndex:1];
+        MTMathList* script = [MTMathList new];
+        [script addAtom:[MTMathAtom atomWithType:kMTMathAtomNumber value:@"2"]];
+        [param setValue:script forKey:key];
+        MTMathList* templ = [MTMathList new];
+        [templ addAtom:param];
+        XCTAssertThrows([[MTMacroAtom alloc] initWithCommand:@"bad"
+                                                   arguments:@[ [MTMathListBuilder buildFromString:@"n"] ]
+                                          templateExpression:templ], @"%@", key);
+    }
+}
+
 // A top-level #N is exactly what the initializer must accept.
 - (void)testMacroAtomAcceptsTopLevelPlaceholder
 {
@@ -346,29 +364,34 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
     return macro;
 }
 
-// Expansion recurses once per nesting level, so an absurdly deep chain must fail
-// loud rather than run the stack out.
-- (void)testRunawayExpansionDepthThrows
+// Expansion recurses once per nesting level, but the nesting it can see is whatever
+// -buildInternal: already accepted, and that is capped at kMTMaxRecursionDepth. There
+// is deliberately no second budget inside expansion: an earlier one rejected chains
+// the parser was happy to build, turning legal input into an uncaught exception on
+// the render path. Deep-but-legal nesting must expand.
+- (void)testDeepNestingExpandsWithoutABudget
 {
-    MTMathList* deep = [MTMathList new];
-    [deep addAtom:NestedPodChain(64)];
-    XCTAssertThrows([deep finalized]);
+    for (NSNumber* depth in @[ @8, @32, @33, @64 ]) {
+        MTMathList* list = [MTMathList new];
+        [list addAtom:NestedPodChain(depth.unsignedIntegerValue)];
+        XCTAssertNoThrow([list finalized], @"depth %@", depth);
+    }
 
-    // Realistic nesting stays well inside the budget.
-    MTMathList* shallow = [MTMathList new];
-    [shallow addAtom:NestedPodChain(8)];
-    XCTAssertNoThrow([shallow finalized]);
-
-    // Pin the boundary itself: the outermost macro expands at depth 0, so a chain of
-    // exactly kMTMaxMacroExpansionDepth (32) reaches depth 31 and is allowed, while
-    // 33 reaches the limit and fails.
-    MTMathList* atLimit = [MTMathList new];
-    [atLimit addAtom:NestedPodChain(32)];
-    XCTAssertNoThrow([atLimit finalized]);
-
-    MTMathList* pastLimit = [MTMathList new];
-    [pastLimit addAtom:NestedPodChain(33)];
-    XCTAssertThrows([pastLimit finalized]);
+    // The parser side of the same claim: nesting that survives -buildInternal: also
+    // survives -finalized.
+    NSMutableString* latex = [NSMutableString string];
+    for (NSUInteger i = 0; i < 40; i++) {
+        [latex appendString:@"\\pod{"];
+    }
+    [latex appendString:@"n"];
+    for (NSUInteger i = 0; i < 40; i++) {
+        [latex appendString:@"}"];
+    }
+    NSError* error = nil;
+    MTMathList* parsed = [MTMathListBuilder buildFromString:latex error:&error];
+    XCTAssertNotNil(parsed);
+    XCTAssertNil(error);
+    XCTAssertNoThrow([parsed finalized]);
 }
 
 // An arity mismatch between template and invocation is a bug in the macro table,
@@ -1030,7 +1053,7 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateParsesPodExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(#1)" argumentCount:1];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(#1)"];
     XCTAssertNotNil(t);
     XCTAssertEqual(t.atoms.count, 4ul);
     XCTAssertEqual([t.atoms[0] type], kMTMathAtomSpace);
@@ -1043,7 +1066,7 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateParsesPmodExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)" argumentCount:1];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"];
     XCTAssertNotNil(t);
     // Space8, "(", m, o, d, Space6, #1, ")"
     XCTAssertEqual(t.atoms.count, 8ul);
@@ -1064,7 +1087,7 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateParsesModExpansion
 {
-    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1" argumentCount:1];
+    MTMathList* t = [MTMathListBuilder buildTemplate:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"];
     XCTAssertEqual(t.atoms.count, 6ul);
     XCTAssertEqualWithAccuracy([(MTMathSpace*)t.atoms[0] space], 12, 0.001);
     XCTAssertTrue([t.atoms[5] isKindOfClass:[MTMacroParameterAtom class]]);
@@ -1081,62 +1104,16 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testBuildTemplateRejectsMalformedPlaceholder
 {
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#x)" argumentCount:1]);
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#0)" argumentCount:1]);
-    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#" argumentCount:1]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#x)"]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#0)"]);
+    XCTAssertNil([MTMathListBuilder buildTemplate:@"(#"]);
 }
 
-#pragma mark - Template validation
-
-// The three checks below all guard -[MTMacroAtom expansion]'s preconditions. Each
-// is a programming error in +builtinMacros, so each asserts (debug) rather than
-// producing a parse error — no LaTeX input can reach them.
-
-- (void)testBuildTemplateRejectsNestedPlaceholder
+- (void)testEveryRegisteredMacroParses
 {
-    // -expansion substitutes only top-level #N, so a nested one survives into the
-    // finalized list and renders as a literal "#1" with assertions off. This is
-    // exactly how amsmath writes \pmod — \pod{{\operator@font mod}\mkern6mu#1} —
-    // so the flattened built-in template is a deliberate choice, now enforced.
-    for (NSString* template in @[ @"\\mkern8mu({\\mathrm{mod}\\mkern6mu#1})",
-                                  @"\\frac{#1}{2}",
-                                  @"x^{#1}",
-                                  @"\\sqrt{#1}" ]) {
-        XCTAssertThrows([MTMathListBuilder buildTemplate:template argumentCount:1],
-                        @"%@", template);
-    }
-}
-
-- (void)testBuildTemplateRejectsPlaceholderAboveDeclaredArity
-{
-    // Template and declared argumentCount disagree: with assertions off, -expansion
-    // carries #2 through and it renders as a literal "#2".
-    XCTAssertThrows([MTMathListBuilder buildTemplate:@"(#1,#2)" argumentCount:1]);
-    XCTAssertThrows([MTMathListBuilder buildTemplate:@"(#1)" argumentCount:0]);
-}
-
-- (void)testBuildTemplateRejectsScriptedPlaceholder
-{
-    // -expansion replaces the placeholder with the argument list wholesale, which
-    // would drop a script the placeholder itself carries.
-    XCTAssertThrows([MTMathListBuilder buildTemplate:@"#1^2" argumentCount:1]);
-    XCTAssertThrows([MTMathListBuilder buildTemplate:@"#1_2" argumentCount:1]);
-}
-
-- (void)testBuildTemplateAcceptsTopLevelPlaceholders
-{
-    // The guard must not reject a legal template: a placeholder used more than
-    // once, out of order, or with the declared arity to spare.
-    for (NSString* template in @[ @"(#1)", @"#1+#1", @"#2-#1", @"\\mathrm{mod}\\mkern6mu#1" ]) {
-        XCTAssertNotNil([MTMathListBuilder buildTemplate:template argumentCount:2],
-                        @"%@", template);
-    }
-}
-
-- (void)testBuiltinTemplatesPassValidation
-{
-    // Every registered macro parses and validates — the check that keeps the guard
-    // honest about the templates actually shipped.
+    // Every registered macro's template parses, builds an MTMacroAtom (whose
+    // initializer asserts the placeholder invariants), and expands — the check that
+    // keeps those asserts honest about the templates actually shipped.
     for (NSString* name in [MTMathListBuilder supportedMacroNames]) {
         NSError* error = nil;
         NSString* latex = [NSString stringWithFormat:@"\\%@{n}", name];

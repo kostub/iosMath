@@ -1214,10 +1214,9 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
     // Parsed with a FRESH builder instance, so the in-flight parse's state is never
     // swapped or restored.
-    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString
-                                            argumentCount:def.argumentCount];
+    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString];
     // A built-in template is a compile-time constant, never user input: failing to
-    // parse or validate it is a programming mistake, so fail loud.
+    // parse it is a programming mistake, so fail loud.
     NSAssert(golden != nil, @"Built-in macro template for \\%@ failed to parse: %@",
              command, def.templateString);
     if (!golden) {
@@ -1900,61 +1899,16 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // so nothing about the in-flight parse is swapped or restored. This is what lets the
 // template be parsed at parse time without a parser in the model layer (LLD §3.3).
 //
-// `argumentCount` is the arity the registry DECLARES for this macro; the template
-// independently contains #N references. Nothing else checks that the two agree, so
-// this is where they meet.
+// The two invariants -[MTMacroAtom expansion] depends on — no placeholder nested
+// below the top level, no script on a placeholder — are asserted where the atom is
+// constructed, in -[MTMacroAtom initWithCommand:arguments:templateExpression:], not
+// here. Templates are compile-time constants in +builtinMacros, so both are
+// programming errors rather than anything user input can reach.
 + (nullable MTMathList *)buildTemplate:(NSString *)templateString
-                         argumentCount:(NSUInteger)argumentCount
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:templateString];
     builder->_templateMode = YES;
-    MTMathList* parsed = [builder build];
-    if (!parsed || ![self validateTemplate:parsed argumentCount:argumentCount]) {
-        return nil;
-    }
-    return parsed;
-}
-
-// Checks the two invariants -[MTMacroAtom expansion] relies on but cannot enforce.
-// A template is a compile-time constant in +builtinMacros, so no user input can
-// reach either failure: both are programming errors and assert loudly. Rejecting
-// them here is what keeps them from becoming silently wrong OUTPUT downstream,
-// where a placeholder that survives expansion renders as a literal "#1" in Release.
-+ (BOOL)validateTemplate:(MTMathList*)parsed argumentCount:(NSUInteger)argumentCount
-{
-    for (MTMathAtom* atom in parsed.atoms) {
-        if ([atom isKindOfClass:[MTMacroParameterAtom class]]) {
-            NSUInteger index = [(MTMacroParameterAtom*)atom argumentIndex];
-            if (index > argumentCount) {
-                NSAssert(NO, @"Macro template references #%lu but declares only %lu argument(s).",
-                         (unsigned long)index, (unsigned long)argumentCount);
-                return NO;
-            }
-            // -expansion replaces the placeholder with the argument list wholesale,
-            // which would drop scripts the placeholder itself carries. Write #1^2 as
-            // {#1}^2 — except that nests the placeholder, which the next check
-            // rejects. In other words: a scripted placeholder is not expressible, so
-            // say so here instead of dropping it at expansion time.
-            if (atom.superScript || atom.subScript) {
-                NSAssert(NO, @"Macro template places a script on #%lu; -expansion cannot carry it.",
-                         (unsigned long)index);
-                return NO;
-            }
-            continue;
-        }
-        // -expansion substitutes only TOP-LEVEL placeholders, so a #N below one —
-        // inside a group, a script, a fraction — survives into the finalized list.
-        // amsmath's own \pmod nests exactly this way
-        // (\pod{{\operator@font mod}\mkern6mu#1}), so the flattened template here is
-        // correct only by deliberate choice, and nothing recorded that. Enforce it
-        // rather than depending on whoever edits the registry next.
-        if (MTContainsMacroParameter(atom)) {
-            NSAssert(NO, @"Macro template nests a #N placeholder inside %@; "
-                     @"-expansion only substitutes top-level placeholders.", [atom class]);
-            return NO;
-        }
-    }
-    return YES;
+    return [builder build];
 }
 
 + (MTMathList *)buildFromString:(NSString *)str error:(NSError *__autoreleasing *)error

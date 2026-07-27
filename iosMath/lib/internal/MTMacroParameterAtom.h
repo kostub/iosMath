@@ -30,12 +30,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** YES if `object` is, or transitively holds, an MTMacroParameterAtom.
-
- Walks every container an atom can hold, so it sees a placeholder at any depth —
- inside a group, a script, a fraction's numerator, a table cell. Used both to
- reject a nested placeholder when a template is parsed and to assert that none
- survives expansion. */
-BOOL MTContainsMacroParameter(id _Nullable object);
-
 NS_ASSUME_NONNULL_END
