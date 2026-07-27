@@ -79,7 +79,6 @@
 /* Begin PBXFileReference section */
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
 		C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTModularArithmeticTest.m; sourceTree = "<group>"; };
-		C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMacroParameterAtom.h; sourceTree = "<group>"; };
 		49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInkWidthTest.m; sourceTree = "<group>"; };
 		490465C01D23DA8400F82033 /* MTFontManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManagerTest.m; sourceTree = "<group>"; };
 		492EECF317DAED9000939107 /* MTMathListDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListDisplay.h; sourceTree = "<group>"; };
@@ -350,7 +349,6 @@
 		C01DEC0DE20260726000004 /* internal */ = {
 			isa = PBXGroup;
 			children = (
-				C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */,
 				49DA6BC319A05F850086B19F /* MTUnicode.h */,
 			);
 			path = internal;

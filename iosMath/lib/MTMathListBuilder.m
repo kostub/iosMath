@@ -11,7 +11,6 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
-#import "MTMacroParameterAtom.h"
 
 NSString *const MTParseError = @"ParseError";
 
@@ -44,23 +43,30 @@ NSString *const MTParseError = @"ParseError";
 
 #pragma mark - MTMacroDefinition
 
-// A built-in macro: how many arguments it takes, and the LaTeX it stands for
-// (with #1...#9 referencing arguments).
+// A built-in macro: how many arguments it takes, and the fixed LaTeX that brackets
+// them. \pmod{n} expands to prefix + n + suffix.
+//
+// Both halves are ordinary LaTeX parsed by the ordinary builder — there is no
+// template syntax and no placeholder atom. That buys one substitution region, which
+// is what these macros need; an expansion that interleaves fixed text between
+// several arguments is not expressible, and a user-facing \newcommand would need
+// substitution that descends into sub-lists rather than a richer table here.
 //
 // Parser-owned and file-private on purpose. The model layer needs NO registry
-// access: MTMacroAtom carries its already-parsed template list, so the dependency
-// runs one way (MTMathListBuilder -> MTMacroDefinition, at parse time) and
-// MTMathList.m never calls into the builder. A consequence worth keeping: an
-// invocation is bound to the expansion as it existed when parsed, so a future
-// mutable/user-defined registry (LLD §8.2) cannot retroactively change an
-// already-parsed atom. See LLD §3.3.
+// access: MTMacroAtom carries its already-parsed halves, so the dependency runs one
+// way (MTMathListBuilder -> MTMacroDefinition, at parse time) and MTMathList.m never
+// calls into the builder. A consequence worth keeping: an invocation is bound to the
+// expansion as it existed when parsed, so a future mutable registry cannot
+// retroactively change an already-parsed atom.
 @interface MTMacroDefinition : NSObject
 
 @property (nonatomic, readonly) NSUInteger argumentCount;      // declared, not inferred
-@property (nonatomic, copy, readonly) NSString* templateString;
+@property (nonatomic, copy, readonly) NSString* prefix;
+@property (nonatomic, copy, readonly) NSString* suffix;
 
 - (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString NS_DESIGNATED_INITIALIZER;
+                               prefix:(NSString*)prefix
+                               suffix:(NSString*)suffix NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
 
 @end
@@ -68,13 +74,16 @@ NSString *const MTParseError = @"ParseError";
 @implementation MTMacroDefinition
 
 - (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString
+                               prefix:(NSString*)prefix
+                               suffix:(NSString*)suffix
 {
-    NSParameterAssert(templateString);
+    NSParameterAssert(prefix);
+    NSParameterAssert(suffix);
     self = [super init];
     if (self) {
         _argumentCount = argumentCount;
-        _templateString = [templateString copy];
+        _prefix = [prefix copy];
+        _suffix = [suffix copy];
     }
     return self;
 }
@@ -100,10 +109,6 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
     // every buildInternal call so the check is always fresh.
     BOOL _groupWasTransformedByStopCommand;
-    // YES only while parsing a built-in macro's template string. Enables #1...#9
-    // placeholder atoms. Never set for user input, so '#' keeps raising
-    // MTParseErrorInvalidCharacter there. See buildTemplate: below.
-    BOOL _templateMode;
 }
 
 - (instancetype)initWithString:(NSString *)str
@@ -522,22 +527,6 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '~') {
             // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
-        } else if (_templateMode && ch == '#') {
-            // Macro argument reference. Only recognized inside a macro template; in
-            // user input '#' falls through to the invalid-character error below.
-            if (![self hasCharacters]) {
-                [self setError:MTParseErrorInvalidCharacter
-                       message:@"Macro template ended with a trailing '#'"];
-                return nil;
-            }
-            unichar digit = [self getNextCharacter];
-            if (digit < '1' || digit > '9') {
-                [self unlookCharacter];
-                [self setError:MTParseErrorInvalidCharacter
-                       message:[NSString stringWithFormat:@"Expected an argument number 1-9 after '#', got '%c'", digit]];
-                return nil;
-            }
-            atom = [[MTMacroParameterAtom alloc] initWithArgumentIndex:(NSUInteger)(digit - '0')];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
@@ -1212,19 +1201,20 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         }
         [args addObject:arg];
     }
-    // Parsed with a FRESH builder instance, so the in-flight parse's state is never
-    // swapped or restored.
-    MTMathList* golden = [MTMathListBuilder buildTemplate:def.templateString];
-    // A built-in template is a compile-time constant, never user input: failing to
-    // parse it is a programming mistake, so fail loud.
-    NSAssert(golden != nil, @"Built-in macro template for \\%@ failed to parse: %@",
-             command, def.templateString);
-    if (!golden) {
+    // Each half is parsed with a FRESH builder instance, so the in-flight parse's
+    // state is never swapped or restored.
+    MTMathList* prefix = [MTMathListBuilder buildFromString:def.prefix];
+    MTMathList* suffix = [MTMathListBuilder buildFromString:def.suffix];
+    // Both are compile-time constants, never user input: failing to parse one is a
+    // programming mistake, so fail loud.
+    NSAssert(prefix && suffix, @"Built-in expansion for \\%@ failed to parse: %@ / %@",
+             command, def.prefix, def.suffix);
+    if (!prefix || !suffix) {
         [self setError:MTParseErrorInternalError
-               message:[NSString stringWithFormat:@"Built-in macro template for \\%@ failed to parse", command]];
+               message:[NSString stringWithFormat:@"Built-in expansion for \\%@ failed to parse", command]];
         return nil;
     }
-    return [[MTMacroAtom alloc] initWithCommand:command arguments:args templateExpression:golden];
+    return [[MTMacroAtom alloc] initWithCommand:command arguments:args prefix:prefix suffix:suffix];
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -1823,15 +1813,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // switch to an 18mu leading gap, because a macro expands at parse time, before the
 // render style is known (LLD §4.2, PRD non-goal §3.1).
 //
-// The upright "mod" comes from \mathrm{mod} in the template — no manual Roman flag,
-// and the whole expansion stays expressible as one readable LaTeX string.
+// The upright "mod" comes from \mathrm{mod} in the prefix — no manual Roman flag,
+// and each half stays a readable LaTeX string.
 //
 // This dispatch_once builds STRINGS ONLY. Nothing is parsed inside it, so there is
-// no reentrancy with buildTemplate:. That is also why the parsed template is NOT
-// cached here: parsing one reaches -macroAtomForCommand: (every command does),
-// which calls back into this method — re-entering its own dispatch_once on the same
-// thread deadlocks. Templates are re-parsed per invocation instead, which is ~8
-// atoms; MTMacroAtom deep-copies the result anyway.
+// no reentrancy. That is also why the parsed halves are NOT cached here: parsing one
+// reaches -macroAtomForCommand: (every command does), which calls back into this
+// method — re-entering its own dispatch_once on the same thread deadlocks. They are
+// re-parsed per invocation instead, which is ~8 atoms; MTMacroAtom deep-copies the
+// result anyway.
 + (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
 {
     static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
@@ -1839,11 +1829,14 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     dispatch_once(&onceToken, ^{
         macros = @{
             @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                       templateString:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"],
+                                                               prefix:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu"
+                                                               suffix:@")"],
             @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                       templateString:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"],
+                                                               prefix:@"\\mkern12mu\\mathrm{mod}\\mkern6mu"
+                                                               suffix:@""],
             @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                       templateString:@"\\mkern8mu(#1)"],
+                                                               prefix:@"\\mkern8mu("
+                                                               suffix:@")"],
         };
     });
     return macros;
@@ -1893,22 +1886,6 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 {
     MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
     return builder.build;
-}
-
-// Parses a macro template with a FRESH builder instance: its own _chars/_currentChar,
-// so nothing about the in-flight parse is swapped or restored. This is what lets the
-// template be parsed at parse time without a parser in the model layer (LLD §3.3).
-//
-// The two invariants -[MTMacroAtom expansion] depends on — no placeholder nested
-// below the top level, no script on a placeholder — are asserted where the atom is
-// constructed, in -[MTMacroAtom initWithCommand:arguments:templateExpression:], not
-// here. Templates are compile-time constants in +builtinMacros, so both are
-// programming errors rather than anything user input can reach.
-+ (nullable MTMathList *)buildTemplate:(NSString *)templateString
-{
-    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:templateString];
-    builder->_templateMode = YES;
-    return [builder build];
 }
 
 + (MTMathList *)buildFromString:(NSString *)str error:(NSError *__autoreleasing *)error
