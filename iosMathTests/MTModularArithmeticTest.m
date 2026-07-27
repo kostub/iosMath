@@ -177,7 +177,7 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
 {
     MTMathList* arg = [MTMathListBuilder buildFromString:latex];
     return [[MTMacroAtom alloc] initWithCommand:@"pod"
-                                      arguments:@[ arg ]
+                                      argument:arg
                                          prefix:PodPrefix()
                                          suffix:PodSuffix()];
 }
@@ -187,11 +187,11 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
     MTMacroAtom* macro = PodMacroWithArgument(@"n");
     XCTAssertEqual(macro.type, kMTMathAtomMacro);
     XCTAssertEqualObjects(macro.command, @"pod");
-    XCTAssertEqual(macro.arguments.count, 1ul);
+    XCTAssertEqual(macro.argument.atoms.count, 1ul);
     XCTAssertEqual(macro.prefix.atoms.count, 2ul);
     XCTAssertEqual(macro.suffix.atoms.count, 1ul);
     // 22 sits just past kMTMathAtomOrdGroup (21), the last script-capable value,
-    // so a macro can carry ^/_ at parse time (MTMathList.h:74-78).
+    // so a macro can carry ^/_ at parse time.
     XCTAssertTrue(macro.scriptsAllowed);
 }
 
@@ -203,14 +203,14 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
     MTMathList* prefix = PodPrefix();
     MTMathList* suffix = PodSuffix();
     MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"pod"
-                                                    arguments:@[ arg ]
+                                                    argument:arg
                                                        prefix:prefix
                                                        suffix:suffix];
     [arg addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
     [prefix addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
     [suffix addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
 
-    XCTAssertEqual([macro.arguments[0] atoms].count, 1ul, @"argument was not deep-copied");
+    XCTAssertEqual([macro.argument atoms].count, 1ul, @"argument was not deep-copied");
     XCTAssertEqual(macro.prefix.atoms.count, 2ul, @"prefix was not deep-copied");
     XCTAssertEqual(macro.suffix.atoms.count, 1ul, @"suffix was not deep-copied");
 }
@@ -223,14 +223,14 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
 
     XCTAssertTrue([copy isKindOfClass:[MTMacroAtom class]]);
     XCTAssertEqualObjects(copy.command, @"pod");
-    XCTAssertNotEqual(copy.arguments[0], macro.arguments[0]);
+    XCTAssertNotEqual(copy.argument, macro.argument);
     XCTAssertNotEqual(copy.prefix, macro.prefix);
     XCTAssertEqual(copy.prefix.atoms.count, 2ul);
     XCTAssertEqual(copy.suffix.atoms.count, 1ul);
     XCTAssertNotNil(copy.superScript);
 
-    [macro.arguments[0] addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
-    XCTAssertEqual([copy.arguments[0] atoms].count, 1ul);
+    [macro.argument addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"z"]];
+    XCTAssertEqual([copy.argument atoms].count, 1ul);
 }
 
 // A macro atom has no valid zero-argument construction. NS_UNAVAILABLE stops
@@ -272,7 +272,7 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
         MTMathList* arg = [MTMathList new];
         [arg addAtom:macro];
         macro = [[MTMacroAtom alloc] initWithCommand:@"pod"
-                                           arguments:@[ arg ]
+                                           argument:arg
                                               prefix:PodPrefix()
                                               suffix:PodSuffix()];
     }
@@ -307,19 +307,6 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
     XCTAssertNoThrow([parsed finalized]);
 }
 
-// \noargs with nothing to terminate the command name would re-parse as \noargsx.
-- (void)testZeroArgumentMacroSerializesWithSeparator
-{
-    MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"noargs"
-                                                    arguments:@[]
-                                                       prefix:[MTMathListBuilder buildFromString:@"1"]
-                                                       suffix:[MTMathList new]];
-    MTMathList* list = [MTMathList new];
-    [list addAtom:macro];
-    [list addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"]];
-    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\noargs x");
-}
-
 - (void)testMacroAtomSerializesCommandFaithfully
 {
     MTMathList* list = [MTMathList new];
@@ -336,7 +323,7 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}^{2}");
 }
 
-// The template is not a source of truth for the arguments: mutating a parsed
+// The stored halves are not a source of truth for the argument: mutating a parsed
 // argument must show up in serialization.
 - (void)testMacroAtomSerializationTracksArgumentMutation
 {
@@ -345,7 +332,7 @@ static MTMacroAtom* NestedPodChain(NSUInteger depth)
     [list addAtom:macro];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{n}");
 
-    MTMathList* arg = macro.arguments[0];
+    MTMathList* arg = macro.argument;
     [arg removeAtomAtIndex:0];
     [arg addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"m"]];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pod{m}");
@@ -424,7 +411,7 @@ static MTMathList* ModPrefix(void)
 static MTMacroAtom* ModMacroWithArgument(NSString* latex)
 {
     return [[MTMacroAtom alloc] initWithCommand:@"mod"
-                                      arguments:@[ [MTMathListBuilder buildFromString:latex] ]
+                                      argument:[MTMathListBuilder buildFromString:latex]
                                          prefix:ModPrefix()
                                          suffix:[MTMathList new]];
 }
@@ -462,7 +449,7 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     XCTAssertEqual([expanded.atoms[3] type], kMTMathAtomBinaryOperator);
 }
 
-// Expansion must not consume the stored halves or arguments: finalizing twice
+// Expansion must not consume the stored halves or argument: finalizing twice
 // gives the same answer.
 - (void)testExpansionLeavesMacroAtomPristine
 {
@@ -475,7 +462,7 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     XCTAssertEqualObjects(first, second);
     XCTAssertEqual(macro.prefix.atoms.count, 2ul);
     XCTAssertEqual(macro.suffix.atoms.count, 1ul);
-    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.argument], @"n");
 }
 
 // Re-finalizing an already-finalized list must be a no-op. The typesetter depends
@@ -504,7 +491,7 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     MTMathList* outerArg = [MTMathList new];
     [outerArg addAtom:inner];
     MTMacroAtom* outer = [[MTMacroAtom alloc] initWithCommand:@"pod"
-                                                    arguments:@[ outerArg ]
+                                                    argument:outerArg
                                                        prefix:PodPrefix()
                                                        suffix:PodSuffix()];
     MTMathList* list = [MTMathList new];
@@ -565,7 +552,7 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     [list addAtom:macro];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list.finalized], @"\\mkern8.0mu(n)");
 
-    MTMathList* arg = macro.arguments[0];
+    MTMathList* arg = macro.argument;
     [arg removeAtomAtIndex:0];
     [arg addAtom:[MTMathAtom atomWithType:kMTMathAtomVariable value:@"m"]];
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list.finalized], @"\\mkern8.0mu(m)");
@@ -694,7 +681,7 @@ static MTMacroAtom* ModMacroWithArgument(NSString* latex)
     [spacesOnly addAtom:[[MTMathSpace alloc] initWithSpace:8]];
     [spacesOnly addAtom:[[MTMathSpace alloc] initWithSpace:6]];
     MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"spacesonly"
-                                                    arguments:@[]
+                                                    argument:[MTMathList new]
                                                        prefix:spacesOnly
                                                        suffix:[MTMathList new]];
     macro.superScript = [MTMathListBuilder buildFromString:@"2"];
@@ -995,30 +982,14 @@ static NSString* ListSignature(MTMathList* list)
 // always has.
 - (void)testEveryRegisteredMacroParses
 {
-    // Every registered macro's prefix and suffix parse and build an MTMacroAtom —
-    // the check that keeps the registry honest, since a malformed half would
-    // otherwise only surface as MTParseErrorInternalError at invocation.
-    for (NSString* name in [MTMathListBuilder supportedMacroNames]) {
+    // Keeps the registry honest: a malformed half would otherwise only surface as
+    // MTParseErrorInternalError at invocation.
+    for (NSString* name in @[ @"pmod", @"mod", @"pod" ]) {
         NSError* error = nil;
         NSString* latex = [NSString stringWithFormat:@"\\%@{n}", name];
         XCTAssertNotNil([MTMathListBuilder buildFromString:latex error:&error], @"%@", latex);
         XCTAssertNil(error, @"%@", latex);
-    }
-}
-
-#pragma mark - Macro registry
-
-- (void)testSupportedMacroNames
-{
-    NSArray<NSString*>* names = [MTMathListBuilder supportedMacroNames];
-    XCTAssertEqual(names.count, 3ul);
-    for (NSString* name in @[ @"pmod", @"mod", @"pod" ]) {
-        XCTAssertTrue([names containsObject:name], @"missing %@", name);
-    }
-    // \bmod is a symbol, not a macro. The two discovery surfaces stay disjoint.
-    XCTAssertFalse([names containsObject:@"bmod"]);
-    XCTAssertTrue([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:@"bmod"]);
-    for (NSString* name in names) {
+        // Macros and symbols stay disjoint surfaces.
         XCTAssertFalse([[MTMathAtomFactory supportedLatexSymbolNames] containsObject:name],
                        @"%@ must not be a symbol too", name);
     }
@@ -1036,8 +1007,8 @@ static NSString* ListSignature(MTMathList* list)
     XCTAssertEqual(last.type, kMTMathAtomMacro);
     MTMacroAtom* macro = (MTMacroAtom*)last;
     XCTAssertEqualObjects(macro.command, @"pmod");
-    XCTAssertEqual(macro.arguments.count, 1ul);
-    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+    XCTAssertEqual(macro.argument.atoms.count, 1ul);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.argument], @"n");
     XCTAssertEqual(macro.prefix.atoms.count, 6ul);
     XCTAssertEqual(macro.suffix.atoms.count, 1ul);
 }
@@ -1077,7 +1048,7 @@ static NSString* ListSignature(MTMathList* list)
 - (void)testUnbracedArgument
 {
     MTMacroAtom* macro = (MTMacroAtom*)[MTMathListBuilder buildFromString:@"\\pmod n"].atoms[0];
-    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.arguments[0]], @"n");
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:macro.argument], @"n");
 }
 
 - (void)testEmptyArgumentIsAllowed
@@ -1085,7 +1056,7 @@ static NSString* ListSignature(MTMathList* list)
     MTMathList* list = [MTMathListBuilder buildFromString:@"\\pmod{}"];
     XCTAssertNotNil(list);
     MTMacroAtom* macro = (MTMacroAtom*)list.atoms[0];
-    XCTAssertEqual([macro.arguments[0] atoms].count, 0ul);
+    XCTAssertEqual([macro.argument atoms].count, 0ul);
 }
 
 - (void)testMissingArgumentIsAnError
@@ -1303,7 +1274,7 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
         if (atom.type == kMTMathAtomMacro) { macro = (MTMacroAtom*)atom; break; }
     }
     XCTAssertNotNil(macro);
-    XCTAssertEqual([macro.arguments[0] atoms][0].fontStyle, kMTFontStyleBold);
+    XCTAssertEqual([macro.argument atoms][0].fontStyle, kMTFontStyleBold);
     // "mod" stays Roman regardless — it comes from \mathrm in the prefix.
     XCTAssertEqual(macro.prefix.atoms[2].fontStyle, kMTFontStyleRoman);
 }

@@ -87,37 +87,18 @@ static NSString* typeToText(MTMathAtomType type) {
     }
 }
 
-// NSArray's -copy is shallow: it copies the array but shares the (mutable)
-// MTMathList elements. MTMathList's own -copyWithZone: is already deep.
-static NSArray<MTMathList*>* MTDeepCopyMathListArray(NSArray<MTMathList*>* lists)
-{
-    NSMutableArray<MTMathList*>* copies = [NSMutableArray arrayWithCapacity:lists.count];
-    for (MTMathList* list in lists) {
-        [copies addObject:[list copy]];
-    }
-    return [copies copy];
-}
-
 @interface MTMathList ()
 
-/** Returns a copy of this list with every top-level MTMacroAtom replaced by its
- RAW (non-finalized) expansion. Non-macro atoms are carried over by reference. */
+/// A copy of this list with every top-level MTMacroAtom replaced by its raw
+/// (non-finalized) expansion. Non-macro atoms are carried over by reference.
 - (MTMathList *)expandMacros;
 
 @end
 
 @interface MTMacroAtom ()
 
-/** The RAW (non-finalized) atom stream this invocation stands for.
-
- Recursion here is bounded by the nesting the parser accepted: a macro can only
- land inside another macro's argument because the input nested them, and
- -buildInternal: caps that at kMTMaxRecursionDepth. No separate budget needed. */
+/// The raw (non-finalized) atom stream this invocation stands for.
 - (MTMathList *)expansion;
-
-/** Moves this atom's scripts onto the last scriptable atom of `expansion`,
- appending an empty Ordinary when there is no free target. */
-- (void)transferScriptsToExpansion:(MTMathList *)expansion;
 
 @end
 
@@ -209,10 +190,10 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             return [[MTMathColorbox alloc] init];
 
         case kMTMathAtomMacro:
-            // Falling through to the default would mint a plain MTMathAtom carrying
-            // type 22 — an atom that claims to be a macro but cannot expand.
+            // The default would mint a plain MTMathAtom carrying type 22 — an atom
+            // that claims to be a macro but cannot expand.
             @throw [NSException exceptionWithName:@"InvalidMethod"
-                                           reason:@"A macro atom cannot be created by type. Use -[MTMacroAtom initWithCommand:arguments:prefix:suffix:] instead."
+                                           reason:@"A macro atom cannot be created by type. Use -[MTMacroAtom initWithCommand:argument:prefix:suffix:] instead."
                                          userInfo:nil];
 
         default:
@@ -1721,10 +1702,8 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 }
 
 /** Reclassifies the list: demotes Bin to Unary at the boundaries where TeX does,
- fuses adjacent numbers, and assigns index ranges. Macros are expanded first —
- finalization is irreversible and context-dependent (a Bin demoted to Unary at one
- boundary cannot be restored), so the reclassifying pass must see the flat raw
- stream a macro stands for, not the macro atom. */
+ fuses adjacent numbers, and assigns index ranges. Macros are expanded first, so the
+ reclassifying pass sees the flat stream a macro stands for rather than the atom. */
 - (MTMathList *)finalized
 {
     MTMathList* expanded = [self expandMacros];
@@ -1734,10 +1713,9 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
     MTMathAtom* prevNode = nil;
     for (MTMathAtom* atom in expanded.atoms) {
-        // -expandMacros dispatches on class, so a real MTMacroAtom is already gone.
-        // What this catches is a plain MTMathAtom whose settable public -type was
-        // forced to kMTMathAtomMacro: it walks through expansion untouched and would
-        // otherwise reach the typesetter, which drops it.
+        // -expandMacros dispatches on class, so a real MTMacroAtom is gone by now.
+        // This catches a plain MTMathAtom with -type forced to kMTMathAtomMacro,
+        // which walks through expansion untouched and would reach the typesetter.
         NSAssert(atom.type != kMTMathAtomMacro,
                  @"Atom %@ claims to be a macro but is not an MTMacroAtom; -type must not be set to kMTMathAtomMacro.",
                  atom.stringValue);
@@ -1789,16 +1767,12 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 {
     MTMathList* expanded = [MTMathList new];
     for (MTMathAtom* atom in self.atoms) {
-        // isKindOfClass: rather than atom.type: `type` is a settable public property,
-        // so a plain MTMathAtom can carry kMTMathAtomMacro without responding to
-        // -expansion. The -type assert in -finalized catches that impostor.
+        // isKindOfClass: rather than atom.type: `type` is settable, so a plain
+        // MTMathAtom can carry kMTMathAtomMacro without responding to -expansion.
         if (![atom isKindOfClass:[MTMacroAtom class]]) {
-            // Carried through by reference and WITHOUT descending into sub-lists
-            // (numerator/denominator/radicand/innerList/cells/scripts). Every
-            // container's -finalized calls the public -finalized on its children,
-            // which expands those lists in turn — so this code needs to understand
-            // zero container types. Sharing is safe because -finalized copies every
-            // atom it keeps, via [atom finalized].
+            // By reference, and without descending into sub-lists: every container's
+            // -finalized calls the public -finalized on its children, which expands
+            // those in turn. Safe to share because -finalized copies what it keeps.
             [expanded addAtom:atom];
             continue;
         }
@@ -1824,18 +1798,18 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 @implementation MTMacroAtom
 
 - (instancetype)initWithCommand:(NSString*)command
-                      arguments:(NSArray<MTMathList*>*)arguments
+                       argument:(MTMathList*)argument
                          prefix:(MTMathList*)prefix
                          suffix:(MTMathList*)suffix
 {
     NSParameterAssert(command);
-    NSParameterAssert(arguments);
+    NSParameterAssert(argument);
     NSParameterAssert(prefix);
     NSParameterAssert(suffix);
     self = [super initWithType:kMTMathAtomMacro value:@""];
     if (self) {
         _command = [command copy];
-        _arguments = MTDeepCopyMathListArray(arguments);
+        _argument = [argument copy];
         _prefix = [prefix copy];
         _suffix = [suffix copy];
     }
@@ -1844,23 +1818,19 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value
 {
-    // NS_UNAVAILABLE in the header already blocks statically typed callers; this
-    // catches the dynamic ones. Unlike MTInner/MTMathColorbox there is no valid
-    // zero-argument construction to fall back to — command, arguments and expansion
-    // text are all required — so it throws rather than redirecting to a bare -init.
+    // NS_UNAVAILABLE blocks statically typed callers; this catches dynamic ones.
     @throw [NSException exceptionWithName:@"InvalidMethod"
-                                   reason:@"[MTMacroAtom initWithType:value:] cannot be called. Use -initWithCommand:arguments:prefix:suffix: instead."
+                                   reason:@"[MTMacroAtom initWithType:value:] cannot be called. Use -initWithCommand:argument:prefix:suffix: instead."
                                  userInfo:nil];
 }
 
 - (id)copyWithZone:(NSZone *)zone
 {
-    // Cannot route through [super copyWithZone:], which would call the throwing
-    // -initWithType:value:. The designated initializer already deep-copies the
-    // arguments and both expansion halves, so only the MTMathAtom fields need
-    // carrying over.
+    // Not [super copyWithZone:], which would call the throwing -initWithType:value:.
+    // The designated initializer deep-copies the argument and both halves, so only
+    // the MTMathAtom fields need carrying over.
     MTMacroAtom* copy = [[[self class] allocWithZone:zone] initWithCommand:self.command
-                                                                 arguments:self.arguments
+                                                                  argument:self.argument
                                                                     prefix:self.prefix
                                                                     suffix:self.suffix];
     copy.subScript = [self.subScript copyWithZone:zone];
@@ -1872,10 +1842,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (NSString *)stringValue
 {
-    NSMutableString* str = [NSMutableString stringWithFormat:@"\\%@", self.command];
-    for (MTMathList* arg in self.arguments) {
-        [str appendFormat:@"{%@}", arg.stringValue];
-    }
+    NSMutableString* str = [NSMutableString stringWithFormat:@"\\%@{%@}", self.command, self.argument.stringValue];
     if (self.superScript) {
         [str appendFormat:@"^{%@}", self.superScript.stringValue];
     }
@@ -1887,34 +1854,20 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
 - (void)appendLaTeXToString:(NSMutableString *)str
 {
-    // Command-faithful, argument-canonical: the invocation round-trips as \pmod{…},
-    // and the argument is re-serialized by the usual serializer rather than
-    // preserved character-for-character. +mathListToString: appends the ^{…}/_{…}
-    // tail for us.
-    [str appendFormat:@"\\%@", self.command];
-    if (self.arguments.count == 0) {
-        // Nothing would terminate the command name otherwise, so a zero-argument
-        // \noargs followed by x would re-parse as the single command \noargsx.
-        [str appendString:@" "];
-    }
-    for (MTMathList* arg in self.arguments) {
-        [str appendFormat:@"{%@}", [MTMathListBuilder mathListToString:arg]];
-    }
+    // The argument is re-serialized by the usual serializer rather than preserved
+    // character-for-character. +mathListToString: appends the ^{…}/_{…} tail.
+    [str appendFormat:@"\\%@{%@}", self.command, [MTMathListBuilder mathListToString:self.argument]];
 }
 
 - (MTMathList *)expansion
 {
-    // Deep copies throughout, so the stored expansion halves and arguments stay
-    // pristine for serialization, for post-parse mutation, and for repeated
-    // -finalized calls.
+    // Deep copies throughout, so the stored halves and argument stay pristine for
+    // serialization, for post-parse mutation, and for repeated -finalized calls.
     MTMathList* out = [self.prefix copy];
-    for (MTMathList* argument in self.arguments) {
-        [out append:[argument copy]];
-    }
+    [out append:[self.argument copy]];
     [out append:[self.suffix copy]];
-    // An argument may itself contain a macro. Re-scan so the returned list is
-    // macro-free at its top level — and so script transfer below targets a real atom
-    // rather than an unexpanded MTMacroAtom.
+    // The argument may itself contain a macro. Re-scan so the result is macro-free
+    // at its top level, and so script transfer targets a real atom.
     MTMathList* flat = [out expandMacros];
     [self transferScriptsToExpansion:flat];
     return flat;
@@ -1927,18 +1880,13 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     }
     MTMathAtom* target = nil;
     for (MTMathAtom* candidate in expansion.atoms.reverseObjectEnumerator) {
-        // -scriptsAllowed is type < kMTMathAtomBoundary, which already excludes
-        // Space (201), Style (202) and every other non-noad (MTMathList.m:222-225).
         if (candidate.scriptsAllowed) {
             target = candidate;
             break;
         }
     }
-    // Slots are evaluated as a unit: if there is no target, or either slot we need
-    // is taken, BOTH scripts go on a fresh empty Ordinary so a ^/_ pair is never
-    // split. This is what the builder already does for x^2^3 and for a leading ^2
-    // (MTMathListBuilder.m:211-216, 224-228), so \mod{n^2}^3 behaves like
-    // \mod{n^2}{}^3 — iosMath's long-standing divergence from TeX, not a new one.
+    // Slots are evaluated as a unit, so a ^/_ pair is never split across two atoms.
+    // The empty-Ordinary fallback is what the builder already does for x^2^3.
     BOOL collides = (target == nil)
         || (self.superScript && target.superScript)
         || (self.subScript && target.subScript);

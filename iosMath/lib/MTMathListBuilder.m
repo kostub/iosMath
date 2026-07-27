@@ -41,55 +41,6 @@ NSString *const MTParseError = @"ParseError";
 
 @end
 
-#pragma mark - MTMacroDefinition
-
-// A built-in macro: how many arguments it takes, and the fixed LaTeX that brackets
-// them. \pmod{n} expands to prefix + n + suffix.
-//
-// Both halves are ordinary LaTeX parsed by the ordinary builder — there is no
-// template syntax and no placeholder atom. That buys one substitution region, which
-// is what these macros need; an expansion that interleaves fixed text between
-// several arguments is not expressible, and a user-facing \newcommand would need
-// substitution that descends into sub-lists rather than a richer table here.
-//
-// Parser-owned and file-private on purpose. The model layer needs NO registry
-// access: MTMacroAtom carries its already-parsed halves, so the dependency runs one
-// way (MTMathListBuilder -> MTMacroDefinition, at parse time) and MTMathList.m never
-// calls into the builder. A consequence worth keeping: an invocation is bound to the
-// expansion as it existed when parsed, so a future mutable registry cannot
-// retroactively change an already-parsed atom.
-@interface MTMacroDefinition : NSObject
-
-@property (nonatomic, readonly) NSUInteger argumentCount;      // declared, not inferred
-@property (nonatomic, copy, readonly) NSString* prefix;
-@property (nonatomic, copy, readonly) NSString* suffix;
-
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                               prefix:(NSString*)prefix
-                               suffix:(NSString*)suffix NS_DESIGNATED_INITIALIZER;
-- (instancetype)init NS_UNAVAILABLE;
-
-@end
-
-@implementation MTMacroDefinition
-
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                               prefix:(NSString*)prefix
-                               suffix:(NSString*)suffix
-{
-    NSParameterAssert(prefix);
-    NSParameterAssert(suffix);
-    self = [super init];
-    if (self) {
-        _argumentCount = argumentCount;
-        _prefix = [prefix copy];
-        _suffix = [suffix copy];
-    }
-    return self;
-}
-
-@end
-
 // Maximum recursion depth for -buildInternal:oneCharOnly:stopChar:.
 // 150 is comfortably deeper than any realistic human-authored expression yet
 // far below the thousands of frames needed to overflow a 1 MB stack.
@@ -203,17 +154,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return YES;
 }
 
-// Reads one mandatory argument, failing loud when there isn't one.
-//
 // -buildInternal:YES on its own is silently permissive: at EOF it returns an empty
-// list with no error, and it leaves a following }/^/_/& unlooked for the caller
-// (see -build and -buildInternal:oneCharOnly:stopChar: above). That is fine for
-// \sqrt, which has always behaved that way, but a macro invocation with no
-// argument must be an error.
-//
-// Factored out rather than inlined so future command categories can adopt it.
-// Scope: only macros route through it today; migrating \sqrt and friends is a
-// separate, behavior-affecting change.
+// list with no error, and leaves a following }/^/_/& unlooked for the caller. That
+// is fine for \sqrt, which has always behaved that way, but a macro invocation with
+// no argument must be an error. Only macros route through this today.
 - (nullable MTMathList *)requiredArgumentWithError:(MTParseErrors)error
 {
     [self skipSpaces];
@@ -229,13 +173,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         return nil;
     }
     if (ch == '\\') {
-        // A stop command terminates the enclosing list instead of producing an
-        // atom, so none of them can begin an argument. Without this check
-        // -buildInternal:YES hands them to -stopCommand:, which for \\ and \cr
-        // ends the row and returns it as the "argument" — silently swallowing a
-        // row break (`\begin{matrix}a\pmod\\b\end{matrix}` loses a row) — and for
-        // \right / \end returns an empty list with NO error. Wrong output rather
-        // than a diagnostic, which is exactly what this method exists to prevent.
+        // A stop command ends the enclosing list instead of producing an atom, so
+        // none can begin an argument. Unchecked, -buildInternal:YES hands \\ and \cr
+        // to -stopCommand:, which ends the row and returns it as the "argument" —
+        // `\begin{matrix}a\pmod\\b\end{matrix}` silently loses a row.
         NSString* command = [self peekCommand];
         if ([[MTMathListBuilder stopCommands] containsObject:command]) {
             [self setError:error
@@ -247,9 +188,8 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return [self buildInternal:YES];
 }
 
-// Reads the command at the current position (which must be on the '\') and
-// restores the read position, so the caller can dispatch on it without consuming
-// it. Returns nil if there is no command there.
+// Restores the read position, so the caller can dispatch without consuming. Nil if
+// there is no command at the current position.
 - (nullable NSString *)peekCommand
 {
     int saved = _currentChar;
@@ -446,8 +386,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                 }
                 continue;
             }
-            // Macros first: one MTMacroAtom flows through the shared script-attach +
-            // append + oneCharOnly tail below with no new logic (LLD §2.6).
+            // Macros first; one MTMacroAtom then flows through the shared tail below.
             atom = [self macroAtomForCommand:command];
             if (!atom) {
                 if (_error) {
@@ -1182,39 +1121,30 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 }
 
 // Returns nil WITHOUT setting an error when `command` is not a macro, so the caller
-// can fall through to -atomForCommand:. Returns nil WITH _error set when the
-// command is a macro whose arguments failed to parse.
+// can fall through to -atomForCommand:. Returns nil WITH _error set when it is a
+// macro whose argument failed to parse.
 - (nullable MTMacroAtom*) macroAtomForCommand:(NSString*) command
 {
-    MTMacroDefinition* def = [MTMathListBuilder builtinMacros][command];
-    if (!def) {
+    NSArray<NSString*>* halves = [MTMathListBuilder builtinMacros][command];
+    if (!halves) {
         return nil;
     }
-    // Arguments are read with the EXISTING reader (the one \frac/\sqrt use), so
-    // they are parsed directly from the user's input — never re-parsed out of a
-    // generated string (LLD §4.1).
-    NSMutableArray<MTMathList*>* args = [NSMutableArray arrayWithCapacity:def.argumentCount];
-    for (NSUInteger i = 0; i < def.argumentCount; i++) {
-        MTMathList* arg = [self requiredArgumentWithError:MTParseErrorMissingArgument];
-        if (!arg) {
-            return nil;   // _error already set
-        }
-        [args addObject:arg];
+    MTMathList* argument = [self requiredArgumentWithError:MTParseErrorMissingArgument];
+    if (!argument) {
+        return nil;   // _error already set
     }
-    // Each half is parsed with a FRESH builder instance, so the in-flight parse's
-    // state is never swapped or restored.
-    MTMathList* prefix = [MTMathListBuilder buildFromString:def.prefix];
-    MTMathList* suffix = [MTMathListBuilder buildFromString:def.suffix];
-    // Both are compile-time constants, never user input: failing to parse one is a
-    // programming mistake, so fail loud.
+    // A fresh builder each, so the in-flight parse's state is never disturbed.
+    MTMathList* prefix = [MTMathListBuilder buildFromString:halves[0]];
+    MTMathList* suffix = [MTMathListBuilder buildFromString:halves[1]];
+    // Compile-time constants, so a parse failure here is a programming mistake.
     NSAssert(prefix && suffix, @"Built-in expansion for \\%@ failed to parse: %@ / %@",
-             command, def.prefix, def.suffix);
+             command, halves[0], halves[1]);
     if (!prefix || !suffix) {
         [self setError:MTParseErrorInternalError
                message:[NSString stringWithFormat:@"Built-in expansion for \\%@ failed to parse", command]];
         return nil;
     }
-    return [[MTMacroAtom alloc] initWithCommand:command arguments:args prefix:prefix suffix:suffix];
+    return [[MTMacroAtom alloc] initWithCommand:command argument:argument prefix:prefix suffix:suffix];
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -1470,9 +1400,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
 }
 
-// Every command -stopCommand: below recognizes. These end the list being built
-// rather than contributing an atom to it, so they are illegal in an argument
-// slot — see -requiredArgumentWithError:. Keep in sync with -stopCommand:.
+// Every command -stopCommand: below recognizes. Keep in sync with it.
 + (NSSet<NSString*>*) stopCommands
 {
     static NSSet<NSString*>* commands = nil;
@@ -1807,46 +1735,25 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return fractionMacroCommands;
 }
 
-// The built-in macro registry. Each entry is amsmath's exact INLINE expansion
-// (LLD §3.3): the 8mu/12mu leading and 6mu inner gaps are amsmath's literal \mkern
-// values, not approximations. What is not reproduced is amsmath's \if@display
-// switch to an 18mu leading gap, because a macro expands at parse time, before the
-// render style is known (LLD §4.2, PRD non-goal §3.1).
+// Each entry is amsmath's exact inline expansion: @[prefix, suffix], bracketing the
+// one argument. Not reproduced is amsmath's \if@display switch to an 18mu leading
+// gap, because a macro expands at parse time, before the render style is known.
 //
-// The upright "mod" comes from \mathrm{mod} in the prefix — no manual Roman flag,
-// and each half stays a readable LaTeX string.
-//
-// This dispatch_once builds STRINGS ONLY. Nothing is parsed inside it, so there is
-// no reentrancy. That is also why the parsed halves are NOT cached here: parsing one
-// reaches -macroAtomForCommand: (every command does), which calls back into this
-// method — re-entering its own dispatch_once on the same thread deadlocks. They are
-// re-parsed per invocation instead, which is ~8 atoms; MTMacroAtom deep-copies the
-// result anyway.
-+ (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
+// This dispatch_once builds strings only. Parsing one here would re-enter this
+// method (every command reaches -macroAtomForCommand:) and deadlock, so the halves
+// are re-parsed per invocation instead — ~8 atoms, and MTMacroAtom copies them anyway.
++ (NSDictionary<NSString*, NSArray<NSString*>*>*) builtinMacros
 {
-    static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
+    static NSDictionary<NSString*, NSArray<NSString*>*>* macros = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         macros = @{
-            @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                               prefix:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu"
-                                                               suffix:@")"],
-            @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                               prefix:@"\\mkern12mu\\mathrm{mod}\\mkern6mu"
-                                                               suffix:@""],
-            @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                                                               prefix:@"\\mkern8mu("
-                                                               suffix:@")"],
+            @"pmod": @[ @"\\mkern8mu(\\mathrm{mod}\\mkern6mu", @")" ],
+            @"mod":  @[ @"\\mkern12mu\\mathrm{mod}\\mkern6mu",  @""  ],
+            @"pod":  @[ @"\\mkern8mu(",                          @")" ],
         };
     });
     return macros;
-}
-
-+ (NSArray<NSString *> *) supportedMacroNames
-{
-    // Sorted, not raw -allKeys: NSDictionary key order is unspecified and can vary
-    // between runs, which would make any ordered assertion by a caller flaky.
-    return [[MTMathListBuilder builtinMacros].allKeys sortedArrayUsingSelector:@selector(compare:)];
 }
 
 + (NSDictionary*) styleToCommands

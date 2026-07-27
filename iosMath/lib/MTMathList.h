@@ -72,9 +72,8 @@ typedef NS_ENUM(NSUInteger, MTMathAtomType)
     /// sub-mlist (== TeX Ord noad with sub_mlist / KaTeX "ordgroup").
     /// Script-capable (< kMTMathAtomBoundary); spaced as Ordinary.
     kMTMathAtomOrdGroup = 21,
-    /// An unexpanded macro invocation (\pmod, \mod, \pod). Holds the command name,
-    /// its parsed arguments, and an argument-free golden template. Expanded away by
-    /// -[MTMathList finalized], so it never reaches the typesetter.
+    /// An unexpanded macro invocation (\pmod, \mod, \pod), expanded away by
+    /// -[MTMathList finalized] so it never reaches the typesetter.
     /// Script-capable (< kMTMathAtomBoundary): ^/_ attaches at parse time and is
     /// transferred onto the expansion.
     kMTMathAtomMacro = 22,
@@ -694,49 +693,36 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
 @end
 
-/** An unexpanded macro invocation.
+/** An unexpanded one-argument macro invocation.
 
- `\pmod{n}` parses to exactly one `MTMacroAtom`, which keeps the raw list small
- (trivial serialization, and `^`/`_` attach through the builder's shared tail).
- It expands to `prefix` + `arguments` + `suffix`, both halves being raw
- (non-finalized) expressions parsed once, at parse time. They are not a second
- source of truth for `arguments`: the expansion is re-derived from (`prefix`,
- current `arguments`, `suffix`) every time `-[MTMathList finalized]` runs.
+ `\pmod{n}` parses to exactly one `MTMacroAtom` and expands to
+ `prefix` + `argument` + `suffix`. All three are raw (non-finalized) lists parsed
+ at parse time; the expansion is re-derived from them every time
+ `-[MTMathList finalized]` runs.
 
- @note Expansion happens in list context, so `-[MTMacroAtom finalized]` on a lone
- atom returns another macro atom rather than the expansion. Only
- `-[MTMathList finalized]` expands.
-
- @note This shape expresses one substitution region — everything fixed before the
- arguments, everything fixed after — which is what the three modular-arithmetic
- macros need. A composite expansion that interleaves fixed text between arguments
- (`\frac{#1}{#2}`) cannot be expressed. A user-facing `\newcommand` would need
- substitution that descends into sub-lists, which is a different mechanism, not a
- wider table here.
+ @note Only `-[MTMathList finalized]` expands. `-[MTMacroAtom finalized]` on a lone
+ atom returns another macro atom.
  */
 @interface MTMacroAtom : MTMathAtom
 
 /** The command name without the leading backslash, e.g. `@"pmod"`. */
 @property (nonatomic, copy, readonly) NSString* command;
 
-/** The parsed arguments, in order. The array identity is immutable; the contained
- `MTMathList`s stay mutable and are owned by this atom (deep-copied at init). */
-@property (nonatomic, copy, readonly) NSArray<MTMathList*>* arguments;
+/** The parsed argument. Mutable, and owned by this atom (deep-copied at init). */
+@property (nonatomic, strong, readonly) MTMathList* argument;
 
-/** The fixed expansion text before the arguments. Raw (non-finalized); may be empty. */
+/** The fixed expansion text before the argument. May be empty. */
 @property (nonatomic, strong, readonly) MTMathList* prefix;
 
-/** The fixed expansion text after the arguments. Raw (non-finalized); may be empty. */
+/** The fixed expansion text after the argument. May be empty. */
 @property (nonatomic, strong, readonly) MTMathList* suffix;
 
 - (instancetype)initWithCommand:(NSString*)command
-                      arguments:(NSArray<MTMathList*>*)arguments
+                       argument:(MTMathList*)argument
                          prefix:(MTMathList*)prefix
                          suffix:(MTMathList*)suffix NS_DESIGNATED_INITIALIZER;
 
-/// A macro atom has no valid zero-argument construction — command, arguments and
-/// expansion text are all required — so the generic initializer is unavailable. The
-/// implementation additionally throws, to catch dynamic (`id`-typed) callers.
+/// The implementation additionally throws, to catch dynamic (`id`-typed) callers.
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value NS_UNAVAILABLE;
 
 @end
