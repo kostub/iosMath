@@ -3694,4 +3694,87 @@
     XCTAssertEqualWithAccuracy(first.width, second.width, 0.001);
 }
 
+// Collects (range, PostScript name) for every kCTFontAttributeName run and
+// asserts no character is left without a font.
+- (NSArray<NSArray*>*) fontRunsOfLine:(MTCTLineDisplay*) line
+{
+    NSMutableArray<NSArray*>* runs = [NSMutableArray array];
+    NSAttributedString* str = line.attributedString;
+    [str enumerateAttribute:(NSString*) kCTFontAttributeName
+                    inRange:NSMakeRange(0, str.length)
+                    options:0
+                 usingBlock:^(id value, NSRange range, BOOL* stop) {
+        XCTAssertNotNil(value, @"unstamped range %@ in %@", NSStringFromRange(range), str.string);
+        NSString* ps = CFBridgingRelease(CTFontCopyPostScriptName((__bridge CTFontRef) value));
+        [runs addObject:@[ [NSValue valueWithRange:range], ps ]];
+    }];
+    return runs;
+}
+
+- (void) testMathitStampsCompanionFontPerRange
+{
+    // \mathit{f}x: one CTLine, two font runs — companion on {0,1}, math font
+    // on the U+1D465 surrogate pair. This is the test that catches a missed
+    // addDisplayLine deletion, which a width check cannot (LLD §5).
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{f}x"];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]]);
+    NSArray<NSArray*>* runs = [self fontRunsOfLine:line];
+    XCTAssertEqual(runs.count, 2);
+    XCTAssertTrue(NSEqualRanges([runs[0][0] rangeValue], NSMakeRange(0, 1)));
+    XCTAssertEqualObjects(runs[0][1], @"LMRoman10-Italic");
+    XCTAssertTrue(NSEqualRanges([runs[1][0] rangeValue], NSMakeRange(1, 2)));
+    XCTAssertEqualObjects(runs[1][1], @"LatinModernMath-Regular");
+}
+
+- (void) testMathitFlagshipCompanionCoversOnlyAbc
+{
+    // LLD flagship: \mathit reaches only abc; \sin, delimiters, +, and theta
+    // stay in the math font.
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{\\sin(abc + \\theta)}"];
+    NSMutableArray<NSString*>* companionSubstrings = [NSMutableArray array];
+    for (MTDisplay* sub in display.subDisplays) {
+        if (![sub isKindOfClass:[MTCTLineDisplay class]]) continue;
+        MTCTLineDisplay* line = (MTCTLineDisplay*) sub;
+        for (NSArray* run in [self fontRunsOfLine:line]) {
+            if ([run[1] isEqualToString:@"LMRoman10-Italic"]) {
+                [companionSubstrings addObject:[line.attributedString.string substringWithRange:[run[0] rangeValue]]];
+            }
+        }
+    }
+    XCTAssertEqualObjects(companionSubstrings, @[ @"abc" ]);
+}
+
+- (void) testMathitMixedAtomSplitsCompanionRanges
+{
+    // \mathit{a\theta b} is ONE atom; the companion covers {0,1} and {3,1}
+    // with the theta surrogate pair between them in the math font. The case
+    // a per-atom stamp would get wrong (LLD §3.4).
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{a\\theta b}"];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    NSArray<NSArray*>* runs = [self fontRunsOfLine:line];
+    XCTAssertEqual(runs.count, 3);
+    XCTAssertEqualObjects(runs[0][1], @"LMRoman10-Italic");
+    XCTAssertTrue(NSEqualRanges([runs[0][0] rangeValue], NSMakeRange(0, 1)));
+    XCTAssertEqualObjects(runs[1][1], @"LatinModernMath-Regular");
+    XCTAssertEqualObjects(runs[2][1], @"LMRoman10-Italic");
+    XCTAssertTrue(NSEqualRanges([runs[2][0] rangeValue], NSMakeRange(3, 1)));
+}
+
+- (void) testMathitDelimitersStayInMathFont
+{
+    // Condition 2 rejects (, ) per character even though the atoms carry the
+    // italic stamp; matching pdflatex, not MathJax (LLD §3.3 G).
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{(a)}"];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    NSArray<NSArray*>* runs = [self fontRunsOfLine:line];
+    XCTAssertEqual(runs.count, 3);
+    XCTAssertEqualObjects(runs[0][1], @"LatinModernMath-Regular");
+    XCTAssertEqualObjects(runs[1][1], @"LMRoman10-Italic");
+    XCTAssertEqualObjects(runs[2][1], @"LatinModernMath-Regular");
+}
+
 @end
