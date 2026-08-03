@@ -17,6 +17,10 @@
 #import "MTMathAtomFactory.h"
 #import "MTMathListBuilder.h"
 
+@interface MTTypesetter (FusionTesting)
++ (NSArray<MTMathAtom*>*) preprocessMathList:(MTMathList*) ml;
+@end
+
 @interface MTTypesetterTest : XCTestCase
 
 @property (nonatomic) MTFont* font;
@@ -3605,6 +3609,56 @@
     }
     XCTAssertEqualWithAccuracy(topLine, contentTop + padding, 0.01);
     XCTAssertEqualWithAccuracy(botLine, contentBot - padding, 0.01);
+}
+
+- (void) testPreprocessDoesNotFuseAcrossFontStyles
+{
+    // f\mathit{x}: without the guard both fuse into one Default atom and the
+    // italic on x is lost (LLD §2.6).
+    NSArray<MTMathAtom*>* atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"f\\mathit{x}"].finalized];
+    XCTAssertEqual(atoms.count, 2);
+    XCTAssertEqual(atoms[0].fontStyle, kMTFontStyleDefault);
+    XCTAssertEqual(atoms[1].fontStyle, kMTFontStyleItalic);
+
+    atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"\\mathit{f}x"].finalized];
+    XCTAssertEqual(atoms.count, 2);
+    XCTAssertEqual(atoms[0].fontStyle, kMTFontStyleItalic);
+    XCTAssertEqual(atoms[1].fontStyle, kMTFontStyleDefault);
+
+    // The bold digit that site A now preserves reaches its bold code point.
+    atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"1\\mathbf{2}"].finalized];
+    XCTAssertEqual(atoms.count, 2);
+    XCTAssertEqualObjects(atoms[0].nucleus, @"1");
+    XCTAssertEqualObjects(atoms[1].nucleus, @"\U0001D7D0");
+}
+
+- (void) testPreprocessStillFusesUniformStyleAtoms
+{
+    // Same style still merges...
+    NSArray<MTMathAtom*>* atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"\\mathit{fg}"].finalized];
+    XCTAssertEqual(atoms.count, 1);
+
+    // ...including Variable+Number pairs, which meet only at site B because
+    // site A fuses same-type atoms only (LLD §3.3 B).
+    atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"\\mathit{a1}"].finalized];
+    XCTAssertEqual(atoms.count, 1);
+    XCTAssertEqual(atoms[0].type, kMTMathAtomOrdinary);
+    XCTAssertEqual(atoms[0].fontStyle, kMTFontStyleItalic);
+}
+
+- (void) testPreprocessUnstyledListUnchanged
+{
+    NSArray<MTMathAtom*>* atoms = [MTTypesetter preprocessMathList:
+        [MTMathListBuilder buildFromString:@"xyz+1"].finalized];
+    XCTAssertEqual(atoms.count, 3);
+    XCTAssertEqualObjects(atoms[0].nucleus, @"\U0001D465\U0001D466\U0001D467");
+    XCTAssertEqualObjects(atoms[1].nucleus, @"+");
+    XCTAssertEqualObjects(atoms[2].nucleus, @"1");
 }
 
 @end

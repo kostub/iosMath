@@ -550,8 +550,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
         
         if (atom.type == kMTMathAtomOrdinary) {
             // This is Rule 14 to merge ordinary characters.
-            // combine ordinary atoms together
+            // combine ordinary atoms together, but only within one font style --
+            // the \mathit face is stamped per single-style run (and TeX's own Rule 14
+            // fuses only within a family).
             if (prevNode && prevNode.type == kMTMathAtomOrdinary && !prevNode.subScript && !prevNode.superScript
+                && prevNode.fontStyle == atom.fontStyle
                 && ![prevNode isKindOfClass:[MTLargeDelimiter class]]
                 && ![atom isKindOfClass:[MTLargeDelimiter class]]) {
                 [prevNode fuse:atom];
