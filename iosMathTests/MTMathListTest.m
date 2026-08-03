@@ -426,6 +426,48 @@ _XCTPrimitiveAssertNotEqual(test, expression1, @#expression1, expression2, @#exp
     XCTAssertEqualObjects(table.verticalLines, (@[ @1, @0, @0 ]));
 }
 
+- (void) testFinalizedDoesNotFuseDigitsAcrossFontStyles
+{
+    // Without the guard, fuse: keeps the first atom's style: 1\mathit{2}
+    // silently drops the italic, \mathit{1}2 spreads it onto a plain digit.
+    MTMathList* list = [MTMathListBuilder buildFromString:@"1\\mathit{2}"].finalized;
+    XCTAssertEqual(list.atoms.count, 2);
+    XCTAssertEqualObjects(list.atoms[0].nucleus, @"1");
+    XCTAssertEqual(list.atoms[0].fontStyle, kMTFontStyleDefault);
+    XCTAssertEqualObjects(list.atoms[1].nucleus, @"2");
+    XCTAssertEqual(list.atoms[1].fontStyle, kMTFontStyleItalic);
+
+    list = [MTMathListBuilder buildFromString:@"\\mathit{1}2"].finalized;
+    XCTAssertEqual(list.atoms.count, 2);
+    XCTAssertEqual(list.atoms[0].fontStyle, kMTFontStyleItalic);
+    XCTAssertEqual(list.atoms[1].fontStyle, kMTFontStyleDefault);
+
+    // Style boundaries split the run; the uniform-style middle still fuses.
+    list = [MTMathListBuilder buildFromString:@"1\\mathit{23}4"].finalized;
+    XCTAssertEqual(list.atoms.count, 3);
+    XCTAssertEqualObjects(list.atoms[0].nucleus, @"1");
+    XCTAssertEqualObjects(list.atoms[1].nucleus, @"23");
+    XCTAssertEqualObjects(list.atoms[2].nucleus, @"4");
+
+    // The same guard repairs \mathbf on mixed-style digit runs (LLD §2.6).
+    list = [MTMathListBuilder buildFromString:@"1\\mathbf{2}"].finalized;
+    XCTAssertEqual(list.atoms.count, 2);
+    XCTAssertEqual(list.atoms[0].fontStyle, kMTFontStyleDefault);
+    XCTAssertEqual(list.atoms[1].fontStyle, kMTFontStyleBold);
+}
+
+- (void) testFinalizedStillFusesUniformStyleDigits
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"1234"].finalized;
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqualObjects(list.atoms[0].nucleus, @"1234");
+
+    list = [MTMathListBuilder buildFromString:@"\\mathit{12}"].finalized;
+    XCTAssertEqual(list.atoms.count, 1);
+    XCTAssertEqualObjects(list.atoms[0].nucleus, @"12");
+    XCTAssertEqual(list.atoms[0].fontStyle, kMTFontStyleItalic);
+}
+
 @end
 
 @interface MTMathAtomTest : XCTestCase

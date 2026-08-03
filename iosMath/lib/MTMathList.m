@@ -1707,8 +1707,10 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
                 break;
                 
             case kMTMathAtomNumber:
-                // combine numbers together
-                if (prevNode && prevNode.type == kMTMathAtomNumber && !prevNode.subScript && !prevNode.superScript) {
+                // combine numbers together, but never across a font-style change:
+                // fuse: keeps the first atom's fontStyle and would corrupt the other's.
+                if (prevNode && prevNode.type == kMTMathAtomNumber && !prevNode.subScript && !prevNode.superScript
+                    && prevNode.fontStyle == newNode.fontStyle) {
                     [prevNode fuse:newNode];
                     // skip the current node, we are done here.
                     continue;
