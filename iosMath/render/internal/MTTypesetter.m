@@ -382,6 +382,17 @@ UTF32Char getBlackboard(unichar ch) {
     return getDefaultStyle(ch);
 }
 
+// \mathit draws these from the text-italic companion face with their plain
+// code points, instead of remapping them into the math-italic block. The set
+// is TeX's class-7 mathchars: Latin letters, digits, capital Greek.
+static BOOL MTIsMathItalicRoutable(unichar ch)
+{
+    // U+03A2 is unassigned — the Greek capital block holds 24 letters, not 25.
+    BOOL capitalGreek = (ch >= kMTUnicodeGreekCapitalStart &&
+                         ch <= kMTUnicodeGreekCapitalEnd && ch != 0x03A2);
+    return IS_UPPER_EN(ch) || IS_LOWER_EN(ch) || IS_NUMBER(ch) || capitalGreek;
+}
+
 static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
 {
     switch (fontStyle) {
@@ -395,6 +406,9 @@ static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
             return getBold(ch);
             
         case kMTFontStyleItalic:
+            if (MTIsMathItalicRoutable(ch)) {
+                return ch;
+            }
             return getItalicized(ch);
             
         case kMTFontStyleBoldItalic:

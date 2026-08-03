@@ -3661,4 +3661,37 @@
     XCTAssertEqualObjects(atoms[2].nucleus, @"1");
 }
 
+// LLD §7 mapping table: routable characters keep plain code points under
+// \mathit; everything else is unchanged from today.
+- (void) testMathitKeepsRoutableCharactersPlain
+{
+    NSDictionary<NSString*, NSString*>* cases = @{
+        @"\\mathit{f}": @"f",
+        @"\\mathit{h}": @"h",              // not U+210E: the companion has its own h
+        @"\\mathit{1}": @"1",
+        @"\\mathit{\\Gamma}": @"Γ",           // routed, not math-italic U+1D6E4
+        @"\\mathit{\\alpha}": @"\U0001D6FC",       // unrouted, identical to \alpha
+        @"\\mathit{\\varepsilon}": @"\U0001D700",  // Greek symbol variants unrouted
+        @"\\Gamma": @"Γ",                     // no \mathit: still upright
+        // one atom mixing routable and unrouted characters (LLD §3.4)
+        @"\\mathit{a\\theta b}": @"a\U0001D703b",
+    };
+    for (NSString* latex in cases) {
+        NSArray<MTMathAtom*>* atoms = [MTTypesetter preprocessMathList:
+            [MTMathListBuilder buildFromString:latex].finalized];
+        XCTAssertEqual(atoms.count, 1, @"%@", latex);
+        XCTAssertEqualObjects(atoms[0].nucleus, cases[latex], @"%@", latex);
+    }
+}
+
+// setFont: re-typesets the same retained (mutated) list; the mapping must be
+// idempotent (LLD §6 re-entrancy).
+- (void) testMathitRetypesetIsIdempotent
+{
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\mathit{f1\\Gamma}x"].finalized;
+    MTMathListDisplay* first = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    MTMathListDisplay* second = [MTTypesetter createLineForMathList:list font:self.font style:kMTLineStyleDisplay];
+    XCTAssertEqualWithAccuracy(first.width, second.width, 0.001);
+}
+
 @end
