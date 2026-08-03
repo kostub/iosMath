@@ -15,10 +15,67 @@
 
 @property (nonatomic, assign) CGFontRef defaultCGFont;
 @property (nonatomic, assign) CTFontRef ctFont;
+@property (nonatomic, assign) CTFontRef mathitCTFont;
 @property (nonatomic, strong) MTFontMathTable* mathTable;
 @property (nonatomic, strong) NSDictionary* rawMathTable;
 
++ (NSBundle*) fontBundle;
+
 @end
+
+CTFontRef MTCreateVerifiedFontWithPostScriptName(NSString* psName, CGFloat size)
+{
+    CTFontRef font = CTFontCreateWithName((__bridge CFStringRef) psName, size, NULL);
+    if (!font) { return NULL; }
+    NSString* actual = CFBridgingRelease(CTFontCopyPostScriptName(font));
+    if ([actual isEqualToString:psName]) {
+        return font;
+    }
+    // CoreText substituted a different face; drawing it silently is a visible
+    // corruption, so reject and let the caller fall back (LLD §2.9).
+    CFRelease(font);
+    return NULL;
+}
+
+static CTFontRef MTCreateBundledItalicFont(CGFloat size) CF_RETURNS_RETAINED;
+static CTFontRef MTCreateBundledItalicFont(CGFloat size)
+{
+    NSString* fontPath = [[MTFont fontBundle] pathForResource:@"lmroman10-italic" ofType:@"otf" inDirectory:@"fonts"];
+    if (!fontPath) { return NULL; }
+    CGDataProviderRef provider = CGDataProviderCreateWithFilename(fontPath.UTF8String);
+    if (!provider) { return NULL; }
+    CGFontRef cgFont = CGFontCreateWithDataProvider(provider);
+    CFRelease(provider);
+    if (!cgFont) { return NULL; }
+    CTFontRef ctFont = CTFontCreateWithGraphicsFont(cgFont, size, nil, nil);
+    CFRelease(cgFont);
+    return ctFont;
+}
+
+static CTFontRef MTCreateCompanionForMathFont(NSString* name, CGFloat size) CF_RETURNS_RETAINED;
+static CTFontRef MTCreateCompanionForMathFont(NSString* name, CGFloat size)
+{
+    static NSDictionary<NSString*, NSString*>* companionNames;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        companionNames = @{
+            @"texgyretermes-math": @"TimesNewRomanPS-ItalicMT",
+            @"xits-math": @"TimesNewRomanPS-ItalicMT",
+            @"texgyrepagella-math": @"Palatino-Italic",
+            @"stixtwo-math": @"STIXTwoText-Italic",
+            @"firamath": @"HelveticaNeue-Italic",
+            @"notosansmath": @"HelveticaNeue-Italic",
+        };
+    });
+    NSString* psName = companionNames[name];
+    if (psName) {
+        CTFontRef font = MTCreateVerifiedFontWithPostScriptName(psName, size);
+        if (font) { return font; }
+    }
+    // latinmodern-math, newcm-math, and any failed by-name lookup all take
+    // the bundled Latin Modern Roman Italic.
+    return MTCreateBundledItalicFont(size);
+}
 
 @implementation MTFont
 
@@ -46,6 +103,14 @@
         if (!dict) { return nil; }
         self.rawMathTable = dict;
         self.mathTable = [[MTFontMathTable alloc] initWithFont:self mathTable:_rawMathTable];
+
+        _mathitCTFont = MTCreateCompanionForMathFont(name, size);
+        NSAssert(_mathitCTFont != NULL, @"Cannot resolve \\mathit companion for %@ — lmroman10-italic.otf missing from bundle?", name);
+        if (!_mathitCTFont) {
+            // Packaging bug: degrade \mathit to the math font (today's rendering)
+            // rather than crash in Release.
+            _mathitCTFont = (CTFontRef) CFRetain(_ctFont);
+        }
     }
     return self;
 }
@@ -71,6 +136,16 @@
     _ctFont = ctFont;
 }
 
+- (void)setMathitCTFont:(CTFontRef)mathitCTFont {
+    if (_mathitCTFont != nil) {
+        CFRelease(_mathitCTFont);
+    }
+    if (mathitCTFont != nil) {
+        CFRetain(mathitCTFont);
+    }
+    _mathitCTFont = mathitCTFont;
+}
+
 + (NSBundle*) fontBundle
 {
     // SwiftPM exposes processed resources via the generated module bundle.
@@ -91,6 +166,9 @@
     copyFont.rawMathTable = self.rawMathTable;
     copyFont.mathTable = [[MTFontMathTable alloc] initWithFont:copyFont mathTable:copyFont.rawMathTable];
     CFRelease(newCtFont);
+    CTFontRef newMathitFont = CTFontCreateCopyWithAttributes(self.mathitCTFont, size, NULL, NULL);
+    copyFont.mathitCTFont = newMathitFont;
+    CFRelease(newMathitFont);
     return copyFont;
 }
 
@@ -114,5 +192,6 @@
 {
     self.defaultCGFont=nil;
     self.ctFont=nil;
+    self.mathitCTFont=nil;
 }
 @end

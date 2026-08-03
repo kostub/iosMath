@@ -22,6 +22,10 @@
 /** Access to the raw CTFontRef if needed. */
 @property (nonatomic, readonly, nonnull) CTFontRef ctFont;
 
+/** The companion text-italic face used to draw \mathit runs. Same size and
+ lifetime as this font; never NULL (falls back to ctFont on a packaging bug). */
+@property (nonatomic, readonly, nonnull) CTFontRef mathitCTFont;
+
 /** The font math table. */
 @property (nonatomic, readonly, nonnull) MTFontMathTable* mathTable;
 
@@ -33,3 +37,8 @@
 - (CGGlyph) getGlyphWithName:(nonnull NSString*) glyphName;
 
 @end
+
+/** Creates a CTFont by PostScript name, returning NULL instead of a silently
+ substituted face when the resolved font's name does not match. Exposed for
+ testing the rejection path. */
+FOUNDATION_EXTERN CTFontRef _Nullable MTCreateVerifiedFontWithPostScriptName(NSString* _Nonnull psName, CGFloat size) CF_RETURNS_RETAINED;
