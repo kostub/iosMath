@@ -3777,4 +3777,77 @@
     XCTAssertEqualObjects(runs[2][1], @"LatinModernMath-Regular");
 }
 
+// The direct assertion that \mathit stopped being a no-op: widths move to
+// the companion's advances (LLD §3 contract table; em values from the face).
+- (void) testMathitChangesWidthOfRoutableCharacters
+{
+    CGFloat em = self.font.fontSize;
+    MTMathListDisplay* mathitF = [self displayForLaTeX:@"\\mathit{f}"];
+    MTMathListDisplay* plainF = [self displayForLaTeX:@"f"];
+    XCTAssertEqualWithAccuracy(mathitF.width, 0.307 * em, 0.01 * em);
+    XCTAssertGreaterThan(fabs(plainF.width - mathitF.width), 0.05 * em);
+
+    MTMathListDisplay* mathitOne = [self displayForLaTeX:@"\\mathit{1}"];
+    MTMathListDisplay* plainOne = [self displayForLaTeX:@"1"];
+    XCTAssertEqualWithAccuracy(mathitOne.width, 0.511 * em, 0.01 * em);
+    XCTAssertGreaterThan(fabs(plainOne.width - mathitOne.width), 0.005 * em);
+}
+
+// Regression guard on the categories iosMath already gets right (LLD §2.2):
+// \mathit must not move anything outside the routing domain.
+- (void) testMathitLeavesUnroutedCategoriesUnchanged
+{
+    NSDictionary<NSString*, NSString*>* pairs = @{
+        @"\\mathit{(}": @"(",
+        @"\\mathit{+}": @"+",
+        @"\\mathit{\\alpha}": @"\\alpha",
+        @"\\mathit{\\aleph}": @"\\aleph",
+    };
+    for (NSString* latex in pairs) {
+        MTMathListDisplay* styled = [self displayForLaTeX:latex];
+        MTMathListDisplay* plain = [self displayForLaTeX:pairs[latex]];
+        XCTAssertEqualWithAccuracy(styled.width, plain.width, 0.001, @"%@", latex);
+    }
+}
+
+// The contiguous companion range lets CoreText apply the face's own kern
+// table (cmti10's b->c kern analogue, LLD §3 contract).
+- (void) testMathitAppliesCompanionKerning
+{
+    CGFloat em = self.font.fontSize;
+    MTMathListDisplay* pair = [self displayForLaTeX:@"\\mathit{AV}"];
+    MTMathListDisplay* a = [self displayForLaTeX:@"\\mathit{A}"];
+    MTMathListDisplay* v = [self displayForLaTeX:@"\\mathit{V}"];
+    // AV pair-kerns -0.102 em in lmroman10-italic; allow half as margin.
+    XCTAssertLessThan(pair.width, a.width + v.width - 0.05 * em);
+}
+
+- (void) testMathitAppliesCompanionLigature
+{
+    // One shaped run, one glyph: the f_i ligature. Asserted on glyph count,
+    // not width, since a ligature can be advance-neutral.
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{fi}"];
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]]);
+    NSArray* runs = (__bridge NSArray*) CTLineGetGlyphRuns(line.line);
+    XCTAssertEqual(runs.count, 1);
+    XCTAssertEqual(CTRunGetGlyphCount((__bridge CTRunRef) runs[0]), 1);
+}
+
+- (void) testMathitShapingDoesNotCrossStyleBoundary
+{
+    // \mathit{f}i: f in the companion, i in the math font — two runs, two
+    // glyphs, no ligature. The font attribution must partition shaping.
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{f}i"];
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]]);
+    NSArray* runs = (__bridge NSArray*) CTLineGetGlyphRuns(line.line);
+    XCTAssertEqual(runs.count, 2);
+    CFIndex totalGlyphs = 0;
+    for (id run in runs) {
+        totalGlyphs += CTRunGetGlyphCount((__bridge CTRunRef) run);
+    }
+    XCTAssertEqual(totalGlyphs, 2);
+}
+
 @end
