@@ -3777,6 +3777,21 @@
     XCTAssertEqualObjects(runs[2][1], @"LatinModernMath-Regular");
 }
 
+- (void) testMathitLeavesCustomNonOrdinaryAtomInMathFont
+{
+    // +addLatexSymbol:value: is public, so a caller can register a non-Ordinary
+    // atom whose nucleus is routable. \mathit selects a family for class-7
+    // mathchars only, so such an atom keeps the math font.
+    [MTMathAtomFactory addLatexSymbol:@"zzmathitrel"
+                                value:[MTMathAtom atomWithType:kMTMathAtomRelation value:@"R"]];
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{\\zzmathitrel}"];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
+    NSArray<NSArray*>* runs = [self fontRunsOfLine:line];
+    XCTAssertEqual(runs.count, 1);
+    XCTAssertEqualObjects(runs[0][1], @"LatinModernMath-Regular");
+}
+
 // The direct assertion that \mathit stopped being a no-op: widths move to
 // the companion's advances (LLD §3 contract table; em values from the face).
 - (void) testMathitChangesWidthOfRoutableCharacters

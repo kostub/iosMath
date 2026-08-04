@@ -1015,8 +1015,11 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 [_currentLine addAttribute:(NSString*) kCTFontAttributeName
                                      value:(__bridge id) (_styleFont.ctFont)
                                      range:appendedRange];
-                if (atom.fontStyle == kMTFontStyleItalic) {
-                    [self applyMathitFontToRoutableCharactersInRange:appendedRange forAtom:atom];
+                // Ordinary only: \mathit selects a family for class-7 mathchars, so a
+                // relation or binary operator registered via +addLatexSymbol:value: with
+                // a routable nucleus keeps the math font.
+                if (atom.fontStyle == kMTFontStyleItalic && atom.type == kMTMathAtomOrdinary) {
+                    [self applyMathitFontToRoutableCharactersInRange:appendedRange];
                 }
                 // add the atom to the current range
                 if (_currentLineIndexRange.location == NSNotFound) {
@@ -1069,14 +1072,13 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
 // Evaluated per character, not per atom: fusion merges a whole \mathit group
 // into one atom, which can mix routable and non-routable characters
 // (\mathit{a\theta b} — theta must stay in the math font, LLD §3.3 C).
-- (void) applyMathitFontToRoutableCharactersInRange:(NSRange) range forAtom:(MTMathAtom*) atom
+- (void) applyMathitFontToRoutableCharactersInRange:(NSRange) range
 {
     NSString* string = _currentLine.string;
     NSUInteger runStart = NSNotFound;
     for (NSUInteger i = range.location; i <= NSMaxRange(range); i++) {
         BOOL routable = (i < NSMaxRange(range)) && MTIsMathItalicRoutable([string characterAtIndex:i]);
         if (routable) {
-            NSAssert(atom.type == kMTMathAtomOrdinary, @"Routable character in non-Ordinary atom: %@", atom);
             if (runStart == NSNotFound) {
                 runStart = i;
             }
