@@ -7,7 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
-@import CoreText;
+#import <CoreText/CoreText.h>
 #import "MTFontManager.h"
 #import "MTFont.h"
 #import "MTFont+Internal.h"
@@ -122,12 +122,25 @@
     NSString* original = CFBridgingRelease(CTFontCopyPostScriptName(font.mathitCTFont));
     NSString* copied = CFBridgingRelease(CTFontCopyPostScriptName(copy.mathitCTFont));
     XCTAssertEqualObjects(original, copied);
+
+    // Size 0 means "12pt" to the primary font's constructor but "keep the
+    // current size" to the companion's, so the two can only stay in step if
+    // the companion is built from the primary's resolved size.
+    MTFont* defaulted = [font copyFontWithSize:0];
+    XCTAssertEqualWithAccuracy(CTFontGetSize(defaulted.mathitCTFont),
+                               CTFontGetSize(defaulted.ctFont), 0.001);
 }
 
 // CTFontCreateWithName substitutes silently rather than failing (LLD §2.9);
 // this proves the create -> compare -> reject sequence actually rejects.
 - (void)testVerifiedFontCreationRejectsSubstitution
 {
+    // Without this the test would also pass if CTFontCreateWithName started
+    // returning NULL, which would mean the compare-and-reject never ran.
+    CTFontRef raw = CTFontCreateWithName(CFSTR("MTNoSuchFace-Italic"), 20, NULL);
+    XCTAssertTrue(raw != NULL, @"CoreText no longer substitutes for a missing face");
+    if (raw) { CFRelease(raw); }
+
     CTFontRef font = MTCreateVerifiedFontWithPostScriptName(@"MTNoSuchFace-Italic", 20);
     XCTAssertTrue(font == NULL);
     if (font) { CFRelease(font); }

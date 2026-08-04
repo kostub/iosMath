@@ -37,7 +37,6 @@ CTFontRef MTCreateVerifiedFontWithPostScriptName(NSString* psName, CGFloat size)
     return NULL;
 }
 
-static CTFontRef MTCreateBundledItalicFont(CGFloat size) CF_RETURNS_RETAINED;
 static CTFontRef MTCreateBundledItalicFont(CGFloat size)
 {
     NSString* fontPath = [[MTFont fontBundle] pathForResource:@"lmroman10-italic" ofType:@"otf" inDirectory:@"fonts"];
@@ -52,7 +51,6 @@ static CTFontRef MTCreateBundledItalicFont(CGFloat size)
     return ctFont;
 }
 
-static CTFontRef MTCreateCompanionForMathFont(NSString* name, CGFloat size) CF_RETURNS_RETAINED;
 static CTFontRef MTCreateCompanionForMathFont(NSString* name, CGFloat size)
 {
     static NSDictionary<NSString*, NSString*>* companionNames;
@@ -166,7 +164,11 @@ static CTFontRef MTCreateCompanionForMathFont(NSString* name, CGFloat size)
     copyFont.rawMathTable = self.rawMathTable;
     copyFont.mathTable = [[MTFontMathTable alloc] initWithFont:copyFont mathTable:copyFont.rawMathTable];
     CFRelease(newCtFont);
-    CTFontRef newMathitFont = CTFontCreateCopyWithAttributes(self.mathitCTFont, size, NULL, NULL);
+    // Not `size`: CTFontCreateWithGraphicsFont maps 0 to 12pt while
+    // CTFontCreateCopyWithAttributes reads it as "keep the current size", so
+    // passing it through would leave the companion a different size than the
+    // font it accompanies.
+    CTFontRef newMathitFont = CTFontCreateCopyWithAttributes(self.mathitCTFont, CTFontGetSize(copyFont.ctFont), NULL, NULL);
     copyFont.mathitCTFont = newMathitFont;
     CFRelease(newMathitFont);
     return copyFont;
