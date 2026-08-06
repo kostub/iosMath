@@ -387,10 +387,7 @@ UTF32Char getBlackboard(unichar ch) {
 // is TeX's class-7 mathchars: Latin letters, digits, capital Greek.
 static BOOL MTIsMathItalicRoutable(unichar ch)
 {
-    // U+03A2 is unassigned — the Greek capital block holds 24 letters, not 25.
-    BOOL capitalGreek = (ch >= kMTUnicodeGreekCapitalStart &&
-                         ch <= kMTUnicodeGreekCapitalEnd && ch != 0x03A2);
-    return IS_UPPER_EN(ch) || IS_LOWER_EN(ch) || IS_NUMBER(ch) || capitalGreek;
+    return IS_UPPER_EN(ch) || IS_LOWER_EN(ch) || IS_NUMBER(ch) || IS_CAPITAL_GREEK(ch);
 }
 
 static UTF32Char styleCharacter(unichar ch, MTFontStyle fontStyle)
