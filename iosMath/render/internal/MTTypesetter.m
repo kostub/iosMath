@@ -1033,15 +1033,21 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                 
                 // add super scripts || subscripts
                 if (atom.subScript || atom.superScript) {
+                    CGFloat delta = 0;
+                    if (atom.nucleus.length > 0) {
+                        // Read before the flush clears _currentLine. A non-empty
+                        // nucleus was just appended, so the line's last composed
+                        // sequence is this atom's last character. Keying on the
+                        // atom rather than on _currentLine.length matters: for an
+                        // empty nucleus the line's last character belongs to the
+                        // previous atom, whose correction addDisplayLine has
+                        // already carried into the pen.
+                        NSRange last = [_currentLine.string rangeOfComposedCharacterSequenceAtIndex:_currentLine.length - 1];
+                        delta = [self italicCorrectionInCurrentLineAtIndex:last.location];
+                    }
                     // stash the existing line
                     // We don't check _currentLine.length here since we want to allow empty lines with super/sub scripts.
                     MTCTLineDisplay* line = [self addDisplayLine];
-                    CGFloat delta = 0;
-                    if (atom.nucleus.length > 0) {
-                        // Use the italic correction of the last character.
-                        CGGlyph glyph = [self findGlyphForCharacterAtIndex:atom.nucleus.length - 1 inString:atom.nucleus];
-                        delta = [_styleFont.mathTable getItalicCorrection:glyph];
-                    }
                     if (delta > 0 && !atom.subScript) {
                         // Add a kern of delta
                         _currentPosition.x += delta;
@@ -1086,6 +1092,51 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
             runStart = NSNotFound;
         }
     }
+}
+
+// The face stamped at `index`. Every appended range is stamped before anything
+// reads it back, so a missing attribute is a broken invariant rather than
+// something LaTeX input can produce. Defaulting to _styleFont would read the
+// math table for a companion glyph and return a plausible wrong number, which
+// is the defect this path exists to remove.
+- (CTFontRef) faceInCurrentLineAtIndex:(NSUInteger) index
+{
+    CTFontRef face = (__bridge CTFontRef) [_currentLine attribute:(NSString*) kCTFontAttributeName
+                                                          atIndex:index
+                                                   effectiveRange:NULL];
+    NSAssert(face != NULL, @"No font stamped at index %lu of '%@'",
+             (unsigned long) index, _currentLine.string);
+    return face;
+}
+
+// The italic correction of the composed character sequence at `index`, from the
+// face that drew it. _currentLine can carry two faces — \mathit routes some
+// characters to the companion — and a CoreText glyph id means nothing without
+// its font, so the glyph is resolved against the same face the metric comes
+// from. This must stay the only way to ask for this number.
+- (CGFloat) italicCorrectionInCurrentLineAtIndex:(NSUInteger) index
+{
+    CTFontRef face = [self faceInCurrentLineAtIndex:index];
+    NSString* string = _currentLine.string;
+    NSRange range = [string rangeOfComposedCharacterSequenceAtIndex:index];
+    unichar chars[range.length];
+    [string getCharacters:chars range:range];
+    CGGlyph glyphs[range.length];
+    if (!CTFontGetGlyphsForCharacters(face, chars, glyphs, range.length)) {
+        // Same convention as findGlyphForCharacterAtIndex:inString:. Measuring
+        // notdef would return a correction for a box that is never drawn.
+        return 0;
+    }
+    if (CFEqual(face, _styleFont.ctFont)) {
+        return [_styleFont.mathTable getItalicCorrection:glyphs[0]];
+    }
+    // No text-italic face available to us carries a MATH table, so the
+    // correction is the ink overhanging the advance — the metric MathJax bakes
+    // into its -tex-mathit table.
+    CGRect bounds = CTFontGetBoundingRectsForGlyphs(face, kCTFontOrientationDefault, glyphs, NULL, 1);
+    CGSize advance;
+    CTFontGetAdvancesForGlyphs(face, kCTFontOrientationDefault, glyphs, &advance, 1);
+    return MAX(0, CGRectGetMaxX(bounds) - advance.width);
 }
 
 - (MTCTLineDisplay*) addDisplayLine
