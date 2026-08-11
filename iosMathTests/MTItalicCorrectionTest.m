@@ -314,4 +314,88 @@
     XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], 0, 0.001);
 }
 
+// Digits and capital Greek are routable too, so they are measured in the
+// companion. \mathit{7} doubles as a face check: the math font's own correction
+// for upright 7 is 0.013 em, so reading the wrong face gives a plausible wrong
+// number rather than zero.
+- (void) testCompanionDigitsAndCapitalGreek
+{
+    CGFloat em = self.font.fontSize;
+    XCTAssertEqualWithAccuracy([self kernOf:[self lineForLaTeX:@"\\mathit{7}"] atIndex:0],
+                               0.114 * em, 0.001 * em);
+    XCTAssertEqualWithAccuracy([self kernOf:[self lineForLaTeX:@"\\mathit{\\Pi}"] atIndex:0],
+                               0.108 * em, 0.001 * em);
+
+    // No ink past the advance: nothing to clear, no kern, and no floor.
+    XCTAssertEqualWithAccuracy([self kernOf:[self lineForLaTeX:@"\\mathit{1}"] atIndex:0], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:[self lineForLaTeX:@"\\mathit{\\Delta}"] atIndex:0], 0, 0.001);
+}
+
+// Latin Modern and New CM both fall through to the bundled companion, so their
+// values are ours to pin. The other six resolve to OS faces: assert where the
+// kern landed and that it is bounded, not what Apple's outlines measure.
+- (void) testCompanionCorrectionAcrossAllBundledFonts
+{
+    NSArray<NSString*>* bundledCompanion = @[ MTFontNameLatinModern, MTFontNameNewComputerModern ];
+    NSArray<NSString*>* names = @[ MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
+                                   MTFontNameNewComputerModern, MTFontNamePagella,
+                                   MTFontNameSTIXTwo, MTFontNameFiraMath, MTFontNameNotoSansMath ];
+    for (NSString* name in names) {
+        MTFont* font = [MTFontManager.fontManager fontWithName:name size:20];
+        MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{fVf}" withFont:font];
+        XCTAssertEqual(display.subDisplays.count, 1, @"%@", name);
+        MTCTLineDisplay* line = display.subDisplays[0];
+
+        // Trailing-only, whatever the face measures.
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], 0, 0.001, @"%@", name);
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:1], 0, 0.001, @"%@", name);
+        CGFloat trailing = [self kernOf:line atIndex:2];
+        XCTAssertGreaterThanOrEqual(trailing, 0, @"%@", name);
+        XCTAssertLessThanOrEqual(trailing, 0.4 * font.fontSize, @"%@", name);
+
+        if ([bundledCompanion containsObject:name]) {
+            XCTAssertEqualWithAccuracy(trailing, 0.145 * font.fontSize, 0.001 * font.fontSize, @"%@", name);
+        }
+    }
+}
+
+// The math-font correction is a font parameter, so the same assertion runs
+// across all eight bundled fonts by reading its own expectation.
+- (void) testMathFontCorrectionIsFontParameterised
+{
+    for (NSString* name in @[ MTFontNameLatinModern, MTFontNameXITS, MTFontNameTermes,
+                              MTFontNameNewComputerModern, MTFontNamePagella,
+                              MTFontNameSTIXTwo, MTFontNameFiraMath, MTFontNameNotoSansMath ]) {
+        MTFont* font = [MTFontManager.fontManager fontWithName:name size:20];
+        MTMathListDisplay* display = [self displayForLaTeX:@"fVf" withFont:font];
+        MTCTLineDisplay* line = display.subDisplays[0];
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
+                                   [self mathItalicCorrectionOf:@"\U0001D453" inFont:font], 0.001, @"%@", name);
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2],
+                                   [self mathItalicCorrectionOf:@"\U0001D449" inFont:font], 0.001, @"%@", name);
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:4],
+                                   [self mathItalicCorrectionOf:@"\U0001D453" inFont:font], 0.001, @"%@", name);
+    }
+}
+
+// New CM is the one bundled font with GPOS pair kerning on math-italic glyphs.
+// The correction must stack on the shaped position, not replace it.
+- (void) testCorrectionStacksOnNativePairKerning
+{
+    MTFont* newcm = [MTFontManager.fontManager fontWithName:MTFontNameNewComputerModern size:20];
+    MTMathListDisplay* display = [self displayForLaTeX:@"B." withFont:newcm];
+    MTCTLineDisplay* line = display.subDisplays[0];
+
+    NSMutableAttributedString* unkerned = [line.attributedString mutableCopy];
+    [unkerned removeAttribute:(NSString*) kCTKernAttributeName range:NSMakeRange(0, unkerned.length)];
+    CTLineRef shaped = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef) unkerned);
+    CGFloat shapedWidth = CTLineGetTypographicBounds(shaped, NULL, NULL, NULL);
+    CFRelease(shaped);
+
+    CGFloat correction = [self mathItalicCorrectionOf:@"\U0001D435" inFont:newcm];
+    XCTAssertGreaterThan(correction, 0);
+    // shaped + correction, not rawAdvance + correction.
+    XCTAssertEqualWithAccuracy(line.width, shapedWidth + correction, 0.001);
+}
+
 @end
