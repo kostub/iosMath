@@ -990,9 +990,15 @@ static void getBboxDetails(CGRect bbox, CGFloat* ascent, CGFloat* descent)
                     if (_currentLine.length > 0) {
                         if (interElementSpace > 0) {
                             // add a kerning of that space to the previous character
+                            NSRange prev = [_currentLine.string rangeOfComposedCharacterSequenceAtIndex:_currentLine.length - 1];
+                            // Additive: that character may already carry an italic
+                            // correction, and assigning would drop it.
+                            NSNumber* kern = [_currentLine attribute:(NSString*) kCTKernAttributeName
+                                                             atIndex:prev.location
+                                                      effectiveRange:NULL];
                             [_currentLine addAttribute:(NSString*) kCTKernAttributeName
-                                                 value:[NSNumber numberWithFloat:interElementSpace]
-                                                 range:[_currentLine.string rangeOfComposedCharacterSequenceAtIndex:_currentLine.length - 1]];
+                                                 value:@(kern.floatValue + interElementSpace)
+                                                 range:prev];
                         }
                     } else {
                         // increase the space
