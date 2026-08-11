@@ -113,7 +113,9 @@
     
     XCTAssertEqualWithAccuracy(display.ascent, 8.834, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
+    // +1.22: trailing ε on y (0.56) and z (0.60), each its own atom so each takes its
+    // own correction, plus w (0.06); x's correction is 0.
+    XCTAssertEqualWithAccuracy(display.width, 46.08, 0.01);
 }
 
 - (void)testVariablesAndNumbers {
@@ -144,7 +146,8 @@
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 45.56, 0.01);
+    // +0.62: trailing ε on y (0.56) and w (0.06); x and 2 have zero correction.
+    XCTAssertEqualWithAccuracy(display.width, 46.18, 0.01);
 }
 
 - (void)testEquationWithOperatorsAndRelations {
@@ -175,7 +178,10 @@
     
     XCTAssertEqualWithAccuracy(display.ascent, 13.32, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 92.36, 0.01);
+    // +0.56: trailing ε on the final y; 2, x, +, 3, = all have zero correction. The
+    // 4.44/5.56pt kerns visible in the run are pre-existing operator inter-element
+    // spacing (unrelated to italic correction) already baked into the old baseline.
+    XCTAssertEqualWithAccuracy(display.width, 92.92, 0.01);
 }
 
 #define XCTAssertEqualsCGPoint(p1, p2, accuracy, ...) \
@@ -1540,7 +1546,13 @@
     XCTAssertEqual(display2.subDisplays.count, 3);
     CGFloat rowPos[3] = { 30.28, -2.68, -31.95};
     // alignment is right, center, left.
-    CGFloat cellPos[3][3] = { { 35.89, 65.89, 129.438 }, { 45.89, 76.94, 129.438}, { 0, 87.66, 129.438}};
+    // Column 1 (center) holds "y+z" (row 0) and the fraction (row 1); "y+z" gains
+    // +1.16 (trailing ε on y=0.56 and z=0.60, each its own atom) and becomes the
+    // widest cell in the column, growing column 1's width by that same +1.16 and
+    // shifting rows 1-2's column-1 cells right by half of it (+0.58) under center
+    // alignment. Column 2 (left-aligned) starts right after column 1, so every row's
+    // column-2 cell shifts right by the full +1.16 column-1 growth.
+    CGFloat cellPos[3][3] = { { 35.89, 65.89, 130.598 }, { 45.89, 77.52, 130.598}, { 0, 88.24, 130.598}};
     // check the 3 rows of the matrix
     for (int i = 0; i < 3; i++) {
         MTDisplay* sub0i = display2.subDisplays[i];
@@ -1944,14 +1956,18 @@
     XCTAssertFalse(line2.hasScript);
 
     MTGlyphDisplay* glyph = accentDisp.accent;
-    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(3.47, 0), 0.01);
+    // +0.61: the accentee "xyzw" grows by +1.22 (trailing ε on y and z, plus w; see
+    // testMultipleVariables), and the accent glyph is centered over the accentee, so
+    // it shifts by half that growth.
+    XCTAssertEqualsCGPoint(glyph.position, CGPointMake(4.08, 0), 0.01);
     XCTAssertEqualNSRange(glyph.range, NSMakeRange(0, 1));
     XCTAssertFalse(glyph.hasScript);
 
     // dimensions
     XCTAssertEqualWithAccuracy(display.ascent, 14.98, 0.01);
     XCTAssertEqualWithAccuracy(display.descent, 4.1, 0.01);
-    XCTAssertEqualWithAccuracy(display.width, 44.86, 0.01);
+    // +1.22: same accentee growth as testMultipleVariables's "xyzw".
+    XCTAssertEqualWithAccuracy(display.width, 46.08, 0.01);
 }
 
 - (void)testLargeDelimiterHeightsIncreaseBySize
@@ -3799,7 +3815,10 @@
     CGFloat em = self.font.fontSize;
     MTMathListDisplay* mathitF = [self displayForLaTeX:@"\\mathit{f}"];
     MTMathListDisplay* plainF = [self displayForLaTeX:@"f"];
-    XCTAssertEqualWithAccuracy(mathitF.width, 0.307 * em, 0.01 * em);
+    // +0.145em: the companion glyph's own ink overhangs its advance by 2.90pt
+    // (lmroman10-italic f: advance 6.14, ink right 9.04), and items 1-6 now add
+    // that overhang as f's trailing italic correction (LLD §3 companion contract).
+    XCTAssertEqualWithAccuracy(mathitF.width, (0.307 + 0.145) * em, 0.01 * em);
     XCTAssertGreaterThan(fabs(plainF.width - mathitF.width), 0.05 * em);
 
     MTMathListDisplay* mathitOne = [self displayForLaTeX:@"\\mathit{1}"];
@@ -3839,14 +3858,20 @@
 
 - (void) testMathitAppliesCompanionLigature
 {
-    // One shaped run, one glyph: the f_i ligature. Asserted on glyph count,
-    // not width, since a ligature can be advance-neutral.
+    // Previously one shaped run, one glyph: the f_i ligature. Items 1-6 now stamp
+    // a trailing italic-correction kern on the atom's last character (i's 1.02pt
+    // companion overhang; f is interior so gets none, per the text-font
+    // interior-suppression rule), which is an attribute boundary between f and i
+    // that CoreText's shaper won't ligature across. GSUB-aware correction
+    // placement is out of scope for this PR (LLD §6), so the ligature no longer
+    // forms: two runs of one (unshaped) glyph each, not one run of a ligature glyph.
     MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{fi}"];
     MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
     XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]]);
     NSArray* runs = (__bridge NSArray*) CTLineGetGlyphRuns(line.line);
-    XCTAssertEqual(runs.count, 1);
+    XCTAssertEqual(runs.count, 2);
     XCTAssertEqual(CTRunGetGlyphCount((__bridge CTRunRef) runs[0]), 1);
+    XCTAssertEqual(CTRunGetGlyphCount((__bridge CTRunRef) runs[1]), 1);
 }
 
 - (void) testMathitShapingDoesNotCrossStyleBoundary

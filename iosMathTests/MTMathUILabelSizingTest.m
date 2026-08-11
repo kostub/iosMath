@@ -78,7 +78,10 @@
 }
 
 - (void)testAlignmentUsesInkWidth {
-    NSString* latex = @"V";   // heavy right overhang (advance 11.66, ink 15.38)
+    // V's italic correction (4.28) now covers its ink overhang (advance grows to
+    // 15.94, matching its 15.94 ink; see LLD §5), so the bound below holds with
+    // equality rather than slack -- it still guards against clipping either way.
+    NSString* latex = @"V";
     for (NSNumber* alignN in @[@(kMTTextAlignmentLeft), @(kMTTextAlignmentCenter), @(kMTTextAlignmentRight)]) {
         MTMathUILabel* label = [[MTMathUILabel alloc] init];
         label.latex = latex;
@@ -105,7 +108,12 @@
 - (void)testScaleLifecycleInvalidates {
     MTSpyLabel* label = [[MTSpyLabel alloc] init];
     label.forcedScale = 1;
-    label.latex = @"V";   // ink overhang; its 1x and 3x rounded widths differ
+    // V's italic correction (4.28) now exceeds its own ink overhang (LLD §5), so its
+    // ink width (15.94) rounds to the same 16pt at 1x and 3x (ceil(15.94)==ceil(47.82)/3)
+    // and no longer demonstrates the scale-dependent rounding this test needs. P's
+    // corrected ink width (15.64) still straddles a 1x/3x rounding boundary
+    // (ceil(15.64)=16 vs ceil(46.92)/3=15.67), so swap to P for that property.
+    label.latex = @"P";
     CGSize sizeAt1x = label.intrinsicContentSize;
     XCTAssertEqualWithAccuracy(sizeAt1x.width, round(sizeAt1x.width), 0.001, @"1x width off grid");
 
