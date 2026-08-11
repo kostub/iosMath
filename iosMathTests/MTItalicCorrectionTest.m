@@ -108,4 +108,130 @@
                                [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
 }
 
+// Default style is cmmi10 (SPACE = 0), so every character of a fused run is
+// corrected, interior included.
+- (void) testDefaultStyleCorrectsEveryCharacter
+{
+    MTCTLineDisplay* line = [self lineForLaTeX:@"fVf"];
+    CGFloat f = [self mathItalicCorrectionOf:@"\U0001D453"];
+    CGFloat V = [self mathItalicCorrectionOf:@"\U0001D449"];
+    XCTAssertGreaterThan(f, 0);
+    XCTAssertGreaterThan(V, 0);
+    // fVf fuses to one atom of three surrogate pairs.
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], f, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], V, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:4], f, 0.001);
+}
+
+// A run whose last glyph has no correction still corrects the interior.
+- (void) testDefaultStyleInteriorCorrectionWithZeroTrailing
+{
+    MTCTLineDisplay* line = [self lineForLaTeX:@"Vx"];
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], 0, 0.001);
+}
+
+// Text-font styles keep only the trailing correction. \mathrm is cmr10 and
+// \mathbf is cmbx10, both SPACE != 0.
+- (void) testTextFontStylesAreTrailingOnly
+{
+    MTCTLineDisplay* roman = [self lineForLaTeX:@"\\mathrm{fVf}"];
+    XCTAssertEqualWithAccuracy([self kernOf:roman atIndex:0], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:roman atIndex:1], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:roman atIndex:2],
+                               [self mathItalicCorrectionOf:@"f"], 0.001);
+
+    MTCTLineDisplay* bold = [self lineForLaTeX:@"\\mathbf{fVf}"];
+    XCTAssertEqualWithAccuracy([self kernOf:bold atIndex:0], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:bold atIndex:2], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:bold atIndex:4],
+                               [self mathItalicCorrectionOf:@"\U0001D41F"], 0.001);
+}
+
+// The two non-default styles that sit on a SPACE = 0 TFM. These fail if the
+// gate is ever keyed on "style != default", or if a default: branch swallows
+// kMTFontStyleBoldItalic. \mathcal maps lowercase onto the default math-italic
+// code points, so \mathcal{ff} and \mathnormal{ff} must agree exactly.
+- (void) testMathFontStylesCorrectTheInterior
+{
+    CGFloat mathItalicF = [self mathItalicCorrectionOf:@"\U0001D453"];
+    for (NSString* latex in @[ @"\\mathcal{ff}", @"\\mathnormal{ff}" ]) {
+        MTCTLineDisplay* line = [self lineForLaTeX:latex];
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], mathItalicF, 0.001, @"%@", latex);
+        XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], mathItalicF, 0.001, @"%@", latex);
+    }
+
+    MTCTLineDisplay* bm = [self lineForLaTeX:@"\\bm{ff}"];
+    CGFloat boldItalicF = [self mathItalicCorrectionOf:@"\U0001D487"];
+    XCTAssertGreaterThan(boldItalicF, 0);
+    XCTAssertEqualWithAccuracy([self kernOf:bm atIndex:0], boldItalicF, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:bm atIndex:2], boldItalicF, 0.001);
+}
+
+// A style change ends a run, so the correction survives on the left glyph even
+// for a suppressed style — pdfTeX's $V\mathrm{l}$ -> V ·2.22223· l. Fusion
+// never merges across styles, so this proves the gate is per-atom.
+- (void) testCorrectionAppliesAtAStyleSeam
+{
+    MTCTLineDisplay* seam = [self lineForLaTeX:@"V\\mathrm{l}"];
+    XCTAssertEqualWithAccuracy([self kernOf:seam atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
+
+    MTCTLineDisplay* suppressed = [self lineForLaTeX:@"\\mathrm{a}\\mathbf{b}"];
+    XCTAssertEqualWithAccuracy([self kernOf:suppressed atIndex:0],
+                               [self mathItalicCorrectionOf:@"a"], 0.001);
+
+    MTCTLineDisplay* unGated = [self lineForLaTeX:@"\\mathnormal{f}\\mathrm{x}"];
+    XCTAssertEqualWithAccuracy([self kernOf:unGated atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D453"], 0.001);
+}
+
+// A cross-atom boundary inside one line: the Close atom appends after the
+// corrected V.
+- (void) testCorrectionAppliesBeforeAClosingDelimiter
+{
+    MTCTLineDisplay* line = [self lineForLaTeX:@"V]"];
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
+}
+
+// Companion glyphs are cmti10 (SPACE != 0), so the interior is suppressed and
+// only the last f carries the measured overhang. Asserting kern placement
+// rather than run width distinguishes "suppressed interior" from "a smaller
+// correction everywhere".
+- (void) testCompanionRunIsTrailingOnly
+{
+    CGFloat em = self.font.fontSize;
+    MTCTLineDisplay* line = [self lineForLaTeX:@"\\mathit{fVf}"];
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:1], 0, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], 0.145 * em, 0.001 * em);
+}
+
+// The face seam inside one nucleus: f is drawn by the companion, alpha by the
+// math font, so the run ends at f and its correction is applied. The only case
+// where an interior companion glyph is corrected, and the only one that fails
+// if the seam check is dropped.
+- (void) testCorrectionAppliesAtAFaceSeamInsideOneNucleus
+{
+    CGFloat em = self.font.fontSize;
+    MTCTLineDisplay* line = [self lineForLaTeX:@"\\mathit{f\\alpha}"];
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], 0.145 * em, 0.001 * em);
+}
+
+// Neither beta nor gamma is routable, so both stay in the math font and the
+// interior is corrected. This is the only test that pins kMTFontStyleItalic in
+// the gate's NO branch. Beta, not alpha: alpha has no italic entry in Latin
+// Modern, so an alpha-first case would pass whichever branch the style took.
+- (void) testMathitInteriorIsCorrectedInTheMathFont
+{
+    MTCTLineDisplay* line = [self lineForLaTeX:@"\\mathit{\\beta\\gamma}"];
+    CGFloat beta = [self mathItalicCorrectionOf:@"\U0001D6FD"];
+    XCTAssertGreaterThan(beta, 0);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], beta, 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2],
+                               [self mathItalicCorrectionOf:@"\U0001D6FE"], 0.001);
+}
+
 @end
