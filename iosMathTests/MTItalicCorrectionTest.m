@@ -398,4 +398,36 @@
     XCTAssertEqualWithAccuracy(line.width, shapedWidth + correction, 0.001);
 }
 
+// f+1 carries both a correction and a binary-operator space on the f. Each is
+// isolated by a control that has only one of them.
+- (void) testCorrectionAndInterElementSpaceCompose
+{
+    CGFloat correctionOnly = [self kernOf:[self lineForLaTeX:@"f1"] atIndex:0];
+    CGFloat spaceOnly = [self kernOf:[self lineForLaTeX:@"x+1"] atIndex:0];
+    CGFloat both = [self kernOf:[self lineForLaTeX:@"f+1"] atIndex:0];
+    XCTAssertGreaterThan(correctionOnly, 0);   // x has no correction, f does
+    XCTAssertGreaterThan(spaceOnly, 0);
+    XCTAssertEqualWithAccuracy(both, correctionOnly + spaceOnly, 0.001);
+
+    CGFloat relationSpace = [self kernOf:[self lineForLaTeX:@"x="] atIndex:0];
+    XCTAssertGreaterThan(relationSpace, 0);
+    XCTAssertEqualWithAccuracy([self kernOf:[self lineForLaTeX:@"V="] atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D449"] + relationSpace, 0.001);
+}
+
+// Nothing is attached where the font reports no correction, so these are
+// byte-identical to master.
+- (void) testZeroCorrectionGlyphsAreUntouched
+{
+    for (NSString* latex in @[ @"\\mathrm{abc}", @"123" ]) {
+        MTCTLineDisplay* line = [self lineForLaTeX:latex];
+        [line.attributedString enumerateAttribute:(NSString*) kCTKernAttributeName
+                                          inRange:NSMakeRange(0, line.attributedString.length)
+                                          options:0
+                                       usingBlock:^(NSNumber* kern, NSRange range, BOOL* stop) {
+            XCTAssertNil(kern, @"%@ has a kern at %@", latex, NSStringFromRange(range));
+        }];
+    }
+}
+
 @end
