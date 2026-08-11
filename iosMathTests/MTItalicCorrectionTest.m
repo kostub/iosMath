@@ -234,4 +234,84 @@
                                [self mathItalicCorrectionOf:@"\U0001D6FE"], 0.001);
 }
 
+// The trailing kern reaches MTCTLineDisplay.width — the measured CoreText
+// property the whole flush story rests on. A lone f is also the end-of-list case.
+- (void) testTrailingCorrectionReachesLineWidth
+{
+    MTCTLineDisplay* line = [self lineForLaTeX:@"f"];
+    XCTAssertEqualWithAccuracy(line.width,
+                               [self mathAdvanceOf:@"\U0001D453"] + [self mathItalicCorrectionOf:@"\U0001D453"],
+                               0.001);
+}
+
+// ...and every flush site inherits it through the display's width, with no
+// pending-advance state anywhere.
+- (void) testTrailingCorrectionSurvivesEveryFlushSite
+{
+    CGFloat expected = [self mathAdvanceOf:@"\U0001D453"] + [self mathItalicCorrectionOf:@"\U0001D453"];
+    for (NSString* latex in @[ @"f\\sqrt{x}", @"f\\sum x", @"f\\,x", @"f\\frac{1}{2}",
+                               @"f\\left(x\\right)", @"f\\color{#ff0000}{x}" ]) {
+        MTMathListDisplay* display = [self displayForLaTeX:latex];
+        MTCTLineDisplay* line = display.subDisplays[0];
+        XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]], @"%@", latex);
+        XCTAssertEqualWithAccuracy(line.width, expected, 0.001, @"%@", latex);
+    }
+
+    // Ordinary -> Radical takes no inter-element space, so the next display
+    // starts exactly where the corrected line ends.
+    MTMathListDisplay* radical = [self displayForLaTeX:@"f\\sqrt{x}"];
+    MTCTLineDisplay* line = radical.subDisplays[0];
+    MTDisplay* next = radical.subDisplays[1];
+    XCTAssertEqualWithAccuracy(next.position.x, line.position.x + line.width, 0.001);
+}
+
+// The final character is corrected by exactly one path, never both, and a
+// subscript still blocks the base from advancing.
+- (void) testScriptedAndScriptlessGlyphsAgree
+{
+    CGFloat f = [self mathItalicCorrectionOf:@"\U0001D453"];
+    CGFloat advance = [self mathAdvanceOf:@"\U0001D453"];
+
+    // Scriptless: the correction is in the line width.
+    XCTAssertEqualWithAccuracy([self lineForLaTeX:@"f"].width, advance + f, 0.001);
+
+    // Superscript: the correction shifts the script instead, and the base line
+    // keeps its bare advance — applied once, not twice.
+    MTMathListDisplay* sup = [self displayForLaTeX:@"f^a"];
+    MTCTLineDisplay* supBase = sup.subDisplays[0];
+    XCTAssertEqualWithAccuracy(supBase.width, advance, 0.001);
+    XCTAssertEqualWithAccuracy(sup.subDisplays[1].position.x - supBase.width, f, 0.001);
+
+    // Subscript: the base does not advance by the correction.
+    MTMathListDisplay* sub = [self displayForLaTeX:@"f_a"];
+    MTCTLineDisplay* subBase = sub.subDisplays[0];
+    XCTAssertEqualWithAccuracy(subBase.width, advance, 0.001);
+    XCTAssertEqualWithAccuracy(sub.subDisplays[1].position.x, subBase.width, 0.001);
+
+    // Both scripts: the superscript carries the correction, the subscript does not.
+    MTMathListDisplay* both = [self displayForLaTeX:@"f_a^b"];
+    MTCTLineDisplay* bothBase = both.subDisplays[0];
+    MTDisplay* superscript = nil;
+    MTDisplay* subscript = nil;
+    for (MTMathListDisplay* d in both.subDisplays) {
+        if (![d isKindOfClass:[MTMathListDisplay class]]) { continue; }
+        if (d.type == kMTLinePositionSuperscript) { superscript = d; }
+        if (d.type == kMTLinePositionSubscript) { subscript = d; }
+    }
+    XCTAssertEqualWithAccuracy(superscript.position.x - subscript.position.x, f, 0.001);
+    XCTAssertEqualWithAccuracy(subscript.position.x, bothBase.width, 0.001);
+}
+
+// A fused atom whose last character carries the script: the interior is
+// corrected here, the last character by the script path.
+- (void) testFusedAtomWithAScriptOnItsLastCharacter
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"Vt^2"];
+    MTCTLineDisplay* line = display.subDisplays[0];
+    // Vt fuses to one atom; V is interior and corrected, t has no correction.
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
+                               [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
+    XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2], 0, 0.001);
+}
+
 @end
