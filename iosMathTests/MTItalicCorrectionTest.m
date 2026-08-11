@@ -430,4 +430,30 @@
     }
 }
 
+// \textit{fVf} renders through MTTextDisplay, which the correction path never
+// sees. The property is structural, so one smoke case is enough.
+- (void) testTextPathTakesNoCorrection
+{
+    MTMathListDisplay* display = [self displayForLaTeX:@"\\textit{fVf}"];
+    XCTAssertEqual(display.subDisplays.count, 1);
+    XCTAssertFalse([display.subDisplays[0] isKindOfClass:[MTCTLineDisplay class]]);
+}
+
+// Two properties of \math* vs \text* that are already correct and must stay
+// that way: math mode discards an interword space, and \text shrinks in scripts.
+- (void) testMathAndTextModeDifferencesAreUnchanged
+{
+    MTCTLineDisplay* math = [self lineForLaTeX:@"\\mathrm{a b}"];
+    XCTAssertEqualObjects(math.attributedString.string, @"ab");
+
+    MTMathListDisplay* text = [self displayForLaTeX:@"\\text{a b}"];
+    MTTextDisplay* textDisplay = text.subDisplays[0];
+    XCTAssertEqualObjects(textDisplay.text, @"a b");
+
+    MTMathListDisplay* scripted = [self displayForLaTeX:@"x^{\\text{ab}}"];
+    MTMathListDisplay* superscript = scripted.subDisplays[1];
+    MTTextDisplay* scriptedText = superscript.subDisplays[0];
+    XCTAssertLessThan(scriptedText.ascent, textDisplay.ascent);
+}
+
 @end
