@@ -171,6 +171,24 @@
     [self assertComposite:[MTInnerDisplay class] bare:@"\\left( V \\right." shifted:@"a\\left( V \\right."];
 }
 
+// The composites above all trail a V, which no longer overhangs, so their getters
+// would still pass with the MAX over children deleted. No plain glyph overhangs
+// its corrected advance any more, but \vec{f}'s accent glyph does (see
+// testAccentGlyphInk), so nesting it is what still forces the child to drive the
+// composite's inkWidth. \sum and \overrightarrow are absent because their own
+// glyph is always wide enough to cover the base -- they can't overhang at all.
+- (void)testCompositeInkTracksOverhangingChild {
+    for (NSArray* c in @[ @[ [MTFractionDisplay class], @"\\frac{1}{\\vec{f}}" ],
+                          @[ [MTRadicalDisplay class],  @"\\sqrt{\\vec{f}}" ],
+                          @[ [MTLineDisplay class],     @"\\overline{\\vec{f}}" ],
+                          @[ [MTInnerDisplay class],    @"\\left( \\vec{f} \\right." ] ]) {
+        MTDisplay* d = [self findDisplayOfClass:c[0] in:[self displayFor:c[1]]];
+        XCTAssertNotNil(d, @"%@", c[1]);
+        XCTAssertGreaterThan(d.inkWidth, d.width, @"%@", c[1]);
+        XCTAssertGreaterThanOrEqual(d.inkWidth, [self composedInkRightOf:d] - 0.01, @"%@", c[1]);
+    }
+}
+
 // Depth-first: the first display of the given class, or nil.
 - (MTDisplay*)findDisplayOfClass:(Class)cls in:(MTDisplay*)d {
     if ([d isKindOfClass:cls]) return d;

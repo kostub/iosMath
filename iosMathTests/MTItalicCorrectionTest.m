@@ -46,7 +46,7 @@
     MTMathListDisplay* display = [self displayForLaTeX:latex];
     XCTAssertEqual(display.subDisplays.count, 1, @"%@", latex);
     XCTAssertTrue([display.subDisplays[0] isKindOfClass:[MTCTLineDisplay class]], @"%@", latex);
-    return display.subDisplays[0];
+    return (MTCTLineDisplay*) display.subDisplays[0];
 }
 
 // The kern attached to the character at `index`, 0 when there is none.
@@ -92,7 +92,7 @@
     CGFloat em = self.font.fontSize;
     MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{f}^2"];
     XCTAssertEqual(display.subDisplays.count, 2);
-    MTCTLineDisplay* base = display.subDisplays[0];
+    MTCTLineDisplay* base = (MTCTLineDisplay*) display.subDisplays[0];
     MTDisplay* script = display.subDisplays[1];
     XCTAssertEqualWithAccuracy(script.position.x - (base.position.x + base.width),
                                0.145 * em, 0.001 * em);
@@ -102,7 +102,7 @@
 - (void) testSuperscriptShiftOnAMathFontGlyphIsUnchanged
 {
     MTMathListDisplay* display = [self displayForLaTeX:@"V^a"];
-    MTCTLineDisplay* base = display.subDisplays[0];
+    MTCTLineDisplay* base = (MTCTLineDisplay*) display.subDisplays[0];
     MTDisplay* script = display.subDisplays[1];
     XCTAssertEqualWithAccuracy(script.position.x - (base.position.x + base.width),
                                [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
@@ -252,7 +252,7 @@
     for (NSString* latex in @[ @"f\\sqrt{x}", @"f\\sum x", @"f\\,x", @"f\\frac{1}{2}",
                                @"f\\left(x\\right)", @"f\\color{#ff0000}{x}" ]) {
         MTMathListDisplay* display = [self displayForLaTeX:latex];
-        MTCTLineDisplay* line = display.subDisplays[0];
+        MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
         XCTAssertTrue([line isKindOfClass:[MTCTLineDisplay class]], @"%@", latex);
         XCTAssertEqualWithAccuracy(line.width, expected, 0.001, @"%@", latex);
     }
@@ -260,7 +260,7 @@
     // Ordinary -> Radical takes no inter-element space, so the next display
     // starts exactly where the corrected line ends.
     MTMathListDisplay* radical = [self displayForLaTeX:@"f\\sqrt{x}"];
-    MTCTLineDisplay* line = radical.subDisplays[0];
+    MTCTLineDisplay* line = (MTCTLineDisplay*) radical.subDisplays[0];
     MTDisplay* next = radical.subDisplays[1];
     XCTAssertEqualWithAccuracy(next.position.x, line.position.x + line.width, 0.001);
 }
@@ -278,25 +278,26 @@
     // Superscript: the correction shifts the script instead, and the base line
     // keeps its bare advance — applied once, not twice.
     MTMathListDisplay* sup = [self displayForLaTeX:@"f^a"];
-    MTCTLineDisplay* supBase = sup.subDisplays[0];
+    MTCTLineDisplay* supBase = (MTCTLineDisplay*) sup.subDisplays[0];
     XCTAssertEqualWithAccuracy(supBase.width, advance, 0.001);
     XCTAssertEqualWithAccuracy(sup.subDisplays[1].position.x - supBase.width, f, 0.001);
 
     // Subscript: the base does not advance by the correction.
     MTMathListDisplay* sub = [self displayForLaTeX:@"f_a"];
-    MTCTLineDisplay* subBase = sub.subDisplays[0];
+    MTCTLineDisplay* subBase = (MTCTLineDisplay*) sub.subDisplays[0];
     XCTAssertEqualWithAccuracy(subBase.width, advance, 0.001);
     XCTAssertEqualWithAccuracy(sub.subDisplays[1].position.x, subBase.width, 0.001);
 
     // Both scripts: the superscript carries the correction, the subscript does not.
     MTMathListDisplay* both = [self displayForLaTeX:@"f_a^b"];
-    MTCTLineDisplay* bothBase = both.subDisplays[0];
+    MTCTLineDisplay* bothBase = (MTCTLineDisplay*) both.subDisplays[0];
     MTDisplay* superscript = nil;
     MTDisplay* subscript = nil;
-    for (MTMathListDisplay* d in both.subDisplays) {
+    for (MTDisplay* d in both.subDisplays) {
         if (![d isKindOfClass:[MTMathListDisplay class]]) { continue; }
-        if (d.type == kMTLinePositionSuperscript) { superscript = d; }
-        if (d.type == kMTLinePositionSubscript) { subscript = d; }
+        MTMathListDisplay* script = (MTMathListDisplay*) d;
+        if (script.type == kMTLinePositionSuperscript) { superscript = script; }
+        if (script.type == kMTLinePositionSubscript) { subscript = script; }
     }
     XCTAssertEqualWithAccuracy(superscript.position.x - subscript.position.x, f, 0.001);
     XCTAssertEqualWithAccuracy(subscript.position.x, bothBase.width, 0.001);
@@ -307,7 +308,7 @@
 - (void) testFusedAtomWithAScriptOnItsLastCharacter
 {
     MTMathListDisplay* display = [self displayForLaTeX:@"Vt^2"];
-    MTCTLineDisplay* line = display.subDisplays[0];
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
     // Vt fuses to one atom; V is interior and corrected, t has no correction.
     XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
                                [self mathItalicCorrectionOf:@"\U0001D449"], 0.001);
@@ -344,7 +345,7 @@
         MTFont* font = [MTFontManager.fontManager fontWithName:name size:20];
         MTMathListDisplay* display = [self displayForLaTeX:@"\\mathit{fVf}" withFont:font];
         XCTAssertEqual(display.subDisplays.count, 1, @"%@", name);
-        MTCTLineDisplay* line = display.subDisplays[0];
+        MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
 
         // Trailing-only, whatever the face measures.
         XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0], 0, 0.001, @"%@", name);
@@ -368,7 +369,7 @@
                               MTFontNameSTIXTwo, MTFontNameFiraMath, MTFontNameNotoSansMath ]) {
         MTFont* font = [MTFontManager.fontManager fontWithName:name size:20];
         MTMathListDisplay* display = [self displayForLaTeX:@"fVf" withFont:font];
-        MTCTLineDisplay* line = display.subDisplays[0];
+        MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
         XCTAssertEqualWithAccuracy([self kernOf:line atIndex:0],
                                    [self mathItalicCorrectionOf:@"\U0001D453" inFont:font], 0.001, @"%@", name);
         XCTAssertEqualWithAccuracy([self kernOf:line atIndex:2],
@@ -384,7 +385,7 @@
 {
     MTFont* newcm = [MTFontManager.fontManager fontWithName:MTFontNameNewComputerModern size:20];
     MTMathListDisplay* display = [self displayForLaTeX:@"B." withFont:newcm];
-    MTCTLineDisplay* line = display.subDisplays[0];
+    MTCTLineDisplay* line = (MTCTLineDisplay*) display.subDisplays[0];
 
     NSMutableAttributedString* unkerned = [line.attributedString mutableCopy];
     [unkerned removeAttribute:(NSString*) kCTKernAttributeName range:NSMakeRange(0, unkerned.length)];
@@ -447,12 +448,12 @@
     XCTAssertEqualObjects(math.attributedString.string, @"ab");
 
     MTMathListDisplay* text = [self displayForLaTeX:@"\\text{a b}"];
-    MTTextDisplay* textDisplay = text.subDisplays[0];
+    MTTextDisplay* textDisplay = (MTTextDisplay*) text.subDisplays[0];
     XCTAssertEqualObjects(textDisplay.text, @"a b");
 
     MTMathListDisplay* scripted = [self displayForLaTeX:@"x^{\\text{ab}}"];
-    MTMathListDisplay* superscript = scripted.subDisplays[1];
-    MTTextDisplay* scriptedText = superscript.subDisplays[0];
+    MTMathListDisplay* superscript = (MTMathListDisplay*) scripted.subDisplays[1];
+    MTTextDisplay* scriptedText = (MTTextDisplay*) superscript.subDisplays[0];
     XCTAssertLessThan(scriptedText.ascent, textDisplay.ascent);
 }
 
