@@ -479,14 +479,45 @@ static NSString* ListSignature(MTMathList* list)
 
 #pragma mark - Registry templates
 
-// Registry-sanity coverage (arity / top-level placeholder checks) is added in
-// item 6; this pins that every registered template parses.
+- (void)testTemplateSplicesMultipleArgumentsInOrder
+{
+    // No built-in macro takes two arguments yet, so drive the splice directly.
+    // #2 appears before #1 and twice, covering reorder and reuse.
+    MTMathList* templateExpression = [MTMathListBuilder buildTemplate:@"#2(#1#2"];
+    MTMacroAtom* macro = [[MTMacroAtom alloc] initWithCommand:@"test"
+        arguments:@[ [MTMathListBuilder buildFromString:@"x"],
+                     [MTMathListBuilder buildFromString:@"y"] ]
+        templateExpression:templateExpression];
+    MTMathList* list = [MTMathList new];
+    [list addAtom:macro];
+    MTMathList* expanded = [list expandMacros];
+    XCTAssertEqualObjects(ListSignature(expanded),
+                          ListSignature([MTMathListBuilder buildFromString:@"y(xy"]));
+}
+
 - (void)testEveryRegisteredMacroParses
 {
     NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathListBuilder builtinMacros];
+    XCTAssertEqual(macros.count, 3ul);
     for (NSString* command in macros) {
-        MTMathList* templateExpression = [MTMathListBuilder buildTemplate:macros[command].templateString];
+        MTMacroDefinition* def = macros[command];
+        MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
         XCTAssertNotNil(templateExpression, @"\\%@ template failed to parse", command);
+        // Substitution does not descend into sub-lists, so every declared
+        // argument must be referenced at the template's top level — a nested #N
+        // would silently render as a literal "#N".
+        NSMutableSet<NSNumber*>* seen = [NSMutableSet set];
+        for (MTMathAtom* atom in templateExpression.atoms) {
+            if ([atom isKindOfClass:[MTMacroParameterAtom class]]) {
+                NSUInteger index = [(MTMacroParameterAtom*)atom argumentIndex];
+                XCTAssertTrue(index >= 1 && index <= def.argumentCount,
+                              @"\\%@ references #%lu beyond its %lu argument(s)",
+                              command, (unsigned long)index, (unsigned long)def.argumentCount);
+                [seen addObject:@(index)];
+            }
+        }
+        XCTAssertEqual(seen.count, def.argumentCount,
+                       @"\\%@ template must reference every declared argument at top level", command);
     }
 }
 
