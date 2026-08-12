@@ -95,6 +95,7 @@
 		492EED0217DAEDB500939107 /* MTMathList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathList.h; sourceTree = "<group>"; };
 		492EED0317DAEDB500939107 /* MTMathList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathList.m; sourceTree = "<group>"; };
 		492EED0417DAEDB500939107 /* MTMathListBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListBuilder.h; sourceTree = "<group>"; };
+		C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMacroParameterAtom.h; sourceTree = "<group>"; };
 		4987307517D546800041B02B /* libIosMath.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libIosMath.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		498730AB17D548DB0041B02B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		49965EFC17CBBA2700A555C5 /* iosMathExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosMathExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -290,10 +291,12 @@
 				492EECFF17DAEDB500939107 /* MTMathListBuilder.m */,
 				49DA6BC319A05F850086B19F /* MTUnicode.h */,
 				49DA6BC619A062A30086B19F /* MTUnicode.m */,
+				C01DEC0DE20260726000004 /* internal */,
 			);
 			path = lib;
 			sourceTree = "<group>";
 		};
+		C01DEC0DE20260726000004 /* internal */ = { isa = PBXGroup; children = ( C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */, ); path = internal; sourceTree = "<group>"; };
 		49965F3917CBD02000A555C5 /* render */ = {
 			isa = PBXGroup;
 			children = (

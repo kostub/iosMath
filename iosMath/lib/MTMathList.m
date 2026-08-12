@@ -12,6 +12,7 @@
 #import "MTMathList.h"
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMacroParameterAtom.h"
 
 // Returns true if the current binary operator is not really binary.
 static BOOL isNotBinaryOperator(MTMathAtom* prevNode)
@@ -1894,6 +1895,36 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
     if (self.subScript) {
         target.subScript = [self.subScript copy];
     }
+}
+
+@end
+
+#pragma mark - MTMacroParameterAtom
+
+@implementation MTMacroParameterAtom
+
+- (instancetype)initWithArgumentIndex:(NSUInteger)argumentIndex
+{
+    NSParameterAssert(argumentIndex >= 1 && argumentIndex <= 9);
+    // Ordinary + a visible "#N" nucleus: if a placeholder ever did leak into a
+    // rendered list, it shows up as literal "#1" rather than crashing on an
+    // unhandled enum value.
+    self = [super initWithType:kMTMathAtomOrdinary
+                         value:[NSString stringWithFormat:@"#%lu", (unsigned long)argumentIndex]];
+    if (self) {
+        _argumentIndex = argumentIndex;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    // MTMathAtom's -copyWithZone: allocates [self class] and calls
+    // -initWithType:value:, which this class does not override — so the copy is a
+    // MTMacroParameterAtom with the right nucleus but a zero index. Restore it.
+    MTMacroParameterAtom* copy = [super copyWithZone:zone];
+    copy->_argumentIndex = self.argumentIndex;
+    return copy;
 }
 
 @end
