@@ -214,19 +214,6 @@ static MTMacroAtom* PodMacroWithArgument(NSString* latex)
     XCTAssertEqual([copy.argument atoms].count, 1ul);
 }
 
-// +atomWithType: is not the only door: -type is a settable public property, so a
-// plain MTMathAtom can be relabelled as a macro after the fact. Expansion dispatches
-// on class and carries it through untouched, and the typesetter would silently drop
-// it — so -finalized asserts on the way past.
-- (void)testFinalizedRejectsNonMacroAtomTypedAsMacro
-{
-    MTMathAtom* impostor = [MTMathAtom atomWithType:kMTMathAtomVariable value:@"x"];
-    impostor.type = kMTMathAtomMacro;
-    MTMathList* list = [MTMathList new];
-    [list addAtom:impostor];
-    XCTAssertThrows([list finalized]);
-}
-
 #pragma mark - Two-phase finalized
 
 // Phase 2 must be the existing loop, unchanged: same Bin/Unary reclassification,

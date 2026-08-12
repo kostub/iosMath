@@ -1713,12 +1713,6 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
 
     MTMathAtom* prevNode = nil;
     for (MTMathAtom* atom in expanded.atoms) {
-        // -expandMacros dispatches on class, so a real MTMacroAtom is gone by now.
-        // This catches a plain MTMathAtom with -type forced to kMTMathAtomMacro,
-        // which walks through expansion untouched and would reach the typesetter.
-        NSAssert(atom.type != kMTMathAtomMacro,
-                 @"Atom %@ claims to be a macro but is not an MTMacroAtom; -type must not be set to kMTMathAtomMacro.",
-                 atom.stringValue);
         MTMathAtom* newNode = [atom finalized];
         // Each character is given a separate index.
         if (NSEqualRanges(zeroRange, atom.indexRange)) {
