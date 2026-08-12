@@ -17,6 +17,7 @@
 #import "MTMathListDisplay.h"
 #import "MTMathListDisplayInternal.h"
 #import "MTFontMathTable.h"
+#import "MTMacroParameterAtom.h"
 
 @interface MTModularArithmeticTest : XCTestCase
 @property (nonatomic) MTFont* font;
@@ -26,6 +27,12 @@
 // macro expansion in isolation and observe RAW (unreclassified) output.
 @interface MTMathList (MTMacroExpansionTesting)
 - (MTMathList *)expandMacros;
+@end
+
+// Declared privately in MTMathListBuilder.m; redeclared here to drive template
+// parsing directly.
+@interface MTMathListBuilder (MTTemplateTesting)
++ (nullable MTMathList *)buildTemplate:(NSString *)str;
 @end
 
 // Defined under "Equivalence helpers" below.
@@ -841,6 +848,26 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
                                        @"subdisplay %lu width: %@", (unsigned long)i, macroLatex);
         }
     }
+}
+
+#pragma mark - Template parsing
+
+- (void)testBuildTemplateParsesParameterAtoms
+{
+    MTMathList* list = [MTMathListBuilder buildTemplate:@"a#1+#2"];
+    XCTAssertNotNil(list);
+    XCTAssertEqual(list.atoms.count, 4ul);
+    XCTAssertEqual(list.atoms[0].type, kMTMathAtomVariable);
+    XCTAssertTrue([list.atoms[1] isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual([(MTMacroParameterAtom*)list.atoms[1] argumentIndex], 1ul);
+    XCTAssertEqual(list.atoms[2].type, kMTMathAtomBinaryOperator);
+    XCTAssertTrue([list.atoms[3] isKindOfClass:[MTMacroParameterAtom class]]);
+    XCTAssertEqual([(MTMacroParameterAtom*)list.atoms[3] argumentIndex], 2ul);
+
+    // Outside template mode # stays an invalid character, exactly as before.
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"#1" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorInvalidCharacter);
 }
 
 @end

@@ -11,6 +11,7 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMacroParameterAtom.h"
 
 NSString *const MTParseError = @"ParseError";
 
@@ -46,6 +47,12 @@ NSString *const MTParseError = @"ParseError";
 // far below the thousands of frames needed to overflow a 1 MB stack.
 static const NSInteger kMTMaxRecursionDepth = 150;
 
+// Not in the public header, so template mode does not appear in the Swift module
+// interface — only built-in macro templates use it.
+@interface MTMathListBuilder ()
++ (nullable MTMathList *)buildTemplate:(NSString *)str;
+@end
+
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
@@ -55,6 +62,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
     NSInteger _recursionDepth;
+    BOOL _templateMode;
     // Set to YES by stopCommand when a TeX group-transformation command (\over,
     // \atop, \choose, \brack, \brace) fires inside a {…} group. Checked in the
     // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
@@ -466,6 +474,18 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         } else if (ch == '~') {
             // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
+        } else if (_templateMode && ch == '#') {
+            // #N argument reference. Malformed #X can only come from a built-in
+            // template string — a programming mistake, not user input.
+            unichar digit = [self hasCharacters] ? [self getNextCharacter] : 0;
+            NSAssert(digit >= '1' && digit <= '9',
+                     @"Malformed #%C in a built-in macro template", digit);
+            if (digit < '1' || digit > '9') {
+                [self setError:MTParseErrorInternalError
+                       message:@"Malformed #N in a built-in macro template"];
+                return nil;
+            }
+            atom = [[MTMacroParameterAtom alloc] initWithArgumentIndex:digit - '0'];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
@@ -1806,6 +1826,15 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         return nil;
     }
     return output;
+}
+
+// Parses a built-in macro template: ordinary LaTeX plus #N argument references.
+// Template mode exists so that in user input # stays an invalid character.
++ (nullable MTMathList *)buildTemplate:(NSString *)str
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
+    builder->_templateMode = YES;
+    return [builder build];
 }
 
 + (NSString*) delimToString:(MTMathAtom*) delim
