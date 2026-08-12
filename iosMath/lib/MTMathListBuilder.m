@@ -47,6 +47,29 @@ NSString *const MTParseError = @"ParseError";
 // far below the thousands of frames needed to overflow a 1 MB stack.
 static const NSInteger kMTMaxRecursionDepth = 150;
 
+// Registry value: declared arity + the LaTeX template the expansion is parsed
+// from. Arity is declared rather than inferred from the template because a
+// future \newcommand declares [argc] and its body may ignore arguments.
+@interface MTMacroDefinition : NSObject
+@property (nonatomic, readonly) NSUInteger argumentCount;
+@property (nonatomic, copy, readonly) NSString* templateString;
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString;
+@end
+
+@implementation MTMacroDefinition
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString
+{
+    self = [super init];
+    if (self) {
+        _argumentCount = argumentCount;
+        _templateString = [templateString copy];
+    }
+    return self;
+}
+@end
+
 // Not in the public header, so template mode does not appear in the Swift module
 // interface — only built-in macro templates use it.
 @interface MTMathListBuilder ()
@@ -1140,31 +1163,35 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return commands;
 }
 
-// Returns nil WITHOUT setting an error when `command` is not a macro, so the caller
-// can fall through to -atomForCommand:. Returns nil WITH _error set when it is a
-// macro whose argument failed to parse.
+// Returns nil WITHOUT setting an error when `command` is not a macro, so the
+// caller can fall through to -atomForCommand:. Returns nil WITH _error set when
+// it is a macro whose arguments failed to parse.
 - (nullable MTMacroAtom*) macroAtomForCommand:(NSString*) command
 {
-    NSArray<NSString*>* halves = [MTMathListBuilder builtinMacros][command];
-    if (!halves) {
+    MTMacroDefinition* def = [MTMathListBuilder builtinMacros][command];
+    if (!def) {
         return nil;
     }
-    MTMathList* argument = [self requiredArgumentWithError:MTParseErrorMissingArgument];
-    if (!argument) {
-        return nil;   // _error already set
+    NSMutableArray<MTMathList*>* arguments = [NSMutableArray arrayWithCapacity:def.argumentCount];
+    for (NSUInteger i = 0; i < def.argumentCount; i++) {
+        MTMathList* argument = [self requiredArgumentWithError:MTParseErrorMissingArgument];
+        if (!argument) {
+            return nil;   // _error already set
+        }
+        [arguments addObject:argument];
     }
-    // A fresh builder each, so the in-flight parse's state is never disturbed.
-    MTMathList* prefix = [MTMathListBuilder buildFromString:halves[0]];
-    MTMathList* suffix = [MTMathListBuilder buildFromString:halves[1]];
+    // A fresh builder, so the in-flight parse's state is never disturbed.
+    MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
     // Compile-time constants, so a parse failure here is a programming mistake.
-    NSAssert(prefix && suffix, @"Built-in expansion for \\%@ failed to parse: %@ / %@",
-             command, halves[0], halves[1]);
-    if (!prefix || !suffix) {
+    NSAssert(templateExpression, @"Built-in template for \\%@ failed to parse: %@",
+             command, def.templateString);
+    if (!templateExpression) {
         [self setError:MTParseErrorInternalError
-               message:[NSString stringWithFormat:@"Built-in expansion for \\%@ failed to parse", command]];
+               message:[NSString stringWithFormat:@"Built-in template for \\%@ failed to parse", command]];
         return nil;
     }
-    return [[MTMacroAtom alloc] initWithCommand:command argument:argument prefix:prefix suffix:suffix];
+    return [[MTMacroAtom alloc] initWithCommand:command arguments:arguments
+                             templateExpression:templateExpression];
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -1755,22 +1782,25 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     return fractionMacroCommands;
 }
 
-// Each entry is amsmath's exact inline expansion: @[prefix, suffix], bracketing the
-// one argument. Not reproduced is amsmath's \if@display switch to an 18mu leading
-// gap, because a macro expands at parse time, before the render style is known.
+// Each entry is amsmath's exact inline expansion as a #N template. Not reproduced
+// is amsmath's \if@display switch to an 18mu leading gap, because a macro expands
+// at parse time, before the render style is known.
 //
 // This dispatch_once builds strings only. Parsing one here would re-enter this
-// method (every command reaches -macroAtomForCommand:) and deadlock, so the halves
-// are re-parsed per invocation instead — ~8 atoms, and MTMacroAtom copies them anyway.
-+ (NSDictionary<NSString*, NSArray<NSString*>*>*) builtinMacros
+// method (every command reaches -macroAtomForCommand:) and deadlock, so templates
+// are parsed per invocation instead — ~8 atoms, and MTMacroAtom copies them anyway.
++ (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
 {
-    static NSDictionary<NSString*, NSArray<NSString*>*>* macros = nil;
+    static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         macros = @{
-            @"pmod": @[ @"\\mkern8mu(\\mathrm{mod}\\mkern6mu", @")" ],
-            @"mod":  @[ @"\\mkern12mu\\mathrm{mod}\\mkern6mu",  @""  ],
-            @"pod":  @[ @"\\mkern8mu(",                          @")" ],
+            @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"],
+            @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"],
+            @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern8mu(#1)"],
         };
     });
     return macros;

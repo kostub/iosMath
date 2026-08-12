@@ -693,34 +693,38 @@ typedef NS_ENUM(NSUInteger, MTStrikeStyle) {
 
 @end
 
-/** An unexpanded one-argument macro invocation.
+/** An unexpanded macro invocation.
 
- `\pmod{n}` parses to exactly one `MTMacroAtom` and expands to
- `prefix` + `argument` + `suffix`. All three are raw (non-finalized) lists parsed
- at parse time; the expansion is re-derived from them every time
- `-[MTMathList finalized]` runs.
+ `\pmod{n}` parses to exactly one `MTMacroAtom` and expands by splicing a deep
+ copy of each argument into the `#N` placeholders of `templateExpression`. All
+ stored lists are raw (non-finalized), parsed at parse time; the expansion is
+ re-derived from them every time `-[MTMathList finalized]` runs.
 
- @note Only `-[MTMathList finalized]` expands. `-[MTMacroAtom finalized]` on a lone
- atom returns another macro atom.
+ `#N` substitution reaches only the top level of the template. A placeholder
+ nested inside a sub-list (`\frac{#1}{2}`, `{#1}`, `x^{#1}`) is not substituted
+ and renders as a literal `#N` — built-in templates are all flat; user-defined
+ templates (`\newcommand`) need substitution that descends into sub-lists, which
+ does not exist yet.
+
+ @note Only `-[MTMathList finalized]` expands. `-[MTMacroAtom finalized]` on a
+ lone atom returns another macro atom.
  */
 @interface MTMacroAtom : MTMathAtom
 
 /** The command name without the leading backslash, e.g. `@"pmod"`. */
 @property (nonatomic, copy, readonly) NSString* command;
 
-/** The parsed argument. Mutable, and owned by this atom (deep-copied at init). */
-@property (nonatomic, strong, readonly) MTMathList* argument;
+/** The parsed arguments in invocation order. The lists are mutable, and owned by
+ this atom (deep-copied at init). */
+@property (nonatomic, copy, readonly) NSArray<MTMathList*>* arguments;
 
-/** The fixed expansion text before the argument. May be empty. */
-@property (nonatomic, strong, readonly) MTMathList* prefix;
-
-/** The fixed expansion text after the argument. May be empty. */
-@property (nonatomic, strong, readonly) MTMathList* suffix;
+/** The golden expansion template: a raw, argument-free list whose `#N`
+ references are internal placeholder atoms. */
+@property (nonatomic, strong, readonly) MTMathList* templateExpression;
 
 - (instancetype)initWithCommand:(NSString*)command
-                       argument:(MTMathList*)argument
-                         prefix:(MTMathList*)prefix
-                         suffix:(MTMathList*)suffix NS_DESIGNATED_INITIALIZER;
+                       arguments:(NSArray<MTMathList*>*)arguments
+              templateExpression:(MTMathList*)templateExpression NS_DESIGNATED_INITIALIZER;
 
 /// The implementation additionally throws, to catch dynamic (`id`-typed) callers.
 - (instancetype)initWithType:(MTMathAtomType)type value:(NSString*)value NS_UNAVAILABLE;
