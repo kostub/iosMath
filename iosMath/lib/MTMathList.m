@@ -194,7 +194,7 @@ static NSString* fractionCommandForDelimiterPair(NSString* leftDelimiter, NSStri
             // The default would mint a plain MTMathAtom carrying type 22 — an atom
             // that claims to be a macro but cannot expand.
             @throw [NSException exceptionWithName:@"InvalidMethod"
-                                           reason:@"A macro atom cannot be created by type. Use -[MTMacroAtom initWithCommand:argument:prefix:suffix:] instead."
+                                           reason:@"A macro atom cannot be created by type. Use -[MTMacroAtom initWithCommand:arguments:templateExpression:] instead."
                                          userInfo:nil];
 
         default:
