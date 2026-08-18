@@ -642,6 +642,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
@@ -694,6 +695,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
