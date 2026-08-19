@@ -1707,6 +1707,10 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                             @4 : @">",
                             @5 : @";",
                             @(-3) : @"!",
+                            // -4 and -5 have no short form; \negmedspace and
+                            // \negthickspace are the only commands that name them.
+                            @(-4) : @"negmedspace",
+                            @(-5) : @"negthickspace",
                             @18 : @"quad",
                             @36 : @"qquad",
                     };
@@ -1815,10 +1819,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
                            templateString:@"\\int\\cdots\\int"],
 
             // amsmath builds these four out of \mathop, which iosMath has no
-            // command for. Without it the expansion is an Ord, so a script lands
-            // to the right instead of centred underneath — the symbol is right,
-            // the script position is not. Known limitation; revisit if \mathop
-            // is ever added.
+            // command for. Without it the expansion is an Ord rather than an Op,
+            // which costs two things: a script lands to the right instead of
+            // centred underneath, and the 3mu an Op gets against the atom after
+            // it is missing. The symbol is right, the spacing around it is not.
+            // Known limitation; revisit if \mathop is ever added.
             @"varliminf":  [[MTMacroDefinition alloc] initWithArgumentCount:0
                             templateString:@"\\underline{\\lim}"],
             @"varlimsup":  [[MTMacroDefinition alloc] initWithArgumentCount:0
