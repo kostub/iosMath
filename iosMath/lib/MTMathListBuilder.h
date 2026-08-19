@@ -97,6 +97,9 @@ typedef NS_ENUM(NSUInteger, MTParseErrors) {
     MTParseErrorMissingColumnSpec,
     /// An array column specification was empty or used an unsupported specifier.
     MTParseErrorInvalidColumnSpec,
+    /// A command that requires an argument was given none — end of input, or a
+    /// `}`/`^`/`_`/`&` where the argument should be.
+    MTParseErrorMissingArgument,
 };
 
 @end

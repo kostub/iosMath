@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465BE1D23DA8400F82033 /* MTTypesetterTest.m */; };
+		C01DEC0DE20260726000003 /* MTModularArithmeticTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */; };
 		49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */; };
 		B5F0B5C103FA9EF7992D11F9 /* MTItalicCorrectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEA6FC9DE3C76B9C2E7DF10 /* MTItalicCorrectionTest.m */; };
 		490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 490465C01D23DA8400F82033 /* MTFontManagerTest.m */; };
@@ -78,6 +79,7 @@
 
 /* Begin PBXFileReference section */
 		490465BE1D23DA8400F82033 /* MTTypesetterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTypesetterTest.m; sourceTree = "<group>"; };
+		C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTModularArithmeticTest.m; sourceTree = "<group>"; };
 		49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInkWidthTest.m; sourceTree = "<group>"; };
 		4EEA6FC9DE3C76B9C2E7DF10 /* MTItalicCorrectionTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTItalicCorrectionTest.m; sourceTree = "<group>"; };
 		490465C01D23DA8400F82033 /* MTFontManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManagerTest.m; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 		492EED0217DAEDB500939107 /* MTMathList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathList.h; sourceTree = "<group>"; };
 		492EED0317DAEDB500939107 /* MTMathList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathList.m; sourceTree = "<group>"; };
 		492EED0417DAEDB500939107 /* MTMathListBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathListBuilder.h; sourceTree = "<group>"; };
+		C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMacroParameterAtom.h; sourceTree = "<group>"; };
 		4987307517D546800041B02B /* libIosMath.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libIosMath.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		498730AB17D548DB0041B02B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		49965EFC17CBBA2700A555C5 /* iosMathExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosMathExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -260,6 +263,7 @@
 				C01DEC0DE20260722000104 /* MTMathUILabelSizingTest.m */,
 				49B83EF517CF046A0014B739 /* MTMathListTest.m */,
 				490465BE1D23DA8400F82033 /* MTTypesetterTest.m */,
+				C01DEC0DE20260726000002 /* MTModularArithmeticTest.m */,
 				49A1B2C31D23DA8400F82033 /* MTInkWidthTest.m */,
 				4EEA6FC9DE3C76B9C2E7DF10 /* MTItalicCorrectionTest.m */,
 				490465C01D23DA8400F82033 /* MTFontManagerTest.m */,
@@ -290,10 +294,12 @@
 				492EECFF17DAEDB500939107 /* MTMathListBuilder.m */,
 				49DA6BC319A05F850086B19F /* MTUnicode.h */,
 				49DA6BC619A062A30086B19F /* MTUnicode.m */,
+				C01DEC0DE20260726000004 /* internal */,
 			);
 			path = lib;
 			sourceTree = "<group>";
 		};
+		C01DEC0DE20260726000004 /* internal */ = { isa = PBXGroup; children = ( C01DEC0DE20260726000001 /* MTMacroParameterAtom.h */, ); path = internal; sourceTree = "<group>"; };
 		49965F3917CBD02000A555C5 /* render */ = {
 			isa = PBXGroup;
 			children = (
@@ -540,6 +546,7 @@
 				C01DEC0DE20260722000103 /* MTMathUILabelSizingTest.m in Sources */,
 				498730A817D548190041B02B /* MTMathListTest.m in Sources */,
 				490465BF1D23DA8400F82033 /* MTTypesetterTest.m in Sources */,
+				C01DEC0DE20260726000003 /* MTModularArithmeticTest.m in Sources */,
 				49A1B2C41D23DA8400F82033 /* MTInkWidthTest.m in Sources */,
 				B5F0B5C103FA9EF7992D11F9 /* MTItalicCorrectionTest.m in Sources */,
 				490465C11D23DA8400F82033 /* MTFontManagerTest.m in Sources */,
@@ -639,6 +646,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
@@ -691,6 +699,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/iosMath",
 					"$(SRCROOT)/iosMath/lib",
+					"$(SRCROOT)/iosMath/lib/internal",
 					"$(SRCROOT)/iosMath/render",
 					"$(SRCROOT)/iosMath/render/internal",
 				);
