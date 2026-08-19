@@ -1,6 +1,7 @@
 ## Changelog
 
 ### v2.6.0 (2026-07-28)
+* Add amsmath's **argument-free macros**. `\implies`, `\iff`, and `\impliedby` now carry amsmath's `\;` on both sides instead of rendering as the bare arrow. New: the named spacings `\thinspace`, `\medspace`, `\thickspace`, `\negthinspace`, `\negmedspace`, `\negthickspace`; the multiple integral `\idotsint`; and the limit forms `\varliminf`, `\varlimsup`, `\varinjlim`, `\varprojlim`. The `\var…lim` family draws the right symbol but puts a script to its right rather than centred underneath, because iosMath has no `\mathop` to make the result an operator.
 * Add **modular-arithmetic notation**: `\bmod` as a binary operator, and the `\pmod`, `\mod`, and `\pod` macros with amsmath's exact inline gaps and upright "mod" (#264, #268). `a \equiv b \pmod{n}` now renders as it does in LaTeX. The macros expand through a new internal macro atom, so a macro invocation serializes back to the command the author wrote rather than to its expansion. amsmath's wider display-style gap (18mu instead of 8/12mu) is not reproduced: a macro expands at parse time, before the render style is known.
 
 ### v2.5.0 (2026-07-14)

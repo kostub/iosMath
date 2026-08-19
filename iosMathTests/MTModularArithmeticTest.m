@@ -498,7 +498,7 @@ static NSString* ListSignature(MTMathList* list)
 - (void)testEveryRegisteredMacroParses
 {
     NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathListBuilder builtinMacros];
-    XCTAssertEqual(macros.count, 3ul);
+    XCTAssertEqual(macros.count, 11ul);
     for (NSString* command in macros) {
         MTMacroDefinition* def = macros[command];
         MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
@@ -874,6 +874,64 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
     NSError* error = nil;
     XCTAssertNil([MTMathListBuilder buildFromString:@"#1" error:&error]);
     XCTAssertEqual(error.code, MTParseErrorInvalidCharacter);
+}
+
+#pragma mark - Zero-argument macros
+
+// The registry's argument-free templates, written out by hand. If these drift
+// from +builtinMacros the tests below fail — which is the point.
+static NSDictionary<NSString*, NSString*>* ZeroArgumentExpansions(void)
+{
+    return @{
+        @"implies":    @"\\;\\Longrightarrow\\;",
+        @"impliedby":  @"\\;\\Longleftarrow\\;",
+        @"iff":        @"\\;\\Longleftrightarrow\\;",
+        @"idotsint":   @"\\int\\cdots\\int",
+        @"varliminf":  @"\\underline{\\lim}",
+        @"varlimsup":  @"\\overline{\\lim}",
+        @"varinjlim":  @"\\underrightarrow{\\lim}",
+        @"varprojlim": @"\\underleftarrow{\\lim}",
+    };
+}
+
+// \implies, \iff and \impliedby were plain aliases of the bare Long-arrow glyph
+// before this; the whole gain is the \; on each side, so a drift back to the
+// unpadded arrow has to fail loudly.
+- (void)testZeroArgumentMacroEquivalence
+{
+    NSDictionary<NSString*, NSString*>* expansions = ZeroArgumentExpansions();
+    for (NSString* command in expansions) {
+        NSString* macroLatex = [NSString stringWithFormat:@"x\\%@ y", command];
+        // The space matches the macro side and terminates a trailing command
+        // name (\int y, not \inty); math mode discards it either way.
+        NSString* writtenLatex = [NSString stringWithFormat:@"x%@ y", expansions[command]];
+        MTMathList* macroList = [MTMathListBuilder buildFromString:macroLatex];
+        MTMathList* writtenList = [MTMathListBuilder buildFromString:writtenLatex];
+        XCTAssertNotNil(macroList, @"%@", macroLatex);
+        XCTAssertNotNil(writtenList, @"%@", writtenLatex);
+        XCTAssertEqualObjects(ListSignature(macroList.finalized),
+                              ListSignature(writtenList.finalized),
+                              @"%@  !=  %@", macroLatex, writtenLatex);
+        for (MTMathAtom* atom in macroList.finalized.atoms) {
+            XCTAssertNotEqual(atom.type, kMTMathAtomMacro, @"%@", macroLatex);
+        }
+    }
+}
+
+// A zero-argument macro has no {} to terminate its name, so serialization has to
+// keep the trailing space: "\implies y" must not come back as "\impliesy".
+- (void)testZeroArgumentMacroSerializationRoundTrips
+{
+    for (NSString* command in ZeroArgumentExpansions()) {
+        NSString* latex = [NSString stringWithFormat:@"x\\%@ y", command];
+        MTMathList* list = [MTMathListBuilder buildFromString:latex];
+        XCTAssertNotNil(list, @"%@", latex);
+        NSString* out = [MTMathListBuilder mathListToString:list];
+        XCTAssertEqualObjects(out, latex);
+        MTMathList* reparsed = [MTMathListBuilder buildFromString:out];
+        XCTAssertNotNil(reparsed, @"%@", out);
+        XCTAssertEqualObjects(ListSignature(reparsed.finalized), ListSignature(list.finalized));
+    }
 }
 
 @end

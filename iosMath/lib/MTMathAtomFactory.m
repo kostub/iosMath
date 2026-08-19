@@ -992,6 +992,14 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
                      @"!" : [[MTMathSpace alloc] initWithSpace:-3],
                      @"quad" : [[MTMathSpace alloc] initWithSpace:18],  // quad = 1em = 18mu
                      @"qquad" : [[MTMathSpace alloc] initWithSpace:36], // qquad = 2em
+                     // amsmath's named forms. The stretch components (\medspace is
+                     // 4mu plus 2mu minus 4mu) are dropped — nothing here stretches.
+                     @"thinspace" : [[MTMathSpace alloc] initWithSpace:3],
+                     @"medspace" : [[MTMathSpace alloc] initWithSpace:4],
+                     @"thickspace" : [[MTMathSpace alloc] initWithSpace:5],
+                     @"negthinspace" : [[MTMathSpace alloc] initWithSpace:-3],
+                     @"negmedspace" : [[MTMathSpace alloc] initWithSpace:-4],
+                     @"negthickspace" : [[MTMathSpace alloc] initWithSpace:-5],
                      
                      // Style
                      @"displaystyle" : [[MTMathStyle alloc] initWithStyle:kMTLineStyleDisplay],
@@ -1020,11 +1028,10 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
                     @"Vert" : @"|",
                     @"gets" : @"leftarrow",
                     @"to" : @"rightarrow",
-                    @"iff" : @"Longleftrightarrow",
                     @"AA" : @"angstrom",
                     @"restriction" : @"upharpoonright",
-                    @"implies" : @"Longrightarrow",
-                    @"impliedby" : @"Longleftarrow",
+                    // \iff, \implies and \impliedby moved to +builtinMacros: amsmath
+                    // pads them with \;, which one symbol atom cannot express.
                     @"dotsc" : @"ldots",
                     @"dotsb" : @"cdots",
                     @"dotsm" : @"cdots",
