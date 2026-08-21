@@ -47,29 +47,6 @@ NSString *const MTParseError = @"ParseError";
 // far below the thousands of frames needed to overflow a 1 MB stack.
 static const NSInteger kMTMaxRecursionDepth = 150;
 
-// Registry value: declared arity + the LaTeX template the expansion is parsed
-// from. Arity is declared rather than inferred from the template because a
-// future \newcommand declares [argc] and its body may ignore arguments.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString;
-@end
-
-@implementation MTMacroDefinition
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString
-{
-    self = [super init];
-    if (self) {
-        _argumentCount = argumentCount;
-        _templateString = [templateString copy];
-    }
-    return self;
-}
-@end
-
 // Not in the public header, so template mode does not appear in the Swift module
 // interface — only built-in macro templates use it.
 @interface MTMathListBuilder ()
@@ -1168,7 +1145,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // it is a macro whose arguments failed to parse.
 - (nullable MTMacroAtom*) macroAtomForCommand:(NSString*) command
 {
-    MTMacroDefinition* def = [MTMathListBuilder builtinMacros][command];
+    MTMacroDefinition* def = [MTMathAtomFactory macroDefinitionForCommand:command];
     if (!def) {
         return nil;
     }
@@ -1182,12 +1159,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
     // A fresh builder, so the in-flight parse's state is never disturbed.
     MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
-    // Compile-time constants, so a parse failure here is a programming mistake.
-    NSAssert(templateExpression, @"Built-in template for \\%@ failed to parse: %@",
-             command, def.templateString);
     if (!templateExpression) {
-        [self setError:MTParseErrorInternalError
-               message:[NSString stringWithFormat:@"Built-in template for \\%@ failed to parse", command]];
+        // Reachable from a template registered through +addMacro:, so this is the
+        // caller's error, not the library's.
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"Template for \\%@ failed to parse", command]];
         return nil;
     }
     return [[MTMacroAtom alloc] initWithCommand:command arguments:arguments
@@ -1784,57 +1760,6 @@ static const NSInteger kMTMaxRecursionDepth = 150;
         };
     });
     return fractionMacroCommands;
-}
-
-// Each entry is amsmath's exact inline expansion as a #N template. Not reproduced
-// is amsmath's \if@display switch to an 18mu leading gap, because a macro expands
-// at parse time, before the render style is known.
-//
-// This dispatch_once builds strings only. Parsing one here would re-enter this
-// method (every command reaches -macroAtomForCommand:) and deadlock, so templates
-// are parsed per invocation instead — ~8 atoms, and MTMacroAtom copies them anyway.
-+ (NSDictionary<NSString*, MTMacroDefinition*>*) builtinMacros
-{
-    static NSDictionary<NSString*, MTMacroDefinition*>* macros = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        macros = @{
-            @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
-                      templateString:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"],
-            @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                      templateString:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"],
-            @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
-                      templateString:@"\\mkern8mu(#1)"],
-
-            // amsmath pads all three with \; on both sides. They were aliases of
-            // the bare arrow until now, which renders tighter than amsmath.
-            @"implies":   [[MTMacroDefinition alloc] initWithArgumentCount:0
-                           templateString:@"\\;\\Longrightarrow\\;"],
-            @"impliedby": [[MTMacroDefinition alloc] initWithArgumentCount:0
-                           templateString:@"\\;\\Longleftarrow\\;"],
-            @"iff":       [[MTMacroDefinition alloc] initWithArgumentCount:0
-                           templateString:@"\\;\\Longleftrightarrow\\;"],
-
-            @"idotsint":  [[MTMacroDefinition alloc] initWithArgumentCount:0
-                           templateString:@"\\int\\cdots\\int"],
-
-            // amsmath builds these four out of \mathop, which iosMath has no
-            // command for. Without it the expansion is an Ord rather than an Op,
-            // which costs two things: a script lands to the right instead of
-            // centred underneath, and the 3mu an Op gets against the atom after
-            // it is missing. The symbol is right, the spacing around it is not.
-            // Known limitation; revisit if \mathop is ever added.
-            @"varliminf":  [[MTMacroDefinition alloc] initWithArgumentCount:0
-                            templateString:@"\\underline{\\lim}"],
-            @"varlimsup":  [[MTMacroDefinition alloc] initWithArgumentCount:0
-                            templateString:@"\\overline{\\lim}"],
-            @"varinjlim":  [[MTMacroDefinition alloc] initWithArgumentCount:0
-                            templateString:@"\\underrightarrow{\\lim}"],
-            @"varprojlim": [[MTMacroDefinition alloc] initWithArgumentCount:0
-                            templateString:@"\\underleftarrow{\\lim}"],
-        };
-    });
-    return macros;
 }
 
 + (NSDictionary*) styleToCommands

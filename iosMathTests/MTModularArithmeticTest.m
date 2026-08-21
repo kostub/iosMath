@@ -35,16 +35,6 @@
 + (nullable MTMathList *)buildTemplate:(NSString *)str;
 @end
 
-// Defined privately in MTMathListBuilder.m; redeclared for registry tests.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-@end
-
-@interface MTMathListBuilder (MTMacroRegistryTesting)
-+ (NSDictionary<NSString*, MTMacroDefinition*>*)builtinMacros;
-@end
-
 // Defined under "Equivalence helpers" below.
 static NSString* ListSignature(MTMathList* list);
 
@@ -497,10 +487,14 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testEveryRegisteredMacroParses
 {
-    NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathListBuilder builtinMacros];
-    XCTAssertEqual(macros.count, 11ul);
-    for (NSString* command in macros) {
-        MTMacroDefinition* def = macros[command];
+    // Named rather than enumerated: +addMacro: writes into the same global table
+    // and there is no unregister, so enumerating it would validate whatever an
+    // earlier test left behind.
+    for (NSString* command in @[ @"pmod", @"mod", @"pod", @"implies", @"impliedby", @"iff",
+                                 @"idotsint", @"varliminf", @"varlimsup", @"varinjlim",
+                                 @"varprojlim" ]) {
+        MTMacroDefinition* def = [MTMathAtomFactory macroDefinitionForCommand:command];
+        XCTAssertNotNil(def, @"\\%@ is not registered", command);
         MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
         XCTAssertNotNil(templateExpression, @"\\%@ template failed to parse", command);
         // Substitution does not descend into sub-lists, so every declared
@@ -519,6 +513,18 @@ static NSString* ListSignature(MTMathList* list)
         XCTAssertEqual(seen.count, def.argumentCount,
                        @"\\%@ template must reference every declared argument at top level", command);
     }
+}
+
+- (void)testAddMacroRegistersAndReplaces
+{
+    [MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{2}"];
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\half"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"\\frac{1}{2}"].finalized));
+
+    // Re-registering the same name replaces the definition, as +addLatexSymbol: does.
+    [MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{3}"];
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\half"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"\\frac{1}{3}"].finalized));
 }
 
 #pragma mark - Parsing the three macros
