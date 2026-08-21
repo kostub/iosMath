@@ -449,6 +449,40 @@ static NSString* ListSignature(MTMathList* list)
                           ListSignature([MTMathListBuilder buildFromString:@"\\frac{1}{3}"].finalized));
 }
 
+#pragma mark - #N anywhere in a template
+
+// The case this design exists for: a placeholder inside another command's braces.
+- (void)testPlaceholderInsideASubList
+{
+    [MTMathAtomFactory addMacro:@"myhat" argumentCount:1 template:@"\\hat{#1}"];
+    [MTMathAtomFactory addMacro:@"myfrac" argumentCount:2 template:@"\\frac{#1}{#2}"];
+
+    NSDictionary<NSString*, NSString*>* cases = @{
+        @"\\myhat{x}":       @"\\hat{x}",
+        @"\\myfrac{1}{2}":   @"\\frac{1}{2}",
+        @"\\myfrac{a+b}{c}": @"\\frac{a+b}{c}",
+    };
+    for (NSString* input in cases) {
+        MTMathList* macroList = [MTMathListBuilder buildFromString:input];
+        XCTAssertNotNil(macroList, @"%@", input);
+        MTMathList* writtenList = [MTMathListBuilder buildFromString:cases[input]];
+        XCTAssertEqualObjects(ListSignature(macroList.finalized),
+                              ListSignature(writtenList.finalized), @"%@", input);
+    }
+}
+
+// A placeholder carrying a script — the case that decided the mechanism. The
+// argument text lands where the parser would have read it inline, so the script
+// attaches to it exactly as if the expansion had been typed out.
+- (void)testPlaceholderCarryingAScript
+{
+    [MTMathAtomFactory addMacro:@"pow" argumentCount:2 template:@"#1^{#2}"];
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\pow{x}{n}"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"x^{n}"].finalized));
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\pow{a+b}{2k}"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"a+b^{2k}"].finalized));
+}
+
 #pragma mark - Parsing the three macros
 
 - (void)testPmodParsesToASingleMacroAtom
