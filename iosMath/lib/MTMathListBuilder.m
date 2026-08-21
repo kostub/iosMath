@@ -745,6 +745,12 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
             continue;
         }
         unichar digit = [templateString characterAtIndex:i + 1];
+        if (digit == '#') {
+            // TeX's escape for a literal #, which \color{##ff0000} needs.
+            [out appendString:@"#"];
+            i++;
+            continue;
+        }
         if (digit < '1' || digit > '9' || (NSUInteger)(digit - '0') > rawArguments.count) {
             // Rejected by the assertion in +addMacro:. With assertions compiled out
             // the # survives here and the expansion fails to parse, which is loud.

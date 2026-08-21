@@ -128,8 +128,10 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (void) addLatexSymbol:(NSString*) name value:(MTMathAtom*) atom;
 
 /** Define a macro: a command that expands to `templateString` with `#1`...`#9` replaced by
- the arguments it is invoked with. Macros are looked up before every other command table, so
- registering a name that already exists — a macro or a built-in command — shadows it.
+ the arguments it is invoked with. As in TeX, a literal `#` in the template is written `##`.
+ Macros are looked up before the symbol tables, so registering a name that already exists —
+ a macro or a built-in symbol — shadows it. `\limits`, the `\text…` commands and the
+ font-style commands are dispatched earlier and cannot be shadowed.
  e.g. `[MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{2}"]`
 
  Carries the same setup-time contract as `+addLatexSymbol:value:` — do not call this while

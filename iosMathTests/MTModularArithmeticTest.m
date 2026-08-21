@@ -396,6 +396,17 @@ static NSString* ListSignature(MTMathList* list)
                           ListSignature([MTMathListBuilder buildFromString:@"y(xy"]));
 }
 
+// A colour literal is the only way a # reaches a template today, and it is also
+// the case that made the old validator reject a legal template outright.
+- (void)testDoubledHashSplicesToALiteralHash
+{
+    [MTMathAtomFactory addMacro:@"warn" argumentCount:1 template:@"\\color{##ff0000}{#1}"];
+    MTMathList* list = [MTMathListBuilder buildFromString:@"\\warn{x}"];
+    XCTAssertNotNil(list);
+    XCTAssertEqualObjects(ListSignature([list expandMacros]),
+                          ListSignature([MTMathListBuilder buildFromString:@"\\color{#ff0000}{x}"]));
+}
+
 - (void)testEveryRegisteredMacroParses
 {
     // Named rather than enumerated: +addMacro: writes into the same global table
