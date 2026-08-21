@@ -127,6 +127,20 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
  `[MTMathAtomFactory addLatexSymbol:@"lcm" value:[MTMathAtomFactory operatorWithName:@"lcm" limits:NO]]` */
 + (void) addLatexSymbol:(NSString*) name value:(MTMathAtom*) atom;
 
+/** Define a macro: a command that expands to `templateString` with `#1`...`#9` replaced by
+ the arguments it is invoked with. Macros are looked up before every other command table, so
+ registering a name that already exists — a macro or a built-in command — shadows it.
+ e.g. `[MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{2}"]`
+
+ Carries the same setup-time contract as `+addLatexSymbol:value:` — do not call this while
+ parsing on another thread. */
++ (void) addMacro:(NSString*) name
+    argumentCount:(NSUInteger) argumentCount
+         template:(NSString*) templateString;
+
+/** The macro registered under `command`, or nil if it is not a macro. */
++ (nullable MTMacroDefinition*) macroDefinitionForCommand:(NSString*) command;
+
 /** Returns a list of all supported lated symbols names. */
 + (NSArray<NSString*>*) supportedLatexSymbolNames;
 

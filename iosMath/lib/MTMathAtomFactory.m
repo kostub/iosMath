@@ -1024,6 +1024,94 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
     return commands;
 }
 
+// Each entry is amsmath's exact inline expansion as a #N template. Not reproduced
+// is amsmath's \if@display switch to an 18mu leading gap, because a macro expands
+// at parse time, before the render style is known.
+//
+// This dispatch_once builds strings only. Parsing one here would re-enter
+// -macroAtomForCommand: (every command reaches it) and deadlock, so templates are
+// parsed per invocation instead.
++ (NSMutableDictionary<NSString*, MTMacroDefinition*>*) macros
+{
+    static NSMutableDictionary<NSString*, MTMacroDefinition*>* macros = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        macros = [NSMutableDictionary dictionaryWithDictionary:@{
+            @"pmod": [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern8mu(\\mathrm{mod}\\mkern6mu#1)"],
+            @"mod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern12mu\\mathrm{mod}\\mkern6mu#1"],
+            @"pod":  [[MTMacroDefinition alloc] initWithArgumentCount:1
+                      templateString:@"\\mkern8mu(#1)"],
+
+            // amsmath pads all three with \; on both sides. They were aliases of
+            // the bare arrow until now, which renders tighter than amsmath.
+            @"implies":   [[MTMacroDefinition alloc] initWithArgumentCount:0
+                           templateString:@"\\;\\Longrightarrow\\;"],
+            @"impliedby": [[MTMacroDefinition alloc] initWithArgumentCount:0
+                           templateString:@"\\;\\Longleftarrow\\;"],
+            @"iff":       [[MTMacroDefinition alloc] initWithArgumentCount:0
+                           templateString:@"\\;\\Longleftrightarrow\\;"],
+
+            @"idotsint":  [[MTMacroDefinition alloc] initWithArgumentCount:0
+                           templateString:@"\\int\\cdots\\int"],
+
+            // amsmath builds these four out of \mathop, which iosMath has no
+            // command for. Without it the expansion is an Ord rather than an Op,
+            // which costs two things: a script lands to the right instead of
+            // centred underneath, and the 3mu an Op gets against the atom after
+            // it is missing. The symbol is right, the spacing around it is not.
+            // Known limitation; revisit if \mathop is ever added.
+            @"varliminf":  [[MTMacroDefinition alloc] initWithArgumentCount:0
+                            templateString:@"\\underline{\\lim}"],
+            @"varlimsup":  [[MTMacroDefinition alloc] initWithArgumentCount:0
+                            templateString:@"\\overline{\\lim}"],
+            @"varinjlim":  [[MTMacroDefinition alloc] initWithArgumentCount:0
+                            templateString:@"\\underrightarrow{\\lim}"],
+            @"varprojlim": [[MTMacroDefinition alloc] initWithArgumentCount:0
+                            templateString:@"\\underleftarrow{\\lim}"],
+        }];
+    });
+    return macros;
+}
+
++ (BOOL) template:(NSString*) templateString referencesOnlyArgumentsUpTo:(NSUInteger) argumentCount
+{
+    for (NSUInteger i = 0; i + 1 < templateString.length; i++) {
+        if ([templateString characterAtIndex:i] != '#') {
+            continue;
+        }
+        unichar digit = [templateString characterAtIndex:i + 1];
+        if (digit < '1' || digit > '9' || (NSUInteger)(digit - '0') > argumentCount) {
+            return NO;
+        }
+        i++;
+    }
+    return YES;
+}
+
++ (void) addMacro:(NSString*) name
+    argumentCount:(NSUInteger) argumentCount
+         template:(NSString*) templateString
+{
+    NSParameterAssert(name);
+    NSParameterAssert(templateString);
+    NSAssert(argumentCount <= 9, @"\\%@ declares %lu arguments; a macro can take at most 9",
+             name, (unsigned long)argumentCount);
+    NSAssert([self template:templateString referencesOnlyArgumentsUpTo:argumentCount],
+             @"Template for \\%@ references an argument beyond its %lu declared argument(s): %@",
+             name, (unsigned long)argumentCount, templateString);
+    // Same setup-time contract as +addLatexSymbol:value: — the table is read
+    // unguarded once initialized. Do not call this while parsing on another thread.
+    [self macros][name] = [[MTMacroDefinition alloc] initWithArgumentCount:argumentCount
+                                                           templateString:templateString];
+}
+
++ (nullable MTMacroDefinition*) macroDefinitionForCommand:(NSString*) command
+{
+    return [self macros][command];
+}
+
 + (NSDictionary*) aliases
 {
     static NSDictionary* aliases = nil;

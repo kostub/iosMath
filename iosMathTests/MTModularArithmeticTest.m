@@ -35,14 +35,10 @@
 + (nullable MTMathList *)buildTemplate:(NSString *)str;
 @end
 
-// Defined privately in MTMathListBuilder.m; redeclared for registry tests.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-@end
-
-@interface MTMathListBuilder (MTMacroRegistryTesting)
-+ (NSDictionary<NSString*, MTMacroDefinition*>*)builtinMacros;
+// Private to MTMathAtomFactory.m; redeclared so the registry tests can enumerate
+// the whole table. MTMacroDefinition itself is public now.
+@interface MTMathAtomFactory (MTMacroRegistryTesting)
++ (NSMutableDictionary<NSString*, MTMacroDefinition*>*)macros;
 @end
 
 // Defined under "Equivalence helpers" below.
@@ -497,8 +493,14 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testEveryRegisteredMacroParses
 {
-    NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathListBuilder builtinMacros];
-    XCTAssertEqual(macros.count, 11ul);
+    NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathAtomFactory macros];
+    // A containment check, not an equality one: +addMacro: writes into this same
+    // global table and there is no unregister, so a test that registers a macro
+    // leaves it there for whatever runs next.
+    NSSet<NSString*>* builtins = [NSSet setWithArray:@[
+        @"pmod", @"mod", @"pod", @"implies", @"impliedby", @"iff", @"idotsint",
+        @"varliminf", @"varlimsup", @"varinjlim", @"varprojlim" ]];
+    XCTAssertTrue([builtins isSubsetOfSet:[NSSet setWithArray:macros.allKeys]]);
     for (NSString* command in macros) {
         MTMacroDefinition* def = macros[command];
         MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
