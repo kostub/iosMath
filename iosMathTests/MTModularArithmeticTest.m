@@ -810,6 +810,19 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
     XCTAssertNoThrow([list finalized]);
 }
 
+// Arguments are stored as source text, so serialization is a splice rather than a
+// re-serialization: redundant braces and unusual spacing come back out verbatim.
+// This replaces testFinalizedTracksArgumentMutation, which pinned the lazy
+// re-derivation this design gives up.
+- (void)testArgumentTextSerializesVerbatim
+{
+    for (NSString* input in @[ @"\\pod{{n}}", @"\\pod{ n }", @"\\pod{n + 1}", @"\\pod{\\frac{1}{2}}" ]) {
+        MTMathList* list = [MTMathListBuilder buildFromString:input];
+        XCTAssertNotNil(list, @"%@", input);
+        XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], input);
+    }
+}
+
 #pragma mark - Rendering
 
 - (void)testPmodRendersUprightMod
@@ -921,6 +934,27 @@ static NSDictionary<NSString*, NSString*>* ZeroArgumentExpansions(void)
         XCTAssertNotNil(reparsed, @"%@", out);
         XCTAssertEqualObjects(ListSignature(reparsed.finalized), ListSignature(list.finalized));
     }
+}
+
+#pragma mark - Recursion cap
+
+// A self-referential macro must fail fast rather than overflow the stack. Each
+// level is a whole sub-builder, so the cap is separate from the parse-depth one.
+- (void)testSelfReferentialMacroHitsTheDepthCap
+{
+    [MTMathAtomFactory addMacro:@"loop" argumentCount:0 template:@"\\loop"];
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\loop" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep);
+}
+
+- (void)testMutuallyRecursiveMacrosHitTheDepthCap
+{
+    [MTMathAtomFactory addMacro:@"ping" argumentCount:0 template:@"\\pong"];
+    [MTMathAtomFactory addMacro:@"pong" argumentCount:0 template:@"\\ping"];
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\ping" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorNestingTooDeep);
 }
 
 @end
