@@ -47,29 +47,6 @@ NSString *const MTParseError = @"ParseError";
 // far below the thousands of frames needed to overflow a 1 MB stack.
 static const NSInteger kMTMaxRecursionDepth = 150;
 
-// Registry value: declared arity + the LaTeX template the expansion is parsed
-// from. Arity is declared rather than inferred from the template because a
-// future \newcommand declares [argc] and its body may ignore arguments.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString;
-@end
-
-@implementation MTMacroDefinition
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString
-{
-    self = [super init];
-    if (self) {
-        _argumentCount = argumentCount;
-        _templateString = [templateString copy];
-    }
-    return self;
-}
-@end
-
 // Not in the public header, so template mode does not appear in the Swift module
 // interface — only built-in macro templates use it.
 @interface MTMathListBuilder ()

@@ -26,6 +26,19 @@ NSString *const MTSymbolInfinity = @"\u221E"; // \infty
 NSString *const MTSymbolAngle = @"\u2220"; // \angle
 NSString *const MTSymbolDegree = @"\u00B0"; // \circ
 
+@implementation MTMacroDefinition
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString
+{
+    self = [super init];
+    if (self) {
+        _argumentCount = argumentCount;
+        _templateString = [templateString copy];
+    }
+    return self;
+}
+@end
+
 // Inter-column spacing for \begin{smallmatrix}, in mu. amsmath separates smallmatrix
 // columns with \thickspace = 5mu, measured under \scriptstyle (amsmath.dtx); KaTeX
 // mirrors this as 0.2778em = 5/18em (src/environments/array.ts). We store the honest

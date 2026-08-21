@@ -38,6 +38,16 @@ typedef NS_ENUM(NSUInteger, MTStackArgRole) {
                inheritsClass:(BOOL)inheritsClass;
 @end
 
+/// Registry value: declared arity + the LaTeX template the expansion is parsed
+/// from. Arity is declared rather than inferred from the template because a
+/// future \newcommand declares [argc] and its body may ignore arguments.
+@interface MTMacroDefinition : NSObject
+@property (nonatomic, readonly) NSUInteger argumentCount;
+@property (nonatomic, copy, readonly) NSString* templateString;
+- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
+                       templateString:(NSString*)templateString;
+@end
+
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
