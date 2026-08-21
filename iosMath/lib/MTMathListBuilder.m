@@ -47,6 +47,10 @@ NSString *const MTParseError = @"ParseError";
 // far below the thousands of frames needed to overflow a 1 MB stack.
 static const NSInteger kMTMaxRecursionDepth = 150;
 
+// Separate from the parse-depth cap because a macro level costs a whole builder
+// and a spliced string, not one stack frame.
+static const NSInteger kMTMaxMacroExpansionDepth = 32;
+
 // Not in the public header, so template mode does not appear in the Swift module
 // interface — only built-in macro templates use it.
 @interface MTMathListBuilder ()
@@ -62,6 +66,7 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     MTFontStyle _currentFontStyle;
     BOOL _spacesAllowed;
     NSInteger _recursionDepth;
+    NSInteger _macroExpansionDepth;
     BOOL _templateMode;
     // Set to YES by stopCommand when a TeX group-transformation command (\over,
     // \atop, \choose, \brack, \brace) fires inside a {…} group. Checked in the
@@ -696,6 +701,97 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     [self setError:MTParseErrorMismatchBraces
            message:@"Unmatched { in \\text* body"];
     return nil;
+}
+
+// The math-mode sibling of -readTextArgument: reads one macro argument as source
+// text without parsing it. Nothing is unescaped and no inner brace is dropped —
+// whatever this returns gets spliced into a template and handed back to a parser.
+// The caller has already skipped spaces and confirmed a character is available.
+- (nullable NSString*) readRawArgument
+{
+    unichar first = [self getNextCharacter];
+    if (first == '\\') {
+        return [@"\\" stringByAppendingString:[self readCommand]];
+    }
+    if (first != '{') {
+        NSMutableString* token = [NSMutableString stringWithCharacters:&first length:1];
+        if (first >= 0xD800 && first <= 0xDBFF && [self hasCharacters]) {
+            unichar low = [self getNextCharacter];
+            if (low >= 0xDC00 && low <= 0xDFFF) {
+                [token appendFormat:@"%C", low];
+            } else {
+                [self unlookCharacter];
+            }
+        }
+        return token;
+    }
+    NSMutableString* body = [NSMutableString string];
+    NSInteger depth = 0;
+    while ([self hasCharacters]) {
+        unichar c = [self getNextCharacter];
+        if (c == '\\') {
+            if (![self hasCharacters]) {
+                [self setError:MTParseErrorMismatchBraces
+                       message:@"Trailing \\ in a macro argument"];
+                return nil;
+            }
+            // Both characters go through untouched, so \{ and \} leave depth alone.
+            [body appendFormat:@"%C%C", c, [self getNextCharacter]];
+            continue;
+        }
+        if (c == '}') {
+            if (depth == 0) {
+                return body;
+            }
+            depth -= 1;
+        } else if (c == '{') {
+            depth += 1;
+        }
+        [body appendFormat:@"%C", c];
+    }
+    [self setError:MTParseErrorMismatchBraces message:@"Unmatched { in a macro argument"];
+    return nil;
+}
+
+- (NSString*) spliceTemplate:(NSString*) templateString
+                   arguments:(NSArray<NSString*>*) rawArguments
+{
+    NSMutableString* out = [NSMutableString stringWithCapacity:templateString.length];
+    NSUInteger length = templateString.length;
+    for (NSUInteger i = 0; i < length; i++) {
+        unichar c = [templateString characterAtIndex:i];
+        if (c != '#' || i + 1 >= length) {
+            [out appendFormat:@"%C", c];
+            continue;
+        }
+        unichar digit = [templateString characterAtIndex:i + 1];
+        if (digit < '1' || digit > '9' || (NSUInteger)(digit - '0') > rawArguments.count) {
+            // Rejected by the assertion in +addMacro:. With assertions compiled out
+            // the # survives here and the expansion fails to parse, which is loud.
+            [out appendFormat:@"%C", c];
+            continue;
+        }
+        [out appendString:rawArguments[digit - '1']];
+        i++;
+    }
+    return out;
+}
+
+// A fresh builder, so the in-flight parse's state is never disturbed. Only the
+// font style is carried across; _currentEnv and _currentInnerAtom are not, so a
+// template that opens a group it does not close cannot parse (LLD §6).
+- (nullable MTMathList*) parseExpansion:(NSString*) spliced forCommand:(NSString*) command
+{
+    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:spliced];
+    builder->_currentFontStyle = _currentFontStyle;
+    builder->_macroExpansionDepth = _macroExpansionDepth + 1;
+    MTMathList* expansion = [builder build];
+    if (!expansion) {
+        [self setError:(MTParseErrors)builder.error.code
+               message:[NSString stringWithFormat:@"Expansion of \\%@ failed to parse: %@",
+                        command, builder.error.localizedDescription]];
+    }
+    return expansion;
 }
 
 - (NSString*) readColor
