@@ -1131,7 +1131,7 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
                     @"to" : @"rightarrow",
                     @"AA" : @"angstrom",
                     @"restriction" : @"upharpoonright",
-                    // \iff, \implies and \impliedby moved to +builtinMacros: amsmath
+                    // \iff, \implies and \impliedby moved to +macros: amsmath
                     // pads them with \;, which one symbol atom cannot express.
                     @"dotsc" : @"ldots",
                     @"dotsb" : @"cdots",

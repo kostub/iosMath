@@ -1159,12 +1159,11 @@ static const NSInteger kMTMaxRecursionDepth = 150;
     }
     // A fresh builder, so the in-flight parse's state is never disturbed.
     MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
-    // Compile-time constants, so a parse failure here is a programming mistake.
-    NSAssert(templateExpression, @"Built-in template for \\%@ failed to parse: %@",
-             command, def.templateString);
     if (!templateExpression) {
-        [self setError:MTParseErrorInternalError
-               message:[NSString stringWithFormat:@"Built-in template for \\%@ failed to parse", command]];
+        // Reachable from a template registered through +addMacro:, so this is the
+        // caller's error, not the library's.
+        [self setError:MTParseErrorInvalidCommand
+               message:[NSString stringWithFormat:@"Template for \\%@ failed to parse", command]];
         return nil;
     }
     return [[MTMacroAtom alloc] initWithCommand:command arguments:arguments

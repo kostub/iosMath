@@ -35,12 +35,6 @@
 + (nullable MTMathList *)buildTemplate:(NSString *)str;
 @end
 
-// Private to MTMathAtomFactory.m; redeclared so the registry tests can enumerate
-// the whole table. MTMacroDefinition itself is public now.
-@interface MTMathAtomFactory (MTMacroRegistryTesting)
-+ (NSMutableDictionary<NSString*, MTMacroDefinition*>*)macros;
-@end
-
 // Defined under "Equivalence helpers" below.
 static NSString* ListSignature(MTMathList* list);
 
@@ -493,16 +487,14 @@ static NSString* ListSignature(MTMathList* list)
 
 - (void)testEveryRegisteredMacroParses
 {
-    NSDictionary<NSString*, MTMacroDefinition*>* macros = [MTMathAtomFactory macros];
-    // A containment check, not an equality one: +addMacro: writes into this same
-    // global table and there is no unregister, so a test that registers a macro
-    // leaves it there for whatever runs next.
-    NSSet<NSString*>* builtins = [NSSet setWithArray:@[
-        @"pmod", @"mod", @"pod", @"implies", @"impliedby", @"iff", @"idotsint",
-        @"varliminf", @"varlimsup", @"varinjlim", @"varprojlim" ]];
-    XCTAssertTrue([builtins isSubsetOfSet:[NSSet setWithArray:macros.allKeys]]);
-    for (NSString* command in macros) {
-        MTMacroDefinition* def = macros[command];
+    // Named rather than enumerated: +addMacro: writes into the same global table
+    // and there is no unregister, so enumerating it would validate whatever an
+    // earlier test left behind.
+    for (NSString* command in @[ @"pmod", @"mod", @"pod", @"implies", @"impliedby", @"iff",
+                                 @"idotsint", @"varliminf", @"varlimsup", @"varinjlim",
+                                 @"varprojlim" ]) {
+        MTMacroDefinition* def = [MTMathAtomFactory macroDefinitionForCommand:command];
+        XCTAssertNotNil(def, @"\\%@ is not registered", command);
         MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
         XCTAssertNotNil(templateExpression, @"\\%@ template failed to parse", command);
         // Substitution does not descend into sub-lists, so every declared
