@@ -10,6 +10,7 @@
 //
 
 #import "MTMathAtomFactory.h"
+#import "MTMathAtomFactory+Internal.h"
 #import "MTMathListBuilder.h"
 
 NSString *const MTSymbolMultiplication = @"\u00D7";
@@ -1075,14 +1076,21 @@ static const CGFloat kSmallMatrixInterColumnSpacing = 5;
     return macros;
 }
 
+// TeX's rule for a replacement text (TeXbook Ch. 20): every # is followed by
+// 1-9 or by another #, the latter standing for a literal # that
+// -spliceTemplate:arguments: collapses. A trailing or otherwise bare # is a typo.
 + (BOOL) template:(NSString*) templateString referencesOnlyArgumentsUpTo:(NSUInteger) argumentCount
 {
-    for (NSUInteger i = 0; i + 1 < templateString.length; i++) {
+    for (NSUInteger i = 0; i < templateString.length; i++) {
         if ([templateString characterAtIndex:i] != '#') {
             continue;
         }
-        unichar digit = [templateString characterAtIndex:i + 1];
-        if (digit < '1' || digit > '9' || (NSUInteger)(digit - '0') > argumentCount) {
+        if (i + 1 >= templateString.length) {
+            return NO;
+        }
+        unichar next = [templateString characterAtIndex:i + 1];
+        if (next != '#' &&
+            (next < '1' || next > '9' || (NSUInteger)(next - '0') > argumentCount)) {
             return NO;
         }
         i++;

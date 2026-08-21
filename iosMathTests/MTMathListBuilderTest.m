@@ -1719,13 +1719,14 @@ static NSArray* getTestDataParseErrors() {
               @[@"\\pmod^2", @(MTParseErrorMissingArgument)],
               // NOTE: the plan's literal case here was `\pmod{\frac}`, expected to
               // propagate MTParseErrorMismatchBraces. In fact `\frac` with no
-              // operands is not an error at all (same as bare top-level `\frac`,
-              // which degrades to `\frac{}{}`): `requiredArgumentWithError:` reads
-              // one argument via the SAME `buildInternal:YES` reader `\frac` itself
-              // uses, so `\frac`'s own numerator/denominator reads see the closing
-              // `}` immediately and each come back as an empty (not missing)
-              // argument. `\pmod{\frac}` therefore parses successfully to
-              // `\pmod{\frac{}{}}` — verified directly; see
+              // operands is not an error at all: `readRawArgument` captures the
+              // argument as raw, unparsed text ("\frac"), so `\frac`'s own operands
+              // aren't read here at all — that only happens once the raw text is
+              // spliced into \pmod's template and the whole thing is parsed
+              // together, and by then `\frac` takes its numerator from the
+              // template text following `#1`. `\pmod{\frac}` therefore parses
+              // successfully and serializes back as `\pmod{\frac}` — verified
+              // directly; see
               // -testFracWithNoArgumentsIsNotAnErrorInsideMacroArgument in
               // MTModularArithmeticTest.m. Swapped in a genuinely malformed
               // argument (an unbalanced brace) that does propagate

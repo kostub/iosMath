@@ -38,16 +38,6 @@ typedef NS_ENUM(NSUInteger, MTStackArgRole) {
                inheritsClass:(BOOL)inheritsClass;
 @end
 
-/// Registry value: declared arity + the LaTeX template the expansion is parsed
-/// from. Arity is declared rather than inferred from the template because a
-/// future \newcommand declares [argc] and its body may ignore arguments.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString;
-@end
-
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
@@ -128,8 +118,10 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (void) addLatexSymbol:(NSString*) name value:(MTMathAtom*) atom;
 
 /** Define a macro: a command that expands to `templateString` with `#1`...`#9` replaced by
- the arguments it is invoked with. Macros are looked up before every other command table, so
- registering a name that already exists — a macro or a built-in command — shadows it.
+ the arguments it is invoked with. As in TeX, a literal `#` in the template is written `##`.
+ Macros are looked up before the symbol tables, so registering a name that already exists —
+ a macro or a built-in symbol — shadows it. `\limits`, the `\text…` commands and the
+ font-style commands are dispatched earlier and cannot be shadowed.
  e.g. `[MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{2}"]`
 
  Carries the same setup-time contract as `+addLatexSymbol:value:` — do not call this while
@@ -137,9 +129,6 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (void) addMacro:(NSString*) name
     argumentCount:(NSUInteger) argumentCount
          template:(NSString*) templateString;
-
-/** The macro registered under `command`, or nil if it is not a macro. */
-+ (nullable MTMacroDefinition*) macroDefinitionForCommand:(NSString*) command;
 
 /** Returns a list of all supported lated symbols names. */
 + (NSArray<NSString*>*) supportedLatexSymbolNames;
