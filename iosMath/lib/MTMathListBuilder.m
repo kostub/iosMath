@@ -11,7 +11,6 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
-#import "MTMacroParameterAtom.h"
 
 NSString *const MTParseError = @"ParseError";
 
@@ -51,12 +50,6 @@ static const NSInteger kMTMaxRecursionDepth = 150;
 // and a spliced string, not one stack frame.
 static const NSInteger kMTMaxMacroExpansionDepth = 32;
 
-// Not in the public header, so template mode does not appear in the Swift module
-// interface — only built-in macro templates use it.
-@interface MTMathListBuilder ()
-+ (nullable MTMathList *)buildTemplate:(NSString *)str;
-@end
-
 @implementation MTMathListBuilder {
     unichar* _chars;
     int _currentChar;
@@ -67,7 +60,6 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
     BOOL _spacesAllowed;
     NSInteger _recursionDepth;
     NSInteger _macroExpansionDepth;
-    BOOL _templateMode;
     // Set to YES by stopCommand when a TeX group-transformation command (\over,
     // \atop, \choose, \brack, \brace) fires inside a {…} group. Checked in the
     // {…} branch to decide whether to wrap as MTMathGroup. Cleared at the top of
@@ -167,11 +159,11 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
     return YES;
 }
 
-// -buildInternal:YES on its own is silently permissive: at EOF it returns an empty
+// -readRawArgument on its own is silently permissive: at EOF it returns an empty
 // list with no error, and leaves a following }/^/_/& unlooked for the caller. That
 // is fine for \sqrt, which has always behaved that way, but a macro invocation with
 // no argument must be an error. Only macros route through this today.
-- (nullable MTMathList *)requiredArgumentWithError:(MTParseErrors)error
+- (nullable NSString *)rawArgumentWithError:(MTParseErrors)error
 {
     [self skipSpaces];
     if (![self hasCharacters]) {
@@ -198,7 +190,7 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
         }
     }
     // An empty {} is a valid, empty argument (LaTeX parity) — not a missing one.
-    return [self buildInternal:YES];
+    return [self readRawArgument];
 }
 
 // Restores the read position, so the caller can dispatch without consuming. Nil if
@@ -479,18 +471,6 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
         } else if (ch == '~') {
             // Tilde is a non-breaking space in LaTeX; render it as an ordinary space.
             atom = [MTMathAtomFactory atomForLatexSymbolName:@" "];
-        } else if (_templateMode && ch == '#') {
-            // #N argument reference. Malformed #X can only come from a built-in
-            // template string — a programming mistake, not user input.
-            unichar digit = [self hasCharacters] ? [self getNextCharacter] : 0;
-            NSAssert(digit >= '1' && digit <= '9',
-                     @"Malformed #%C in a built-in macro template", digit);
-            if (digit < '1' || digit > '9') {
-                [self setError:MTParseErrorInternalError
-                       message:@"Malformed #N in a built-in macro template"];
-                return nil;
-            }
-            atom = [[MTMacroParameterAtom alloc] initWithArgumentIndex:digit - '0'];
         } else {
             atom = [MTMathAtomFactory atomForCharacter:ch];
             if (!atom) {
@@ -1238,32 +1218,33 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
 
 // Returns nil WITHOUT setting an error when `command` is not a macro, so the
 // caller can fall through to -atomForCommand:. Returns nil WITH _error set when
-// it is a macro whose arguments failed to parse.
+// it is a macro whose arguments or expansion failed to parse.
 - (nullable MTMacroAtom*) macroAtomForCommand:(NSString*) command
 {
     MTMacroDefinition* def = [MTMathAtomFactory macroDefinitionForCommand:command];
     if (!def) {
         return nil;
     }
-    NSMutableArray<MTMathList*>* arguments = [NSMutableArray arrayWithCapacity:def.argumentCount];
+    if (_macroExpansionDepth >= kMTMaxMacroExpansionDepth) {
+        [self setError:MTParseErrorNestingTooDeep message:@"Macro expansion nested too deep"];
+        return nil;
+    }
+    NSMutableArray<NSString*>* arguments = [NSMutableArray arrayWithCapacity:def.argumentCount];
     for (NSUInteger i = 0; i < def.argumentCount; i++) {
-        MTMathList* argument = [self requiredArgumentWithError:MTParseErrorMissingArgument];
+        NSString* argument = [self rawArgumentWithError:MTParseErrorMissingArgument];
         if (!argument) {
             return nil;   // _error already set
         }
         [arguments addObject:argument];
     }
-    // A fresh builder, so the in-flight parse's state is never disturbed.
-    MTMathList* templateExpression = [MTMathListBuilder buildTemplate:def.templateString];
-    if (!templateExpression) {
-        // Reachable from a template registered through +addMacro:, so this is the
-        // caller's error, not the library's.
-        [self setError:MTParseErrorInvalidCommand
-               message:[NSString stringWithFormat:@"Template for \\%@ failed to parse", command]];
-        return nil;
+    NSString* spliced = [self spliceTemplate:def.templateString arguments:arguments];
+    MTMathList* expansion = [self parseExpansion:spliced forCommand:command];
+    if (!expansion) {
+        return nil;   // _error already set
     }
-    return [[MTMacroAtom alloc] initWithCommand:command arguments:arguments
-                             templateExpression:templateExpression];
+    return [[MTMacroAtom alloc] initWithCommand:command
+                                      arguments:arguments
+                                   rawExpansion:expansion];
 }
 
 - (MTMathAtom*) atomForCommand:(NSString*) command
@@ -1908,15 +1889,6 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
         return nil;
     }
     return output;
-}
-
-// Parses a built-in macro template: ordinary LaTeX plus #N argument references.
-// Template mode exists so that in user input # stays an invalid character.
-+ (nullable MTMathList *)buildTemplate:(NSString *)str
-{
-    MTMathListBuilder* builder = [[MTMathListBuilder alloc] initWithString:str];
-    builder->_templateMode = YES;
-    return [builder build];
 }
 
 + (NSString*) delimToString:(MTMathAtom*) delim
