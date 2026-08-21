@@ -1,8 +1,5 @@
 ## Changelog
 
-### v2.6.0 (2026-07-28)
-* Add **modular-arithmetic notation**: `\bmod` as a binary operator, and the `\pmod`, `\mod`, and `\pod` macros with amsmath's exact inline gaps and upright "mod" (#264, #268). `a \equiv b \pmod{n}` now renders as it does in LaTeX. The macros expand through a new internal macro atom, so a macro invocation serializes back to the command the author wrote rather than to its expansion. amsmath's wider display-style gap (18mu instead of 8/12mu) is not reproduced: a macro expands at parse time, before the render style is known.
-
 ### v2.5.0 (2026-07-14)
 * Add the LaTeX **`array` environment**: `\begin{array}{lcr}…\end{array}` with per-column alignment, `|` column rules, and `\hline` row rules (#251, #253, #254).
 * Add more matrix and alignment environments: `smallmatrix`, `gathered`, and `alignedat` (#246, #248).

@@ -2698,9 +2698,9 @@ static NSArray* getTestDataLargeDelimiters() {
 
 - (void) testNewAliases
 {
+    // \implies and \impliedby left this table when they became macros with \;
+    // padding; MTModularArithmeticTest covers them now.
     NSArray* rows = @[
-        @[ @"implies",      @"Longrightarrow", @"⟹", @"\\Longrightarrow " ],
-        @[ @"impliedby",    @"Longleftarrow",  @"⟸", @"\\Longleftarrow " ],
         @[ @"dotsc",        @"ldots",          @"…", @"\\ldots " ],
         @[ @"dotsb",        @"cdots",          @"⋯", @"\\cdots " ],
         @[ @"dotsm",        @"cdots",          @"⋯", @"\\cdots " ],
@@ -2708,7 +2708,7 @@ static NSArray* getTestDataLargeDelimiters() {
         @[ @"square",       @"Box",            @"□", @"\\Box " ],
         @[ @"vartriangle",  @"triangle",       @"△", @"\\triangle " ],
     ];
-    XCTAssertEqual(rows.count, (NSUInteger)8);
+    XCTAssertEqual(rows.count, (NSUInteger)6);
     for (NSArray* r in rows) {
         NSString* alias = r[0];
         NSString* expectedNucleus = r[2];
