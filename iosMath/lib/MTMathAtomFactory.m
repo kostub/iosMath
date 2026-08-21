@@ -10,6 +10,7 @@
 //
 
 #import "MTMathAtomFactory.h"
+#import "MTMathAtomFactory+Internal.h"
 #import "MTMathListBuilder.h"
 
 NSString *const MTSymbolMultiplication = @"\u00D7";

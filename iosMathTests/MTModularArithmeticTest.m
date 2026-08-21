@@ -11,6 +11,7 @@
 #import "MTMathList.h"
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMathAtomFactory+Internal.h"
 #import "MTTypesetter.h"
 #import "MTFont+Internal.h"
 #import "MTFontManager.h"

@@ -38,16 +38,6 @@ typedef NS_ENUM(NSUInteger, MTStackArgRole) {
                inheritsClass:(BOOL)inheritsClass;
 @end
 
-/// Registry value: declared arity + the LaTeX template the expansion is parsed
-/// from. Arity is declared rather than inferred from the template because a
-/// future \newcommand declares [argc] and its body may ignore arguments.
-@interface MTMacroDefinition : NSObject
-@property (nonatomic, readonly) NSUInteger argumentCount;
-@property (nonatomic, copy, readonly) NSString* templateString;
-- (instancetype)initWithArgumentCount:(NSUInteger)argumentCount
-                       templateString:(NSString*)templateString;
-@end
-
 FOUNDATION_EXPORT NSString *const MTSymbolMultiplication;
 FOUNDATION_EXPORT NSString *const MTSymbolDivision;
 FOUNDATION_EXPORT NSString *const MTSymbolFractionSlash;
@@ -139,9 +129,6 @@ FOUNDATION_EXPORT NSString *const MTSymbolDegree;
 + (void) addMacro:(NSString*) name
     argumentCount:(NSUInteger) argumentCount
          template:(NSString*) templateString;
-
-/** The macro registered under `command`, or nil if it is not a macro. */
-+ (nullable MTMacroDefinition*) macroDefinitionForCommand:(NSString*) command;
 
 /** Returns a list of all supported lated symbols names. */
 + (NSArray<NSString*>*) supportedLatexSymbolNames;

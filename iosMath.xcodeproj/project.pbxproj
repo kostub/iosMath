@@ -93,6 +93,7 @@
 		492EECFA17DAED9000939107 /* MTFontManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFontManager.m; sourceTree = "<group>"; };
 		492EECFF17DAEDB500939107 /* MTMathListBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathListBuilder.m; sourceTree = "<group>"; };
 		492EED0017DAEDB500939107 /* MTMathAtomFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathAtomFactory.h; sourceTree = "<group>"; };
+		A1B2C3D40000000000000101 /* MTMathAtomFactory+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MTMathAtomFactory+Internal.h"; sourceTree = "<group>"; };
 		492EED0117DAEDB500939107 /* MTMathAtomFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathAtomFactory.m; sourceTree = "<group>"; };
 		492EED0217DAEDB500939107 /* MTMathList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMathList.h; sourceTree = "<group>"; };
 		492EED0317DAEDB500939107 /* MTMathList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMathList.m; sourceTree = "<group>"; };
@@ -286,6 +287,7 @@
 				49DEC8B51CF77B00000053CD /* MTMathListIndex.m */,
 				49DEC8B61CF77B00000053CD /* MTMathListIndex.h */,
 				492EED0017DAEDB500939107 /* MTMathAtomFactory.h */,
+				A1B2C3D40000000000000101 /* MTMathAtomFactory+Internal.h */,
 				492EED0117DAEDB500939107 /* MTMathAtomFactory.m */,
 				492EED0217DAEDB500939107 /* MTMathList.h */,
 				492EED0317DAEDB500939107 /* MTMathList.m */,

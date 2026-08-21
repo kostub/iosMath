@@ -11,6 +11,7 @@
 
 #import "MTMathListBuilder.h"
 #import "MTMathAtomFactory.h"
+#import "MTMathAtomFactory+Internal.h"
 
 NSString *const MTParseError = @"ParseError";
 
