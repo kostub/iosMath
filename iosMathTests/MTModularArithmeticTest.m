@@ -483,6 +483,49 @@ static NSString* ListSignature(MTMathList* list)
                           ListSignature([MTMathListBuilder buildFromString:@"a+b^{2k}"].finalized));
 }
 
+#pragma mark - Reading an argument as raw text
+
+- (void)testRawArgumentScanner
+{
+    NSDictionary<NSString*, NSString*>* cases = @{
+        @"\\pod{a+b}":        @"\\mkern8mu(a+b)",
+        @"\\pod n":           @"\\mkern8mu(n)",
+        @"\\pod\\alpha":      @"\\mkern8mu(\\alpha)",
+        @"\\pod{}":           @"\\mkern8mu()",
+        @"\\pod{\\frac{1}{2}}": @"\\mkern8mu(\\frac{1}{2})",
+        // \{ and \} are two characters passed through, so they do not move the
+        // brace-depth counter.
+        @"\\pod{\\{x\\}}":    @"\\mkern8mu(\\{x\\})",
+    };
+    for (NSString* input in cases) {
+        MTMathList* macroList = [MTMathListBuilder buildFromString:input];
+        XCTAssertNotNil(macroList, @"%@", input);
+        MTMathList* writtenList = [MTMathListBuilder buildFromString:cases[input]];
+        XCTAssertEqualObjects(ListSignature(macroList.finalized),
+                              ListSignature(writtenList.finalized), @"%@", input);
+    }
+}
+
+- (void)testUnmatchedBraceInArgument
+{
+    NSError* error = nil;
+    XCTAssertNil([MTMathListBuilder buildFromString:@"\\pod{{n}" error:&error]);
+    XCTAssertEqual(error.code, MTParseErrorMismatchBraces);
+}
+
+// \substack's shape. The argument is parsed inside the smallmatrix, never on its
+// own — which is the whole reason arguments are stored as text.
+- (void)testArgumentContainingRowSeparators
+{
+    [MTMathAtomFactory addMacro:@"substack" argumentCount:1
+                       template:@"\\begin{smallmatrix}#1\\end{smallmatrix}"];
+    MTMathList* macroList = [MTMathListBuilder buildFromString:@"\\substack{i<n \\\\ i \\ne j}"];
+    XCTAssertNotNil(macroList);
+    MTMathList* writtenList = [MTMathListBuilder buildFromString:
+                               @"\\begin{smallmatrix}i<n \\\\ i \\ne j\\end{smallmatrix}"];
+    XCTAssertEqualObjects(ListSignature(macroList.finalized), ListSignature(writtenList.finalized));
+}
+
 #pragma mark - Parsing the three macros
 
 - (void)testPmodParsesToASingleMacroAtom
