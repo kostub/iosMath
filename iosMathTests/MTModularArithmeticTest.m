@@ -445,7 +445,7 @@ static NSString* ListSignature(MTMathList* list)
             [seen addObject:@(index)];
         }
         XCTAssertEqual(seen.count, def.argumentCount,
-                       @"\\%@ template must reference every declared argument at top level", command);
+                       @"\\%@ template must reference every declared argument", command);
     }
 }
 
@@ -811,15 +811,18 @@ static NSString* WrittenOutExpansion(NSString* command, NSString* arg)
 // argument reader (`readRawArgument`) captures the argument as raw, unparsed
 // text, so the raw list serializes back to exactly `\pmod{\frac}` — the
 // argument string is echoed verbatim, not re-derived from a parsed sub-list.
-// `\frac` with no braces after it still parses once the argument text is
-// spliced into the template and the whole thing is parsed together, exactly
-// like bare top-level `\frac` at EOF.
+// `\frac` reads its operands only when the spliced string is parsed as a whole, and
+// by then what follows `#1` is the template's own closing `)`, which becomes the
+// numerator. So the expansion is not the `\frac{}{}` a bare trailing `\frac` gives —
+// the paren is swallowed and the denominator is empty. TeX does the same thing with
+// the same definition, and `\pmod{\frac}` is degenerate input either way.
 - (void)testFracWithNoArgumentsIsNotAnErrorInsideMacroArgument
 {
     MTMathList* list = [MTMathListBuilder buildFromString:@"\\pmod{\\frac}"];
     XCTAssertNotNil(list);
     XCTAssertEqualObjects([MTMathListBuilder mathListToString:list], @"\\pmod{\\frac}");
-    XCTAssertNoThrow([list finalized]);
+    XCTAssertEqualObjects([MTMathListBuilder mathListToString:list.finalized],
+                          @"\\mkern8.0mu(\\mathrm{mod}\\mkern6.0mu\\frac{)}{}");
 }
 
 // Arguments are stored as source text, so serialization is a splice rather than a

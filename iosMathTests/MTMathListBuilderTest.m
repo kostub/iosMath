@@ -1723,10 +1723,10 @@ static NSArray* getTestDataParseErrors() {
               // argument as raw, unparsed text ("\frac"), so `\frac`'s own operands
               // aren't read here at all — that only happens once the raw text is
               // spliced into \pmod's template and the whole thing is parsed
-              // together, and by then `\frac` sees no operands of its own,
-              // degrading the same way bare top-level `\frac` does. `\pmod{\frac}`
-              // therefore parses successfully and serializes back as `\pmod{\frac}`
-              // — verified directly; see
+              // together, and by then `\frac` takes its numerator from the
+              // template text following `#1`. `\pmod{\frac}` therefore parses
+              // successfully and serializes back as `\pmod{\frac}` — verified
+              // directly; see
               // -testFracWithNoArgumentsIsNotAnErrorInsideMacroArgument in
               // MTModularArithmeticTest.m. Swapped in a genuinely malformed
               // argument (an unbalanced brace) that does propagate

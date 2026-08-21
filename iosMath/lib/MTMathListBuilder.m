@@ -160,10 +160,10 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
     return YES;
 }
 
-// -readRawArgument on its own is silently permissive: at EOF it returns an empty
-// list with no error, and leaves a following }/^/_/& unlooked for the caller. That
-// is fine for \sqrt, which has always behaved that way, but a macro invocation with
-// no argument must be an error. Only macros route through this today.
+// -readRawArgument reads unconditionally: it needs a character to be there, and it
+// takes a }, ^, _ or & as a one-character argument rather than treating it as the
+// end of the argument. A macro invocation with no argument has to be an error
+// instead, so this wrapper rules both out first. Only macros route through this.
 - (nullable NSString *)rawArgumentWithError:(MTParseErrors)error
 {
     [self skipSpaces];
@@ -687,7 +687,9 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
 // The math-mode sibling of -readTextArgument: reads one macro argument as source
 // text without parsing it. Nothing is unescaped and no inner brace is dropped —
 // whatever this returns gets spliced into a template and handed back to a parser.
-// The caller has already skipped spaces and confirmed a character is available.
+// The caller has already skipped spaces and confirmed a character is available; since
+// -skipSpaces consumes everything outside 0x21-0x7E, that character is always ASCII,
+// so a braceless argument is a single unichar and never half a surrogate pair.
 - (nullable NSString*) readRawArgument
 {
     unichar first = [self getNextCharacter];
@@ -695,16 +697,7 @@ static const NSInteger kMTMaxMacroExpansionDepth = 32;
         return [@"\\" stringByAppendingString:[self readCommand]];
     }
     if (first != '{') {
-        NSMutableString* token = [NSMutableString stringWithCharacters:&first length:1];
-        if (first >= 0xD800 && first <= 0xDBFF && [self hasCharacters]) {
-            unichar low = [self getNextCharacter];
-            if (low >= 0xDC00 && low <= 0xDFFF) {
-                [token appendFormat:@"%C", low];
-            } else {
-                [self unlookCharacter];
-            }
-        }
-        return token;
+        return [NSString stringWithCharacters:&first length:1];
     }
     NSMutableString* body = [NSMutableString string];
     NSInteger depth = 0;
