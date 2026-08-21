@@ -523,6 +523,18 @@ static NSString* ListSignature(MTMathList* list)
     }
 }
 
+- (void)testAddMacroRegistersAndReplaces
+{
+    [MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{2}"];
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\half"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"\\frac{1}{2}"].finalized));
+
+    // Re-registering the same name replaces the definition, as +addLatexSymbol: does.
+    [MTMathAtomFactory addMacro:@"half" argumentCount:0 template:@"\\frac{1}{3}"];
+    XCTAssertEqualObjects(ListSignature([MTMathListBuilder buildFromString:@"\\half"].finalized),
+                          ListSignature([MTMathListBuilder buildFromString:@"\\frac{1}{3}"].finalized));
+}
+
 #pragma mark - Parsing the three macros
 
 - (void)testPmodParsesToASingleMacroAtom
